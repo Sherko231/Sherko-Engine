@@ -12,7 +12,7 @@
 - **Current work package:** Native/network feasibility
 - **Completed executable tasks:** P0-T01 through P0-T09 and P0-T11
 - **Skipped conditional task:** P0-T10 — not required because P0-T09 succeeded
-- **Next executable task:** P0-T12 — Run integrated native feasibility soak
+- **Current executable task:** P0-T12 — Run integrated native feasibility soak
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -32,12 +32,13 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T09 | Complete | Java 25 FFM successfully loaded the official `steam_api64.dll`, initialized Steam through `SteamAPI_InitFlat`, resolved `SteamAPI_SteamNetworkingSockets_SteamAPI_v012`, obtained a non-null `ISteamNetworkingSockets` pointer, called `SteamAPI_ISteamNetworkingSockets_InitAuthentication`, received the valid result `Attempting`, and shut down cleanly without authored C/C++ glue. |
 | P0-T10 | Not required | The dedicated-server fallback trigger did not fire because P0-T09 established a viable Java-to-Steam flat-API path. |
 | P0-T11 | Complete | The localhost UDP impairment harness successfully injected and independently observed fixed latency, variable jitter, deterministic packet loss, duplication, and reordering in one short runtime suite. |
-| P0-T12 | Next | Combine GLFW/OpenGL, Jolt JNI, OpenAL, and UDP in one feasibility executable, run under JFR, and verify clean shutdown/resource behavior. |
+| P0-T12 | In progress | One integrated Java 25 spike now initializes GLFW/OpenGL, Jolt JNI, OpenAL, and localhost UDP together and runs under JFR. Owner-set acceptance duration is 15 seconds; local runtime verification is still required. |
 
 Detailed feasibility notes:
 
 - `docs/feasibility/P0-T08_STEAM_NETWORKING_SOCKETS_COVERAGE.md`
 - `docs/feasibility/P0-T11_NETWORK_IMPAIRMENT_HARNESS.md`
+- `docs/feasibility/P0-T12_INTEGRATED_NATIVE_SOAK.md`
 
 ## Current experimental code
 
@@ -52,6 +53,7 @@ Current examples include:
 - `src/main/java/com/samo/spike/network/NetworkImpairmentHarness.java`
 - `src/main/java/com/samo/spike/steam/SteamInitSpike.java`
 - `src/main/java/com/samo/spike/steam/SteamFlatApiFfmSpike.java`
+- `src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
 
 Do not infer renderer, physics, audio, networking, Steam integration, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
 
@@ -74,6 +76,8 @@ The current proven/selected baseline relevant to work completed so far is:
 - Java 25 FFM can directly call the official Steam flat API and obtain a usable `ISteamNetworkingSockets` interface pointer without authored C/C++ glue
 - The FFM feasibility path currently uses `SteamAPI_InitFlat`, the versioned `SteamNetworkingSockets` accessor exported by the official redistributable, and flat `SteamAPI_ISteamNetworkingSockets_*` functions
 - P0-T11 proves development-only impairment injection for latency, jitter, loss, duplication, and reordering; it is not a production networking layer
+- P0-T12 uses one short-lived process to exercise graphics, physics, audio, and UDP concurrently while JFR records the run
+- P0-T12's owner-approved acceptance duration is **15 seconds**, replacing the original 15-minute requirement in Issue #29; the older technical-backlog wording is superseded for this task until that catalog entry is safely synchronized
 - The production transport wrapper/design is still not implemented; P0-T09 only proved that the required native API is reachable from Java
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
@@ -81,15 +85,21 @@ For the complete intended v1 technology and product boundaries, read `ENGINE_SCO
 
 ## What happens next
 
-The immediate next task is **P0-T12 — Run integrated native feasibility soak**.
+The immediate task is **P0-T12 — Run integrated native feasibility soak**.
 
-P0-T12 must produce one disposable feasibility executable that initializes GLFW/OpenGL, Jolt JNI, OpenAL, and UDP together, runs under Java Flight Recorder, and exits cleanly without a native crash or obvious monotonic resource leak.
+The implementation is ready for local verification through:
 
-The backlog acceptance criterion currently specifies a **15-minute** run. The repository owner has separately stated a preference for short feasibility tests around **10 seconds**. Do not silently rewrite the task criterion: before the soak is executed, explicitly choose whether to preserve the 15-minute acceptance criterion or shorten it for this project.
+```powershell
+.\gradlew.bat runIntegratedNativeSoak
+```
+
+The Gradle task runs the integrated executable for 15 seconds under Java Flight Recorder. The executable must initialize OpenGL, OpenAL, Jolt, and UDP together; continuously render, step physics, move an OpenAL source, and exchange UDP datagrams; then shut everything down explicitly. The JFR recording is written to `build/spikes/native-soak/p0-t12.jfr`.
+
+P0-T12 remains in progress until the local run succeeds, the JFR file is present, and cleanup output shows no native crash or obvious positive Jolt allocation growth.
 
 The production Steam networking path is technically reachable from Java, but the production wrapper and gameplay transport architecture still belong to later phases.
 
-See `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for ordering and acceptance criteria.
+See `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for ordering. For P0-T12 duration, Issue #29 and the P0-T12 feasibility note are the current authoritative acceptance wording.
 
 ## Documentation maintenance policy
 

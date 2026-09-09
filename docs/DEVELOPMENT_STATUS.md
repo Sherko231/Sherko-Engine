@@ -12,7 +12,7 @@
 - **Current work package:** Networking/Steam feasibility
 - **Completed executable tasks:** P0-T01 through P0-T09
 - **Skipped conditional task:** P0-T10 — not required because P0-T09 succeeded
-- **Next executable task:** P0-T11 — Build network impairment harness
+- **Current executable task:** P0-T11 — Build network impairment harness
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -31,9 +31,12 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T08 | Complete — gate failed | Steamworks4j 1.10.0 does **not** expose the required `ISteamNetworkingSockets` listen-socket, connection, message, and connection-status APIs. Its `SteamNetworking` wrapper targets the older P2P session API, so it cannot be accepted as the production transport binding. |
 | P0-T09 | Complete | Java 25 FFM successfully loaded the official `steam_api64.dll`, initialized Steam through `SteamAPI_InitFlat`, resolved `SteamAPI_SteamNetworkingSockets_SteamAPI_v012`, obtained a non-null `ISteamNetworkingSockets` pointer, called `SteamAPI_ISteamNetworkingSockets_InitAuthentication`, received the valid result `Attempting`, and shut down cleanly without authored C/C++ glue. |
 | P0-T10 | Not required | The dedicated-server fallback trigger did not fire because P0-T09 established a viable Java-to-Steam flat-API path. |
-| P0-T11 | Next | Build a development impairment harness for latency, jitter, packet loss, duplication, and reordering. |
+| P0-T11 | In progress | A deterministic localhost UDP impairment harness is implemented for independent latency, jitter, packet loss, duplication, and reordering checks. Local runtime verification of all five modes is still required. |
 
-The detailed P0-T08 coverage table is recorded in `docs/feasibility/P0-T08_STEAM_NETWORKING_SOCKETS_COVERAGE.md`.
+Detailed feasibility notes:
+
+- `docs/feasibility/P0-T08_STEAM_NETWORKING_SOCKETS_COVERAGE.md`
+- `docs/feasibility/P0-T11_NETWORK_IMPAIRMENT_HARNESS.md`
 
 ## Current experimental code
 
@@ -45,6 +48,7 @@ Current examples include:
 - `src/main/java/com/samo/spike/physics/JoltLifecycleSpike.java`
 - `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
 - `src/main/java/com/samo/spike/network/LocalhostUdpSpike.java`
+- `src/main/java/com/samo/spike/network/NetworkImpairmentHarness.java`
 - `src/main/java/com/samo/spike/steam/SteamInitSpike.java`
 - `src/main/java/com/samo/spike/steam/SteamFlatApiFfmSpike.java`
 
@@ -69,19 +73,28 @@ The current proven/selected baseline relevant to work completed so far is:
 - Java 25 FFM can directly call the official Steam flat API and obtain a usable `ISteamNetworkingSockets` interface pointer without authored C/C++ glue
 - The FFM feasibility path currently uses `SteamAPI_InitFlat`, the versioned `SteamNetworkingSockets` accessor exported by the official redistributable, and flat `SteamAPI_ISteamNetworkingSockets_*` functions
 - The production transport wrapper/design is still not implemented; P0-T09 only proved that the required native API is reachable from Java
+- P0-T11 impairment injection remains development-only test infrastructure and must not be treated as a production networking layer
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate next task is **P0-T11 — Build network impairment harness**.
+The immediate task remains **P0-T11 — Build network impairment harness** until local runtime verification passes.
 
-P0-T11 must add a development-only harness around the localhost networking spike that can independently inject latency, jitter, packet loss, duplication, and packet reordering. Each impairment must be independently observable and reproducible. This remains test infrastructure only: no gameplay replication, production transport abstraction, or reliability protocol should be introduced in this task.
+The implementation can be verified with:
+
+```powershell
+.\gradlew.bat runNetworkImpairmentHarness
+```
+
+The suite runs five short deterministic scenarios sequentially: fixed latency, variable jitter, deterministic packet loss, deterministic duplication, and forced packet reordering. Each scenario performs its own assertions and must print a `P0-T11 <mode> passed` line; the full run must end with `P0-T11 suite passed: all five impairment modes were observed independently.`
+
+Individual modes are also available through `runNetworkImpairmentLatency`, `runNetworkImpairmentJitter`, `runNetworkImpairmentLoss`, `runNetworkImpairmentDuplication`, and `runNetworkImpairmentReordering`.
 
 P0-T10 is closed as **not planned** because its trigger required both P0-T08 and P0-T09 to fail, and P0-T09 succeeded.
 
-The production Steam networking path is now technically reachable from Java, but the production wrapper and gameplay transport architecture still belong to later phases.
+The production Steam networking path is technically reachable from Java, but the production wrapper and gameplay transport architecture still belong to later phases.
 
 See `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for ordering and acceptance criteria.
 

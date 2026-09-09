@@ -10,8 +10,8 @@
 - **Milestone:** M0 — Feasibility
 - **Phase:** P0 — Feasibility
 - **Current work package:** Networking/Steam feasibility
-- **Completed executable tasks:** P0-T01 through P0-T05
-- **Current executable task:** P0-T06 — Prove localhost UDP exchange
+- **Completed executable tasks:** P0-T01 through P0-T06
+- **Next executable task:** P0-T07 — Prove Steam initialization and callback pump
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -25,7 +25,8 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T03 | Complete | LWJGL + GLFW can create the required OpenGL 4.6 Core context on the target development environment. |
 | P0-T04 | Complete | Jolt JNI 6.0.0 loads and simulates correctly on the target Windows/Java environment; a dynamic rigid body falls onto a static floor, repeated start/stop succeeds, and the debug native-allocation balance returns to zero after cleanup. |
 | P0-T05 | Complete | LWJGL OpenAL can open the default device/context, play a generated mono source with audible left/right 3D positioning, and explicitly delete the source/buffer before destroying the context/device. |
-| P0-T06 | In progress | A two-process localhost UDP spike is implemented with numbered datagrams, echo replies, per-packet RTT logging, and short timeouts; runtime verification is still required. |
+| P0-T06 | Complete | Two Java JVM processes can exchange numbered UDP datagrams over localhost using `DatagramChannel`; runtime verification received 8/8 replies and logged an average RTT of 0.459 ms on the development machine. |
+| P0-T07 | Next | Initialize Steam from Java, print the Steam user identity, pump at least one callback, and shut down cleanly without a native crash. |
 
 ## Current experimental code
 
@@ -52,16 +53,16 @@ The current proven/selected baseline relevant to work completed so far is:
 - GLFW + OpenGL 4.6 Core for the rendering feasibility path
 - Jolt Physics through Jolt JNI for rigid-body physics feasibility
 - OpenAL through LWJGL for 3D-audio feasibility
-- Java NIO `DatagramChannel` is the active localhost UDP feasibility path under P0-T06
+- Java NIO `DatagramChannel` is proven for the basic localhost UDP feasibility path
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate task is **P0-T06 — Prove localhost UDP exchange**.
+The immediate next task is **P0-T07 — Prove Steam initialization and callback pump**.
 
-Runtime verification should launch two JVM processes: one server and one client. Both must report received sequence numbers, and the client must log per-packet and average RTT. The spike uses localhost only and deliberately does not implement reliability, replication, or a production transport abstraction.
+This begins direct Steam API feasibility. The spike must initialize Steam from Java, print the active Steam user identity, receive at least one callback through the callback pump, and shut down cleanly without a native crash. It deliberately does not implement lobbies, invites, gameplay transport, or replication.
 
 The production networking path remains a milestone gate: Phase 1 must not begin until that path is concrete.
 

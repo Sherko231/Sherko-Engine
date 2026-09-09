@@ -148,3 +148,19 @@ tasks.register<JavaExec>("runSteamInitSpike") {
         providers.gradleProperty("steamSpikeTimeoutSeconds").orElse("10").get()
     )
 }
+
+tasks.register<JavaExec>("runSteamFlatApiFfmSpike") {
+    group = "verification"
+    description = "Runs the P0-T09 Java 25 FFM -> Steam flat API feasibility spike."
+    dependsOn(prepareSteamSpike)
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.steam.SteamFlatApiFfmSpike"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    workingDir(steamSpikeWorkingDir.get().asFile)
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    providers.gradleProperty("steamApi64Path").orNull?.let {
+        systemProperty("spike.steamApi64Path", it)
+    }
+}

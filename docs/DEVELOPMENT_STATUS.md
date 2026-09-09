@@ -28,6 +28,7 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T06 | Complete | Two Java JVM processes can exchange numbered UDP datagrams over localhost using `DatagramChannel`; runtime verification received 8/8 replies and logged an average RTT of 0.459 ms on the development machine. |
 | P0-T07 | Complete | Steamworks4j 1.10.0 successfully initializes Steam from Java when the Steam desktop client is running and logged in, exposes the active persona/Steam ID, receives an asynchronous callback through `SteamAPI.runCallbacks()`, and shuts down without a native crash. |
 | P0-T08 | Complete — gate failed | Steamworks4j 1.10.0 does **not** expose the required `ISteamNetworkingSockets` listen-socket, connection, message, and connection-status APIs. Its `SteamNetworking` wrapper targets the older P2P session API, so it cannot be accepted as the production transport binding. |
+| P0-T09 | In progress | A Java 25 FFM spike is implemented that loads `steam_api64.dll`, calls `SteamAPI_Init`, resolves an `ISteamNetworkingSockets` flat-API accessor, invokes `SteamAPI_ISteamNetworkingSockets_InitAuthentication`, validates the returned `ESteamNetworkingAvailability`, and shuts Steam down. Local runtime verification is still required. |
 
 The detailed P0-T08 coverage table is recorded in `docs/feasibility/P0-T08_STEAM_NETWORKING_SOCKETS_COVERAGE.md`.
 
@@ -42,6 +43,7 @@ Current examples include:
 - `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
 - `src/main/java/com/samo/spike/network/LocalhostUdpSpike.java`
 - `src/main/java/com/samo/spike/steam/SteamInitSpike.java`
+- `src/main/java/com/samo/spike/steam/SteamFlatApiFfmSpike.java`
 
 Do not infer renderer, physics, audio, networking, Steam integration, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
 
@@ -62,6 +64,7 @@ The current proven/selected baseline relevant to work completed so far is:
 - Local Steam client integration requires the Steam desktop client to be running and logged in; otherwise initialization may fail with `NoSteamClient`
 - Steamworks4j 1.10.0 is **not sufficient** for the required `ISteamNetworkingSockets` production transport surface
 - The active fallback path is Java 25 FFM calling the official Steam flat API without authored C/C++ glue
+- The P0-T09 spike uses the official `steam_api64.dll` redistributable already present on the Steamworks4j runtime classpath, or an explicitly supplied Steamworks SDK redistributable path
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
@@ -70,7 +73,7 @@ For the complete intended v1 technology and product boundaries, read `ENGINE_SCO
 
 The immediate task is **P0-T09 — Prove Steam flat API through Java FFM fallback**.
 
-P0-T09 must load the official Steam redistributable through Java 25's Foreign Function & Memory API and invoke one harmless Steam flat-API networking function that returns a valid result, with no authored C/C++ glue.
+The implementation is ready for local verification through the `runSteamFlatApiFfmSpike` Gradle task. The test must run with the Steam desktop client open and logged in. It must prove that Java 25's Foreign Function & Memory API can load the official Steam redistributable, obtain an `ISteamNetworkingSockets` interface pointer, invoke `SteamAPI_ISteamNetworkingSockets_InitAuthentication`, receive a valid `ESteamNetworkingAvailability` result, and shut down without authored C/C++ glue.
 
 If P0-T09 succeeds, the project can continue evaluating the official Steam flat API as the production networking path. If it fails, proceed to **P0-T10**, which changes the hosting decision before Phase 1 begins.
 

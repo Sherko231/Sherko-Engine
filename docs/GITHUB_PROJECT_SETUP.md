@@ -1,16 +1,16 @@
 # GitHub Roadmap Model — Sherko Engine
 
-This document defines the canonical GitHub planning model for Sherko Engine.
+This document defines the stable GitHub planning model for Sherko Engine. It intentionally does **not** duplicate live Issue numbers, current task statuses, or other data that belongs in GitHub itself.
 
 ## Source-of-truth layers
 
 - `ENGINE_SCOPE.md` — product and architecture boundaries.
-- `ROADMAP.md` — milestone/phase-level roadmap.
-- `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and acceptance criteria.
+- `ROADMAP.md` — milestone/phase-level roadmap and planning rules.
+- `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and planning acceptance criteria.
 - GitHub Milestones — milestone progress over executable Issues.
 - GitHub Labels — durable task type/subsystem classification.
-- GitHub Issues — executable work only.
-- GitHub Project — live roadmap/board layer; phase cards should be Project draft items rather than repository Issues.
+- GitHub Issues — executable work and task-level execution contracts.
+- GitHub Project — live roadmap/board layer and task status.
 
 ## Milestones
 
@@ -30,11 +30,11 @@ Do not assign arbitrary due dates. Add dates only when they represent a real pla
 
 Issues represent executable tasks only.
 
-- The active phase is expanded into Issues.
-- P0 task Issues are #18-#29.
-- P0-T01 (#18) is completed because the v1 scope is already locked.
-- Future tasks remain in `TECHNICAL_BACKLOG.md` until their phase approaches execution.
-- Closed Issues #1-#17 are obsolete planning artifacts from an earlier setup attempt and must not be used as roadmap epics.
+- Materialize tasks as Issues only when their phase is near execution.
+- Keep permanent task IDs from `TECHNICAL_BACKLOG.md` in Issue titles.
+- The Issue becomes the task's execution contract once work is activated.
+- Do not mirror Ready/In Progress/Done state back into roadmap/backlog documents.
+- Do not use repository Issues as phase epics when a Project draft item is sufficient.
 
 ## Labels
 
@@ -121,22 +121,7 @@ No `XL`: split work that exceeds L.
 1. `Roadmap` — Roadmap layout, phase draft items only.
 2. `Board` — Board layout, executable task Issues grouped by Status.
 3. `Backlog` — Table layout, open executable tasks.
-4. `Current Phase` — Table layout filtered to the active phase; initially P0.
-
-## Current P0 issue classification
-
-- #18 P0-T01 — Done — Documentation — P2 Normal — XS
-- #19 P0-T02 — Ready — Build / CI — P1 High — S
-- #20 P0-T03 — Backlog — Rendering — P1 High — S
-- #21 P0-T04 — Backlog — Physics — P1 High — S
-- #22 P0-T05 — Backlog — Audio — P1 High — S
-- #23 P0-T06 — Backlog — Networking — P1 High — S
-- #24 P0-T07 — Backlog — Steam — P1 High — S
-- #25 P0-T08 — Backlog — Steam — P0 Critical — M
-- #26 P0-T09 — conditional on P0-T08 failure — Steam — P0 Critical — M
-- #27 P0-T10 — conditional on P0-T08 and P0-T09 failure — Networking — P0 Critical — S
-- #28 P0-T11 — Backlog — Networking — P1 High — M
-- #29 P0-T12 — Backlog — Core — P0 Critical — M
+4. `Current Phase` — Table layout filtered to the active phase.
 
 ## Execution rule
 
@@ -144,7 +129,7 @@ No `XL`: split work that exceeds L.
 2. Move it to `In Progress`.
 3. Create a dedicated branch.
 4. Give the coding agent that task only.
-5. Require its acceptance criteria and tests.
+5. Require the Issue's acceptance criteria and appropriate verification.
 6. Open a PR that closes the Issue.
 7. Merge only after CI/verification passes.
 8. Mark Done only after merge and acceptance verification.

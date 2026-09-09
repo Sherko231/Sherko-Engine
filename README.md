@@ -12,7 +12,9 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-The repository is still at the pre-foundation stage. The current roadmap focus is **M0 / Phase 0 — Feasibility**, especially validating the production Steam/networking path before engine architecture depends on it.
+**M0 / Phase 0 — Feasibility is complete.** The risky native/Steam/networking assumptions have been exercised far enough to pass the milestone exit gate: Java can reach the required SteamNetworkingSockets flat API path, the localhost impairment harness works, and GLFW/OpenGL, Jolt JNI, OpenAL, and UDP run together cleanly in the integrated JFR soak.
+
+The repository is now entering **M1 / Phase 1 — Build, modules, and quality gates**. The first executable task is `P1-T01`, which establishes the initial multi-project Gradle structure with `engine-core`, `test-support`, `game-client`, and `game-server`.
 
 For the fastest orientation on what has already been proven, what is temporary, and what should happen next, read [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 

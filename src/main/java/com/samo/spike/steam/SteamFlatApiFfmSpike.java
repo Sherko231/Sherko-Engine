@@ -15,11 +15,13 @@ import java.util.Locale;
 import java.util.Set;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
-import static java.lang.foreign.ValueLayout.JAVA_BOOLEAN;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 public final class SteamFlatApiFfmSpike {
     private static final String REDISTRIBUTABLE_RESOURCE = "/steam_api64.dll";
+    private static final int STEAM_ERROR_MESSAGE_BYTES = 1024;
+    private static final int STEAM_API_INIT_OK = 0;
+
     private static final Set<Integer> KNOWN_AVAILABILITY_RESULTS = Set.of(
             -102, // CannotTry
             -101, // Failed
@@ -50,23 +52,28 @@ public final class SteamFlatApiFfmSpike {
             SymbolLookup steamApi = SymbolLookup.libraryLookup(redistributable, arena);
             Linker linker = Linker.nativeLinker();
 
-            MethodHandle steamInit = linker.downcallHandle(
-                    steamApi.findOrThrow("SteamAPI_Init"),
-                    FunctionDescriptor.of(JAVA_BOOLEAN)
+            MethodHandle steamInitFlat = linker.downcallHandle(
+                    steamApi.findOrThrow("SteamAPI_InitFlat"),
+                    FunctionDescriptor.of(JAVA_INT, ADDRESS)
             );
             MethodHandle steamShutdown = linker.downcallHandle(
                     steamApi.findOrThrow("SteamAPI_Shutdown"),
                     FunctionDescriptor.ofVoid()
             );
 
-            boolean initialized = (boolean) steamInit.invokeExact();
-            if (!initialized) {
+            MemorySegment errorMessage = arena.allocate(STEAM_ERROR_MESSAGE_BYTES);
+            errorMessage.fill((byte) 0);
+
+            int initResult = (int) steamInitFlat.invokeExact(errorMessage);
+            if (initResult != STEAM_API_INIT_OK) {
                 throw new IllegalStateException(
-                        "SteamAPI_Init returned false. Make sure the Steam desktop client is running and logged in."
+                        "SteamAPI_InitFlat failed with result=" + initResult
+                                + " (" + initResultName(initResult) + "). "
+                                + "Make sure the Steam desktop client is running and logged in."
                 );
             }
 
-            System.out.println("SteamAPI_Init        : true");
+            System.out.println("SteamAPI_InitFlat    : OK");
 
             try {
                 Accessor accessor = findNetworkingSocketsAccessor(steamApi);
@@ -170,6 +177,16 @@ public final class SteamFlatApiFfmSpike {
         throw new IllegalStateException(
                 "No supported SteamNetworkingSockets flat-API accessor symbol was found in steam_api64.dll"
         );
+    }
+
+    private static String initResultName(int value) {
+        return switch (value) {
+            case 0 -> "OK";
+            case 1 -> "FailedGeneric";
+            case 2 -> "NoSteamClient";
+            case 3 -> "VersionMismatch";
+            default -> "Unrecognized";
+        };
     }
 
     private static String availabilityName(int value) {

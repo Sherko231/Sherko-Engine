@@ -11,7 +11,7 @@
 - **Phase:** P0 — Feasibility
 - **Current work package:** Networking/Steam feasibility
 - **Completed executable tasks:** P0-T01 through P0-T05
-- **Next executable task:** P0-T06 — Prove localhost UDP exchange
+- **Current executable task:** P0-T06 — Prove localhost UDP exchange
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -25,7 +25,7 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T03 | Complete | LWJGL + GLFW can create the required OpenGL 4.6 Core context on the target development environment. |
 | P0-T04 | Complete | Jolt JNI 6.0.0 loads and simulates correctly on the target Windows/Java environment; a dynamic rigid body falls onto a static floor, repeated start/stop succeeds, and the debug native-allocation balance returns to zero after cleanup. |
 | P0-T05 | Complete | LWJGL OpenAL can open the default device/context, play a generated mono source with audible left/right 3D positioning, and explicitly delete the source/buffer before destroying the context/device. |
-| P0-T06 | Next | Launch two JVM processes and prove numbered UDP datagram exchange over localhost with measured RTT. |
+| P0-T06 | In progress | A two-process localhost UDP spike is implemented with numbered datagrams, echo replies, per-packet RTT logging, and short timeouts; runtime verification is still required. |
 
 ## Current experimental code
 
@@ -36,6 +36,7 @@ Current examples include:
 - `src/main/java/com/samo/spike/opengl/OpenGL46Spike.java`
 - `src/main/java/com/samo/spike/physics/JoltLifecycleSpike.java`
 - `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
+- `src/main/java/com/samo/spike/network/LocalhostUdpSpike.java`
 
 Do not infer renderer, physics, audio, networking, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
 
@@ -51,15 +52,16 @@ The current proven/selected baseline relevant to work completed so far is:
 - GLFW + OpenGL 4.6 Core for the rendering feasibility path
 - Jolt Physics through Jolt JNI for rigid-body physics feasibility
 - OpenAL through LWJGL for 3D-audio feasibility
+- Java NIO `DatagramChannel` is the active localhost UDP feasibility path under P0-T06
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate next task is **P0-T06 — Prove localhost UDP exchange**.
+The immediate task is **P0-T06 — Prove localhost UDP exchange**.
 
-This begins the networking/Steam feasibility work package. The first step is a deliberately small Java `DatagramChannel` spike using two JVM processes on localhost, numbered packets, and logged round-trip time. It is not a production transport layer.
+Runtime verification should launch two JVM processes: one server and one client. Both must report received sequence numbers, and the client must log per-packet and average RTT. The spike uses localhost only and deliberately does not implement reliability, replication, or a production transport abstraction.
 
 The production networking path remains a milestone gate: Phase 1 must not begin until that path is concrete.
 

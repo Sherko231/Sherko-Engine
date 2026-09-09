@@ -85,3 +85,35 @@ tasks.register<JavaExec>("runOpenAL3DAudioSpike") {
         providers.gradleProperty("audioSpikeDurationSeconds").orElse("10").get()
     )
 }
+
+fun JavaExec.configureUdpSpike(role: String) {
+    group = "verification"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.network.LocalhostUdpSpike"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    args(role)
+    systemProperty(
+        "spike.udpPort",
+        providers.gradleProperty("udpSpikePort").orElse("42060").get()
+    )
+    systemProperty(
+        "spike.packetCount",
+        providers.gradleProperty("udpSpikePacketCount").orElse("8").get()
+    )
+    systemProperty(
+        "spike.timeoutMillis",
+        providers.gradleProperty("udpSpikeTimeoutMillis").orElse("10000").get()
+    )
+}
+
+tasks.register<JavaExec>("runUdpSpikeServer") {
+    description = "Runs the P0-T06 localhost UDP echo server in its own JVM."
+    configureUdpSpike("server")
+}
+
+tasks.register<JavaExec>("runUdpSpikeClient") {
+    description = "Runs the P0-T06 localhost UDP RTT client in its own JVM."
+    configureUdpSpike("client")
+}

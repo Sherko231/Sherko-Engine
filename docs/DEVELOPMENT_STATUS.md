@@ -10,8 +10,8 @@
 - **Milestone:** M0 — Feasibility
 - **Phase:** P0 — Feasibility
 - **Current work package:** Networking/Steam feasibility
-- **Completed executable tasks:** P0-T01 through P0-T07
-- **Next executable task:** P0-T08 — Verify Java coverage for SteamNetworkingSockets
+- **Completed executable tasks:** P0-T01 through P0-T08
+- **Current executable task:** P0-T09 — Prove Steam flat API through Java FFM fallback
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -27,7 +27,9 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T05 | Complete | LWJGL OpenAL can open the default device/context, play a generated mono source with audible left/right 3D positioning, and explicitly delete the source/buffer before destroying the context/device. |
 | P0-T06 | Complete | Two Java JVM processes can exchange numbered UDP datagrams over localhost using `DatagramChannel`; runtime verification received 8/8 replies and logged an average RTT of 0.459 ms on the development machine. |
 | P0-T07 | Complete | Steamworks4j 1.10.0 successfully initializes Steam from Java when the Steam desktop client is running and logged in, exposes the active persona/Steam ID, receives an asynchronous callback through `SteamAPI.runCallbacks()`, and shuts down without a native crash. |
-| P0-T08 | Next | Verify whether Steamworks4j 1.10.0 exposes every `ISteamNetworkingSockets` operation required for production listen-server transport. |
+| P0-T08 | Complete — gate failed | Steamworks4j 1.10.0 does **not** expose the required `ISteamNetworkingSockets` listen-socket, connection, message, and connection-status APIs. Its `SteamNetworking` wrapper targets the older P2P session API, so it cannot be accepted as the production transport binding. |
+
+The detailed P0-T08 coverage table is recorded in `docs/feasibility/P0-T08_STEAM_NETWORKING_SOCKETS_COVERAGE.md`.
 
 ## Current experimental code
 
@@ -58,18 +60,19 @@ The current proven/selected baseline relevant to work completed so far is:
 - Java NIO `DatagramChannel` is proven for the basic localhost UDP feasibility path
 - Steamworks4j 1.10.0 is proven for basic Steam client initialization, identity access, callback pumping, and clean shutdown
 - Local Steam client integration requires the Steam desktop client to be running and logged in; otherwise initialization may fail with `NoSteamClient`
-- P0-T08 must still prove whether Steamworks4j 1.10.0 provides sufficient `ISteamNetworkingSockets` coverage for production gameplay transport
+- Steamworks4j 1.10.0 is **not sufficient** for the required `ISteamNetworkingSockets` production transport surface
+- The active fallback path is Java 25 FFM calling the official Steam flat API without authored C/C++ glue
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate next task is **P0-T08 — Verify Java coverage for SteamNetworkingSockets**.
+The immediate task is **P0-T09 — Prove Steam flat API through Java FFM fallback**.
 
-P0-T08 is a capability audit, not a networking implementation task. It must map every required listen-server transport operation to a callable Steamworks4j method: create/listen socket, outbound connect, accept connection, send messages, receive messages, and connection/status callbacks. Any missing operation must be explicitly marked unsupported.
+P0-T09 must load the official Steam redistributable through Java 25's Foreign Function & Memory API and invoke one harmless Steam flat-API networking function that returns a valid result, with no authored C/C++ glue.
 
-If P0-T08 succeeds, the production networking path is concrete enough for the Phase 0 gate. If it fails, proceed to **P0-T09**, which proves whether Java FFM can call the official Steam flat API without authored C/C++ glue.
+If P0-T09 succeeds, the project can continue evaluating the official Steam flat API as the production networking path. If it fails, proceed to **P0-T10**, which changes the hosting decision before Phase 1 begins.
 
 The production networking path remains a milestone gate: Phase 1 must not begin until that path is concrete.
 

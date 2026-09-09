@@ -10,13 +10,37 @@ assignees: ""
 
 **Task ID:** P?-T??
 **Phase:** Phase ?
-**Technical backlog link:** <!-- link to the heading/task in docs/roadmap/TECHNICAL_BACKLOG.md -->
+**Technical backlog link:** <!-- link to the task in docs/roadmap/TECHNICAL_BACKLOG.md -->
 
 ## Goal
 
 <!-- One bounded outcome. Do not paste an entire phase here. -->
 
-## Allowed scope
+## Acceptance criteria
+
+- [ ] 
+
+## Dependencies / blockers
+
+- None / #
+
+## Verification
+
+```text
+./gradlew ...
+```
+
+<!-- Add the optional sections below only when they materially reduce ambiguity or architectural risk. -->
+
+## Optional: Required tests
+
+- [ ] 
+
+## Optional: Non-goals
+
+- 
+
+## Optional: Allowed scope / architecture constraints
 
 ### Modules / files allowed to change
 
@@ -30,29 +54,6 @@ assignees: ""
 
 - 
 
-## Acceptance criteria
+## Optional: Stop condition
 
-- [ ] 
-
-## Required tests
-
-- [ ] 
-
-## Non-goals
-
-- 
-- 
-
-## Dependencies / blockers
-
-- None / #
-
-## Verification commands
-
-```text
-./gradlew ...
-```
-
-## Stop condition
-
-Stop implementation and report the architectural conflict if completing this task requires changing an interface, module boundary, protocol/layout, product-scope decision, or dependency that is not explicitly allowed above.
+Stop implementation and report the architectural conflict if completing this task requires changing an interface, module boundary, protocol/layout, product-scope decision, or dependency that is not explicitly allowed by this Issue.

@@ -5,6 +5,9 @@ build/
 !**/src/test/**/build/
 .kotlin
 
+### Native spike artifacts ###
+/joltjni.dll
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws

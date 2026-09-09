@@ -21,10 +21,12 @@ repositories {
 dependencies {
     implementation("org.lwjgl:lwjgl:$lwjglVersion")
     implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-openal:$lwjglVersion")
     implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion")
 
     runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:natives-windows")
     runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:natives-windows")
     runtimeOnly("org.lwjgl:lwjgl-opengl:$lwjglVersion:natives-windows")
 
     implementation("com.github.stephengold:jolt-jni-Windows64:$joltJniVersion")
@@ -66,5 +68,20 @@ tasks.register<JavaExec>("runJoltLifecycleSpike") {
     systemProperty(
         "spike.cycles",
         providers.gradleProperty("joltSpikeCycles").orElse("4").get()
+    )
+}
+
+tasks.register<JavaExec>("runOpenAL3DAudioSpike") {
+    group = "verification"
+    description = "Runs the P0-T05 OpenAL 3D audio lifecycle feasibility spike."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.audio.OpenAL3DAudioSpike"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    systemProperty(
+        "spike.durationSeconds",
+        providers.gradleProperty("audioSpikeDurationSeconds").orElse("10").get()
     )
 }

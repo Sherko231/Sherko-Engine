@@ -102,6 +102,19 @@ This runs all five modes sequentially. It should finish in seconds, not minutes,
 P0-T11 suite passed: all five impairment modes were observed independently.
 ```
 
+## Runtime verification
+
+Verified successfully on the target Windows development environment.
+
+Observed results from the full suite:
+
+- **Latency:** fixed `80 ms` injection was visible on every packet; minimum observed RTT was `80.623 ms`.
+- **Jitter:** deterministic variable delay was visible; observed RTT range was `15.735..67.656 ms`.
+- **Packet loss:** sequence `3` and `6` were deliberately dropped; client received `6/8` unique replies.
+- **Duplication:** sequence `4` and `8` were duplicated; client received `10` datagrams for `8` unique sequences.
+- **Reordering:** sequence `2` was held until after sequence `3`; observed receive order was `[1, 3, 2, 4, 5, 6, 7, 8]`.
+- The suite ended with `P0-T11 suite passed: all five impairment modes were observed independently.`
+
 ## Tuning
 
 Optional Gradle properties:
@@ -114,4 +127,4 @@ Optional Gradle properties:
 
 ## Acceptance
 
-P0-T11 is complete only after local runtime output proves all five modes independently and the full suite completes successfully.
+**Complete.** All five impairment modes were enabled and observed independently in a successful local runtime suite.

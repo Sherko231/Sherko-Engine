@@ -10,8 +10,8 @@
 - **Milestone:** M0 — Feasibility
 - **Phase:** P0 — Feasibility
 - **Current work package:** Networking/Steam feasibility
-- **Completed executable tasks:** P0-T01 through P0-T06
-- **Current executable task:** P0-T07 — Prove Steam initialization and callback pump
+- **Completed executable tasks:** P0-T01 through P0-T07
+- **Next executable task:** P0-T08 — Verify Java coverage for SteamNetworkingSockets
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -26,7 +26,8 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T04 | Complete | Jolt JNI 6.0.0 loads and simulates correctly on the target Windows/Java environment; a dynamic rigid body falls onto a static floor, repeated start/stop succeeds, and the debug native-allocation balance returns to zero after cleanup. |
 | P0-T05 | Complete | LWJGL OpenAL can open the default device/context, play a generated mono source with audible left/right 3D positioning, and explicitly delete the source/buffer before destroying the context/device. |
 | P0-T06 | Complete | Two Java JVM processes can exchange numbered UDP datagrams over localhost using `DatagramChannel`; runtime verification received 8/8 replies and logged an average RTT of 0.459 ms on the development machine. |
-| P0-T07 | In progress | A Steamworks4j 1.10.0 spike is implemented to initialize Steam from Java, print the active persona/Steam ID, request an asynchronous callback, pump callbacks for up to 10 seconds, dispose wrapper callbacks, and shut Steam down cleanly. Runtime verification is still required. |
+| P0-T07 | Complete | Steamworks4j 1.10.0 successfully initializes Steam from Java when the Steam desktop client is running and logged in, exposes the active persona/Steam ID, receives an asynchronous callback through `SteamAPI.runCallbacks()`, and shuts down without a native crash. |
+| P0-T08 | Next | Verify whether Steamworks4j 1.10.0 exposes every `ISteamNetworkingSockets` operation required for production listen-server transport. |
 
 ## Current experimental code
 
@@ -55,20 +56,20 @@ The current proven/selected baseline relevant to work completed so far is:
 - Jolt Physics through Jolt JNI for rigid-body physics feasibility
 - OpenAL through LWJGL for 3D-audio feasibility
 - Java NIO `DatagramChannel` is proven for the basic localhost UDP feasibility path
-- Steamworks4j 1.10.0 is the selected disposable Java Steam binding under evaluation in P0-T07/P0-T08; P0-T08 must still prove whether its `ISteamNetworkingSockets` API coverage is sufficient for production gameplay transport
+- Steamworks4j 1.10.0 is proven for basic Steam client initialization, identity access, callback pumping, and clean shutdown
+- Local Steam client integration requires the Steam desktop client to be running and logged in; otherwise initialization may fail with `NoSteamClient`
+- P0-T08 must still prove whether Steamworks4j 1.10.0 provides sufficient `ISteamNetworkingSockets` coverage for production gameplay transport
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate task is **P0-T07 — Prove Steam initialization and callback pump**.
+The immediate next task is **P0-T08 — Verify Java coverage for SteamNetworkingSockets**.
 
-The current spike uses Steamworks4j 1.10.0 with its LWJGL3 loader. For local development it generates `build/spikes/steam/steam_appid.txt` with Valve's public Spacewar test App ID (`480`); the generated file lives under `build/` and is not a project/product App ID. The runtime test must be performed with the Steam desktop client running and logged in.
+P0-T08 is a capability audit, not a networking implementation task. It must map every required listen-server transport operation to a callable Steamworks4j method: create/listen socket, outbound connect, accept connection, send messages, receive messages, and connection/status callbacks. Any missing operation must be explicitly marked unsupported.
 
-Verification must confirm that Steam initializes, the active persona/Steam ID are printed, at least one asynchronous callback is received through `SteamAPI.runCallbacks()`, and shutdown completes without a native crash. The spike deliberately does not implement lobbies, invites, gameplay transport, or replication.
-
-After P0-T07, **P0-T08** must inspect the selected binding's exact `ISteamNetworkingSockets` coverage before the engine commits to it as a production transport path.
+If P0-T08 succeeds, the production networking path is concrete enough for the Phase 0 gate. If it fails, proceed to **P0-T09**, which proves whether Java FFM can call the official Steam flat API without authored C/C++ glue.
 
 The production networking path remains a milestone gate: Phase 1 must not begin until that path is concrete.
 

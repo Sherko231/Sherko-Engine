@@ -7,6 +7,7 @@ version = "1.0-SNAPSHOT"
 
 val lwjglVersion = "3.4.3"
 val joltJniVersion = "6.0.0"
+val steamworks4jVersion = "1.10.0"
 
 java {
     toolchain {
@@ -33,6 +34,8 @@ dependencies {
     runtimeOnly("com.github.stephengold:jolt-jni-Windows64:$joltJniVersion:DebugSp")
     implementation("io.github.electrostat-lab:snaploader:1.1.1-stable")
     runtimeOnly("com.github.oshi:oshi-core:7.4.2")
+
+    implementation("com.code-disaster.steamworks4j:steamworks4j-lwjgl3:$steamworks4jVersion")
 
     testImplementation(platform("org.junit:junit-bom:6.0.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -116,4 +119,32 @@ tasks.register<JavaExec>("runUdpSpikeServer") {
 tasks.register<JavaExec>("runUdpSpikeClient") {
     description = "Runs the P0-T06 localhost UDP RTT client in its own JVM."
     configureUdpSpike("client")
+}
+
+val steamSpikeWorkingDir = layout.buildDirectory.dir("spikes/steam")
+val prepareSteamSpike by tasks.registering {
+    val appIdFile = steamSpikeWorkingDir.map { it.file("steam_appid.txt") }
+    outputs.file(appIdFile)
+    doLast {
+        val file = appIdFile.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText("480\n")
+    }
+}
+
+tasks.register<JavaExec>("runSteamInitSpike") {
+    group = "verification"
+    description = "Runs the P0-T07 Steam initialization/callback feasibility spike."
+    dependsOn(prepareSteamSpike)
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.steam.SteamInitSpike"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    workingDir(steamSpikeWorkingDir.get().asFile)
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    systemProperty(
+        "spike.timeoutSeconds",
+        providers.gradleProperty("steamSpikeTimeoutSeconds").orElse("10").get()
+    )
 }

@@ -121,6 +121,41 @@ tasks.register<JavaExec>("runUdpSpikeClient") {
     configureUdpSpike("client")
 }
 
+fun JavaExec.configureNetworkImpairmentHarness(mode: String) {
+    group = "verification"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.network.NetworkImpairmentHarness"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    args(mode)
+    systemProperty(
+        "spike.impairmentPort",
+        providers.gradleProperty("impairmentPort").orElse("42100").get()
+    )
+    systemProperty(
+        "spike.impairmentPacketCount",
+        providers.gradleProperty("impairmentPacketCount").orElse("8").get()
+    )
+    systemProperty(
+        "spike.impairmentTimeoutMillis",
+        providers.gradleProperty("impairmentTimeoutMillis").orElse("10000").get()
+    )
+}
+
+tasks.register<JavaExec>("runNetworkImpairmentHarness") {
+    description = "Runs all P0-T11 localhost network impairment modes."
+    configureNetworkImpairmentHarness("all")
+}
+
+listOf("latency", "jitter", "loss", "duplication", "reordering").forEach { mode ->
+    val taskSuffix = mode.replaceFirstChar { it.uppercase() }
+    tasks.register<JavaExec>("runNetworkImpairment$taskSuffix") {
+        description = "Runs the P0-T11 $mode-only localhost network impairment check."
+        configureNetworkImpairmentHarness(mode)
+    }
+}
+
 val steamSpikeWorkingDir = layout.buildDirectory.dir("spikes/steam")
 val prepareSteamSpike by tasks.registering {
     val appIdFile = steamSpikeWorkingDir.map { it.file("steam_appid.txt") }

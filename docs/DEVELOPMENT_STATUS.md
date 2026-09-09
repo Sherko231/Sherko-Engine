@@ -11,7 +11,7 @@
 - **Phase:** P0 — Feasibility
 - **Current work package:** Native subsystem spikes
 - **Completed executable tasks:** P0-T01 through P0-T04
-- **Next executable task:** P0-T05 — Prove OpenAL 3D audio lifecycle
+- **Current executable task:** P0-T05 — Prove OpenAL 3D audio lifecycle
 - **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
 
 Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
@@ -24,7 +24,7 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T02 | Complete | Java 25 is pinned through Gradle toolchains and used by CI. |
 | P0-T03 | Complete | LWJGL + GLFW can create the required OpenGL 4.6 Core context on the target development environment. |
 | P0-T04 | Complete | Jolt JNI 6.0.0 loads and simulates correctly on the target Windows/Java environment; a dynamic rigid body falls onto a static floor, repeated start/stop succeeds, and the debug native-allocation balance returns to zero after cleanup. |
-| P0-T05 | Next | Prove OpenAL 3D mono-source movement and device/context/source/buffer cleanup. |
+| P0-T05 | In progress | OpenAL 3D audio feasibility spike is implemented and awaiting runtime verification of audible left/right movement and clean shutdown. |
 
 ## Current experimental code
 
@@ -34,8 +34,9 @@ Current examples include:
 
 - `src/main/java/com/samo/spike/opengl/OpenGL46Spike.java`
 - `src/main/java/com/samo/spike/physics/JoltLifecycleSpike.java`
+- `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
 
-Do not infer renderer, physics, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
+Do not infer renderer, physics, audio, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
 
 > **Spikes are disposable. Conclusions are durable.**
 
@@ -48,13 +49,16 @@ The current proven/selected baseline relevant to work completed so far is:
 - LWJGL 3.4.x family for native Java bindings
 - GLFW + OpenGL 4.6 Core for the rendering feasibility path
 - Jolt Physics through Jolt JNI for rigid-body physics feasibility
+- OpenAL through LWJGL is the active 3D-audio feasibility path under P0-T05
 - Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
 
 For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
 
 ## What happens next
 
-The immediate next task is **P0-T05 — Prove OpenAL 3D audio lifecycle**.
+The immediate task is **P0-T05 — Prove OpenAL 3D audio lifecycle**.
+
+Runtime verification must confirm that a mono source moving across the listener is audibly positioned left/right and that source/buffer ownership returns to zero before the OpenAL context/device are destroyed.
 
 After the native subsystem spikes, Phase 0 continues into networking and Steam feasibility. The production networking path remains a milestone gate: Phase 1 must not begin until that path is concrete.
 

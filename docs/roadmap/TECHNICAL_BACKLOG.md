@@ -1,0 +1,373 @@
+# Sherko Engine Technical Backlog
+
+> Canonical detailed task catalog. **217 task IDs are defined here; they are not 217 active GitHub Issues.**
+>
+> Only the active roadmap phase should normally be materialized as Issues. Keep task IDs stable even when wording is refined.
+
+See [`../../ROADMAP.md`](../../ROADMAP.md) for milestone-level planning and [`../../ENGINE_SCOPE.md`](../../ENGINE_SCOPE.md) for product/architecture boundaries.
+
+## Phase 0 - Feasibility gates and irreversible decisions
+
+Goal: disprove the risky assumptions before building the engine around them.
+
+- [ ] P0-T01 Create `ENGINE_SCOPE.md` containing the exact platform, player count, hosting model, tick rates, world-size limit, minimum GPU level, and excluded features listed above. Acceptance: every field has one value; no field says “later” or “maybe.”
+- [ ] P0-T02 Install a Java 25 toolchain and pin it through Gradle toolchains. Acceptance: `javaToolchains` reports Java 25 and CI uses the same major version.
+- [ ] P0-T03 Create one LWJGL spike that opens a 1280x720 GLFW window and clears it with OpenGL 4.6 Core. Acceptance: GL debug output contains no high-severity messages for 10 minutes.
+- [ ] P0-T04 Create one Jolt JNI spike containing a static floor and one falling dynamic box. Acceptance: the box settles, all native objects are explicitly released, and repeated start/stop does not grow native memory.
+- [ ] P0-T05 Create one OpenAL spike that plays a mono sound from a moving 3D source. Acceptance: left/right positioning changes audibly and source/buffer counts return to zero on shutdown.
+- [ ] P0-T06 Launch two JVM processes and exchange numbered UDP datagrams over localhost using `DatagramChannel`. Acceptance: both processes report sequence numbers and measured round-trip time.
+- [ ] P0-T07 Initialize Steam from Java in a disposable spike and receive at least one callback. Acceptance: Steam user identity is printed and shutdown completes without a native crash.
+- [ ] P0-T08 Verify whether the selected Java Steam binding exposes the exact `ISteamNetworkingSockets` calls required for listen sockets, outbound connections, accepting connections, sending messages, receiving messages, and status callbacks. Acceptance: a written API coverage table links every required operation to a callable Java method.
+- [ ] P0-T09 If P0-T08 fails, implement a throwaway Java FFM proof that invokes one harmless Steam flat-API networking function. Acceptance: Java loads the official redistributable and receives a valid return value without authored C/C++ glue.
+- [ ] P0-T10 If P0-T09 fails, change the product decision from listen server to reachable dedicated server before proceeding. Acceptance: `ENGINE_SCOPE.md` contains the replacement topology and expected server operating cost is recorded.
+- [ ] P0-T11 Create a network impairment harness supporting configurable latency, jitter, packet loss, duplication, and reordering. Acceptance: the localhost spike observes each impairment independently.
+- [ ] P0-T12 Produce a single feasibility executable combining GLFW, OpenGL, Jolt JNI, OpenAL, and UDP. Acceptance: it starts, runs for 15 minutes, and exits cleanly under Java Flight Recorder.
+
+Exit gate: do not start Phase 1 unless P0-T08, P0-T09, or P0-T10 has produced a concrete production networking path.
+
+## Phase 1 - Build, modules, and quality gates
+
+Goal: make every later AI-generated change small, isolated, testable, and reversible.
+
+- [ ] P1-T01 Initialize a Gradle Wrapper and multi-project build with only `engine-core`, `test-support`, `game-client`, and `game-server`. Acceptance: one command compiles and tests all four modules.
+- [ ] P1-T02 Add the remaining empty modules from the target tree. Acceptance: `projects` lists every module and no circular project dependency exists.
+- [ ] P1-T03 Add a centralized dependency version catalog and dependency locking. Acceptance: clean builds resolve identical versions on two machines.
+- [ ] P1-T04 Add JUnit 5 and AssertJ to `test-support`. Acceptance: a sample unit test runs in every engine module.
+- [ ] P1-T05 Add Checkstyle with rules forbidding wildcard imports, empty catch blocks, and ignored return values where detectable. Acceptance: a deliberately invalid test file fails the check task.
+- [ ] P1-T06 Add JaCoCo reporting without enforcing an arbitrary global percentage. Acceptance: XML and HTML reports are generated in CI.
+- [ ] P1-T07 Define package roots so each Gradle module exports only its API packages. Acceptance: an architecture test rejects a game-to-platform implementation shortcut.
+- [ ] P1-T08 Add CI jobs for compile, unit tests, architecture tests, and Windows native smoke tests. Acceptance: a pull request cannot pass when any job fails.
+- [ ] P1-T09 Add client and headless-server run tasks with separate main classes. Acceptance: server starts without initializing GLFW, OpenGL, or OpenAL.
+- [ ] P1-T10 Add a reproducible `--version` command reporting engine commit, protocol version, asset version, Java version, and native-library versions. Acceptance: client and server print compatible values.
+
+Exit gate: empty client and server applications build and run through repeatable commands.
+
+## Phase 2 - Core lifecycle, time, configuration, and native ownership
+
+Goal: establish the contracts every subsystem will follow.
+
+- [ ] P2-T01 Define `EngineSubsystem` with explicit `initialize`, `start`, `stop`, and `close` phases. Acceptance: lifecycle order is unit-tested.
+- [ ] P2-T02 Implement a dependency graph that topologically sorts subsystems. Acceptance: a synthetic circular dependency fails before initialization and prints the cycle.
+- [ ] P2-T03 Implement rollback shutdown when subsystem initialization fails halfway. Acceptance: already-started test subsystems close in reverse order exactly once.
+- [ ] P2-T04 Implement `EngineClock` using a monotonic nanosecond source. Acceptance: clock tests reject negative elapsed durations.
+- [ ] P2-T05 Implement a fixed-step accumulator with 1/60-second simulation steps. Acceptance: simulated time is equal for 30, 60, 144, and irregular render-frame sequences.
+- [ ] P2-T06 Clamp a single incoming frame gap and cap catch-up steps. Acceptance: a simulated 2-second stall does not run unbounded update steps.
+- [ ] P2-T07 Expose render interpolation alpha separately from simulation delta. Acceptance: simulation always receives the fixed delta and renderer receives alpha in [0,1).
+- [ ] P2-T08 Implement typed configuration keys with defaults, bounds, source location, and validation errors. Acceptance: invalid fullscreen resolution and tick rate fail before subsystem startup.
+- [ ] P2-T09 Implement layered config loading: engine defaults, game config, user config, command-line override. Acceptance: a test verifies the exact precedence order.
+- [ ] P2-T10 Implement a native-resource registry storing resource type, allocation site, handle, and closer. Acceptance: debug shutdown fails if a test native handle remains open.
+- [ ] P2-T11 Define a per-frame allocation metric using JFR or JDK allocation events. Acceptance: a benchmark reports bytes allocated per simulation tick and render frame.
+- [ ] P2-T12 Add structured logging fields for frame, simulation tick, thread, subsystem, connection, and entity. Acceptance: a test log can be filtered by one connection ID.
+- [ ] P2-T13 Add fatal assertion behavior that writes logs and terminates only after orderly subsystem shutdown. Acceptance: assertion test closes all registered resources.
+
+Exit gate: a headless loop can run deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup.
+
+## Phase 3 - Platform and input
+
+Goal: produce stable platform events and tick-aligned player commands.
+
+- [ ] P3-T01 Implement `GlfwWindow` creation with explicit OpenGL version/profile hints. Acceptance: the actual GL version and renderer string are logged.
+- [ ] P3-T02 Handle framebuffer-size events separately from logical window-size events. Acceptance: renderer receives pixel dimensions after DPI scaling.
+- [ ] P3-T03 Implement windowed, borderless, and exclusive fullscreen transitions. Acceptance: switch modes 20 times without losing the context.
+- [ ] P3-T04 Implement focus-loss handling that releases captured cursor and clears stuck input states. Acceptance: holding a key while alt-tabbing does not leave it pressed.
+- [ ] P3-T05 Implement raw mouse motion when supported and a documented fallback when unavailable. Acceptance: mouse delta is independent of cursor screen position.
+- [ ] P3-T06 Store hardware state in `InputSnapshot` once per render frame. Acceptance: gameplay code cannot call GLFW directly.
+- [ ] P3-T07 Define data-driven input actions for move, look, jump, crouch, sprint, interact, grab, throw, primary use, pause, and push-to-talk. Acceptance: bindings load from JSON.
+- [ ] P3-T08 Implement action transitions: pressed, held, released, and analog value. Acceptance: transition tests cover one-frame taps and simultaneous bindings.
+- [ ] P3-T09 Convert input snapshots into numbered `PlayerInputCommand` records per simulation tick. Acceptance: the same command record can be serialized and replayed.
+- [ ] P3-T10 Add mouse sensitivity, Y inversion, dead zone, and controller curve settings. Acceptance: each setting has a deterministic unit test.
+
+Exit gate: an input-recording test can replay an identical sequence into the headless simulation.
+
+## Phase 4 - Math and spatial conventions
+
+Goal: prevent coordinate-system and transform bugs from spreading across renderer, physics, audio, and networking.
+
+- [ ] P4-T01 Document one coordinate convention: right-handed world, +Y up, -Z forward, meters, radians internally. Acceptance: renderer, physics, and asset conversion tests cite this document.
+- [ ] P4-T02 Use JOML mutable vectors/quaternions/matrices and forbid temporary-object arithmetic in hot loops. Acceptance: transform benchmark allocates zero heap bytes after warm-up.
+- [ ] P4-T03 Implement `Transform` with local position, local rotation, local scale, parent, dirty flag, and cached world matrix. Acceptance: parent rotation and non-uniform scale tests pass.
+- [ ] P4-T04 Detect and reject transform-parent cycles. Acceptance: assigning an entity below its descendant returns a specific error.
+- [ ] P4-T05 Implement transform dirty propagation only to descendants. Acceptance: modifying one leaf does not recompute unrelated world matrices.
+- [ ] P4-T06 Implement ray, plane, sphere, AABB, and frustum primitives. Acceptance: edge/contact/inside/outside tests cover each primitive.
+- [ ] P4-T07 Implement screen-to-world ray construction from camera matrices. Acceptance: the center pixel produces the camera forward ray within tolerance.
+- [ ] P4-T08 Implement view and perspective projection construction with documented near/far planes and depth convention. Acceptance: known points map to expected normalized device coordinates.
+- [ ] P4-T09 Implement transform network quantization helpers without integrating networking yet. Acceptance: position and quaternion round-trip errors stay below written tolerances.
+
+Exit gate: spatial tests pass independently of OpenGL and Jolt.
+
+## Phase 5 - Rendering foundation
+
+Goal: render a stable, inspectable 3D room without game or physics dependencies.
+
+- [ ] P5-T01 Enable the OpenGL debug callback in debug builds and promote high-severity messages to test failures. Acceptance: an intentional invalid call is captured with source and type.
+- [ ] P5-T02 Enforce render-thread ownership for every OpenGL wrapper. Acceptance: a GPU call from a worker thread throws before entering OpenGL.
+- [ ] P5-T03 Implement explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Acceptance: every wrapper is idempotently closeable and registered for leak detection.
+- [ ] P5-T04 Implement persistent or orphaned dynamic buffer upload after benchmarking both choices on the target GPU. Acceptance: selected path and benchmark result are recorded.
+- [ ] P5-T05 Implement offline GLSL compilation/validation in the build and runtime program-link validation. Acceptance: a broken shader fails before the game enters its loop.
+- [ ] P5-T06 Define camera and per-frame uniform blocks with fixed binding indices. Acceptance: shader reflection test verifies size and binding consistency.
+- [ ] P5-T07 Render one indexed static mesh with depth testing and back-face culling. Acceptance: RenderDoc shows one expected indexed draw and no validation/debug error.
+- [ ] P5-T08 Implement sRGB framebuffer output and sRGB texture sampling rules. Acceptance: a reference gray texture matches expected linear-space output within screenshot tolerance.
+- [ ] P5-T09 Implement a material record containing shader variant, textures, scalar parameters, blend mode, depth mode, and cull mode. Acceptance: two materials render the same mesh differently without branching on entity type.
+- [ ] P5-T10 Implement render submission as immutable per-frame packets built from world state. Acceptance: renderer has no dependency on gameplay component classes.
+- [ ] P5-T11 Implement CPU frustum culling using world AABBs. Acceptance: debug counters prove off-camera meshes generate no draw submission.
+- [ ] P5-T12 Sort opaque draws by program/material/mesh and transparent draws back-to-front. Acceptance: a capture confirms order for a controlled scene.
+- [ ] P5-T13 Implement one directional light and cascades are explicitly excluded; use a single shadow map first. Acceptance: moving geometry casts and receives a stable shadow.
+- [ ] P5-T14 Add point and spot lights with a strict configurable maximum per frame. Acceptance: exceeding the maximum logs one bounded warning and does not corrupt buffers.
+- [ ] P5-T15 Add fog, tonemapping, gamma, and a minimal post-process pass. Acceptance: every effect can be disabled independently through config.
+- [ ] P5-T16 Add debug line, AABB, sphere, ray, and text counters. Acceptance: physics and networking modules can submit debug primitives through an interface without importing OpenGL.
+- [ ] P5-T17 Add a first-person view-model render layer with separate FOV/depth handling. Acceptance: held hands/tools do not clip through nearby world geometry.
+
+Exit gate: a textured room with lighting, shadows, fog, debug geometry, and a view model renders without gameplay code.
+
+## Phase 6 - Asset pipeline and resource lifetime
+
+Goal: remove source-format parsing and raw file paths from runtime gameplay.
+
+- [ ] P6-T01 Define `AssetId` as a stable 128-bit identifier independent of file path. Acceptance: moving a source file does not change references after metadata moves with it.
+- [ ] P6-T02 Define versioned source metadata for mesh, texture, material, skeleton, animation, audio, prefab, and scene assets. Acceptance: unknown versions fail with an upgrade-required message.
+- [ ] P6-T03 Implement a command-line asset cooker with one input directory and one output cache. Acceptance: clean cooking produces a manifest and nonzero cooked files.
+- [ ] P6-T04 Import glTF meshes through Assimp in the cooker. Acceptance: positions, normals, tangents, UVs, and indices match a known reference asset.
+- [ ] P6-T05 Convert imported coordinates and units into the engine convention exactly once during cooking. Acceptance: a one-meter reference cube has a one-meter engine AABB.
+- [ ] P6-T06 Generate missing tangents and reject meshes missing required UVs for tangent-space materials. Acceptance: errors include asset path and mesh name.
+- [ ] P6-T07 Cook vertex/index streams into a documented binary schema with magic, schema version, counts, bounds, and checksum. Acceptance: corrupted payload is rejected before GPU upload.
+- [ ] P6-T08 Decode PNG/JPEG only in the cooker and generate mip chains. Acceptance: runtime loads the cooked texture without invoking image decoding.
+- [ ] P6-T09 Cook mono/stereo audio metadata and Vorbis payloads with validated sample rate/channel count. Acceptance: a malformed source is rejected by the cooker.
+- [ ] P6-T10 Build a dependency graph from materials to textures/shaders and scenes/prefabs to their assets. Acceptance: recooking a texture invalidates only affected dependents.
+- [ ] P6-T11 Implement `ResourceHandle<T>` with loading, ready, failed, and released states. Acceptance: gameplay cannot obtain an untyped native handle.
+- [ ] P6-T12 Implement fallback mesh, texture, material, and sound assets. Acceptance: missing content yields visible/audible fallback and a structured error instead of a crash.
+- [ ] P6-T13 Implement asynchronous file read/decompression but perform GPU upload on the render thread. Acceptance: loading a large mesh does not call OpenGL off-thread.
+- [ ] P6-T14 Add development hot reload for shader and material assets only. Acceptance: a material edit appears without restarting and failed reload preserves the prior valid resource.
+
+Exit gate: the runtime starts using only a cooked asset directory and manifest.
+
+## Phase 7 - World, entities, components, prefabs, and scenes
+
+Goal: create a data-driven gameplay foundation without a monolithic inheritance tree.
+
+- [ ] P7-T01 Implement a generational `EntityId(index,generation)`. Acceptance: destroying and reusing an index never makes an old ID valid.
+- [ ] P7-T02 Implement one packed component store keyed by entity index. Acceptance: add/get/remove/iteration and stale-ID tests pass.
+- [ ] P7-T03 Add deferred structural commands for entity/component creation and removal during iteration. Acceptance: a system can destroy its current entity without corrupting iteration.
+- [ ] P7-T04 Define fixed world update phases: input, pre-physics, physics, post-physics, gameplay, replication capture, presentation extraction. Acceptance: phase order is asserted in a test.
+- [ ] P7-T05 Implement `TransformComponent`, `NameComponent`, `MeshRendererComponent`, `CameraComponent`, and `AudioEmitterComponent`. Acceptance: a scene creates each entirely from data.
+- [ ] P7-T06 Separate stable authoring GUIDs from transient runtime entity IDs. Acceptance: saving and reloading resolves cross-entity references after runtime IDs change.
+- [ ] P7-T07 Define scene JSON with schema version, entity GUID, parent GUID, and versioned component objects. Acceptance: load-save-load preserves semantic equality.
+- [ ] P7-T08 Reject unknown required components while preserving or warning on unknown optional editor data. Acceptance: behavior is covered by fixtures.
+- [ ] P7-T09 Define prefab JSON with nested prefabs and explicit property overrides. Acceptance: changing the prefab updates non-overridden instance values.
+- [ ] P7-T10 Detect circular prefab references before instantiation. Acceptance: error prints the complete reference chain.
+- [ ] P7-T11 Implement scene load into a temporary world followed by atomic activation. Acceptance: a failed scene load leaves the current world unchanged.
+- [ ] P7-T12 Implement a bounded event queue with typed event IDs and explicit payload codecs. Acceptance: event overflow is observable and cannot grow memory without limit.
+- [ ] P7-T13 Add a world query API for component combinations used by renderer, physics, and audio. Acceptance: these systems do not depend on game-specific entity subclasses.
+
+Exit gate: a JSON scene instantiates a complete rendered room through components and stable asset IDs.
+
+## Phase 8 - Physics and local interaction
+
+Goal: create the local physics sandbox that networking must later reproduce.
+
+- [ ] P8-T01 Wrap Jolt JNI initialization/shutdown behind `PhysicsBackend`. Acceptance: `engine-world` contains no Jolt imports.
+- [ ] P8-T02 Define collision layers for static world, player, dynamic prop, trigger, held prop, enemy, and projectile/query. Acceptance: a collision matrix test covers every pair.
+- [ ] P8-T03 Implement box, sphere, capsule, convex hull, and static triangle-mesh shape assets. Acceptance: dynamic triangle meshes are rejected unless explicitly supported.
+- [ ] P8-T04 Cook convex hull and static mesh collision in the asset cooker. Acceptance: runtime never constructs large static mesh shapes from raw vertices.
+- [ ] P8-T05 Implement rigid-body creation from `RigidBodyComponent` and `ColliderComponent`. Acceptance: static, dynamic, and kinematic examples match their declared behavior.
+- [ ] P8-T06 Establish one-way ownership rules: kinematic transform drives physics; dynamic physics drives transform after each step. Acceptance: no entity is written both ways in one tick.
+- [ ] P8-T07 Step physics only from the fixed simulation phase. Acceptance: changing render FPS does not change a recorded drop test beyond tolerance.
+- [ ] P8-T08 Queue contact begin, persist, and end events without mutating the world inside native callbacks. Acceptance: callback stress test produces no concurrent modification.
+- [ ] P8-T09 Implement raycast, shape cast, overlap, and ground-probe query APIs with reusable result buffers. Acceptance: hot query benchmark allocates zero heap bytes.
+- [ ] P8-T10 Implement a `CharacterMotor` using the supported Jolt character-controller approach. Acceptance: walk, jump, slope limit, stair step, ceiling, and moving-platform fixtures pass.
+- [ ] P8-T11 Implement interaction targeting using a camera ray plus short-radius shape cast. Acceptance: thin and slightly off-center objects remain selectable without selecting through walls.
+- [ ] P8-T12 Implement grab as a configurable physical constraint to a hand target. Acceptance: the held body keeps collision and has maximum force/distance limits.
+- [ ] P8-T13 Implement release and throw using server-ready intent parameters: target entity and normalized charge, not arbitrary client force. Acceptance: identical commands produce bounded forces.
+- [ ] P8-T14 Implement pushable buttons, hinged doors, and breakable constraints through reusable components. Acceptance: none of these require a renderer-specific or object-name branch.
+- [ ] P8-T15 Add Jolt body/shape/constraint leak accounting. Acceptance: loading and unloading the sandbox 100 times returns counts to baseline.
+
+Exit gate: one local player can traverse a room, grab/throw props, open doors, press buttons, and trigger collision sounds.
+
+## Phase 9 - Local first-person vertical slice
+
+Goal: prove the engine can support the intended game before network complexity is added.
+
+- [ ] P9-T01 Split player logic into input source, controller, character motor, camera, interactor, hands, status, and presentation components/services. Acceptance: no `Player` class owns all responsibilities.
+- [ ] P9-T02 Implement camera yaw on the body and pitch on a camera pivot with clamped pitch. Acceptance: physics capsule never inherits camera pitch.
+- [ ] P9-T03 Add crouch with clearance validation before standing. Acceptance: player cannot stand into a ceiling.
+- [ ] P9-T04 Add sprint as a validated movement mode, not a direct position multiplier. Acceptance: diagonal movement does not exceed target speed.
+- [ ] P9-T05 Implement camera bob, sway, shake, and landing response as presentation-only effects. Acceptance: disabling presentation does not change authoritative position.
+- [ ] P9-T06 Implement `InteractableComponent` with supported verbs and server-validatable range/line-of-sight rules. Acceptance: interaction test rejects occluded and out-of-range targets.
+- [ ] P9-T07 Implement an inventory with explicit slot count and stable item asset IDs. Acceptance: duplicate pickup and drop paths preserve exactly one item instance.
+- [ ] P9-T08 Implement downed, revive, respawn, and team-wipe states as a state machine. Acceptance: every transition and illegal transition is tested.
+- [ ] P9-T09 Implement one cooperative objective requiring two distinct interactions. Acceptance: objective completion is driven by component state/events, not level object names.
+- [ ] P9-T10 Add deterministic input recording and local replay for the vertical slice. Acceptance: replay reaches the same non-physics gameplay states and records physics divergence metrics.
+
+Exit gate: a five-minute local level demonstrates movement, props, one cooperative objective, failure, and restart.
+
+## Phase 10 - Network transport and protocol
+
+Goal: build a transport-independent, bounded protocol before replicating gameplay.
+
+- [ ] P10-T01 Define `GameTransport` for listen, connect, poll events, send with `RELIABLE_ORDERED` or `UNRELIABLE_SEQUENCED`, disconnect, and close. Acceptance: loopback, IP-development, and eventual Steam implementations pass the same contract tests.
+- [ ] P10-T02 Implement in-memory loopback transport with separate client/server queues. Acceptance: tests can run a complete session without sockets or sleeping.
+- [ ] P10-T03 Implement a nonblocking development IP transport with one selector thread owning `ServerSocketChannel`/`SocketChannel` for reliable traffic and `DatagramChannel` for time-sensitive traffic. Acceptance: simulation thread never blocks on socket I/O.
+- [ ] P10-T04 Define the UDP header fields: protocol magic, protocol version, connection ID, packet sequence, flags, and payload length; define a separate length-prefixed TCP frame. Acceptance: golden-byte tests fix byte order and exact layouts.
+- [ ] P10-T05 Reject wrong magic, unsupported version, unknown connection, undersized headers, oversized frames/datagrams, and declared-length mismatch before payload parsing. Acceptance: fuzz corpus causes no uncaught exception or allocation explosion.
+- [ ] P10-T06 Implement sequence-number wrap comparison. Acceptance: tests cover the full wrap boundary.
+- [ ] P10-T07 Implement unreliable-sequenced messages for snapshots. Acceptance: older messages arriving late are dropped.
+- [ ] P10-T08 Map reliable-ordered messages to framed TCP in the development IP adapter and to the transport-provided reliable mode in SteamNetworkingSockets. Acceptance: control messages arrive once and in order without implementing a second reliability layer over Steam.
+- [ ] P10-T09 Bound each connection's inbound queue, outbound reliable queue, outbound unreliable queue, TCP frame size, UDP datagram size, and total queued bytes. Acceptance: malicious enqueue attempts cannot grow memory beyond configured limits.
+- [ ] P10-T10 Implement handshake states with nonce/cookie, protocol version, build version, player identity, and explicit rejection reason. Acceptance: replayed or mismatched handshakes are rejected.
+- [ ] P10-T11 Implement timeout, keepalive, graceful disconnect, and abrupt-loss transitions. Acceptance: all state transitions are covered under the impairment harness.
+- [ ] P10-T12 Implement client/server clock offset and RTT estimation without changing the JVM wall clock. Acceptance: synthetic delay changes converge within documented error.
+- [ ] P10-T13 Implement packet capture to a versioned debug file with sensitive tokens excluded. Acceptance: a captured session can be decoded offline.
+- [ ] P10-T14 Expose live transport metrics: RTT, loss, jitter, bytes/sec, packets/sec, reliable backlog, and dropped queue count. Acceptance: impairment settings produce corresponding metric changes.
+
+Exit gate: four clients remain connected to one server for 60 minutes under 100 ms latency, 20 ms jitter, 2% loss, and 0.2% reordering.
+
+## Phase 11 - Replication and join-in-progress
+
+Goal: reproduce authoritative world state without coupling every component to socket code.
+
+- [ ] P11-T01 Define a session-scoped `NetworkEntityId` allocator owned only by the server. Acceptance: clients cannot allocate authoritative IDs.
+- [ ] P11-T02 Define `ReplicationDescriptor` per replicated component with explicit field codecs and schema version. Acceptance: adding a non-replicated Java field does not silently change the wire format.
+- [ ] P11-T03 Implement authoritative spawn containing prefab ID, network entity ID, owner ID, initial transform, and initial replicated state. Acceptance: duplicate spawn is idempotent.
+- [ ] P11-T04 Implement despawn with tombstone retention long enough to reject late updates. Acceptance: reordered state cannot resurrect a destroyed entity.
+- [ ] P11-T05 Capture world snapshots only after the fixed tick completes. Acceptance: one snapshot never mixes pre- and post-physics state.
+- [ ] P11-T06 Implement per-connection baselines and delta encoding. Acceptance: unchanged entities produce no component payload after acknowledgement.
+- [ ] P11-T07 Quantize positions, velocities, rotations, and normalized values with documented ranges. Acceptance: out-of-range values clamp or fail explicitly and round-trip error is tested.
+- [ ] P11-T08 Implement relevance by scene plus distance with an always-relevant set for players/objectives. Acceptance: distant props stop consuming bandwidth while objectives remain visible.
+- [ ] P11-T09 Implement replication priority using player, interacting/awake body, nearby body, sleeping body, and cosmetic tiers. Acceptance: a bandwidth cap drops low-priority updates first.
+- [ ] P11-T10 Implement dormancy for unchanged/sleeping entities and wake notification. Acceptance: sleeping prop sends no recurring state and wakes correctly after collision.
+- [ ] P11-T11 Define RPC direction and reliability in a registry. Acceptance: client cannot invoke server-to-client-only RPCs and unknown IDs disconnect or reject safely.
+- [ ] P11-T12 Add monotonically increasing event IDs for non-idempotent cosmetic events. Acceptance: duplicate packets do not replay the same impact sound/effect twice.
+- [ ] P11-T13 Implement join-in-progress as world header, required asset manifest hash, initial spawn set, full baseline, then live deltas. Acceptance: a fourth client joins a running session without pausing existing players.
+- [ ] P11-T14 Reject join when protocol or cooked-asset manifest hashes differ. Acceptance: the client receives a human-readable incompatibility reason.
+
+Exit gate: four clients see consistent spawn/despawn, players, doors, buttons, objective state, and sleeping/awake props.
+
+## Phase 12 - Prediction, reconciliation, interpolation, and physics correction
+
+Goal: make the co-op game playable on real networks rather than only on localhost.
+
+- [ ] P12-T01 Send numbered input commands containing tick, move axes, view angles, action bits, and acknowledged server tick. Acceptance: codec golden test fixes exact fields and bounds.
+- [ ] P12-T02 Process inputs only on the server and reject impossible tick jumps, input ranges, and command rates. Acceptance: malformed input cannot create movement or unbounded queues.
+- [ ] P12-T03 Predict only the owning player's character motor on the client. Acceptance: non-owned characters never consume local input.
+- [ ] P12-T04 Store a bounded ring of predicted states and input commands. Acceptance: memory usage is constant over a one-hour run.
+- [ ] P12-T05 Reconcile to server state and replay only commands newer than the acknowledged input. Acceptance: induced error converges and replay count is observable.
+- [ ] P12-T06 Separate authoritative transform from smoothed presentation transform. Acceptance: smoothing never changes collision queries or server state.
+- [ ] P12-T07 Implement a timestamped interpolation buffer for remote players. Acceptance: 20 Hz snapshots render smoothly at 144 Hz under jitter.
+- [ ] P12-T08 Bound interpolation delay and extrapolation duration. Acceptance: a stalled connection freezes gracefully instead of extrapolating indefinitely.
+- [ ] P12-T09 Interpolate remote rigid bodies using position, orientation, linear velocity, and angular velocity. Acceptance: rotating thrown props do not visibly step between snapshots.
+- [ ] P12-T10 Define server-only authority for dynamic props. Acceptance: clients can request impulses/interactions but cannot submit authoritative transforms.
+- [ ] P12-T11 Add local visual prediction for the currently held prop while preserving a separate authoritative physics body. Acceptance: correction is smooth and release uses authoritative velocity.
+- [ ] P12-T12 Implement snap-versus-smooth correction thresholds for props. Acceptance: large penetrations snap; small errors converge without oscillation.
+- [ ] P12-T13 Replicate body sleep/wake state and suppress interpolation while sleeping. Acceptance: sleeping objects remain visually stationary without continuous packets.
+- [ ] P12-T14 Add server rewind only if the game introduces latency-sensitive hitscan. Acceptance: if absent, the task is explicitly marked not applicable instead of implementing unused complexity.
+- [ ] P12-T15 Run the vertical slice at 0/50/100/150/200 ms latency and 0/1/2/5% loss. Acceptance: a written matrix records movement error, correction frequency, prop error, bandwidth, and disconnects.
+
+Exit gate: the grab-and-throw vertical slice remains playable at 100 ms RTT and 2% packet loss.
+
+## Phase 13 - Steam session and production transport
+
+Goal: replace manual endpoints with a real invite/join flow without mixing Steam concepts into gameplay.
+
+- [ ] P13-T01 Implement `OnlineServices` separately from `GameTransport`. Acceptance: offline/LAN mode runs with a null online-services implementation.
+- [ ] P13-T02 Pump Steam callbacks at a documented point in the client loop. Acceptance: callback delay remains bounded while rendering is throttled or unfocused.
+- [ ] P13-T03 Implement create-lobby with owner, build version, protocol version, mode, map, slots, and joinable state. Acceptance: another Steam account can discover compatible metadata.
+- [ ] P13-T04 Implement lobby search filters for compatible build, open slots, and region/distance policy. Acceptance: incompatible lobbies never appear as joinable.
+- [ ] P13-T05 Implement invite acceptance when the game is closed and when already running. Acceptance: both routes reach the same lobby-join state machine.
+- [ ] P13-T06 Implement ready/unready and owner-only launch arbitration. Acceptance: non-owner launch requests are rejected.
+- [ ] P13-T07 Implement lobby-to-transport handoff using the Phase 0 validated route. Acceptance: no public IP or secret token is stored in public lobby metadata.
+- [ ] P13-T08 If using SteamNetworkingSockets, map Steam connection callbacks into `GameTransport` without exposing Steam types above the adapter. Acceptance: replication contract tests run over the Steam adapter.
+- [ ] P13-T09 If using dedicated servers, implement allocation/address retrieval and Steam authentication before connecting. Acceptance: an unauthenticated client cannot enter the world.
+- [ ] P13-T10 Handle host disconnect with an explicit return-to-lobby result; host migration remains excluded from v1. Acceptance: clients do not hang or keep simulating an ownerless world.
+- [ ] P13-T11 Add Steam-offline error paths for initialization failure, overlay absence, invite failure, and relay unavailability. Acceptance: each path has a user-facing message and clean shutdown.
+
+Exit gate: four remote Steam accounts can invite, join, ready, launch, play, disconnect, and return to menu.
+
+## Phase 14 - Audio, animation, and AI required by the genre
+
+Goal: add presentation and server-driven behaviors after network correctness exists.
+
+### Audio
+
+- [ ] P14-T01 Implement OpenAL device/context lifecycle and capability logging. Acceptance: device loss produces a controlled mute/error state rather than a crash.
+- [ ] P14-T02 Implement pooled 3D sources with distance attenuation and priority stealing. Acceptance: exceeding source count steals the lowest-priority inaudible source.
+- [ ] P14-T03 Update listener pose from presentation camera and source pose from interpolated presentation transforms. Acceptance: network corrections do not create abrupt audio teleport artifacts.
+- [ ] P14-T04 Define data-driven audio events with random clips, pitch range, gain range, cooldown, and concurrency limit. Acceptance: repeated prop impacts vary but cannot create an audio storm.
+- [ ] P14-T05 Trigger authoritative gameplay sounds from replicated events and local cosmetic sounds from prediction with deduplication. Acceptance: owner hears one interaction sound after confirmation, not two.
+
+### Animation
+
+- [ ] P14-T06 Cook skeleton hierarchy, inverse bind matrices, animation clips, and skin weights from glTF. Acceptance: reference bind pose renders without deformation.
+- [ ] P14-T07 Implement CPU pose sampling and two-clip crossfade. Acceptance: a walk-to-idle fixture has continuous transforms.
+- [ ] P14-T08 Upload skin matrices through a bounded GPU buffer. Acceptance: oversized skeletons fail with a clear asset-cook error.
+- [ ] P14-T09 Separate first-person arms/view-model animation from third-person replicated body animation. Acceptance: remote clients never render the owner's first-person-only mesh.
+- [ ] P14-T10 Implement hand IK target from the held item's authored grip points. Acceptance: two differently sized props align both hands without item-specific player code.
+- [ ] P14-T11 Add ragdoll activation, authoritative server state, and recovery transition only after ordinary prop replication is stable. Acceptance: ragdoll bandwidth and correction error are measured under impairment.
+
+### AI/navigation
+
+- [ ] P14-T12 Integrate Recast4j only in the cooker/editor to generate navmesh data. Acceptance: runtime loads cooked navmesh without rebuilding it.
+- [ ] P14-T13 Implement server-only navmesh queries and path following. Acceptance: clients receive AI state but never decide authoritative paths.
+- [ ] P14-T14 Implement perception with explicit vision cone, distance, occlusion ray, hearing event radius, and memory timeout. Acceptance: each sensor has isolated fixtures.
+- [ ] P14-T15 Implement a small explicit AI state machine: idle, investigate, chase, interact/attack, recover. Acceptance: transitions are logged and replayable from recorded stimuli.
+
+Exit gate: remote player animation, hand IK, collision audio, one server-controlled enemy, and optional ragdoll work in the network test map.
+
+## Phase 15 - Editor and debugging tools
+
+Goal: make content creation and diagnosis possible without editing JSON and logs manually.
+
+- [ ] P15-T01 Integrate imgui-java with GLFW/OpenGL input capture. Acceptance: UI focus prevents accidental player input while the editor is active.
+- [ ] P15-T02 Add world hierarchy filtered by name, component, and network ID. Acceptance: selecting an entry highlights the exact render and physics entity.
+- [ ] P15-T03 Add inspectors for every v1 component using explicit editor adapters, not Java reflection over arbitrary fields. Acceptance: invalid values show validation errors before applying.
+- [ ] P15-T04 Add local/world transform editing with undo/redo command objects. Acceptance: 100 undo/redo cycles reproduce the original transform.
+- [ ] P15-T05 Add asset browser showing asset ID, source, cooked status, dependencies, and load state. Acceptance: broken references navigate to the missing asset record.
+- [ ] P15-T06 Add prefab create/apply/revert and override visualization. Acceptance: override state survives scene save/reload.
+- [ ] P15-T07 Add play mode by cloning authoring world into a runtime world. Acceptance: runtime destruction does not modify the saved editor scene.
+- [ ] P15-T08 Add physics visualization for shapes, contacts, constraints, sleeping bodies, and collision layers. Acceptance: visualization is removable from release builds.
+- [ ] P15-T09 Add network panel for connections, RTT, jitter, loss, bandwidth, reliable backlog, relevant entities, and per-entity bytes. Acceptance: top bandwidth users can be identified during play.
+- [ ] P15-T10 Add an in-game command console with typed argument validation and authority restrictions. Acceptance: client cannot execute server-only mutation commands.
+- [ ] P15-T11 Add frame timing panel splitting simulation, physics, replication, render extraction, GPU, audio, and GC/allocation. Acceptance: a deliberate delay appears under the correct subsystem.
+- [ ] P15-T12 Add deterministic test-scene launch arguments for map, player count, impairment profile, and scripted inputs. Acceptance: one CI command reproduces the multiplayer physics test.
+
+Exit gate: a developer can construct the test level, inspect entities, diagnose physics/networking, and reproduce a failure without source edits.
+
+## Phase 16 - Production hardening and release gate
+
+Goal: turn the engine slice into a shippable base rather than a permanent prototype.
+
+- [ ] P16-T01 Define CPU frame budgets for 60 Hz and GPU budget for target hardware. Acceptance: automated performance scene reports pass/fail per subsystem.
+- [ ] P16-T02 Record JFR allocation profiles for menu, level load, quiet gameplay, prop chaos, and disconnect/reconnect. Acceptance: unexpected per-tick allocations have owners or documented exceptions.
+- [ ] P16-T03 Run RenderDoc captures for shadow, opaque, transparent, post-process, UI, and view-model passes. Acceptance: redundant clears, invalid resources, and obvious state churn are removed or recorded.
+- [ ] P16-T04 Implement bounded pools only where profiling proves allocation or native churn. Acceptance: each pool cites a before/after benchmark; speculative pools are rejected.
+- [ ] P16-T05 Add protocol fuzzing for every packet decoder with maximum length/depth/count limits. Acceptance: one million malformed inputs cause no crash or unbounded memory use.
+- [ ] P16-T06 Validate every client action on the server: rate, range, ownership, line of sight, state, cooldown, and payload bounds. Acceptance: a test exists for each rejected rule.
+- [ ] P16-T07 Run 4-client soak tests for 8 hours with periodic join/leave, scene restart, prop spawning, and impairment. Acceptance: native handles, heap, direct memory, entity count, and reliable backlog return to baselines.
+- [ ] P16-T08 Test compatibility on at least NVIDIA, AMD, and Intel GPUs that meet the declared minimum. Acceptance: known driver workarounds are capability-gated, not vendor-wide guesses.
+- [ ] P16-T09 Create a custom runtime image with only required Java modules. Acceptance: game runs on a Windows machine with no Java installation.
+- [ ] P16-T10 Package client with `jpackage`, native DLLs, cooked assets, licenses, and crash/log directory rules. Acceptance: installation and uninstall work from a clean VM.
+- [ ] P16-T11 Package a separate headless server image with no graphics/audio natives. Acceptance: dependency inspection confirms it cannot initialize client subsystems.
+- [ ] P16-T12 Add save/settings migration with schema version and atomic temp-file replacement. Acceptance: interrupted writes preserve the previous valid settings.
+- [ ] P16-T13 Freeze engine API v1 only after the network vertical slice ships internally. Acceptance: public engine packages and compatibility policy are documented.
+
+Final release gate:
+
+1. Four Steam users can form a lobby and launch a session.
+2. All players move responsively at 100 ms RTT and 2% packet loss.
+3. Two players can contend for, grab, carry, throw, and collide the same prop without permanent divergence.
+4. A late joiner receives the correct world, objective, player, door, and prop state.
+5. Host departure returns everyone to a defined state.
+6. Eight-hour soak test has no monotonic heap, direct-memory, native-handle, entity, or reliable-queue growth.
+7. Client is distributed with its JVM; players do not install Java separately.
+
+## 5. Rule for AI-generated tasks
+
+Give the coding agent exactly one task ID at a time. Every task prompt must include:
+
+1. Allowed modules and files.
+2. Interfaces it may change.
+3. Interfaces it must not change.
+4. Required tests from the acceptance criterion.
+5. Explicit non-goals.
+6. Commands used to verify the result.
+7. A requirement to stop if the task needs an undeclared architectural change.
+
+Do not ask an agent to “implement Phase 8” or “build networking.” A valid task is closer to: “Implement P10-T06 sequence-number wrap comparison in `engine-network-api`; add exhaustive boundary tests; do not change packet layout or socket code.”

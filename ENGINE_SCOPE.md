@@ -20,9 +20,6 @@ This document is the product and architecture boundary for the roadmap. Changes 
 | World size | Small/medium complete-scene levels; no seamless open-world streaming in v1 |
 | Authoring interchange | glTF 2.0 |
 | Runtime assets | Cooked engine-specific formats |
-| Minimum GPU | **UNLOCKED — must be chosen in P0-T01 before Phase 1** |
-
-The minimum GPU is intentionally not invented here. The source roadmap requires one, but did not actually specify it. `P0-T01` is therefore not complete until a concrete minimum GPU is selected.
 
 ## Baseline technology choices
 

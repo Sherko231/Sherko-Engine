@@ -7,15 +7,14 @@
 
 ## Current position
 
-- **Milestone:** M0 — Feasibility
-- **Phase:** P0 — Feasibility
-- **Current work package:** Native/network feasibility
-- **Completed executable tasks:** P0-T01 through P0-T09 and P0-T11
-- **Skipped conditional task:** P0-T10 — not required because P0-T09 succeeded
-- **Current executable task:** P0-T12 — Run integrated native feasibility soak
-- **Production engine architecture:** not started yet; Phase 0 code is primarily feasibility work
+- **Milestone:** M1 — Engine Foundation
+- **Phase:** P1 — Build, modules, and quality gates
+- **Current work package:** Multi-project Gradle foundation
+- **M0 / Phase 0:** complete; exit gate passed
+- **Current executable task:** P1-T01 — Initialize multi-project Gradle build (Issue #31)
+- **Production engine architecture:** beginning with build/module boundaries; Phase 0 spike code remains temporary feasibility evidence
 
-Phase 0 exists to disprove risky native, rendering, physics, audio, networking, and Steam assumptions before permanent engine architecture depends on them.
+Phase 0 successfully discharged the major native, Steam, and networking feasibility risks that blocked foundation work. Phase 1 now establishes the project structure and quality boundaries that later engine code will depend on.
 
 ## Proven so far
 
@@ -27,12 +26,14 @@ Phase 0 exists to disprove risky native, rendering, physics, audio, networking, 
 | P0-T04 | Complete | Jolt JNI 6.0.0 loads and simulates correctly on the target Windows/Java environment; a dynamic rigid body falls onto a static floor, repeated start/stop succeeds, and the debug native-allocation balance returns to zero after cleanup. |
 | P0-T05 | Complete | LWJGL OpenAL can open the default device/context, play a generated mono source with audible left/right 3D positioning, and explicitly delete the source/buffer before destroying the context/device. |
 | P0-T06 | Complete | Two Java JVM processes can exchange numbered UDP datagrams over localhost using `DatagramChannel`; runtime verification received 8/8 replies and logged an average RTT of 0.459 ms on the development machine. |
-| P0-T07 | Complete | Steamworks4j 1.10.0 successfully initializes Steam from Java when the Steam desktop client is running and logged in, exposes the active persona/Steam ID, receives an asynchronous callback through `SteamAPI.runCallbacks()`, and shuts down without a native crash. |
-| P0-T08 | Complete — gate failed | Steamworks4j 1.10.0 does **not** expose the required `ISteamNetworkingSockets` listen-socket, connection, message, and connection-status APIs. Its `SteamNetworking` wrapper targets the older P2P session API, so it cannot be accepted as the production transport binding. |
-| P0-T09 | Complete | Java 25 FFM successfully loaded the official `steam_api64.dll`, initialized Steam through `SteamAPI_InitFlat`, resolved `SteamAPI_SteamNetworkingSockets_SteamAPI_v012`, obtained a non-null `ISteamNetworkingSockets` pointer, called `SteamAPI_ISteamNetworkingSockets_InitAuthentication`, received the valid result `Attempting`, and shut down cleanly without authored C/C++ glue. |
+| P0-T07 | Complete | Steamworks4j 1.10.0 successfully initializes Steam from Java when the Steam desktop client is running and logged in, receives asynchronous callbacks, and shuts down without a native crash. |
+| P0-T08 | Complete — gate failed | Steamworks4j 1.10.0 does **not** expose the required `ISteamNetworkingSockets` listen-socket, connection, message, and connection-status APIs; its older P2P wrapper is not sufficient as the production transport binding. |
+| P0-T09 | Complete | Java 25 FFM successfully loaded the official `steam_api64.dll`, initialized Steam through `SteamAPI_InitFlat`, obtained a non-null `ISteamNetworkingSockets` pointer, called the flat networking API, and received a valid result without authored C/C++ glue. |
 | P0-T10 | Not required | The dedicated-server fallback trigger did not fire because P0-T09 established a viable Java-to-Steam flat-API path. |
-| P0-T11 | Complete | The localhost UDP impairment harness successfully injected and independently observed fixed latency, variable jitter, deterministic packet loss, duplication, and reordering in one short runtime suite. |
-| P0-T12 | In progress | One integrated Java 25 spike now initializes GLFW/OpenGL, Jolt JNI, OpenAL, and localhost UDP together and runs under JFR. Owner-set acceptance duration is 15 seconds; local runtime verification is still required. |
+| P0-T11 | Complete | The localhost UDP impairment harness successfully injected and independently observed latency, jitter, packet loss, duplication, and reordering. |
+| P0-T12 | Complete | The owner-approved 15-second integrated JFR soak initialized GLFW/OpenGL, OpenAL, Jolt, and UDP together; UDP completed 58/58 echoes; Jolt allocation balance changed from 1 to 0; and shutdown completed cleanly. |
+
+The M0 exit gate is therefore satisfied: a concrete Java production-networking path exists, and the selected native stack can run together cleanly in one process.
 
 Detailed feasibility notes:
 
@@ -55,51 +56,43 @@ Current examples include:
 - `src/main/java/com/samo/spike/steam/SteamFlatApiFfmSpike.java`
 - `src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
 
-Do not infer renderer, physics, audio, networking, Steam integration, scene, resource-management, or gameplay architecture from these files. They may be simplified, rewritten, moved, or deleted after their conclusions have been captured.
+P1-T01 must preserve access to this evidence while introducing the initial multi-project build. Do not silently delete or reinterpret spike code as permanent engine APIs.
 
 > **Spikes are disposable. Conclusions are durable.**
 
 ## Current technical baseline
 
-The current proven/selected baseline relevant to work completed so far is:
+The proven baseline entering Phase 1 is:
 
 - Java 25 via Gradle toolchains
 - Windows x64 as the initial platform target
 - LWJGL 3.4.x family for native Java bindings
-- GLFW + OpenGL 4.6 Core for the rendering feasibility path
+- GLFW + OpenGL 4.6 Core for rendering feasibility
 - Jolt Physics through Jolt JNI for rigid-body physics feasibility
 - OpenAL through LWJGL for 3D-audio feasibility
-- Java NIO `DatagramChannel` is proven for the basic localhost UDP feasibility path
-- Steamworks4j 1.10.0 is proven for basic Steam client initialization, identity access, callback pumping, and clean shutdown
-- Local Steam client integration requires the Steam desktop client to be running and logged in; otherwise initialization may fail with `NoSteamClient`
-- Steamworks4j 1.10.0 is **not sufficient** for the required `ISteamNetworkingSockets` production transport surface
-- Java 25 FFM can directly call the official Steam flat API and obtain a usable `ISteamNetworkingSockets` interface pointer without authored C/C++ glue
-- The FFM feasibility path currently uses `SteamAPI_InitFlat`, the versioned `SteamNetworkingSockets` accessor exported by the official redistributable, and flat `SteamAPI_ISteamNetworkingSockets_*` functions
-- P0-T11 proves development-only impairment injection for latency, jitter, loss, duplication, and reordering; it is not a production networking layer
-- P0-T12 uses one short-lived process to exercise graphics, physics, audio, and UDP concurrently while JFR records the run
-- P0-T12's owner-approved acceptance duration is **15 seconds**, replacing the original 15-minute requirement in Issue #29; the older technical-backlog wording is superseded for this task until that catalog entry is safely synchronized
-- The production transport wrapper/design is still not implemented; P0-T09 only proved that the required native API is reachable from Java
-- Explicit native-resource cleanup is required; native ownership must not be left to accidental GC timing
+- Java NIO `DatagramChannel` for development UDP testing
+- Steamworks4j 1.10.0 for basic Steam client initialization/callbacks only
+- Java 25 FFM for direct access to the official Steam flat API / `ISteamNetworkingSockets` path
+- explicit native-resource cleanup as a required ownership discipline
+- development-only network impairment infrastructure for latency, jitter, loss, duplication, and reordering
+- JFR available for runtime/native integration profiling
 
-For the complete intended v1 technology and product boundaries, read `ENGINE_SCOPE.md`. A dependency appearing in a Phase 0 spike does not by itself make its spike structure a permanent engine API.
+The production transport wrapper/design is still a later implementation task. P0 proved reachability and feasibility, not the final networking abstraction.
 
 ## What happens next
 
-The immediate task is **P0-T12 — Run integrated native feasibility soak**.
+The immediate task is **P1-T01 — Initialize multi-project Gradle build** (Issue #31).
 
-The implementation is ready for local verification through:
+P1-T01 must establish exactly these initial modules:
 
-```powershell
-.\gradlew.bat runIntegratedNativeSoak
-```
+- `engine-core`
+- `test-support`
+- `game-client`
+- `game-server`
 
-The Gradle task runs the integrated executable for 15 seconds under Java Flight Recorder. The executable must initialize OpenGL, OpenAL, Jolt, and UDP together; continuously render, step physics, move an OpenAL source, and exchange UDP datagrams; then shut everything down explicitly. The JFR recording is written to `build/spikes/native-soak/p0-t12.jfr`.
+The Gradle Wrapper remains the project entry point. One root command must compile and test all four modules successfully. Existing Phase 0 spike code must remain accessible during the transition.
 
-P0-T12 remains in progress until the local run succeeds, the JFR file is present, and cleanup output shows no native crash or obvious positive Jolt allocation growth.
-
-The production Steam networking path is technically reachable from Java, but the production wrapper and gameplay transport architecture still belong to later phases.
-
-See `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for ordering. For P0-T12 duration, Issue #29 and the P0-T12 feasibility note are the current authoritative acceptance wording.
+P1-T02 will add the remaining planned modules only after this initial structure is proven.
 
 ## Documentation maintenance policy
 
@@ -128,12 +121,7 @@ Do **not** create documentation churn for trivial formatting-only changes or imp
 
 For experimental Phase 0 work, document the **result and decision**, not a tutorial of the temporary implementation.
 
-Good documentation:
-
-- the tested dependency/version or capability;
-- whether the feasibility gate passed or failed;
-- important compatibility or lifecycle constraints discovered;
-- decisions that future production code must preserve.
+Good documentation records the tested dependency/version or capability, whether the feasibility gate passed or failed, important compatibility/lifecycle constraints discovered, and decisions that future production code must preserve.
 
 Avoid documenting temporary class structure, helper methods, or one-off spike code as if they were engine architecture.
 
@@ -159,7 +147,7 @@ After the change:
 
 Current owner-directed development is performed directly on the explicitly selected branch. At the time of this snapshot, that branch is `master`.
 
-Do not create a pull request unless the repository owner explicitly asks for one. Older documentation or issue text that assumes every change must go through a PR should not override this current working convention.
+Do not create a pull request unless the repository owner explicitly asks for one. Older documentation or issue text that assumes every change must go through a PR does not override this working convention.
 
 ## Status-file design rule
 

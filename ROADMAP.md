@@ -13,7 +13,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Milestones | Major outcomes and ordering | this file |
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
-| Code change | Implementation + tests/evidence | Pull Request linked to one active Issue |
+| Code change | Implementation + tests/evidence | Direct commit to the owner-selected branch unless a PR is explicitly requested |
 
 ### Planning rule
 
@@ -30,38 +30,48 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 
 | Milestone | Name | Horizon | Phases | Outcome |
 | --- | --- | --- | --- | --- |
-| M0 | Feasibility | NOW | P0 | Prove the risky native/Steam/networking assumptions before the architecture depends on them. |
-| M1 | Engine foundation | NEXT | P1-P4 | Establish the build, module boundaries, lifecycle, timing, input, math, and spatial contracts. |
-| M2 | Local playable runtime | LATER | P5-P9 | Render and load a room, build the world/physics stack, then prove a five-minute local co-op-style vertical slice. |
+| M0 | Feasibility | COMPLETE | P0 | Prove the risky native/Steam/networking assumptions before the architecture depends on them. |
+| M1 | Engine foundation | NOW | P1-P4 | Establish the build, module boundaries, lifecycle, timing, input, math, and spatial contracts. |
+| M2 | Local playable runtime | NEXT | P5-P9 | Render and load a room, build the world/physics stack, then prove a five-minute local co-op-style vertical slice. |
 | M3 | Multiplayer core | LATER | P10-P13 | Build transport, replication, prediction/correction, join-in-progress, and Steam session flow. |
 | M4 | Genre systems | LATER | P14 | Add network-aware audio, animation, IK, navigation, perception, and one server-authoritative enemy. |
 | M5 | Tools | LATER | P15 | Add the minimum editor and diagnostics needed to author and debug the game without source edits. |
 | M6 | Production base | LATER | P16 | Profile, fuzz, soak-test, package, and freeze a v1 engine API only after the network slice survives release gates. |
 
-## Current focus — M0 / Phase 0
+## Completed — M0 / Phase 0
 
-**Goal:** disprove risky assumptions before engine architecture depends on them.
+M0 passed its exit gate.
 
-The critical path is Steam/network transport feasibility:
+Durable Phase 0 conclusions include:
 
-`P0-T08` → if unsupported, `P0-T09` → if that fails, `P0-T10`
+1. Java 25 and the selected native stack are viable on the target Windows x64 environment.
+2. Steamworks4j is sufficient for basic Steam client integration but not for the required modern `ISteamNetworkingSockets` surface.
+3. Java 25 FFM can call the official Steam flat API directly and reach `ISteamNetworkingSockets` without authored C/C++ glue.
+4. The localhost impairment harness can reproduce latency, jitter, loss, duplication, and reordering.
+5. GLFW/OpenGL, Jolt JNI, OpenAL, and UDP can run together cleanly under JFR in the owner-approved 15-second integrated soak.
 
-Phase 1 must not begin until one production networking path is concrete.
+The conditional dedicated-server fallback P0-T10 was not required because P0-T09 established a viable Java-to-Steam networking path.
 
-### Phase 0 work packages
+## Current focus — M1 / Phase 1
 
-1. **Scope and toolchain** — P0-T01..P0-T02
-2. **Native subsystem spikes** — P0-T03..P0-T05
-3. **Networking/Steam feasibility** — P0-T06..P0-T10
-4. **Network impairment harness** — P0-T11
-5. **Integrated feasibility soak** — P0-T12
+**Goal:** make later engine changes isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
 
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-0---feasibility-gates-and-irreversible-decisions).
+The current executable task is `P1-T01 — Initialize multi-project Gradle build`.
+
+### Phase 1 work packages
+
+1. **Initial multi-project structure** — P1-T01
+2. **Remaining module skeletons** — P1-T02
+3. **Dependency/version reproducibility** — P1-T03
+4. **Testing and code-quality gates** — P1-T04..P1-T08
+5. **Client/server entry points and version reporting** — P1-T09..P1-T10
+
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-1---build-modules-and-quality-gates).
 
 ## Milestone exit outcomes
 
 ### M0 — Feasibility
-Proceed only when the project has a concrete production networking path and the native stack can run together cleanly.
+**Passed.** The project has a concrete production networking path and the selected native stack runs together cleanly.
 
 ### M1 — Engine foundation
 Client and headless server run from repeatable commands; fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.
@@ -92,13 +102,13 @@ Examples intentionally deferred: Vulkan/multiple render backends, open-world str
 For work near execution:
 
 1. Create one Issue per independently testable roadmap task.
-2. Copy the permanent task ID into the Issue title, e.g. `[P0-T08] Verify SteamNetworkingSockets Java API coverage`.
+2. Copy the permanent task ID into the Issue title, e.g. `[P1-T01] Initialize multi-project Gradle build`.
 3. Use the repository's engine-task template as a starting point, but include only the sections needed to make the task unambiguous.
 4. Link real dependencies/blockers explicitly.
 5. Keep only a bounded active queue; do not convert the entire technical backlog into Issues.
-6. A PR should normally implement one Issue. If a task is too large for one reviewable PR, split it before coding.
-7. Merge only after the acceptance criteria and verification evidence pass.
-8. Close the Issue through the PR (`Closes #...`) so GitHub remains the work-state source of truth.
+6. Implement on the explicitly selected working branch, currently `master`, unless the repository owner explicitly requests another branch or a PR.
+7. Close the Issue only after its acceptance criteria and verification evidence pass.
+8. Keep `docs/DEVELOPMENT_STATUS.md` synchronized after meaningful repository developments.
 
 ## Definition of Ready
 
@@ -121,8 +131,8 @@ A task is done only when:
 - no undeclared scope was implemented;
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
-- the linked Issue is closed by the merged PR.
+- the linked Issue is closed consistently with the verified result.
 
 ## Status convention
 
-This file uses only planning horizons: **NOW**, **NEXT**, and **LATER**. These are not task statuses. Live task status is maintained only in GitHub Issues/Project. Dates are deliberately omitted until enough Phase 0/1 throughput exists to estimate them credibly.
+This file uses planning horizons such as **NOW**, **NEXT**, **LATER**, and **COMPLETE** at milestone level. Exact live task state is maintained in GitHub Issues/Project. Dates are deliberately omitted until enough Phase 1 throughput exists to estimate them credibly.

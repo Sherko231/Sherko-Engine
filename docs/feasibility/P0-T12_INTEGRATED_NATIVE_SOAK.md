@@ -17,7 +17,7 @@ It is not production engine architecture.
 
 ## Duration decision
 
-The repository owner explicitly changed the P0-T12 acceptance duration from **15 minutes** to **15 seconds** on 2026-09-10. GitHub Issue #29 contains the updated live acceptance criteria and supersedes the older 15-minute wording still present in the canonical backlog until that catalog entry can be edited safely.
+The repository owner explicitly changed the P0-T12 acceptance duration from **15 minutes** to **15 seconds** on 2026-09-10. GitHub Issue #29 contains the updated live acceptance criteria and supersedes the older 15-minute wording still present in the canonical backlog.
 
 ## Entry point
 
@@ -45,17 +45,23 @@ The Gradle task starts Java Flight Recorder automatically with the `profile` set
 
 `build/spikes/native-soak/p0-t12.jfr`
 
-## Expected runtime evidence
+## Verified runtime result
 
-The executable must report successful initialization for OpenGL, OpenAL, Jolt, and UDP, run continuously for the requested 15 seconds, and then report UDP traffic totals.
+The owner ran the integrated soak successfully on the target Windows x64 development machine under Java 25.
 
-On the Jolt debug native build, shutdown also prints the initial and final Jolt allocation balance. The final balance must not be greater than the initial balance.
+Observed runtime evidence:
 
-A successful run ends with:
+- JFR recording started successfully before the spike began;
+- OpenGL initialized as `4.6.0 NVIDIA 592.02`;
+- OpenAL initialized as `1.1 ALSOFT 1.25.2`;
+- Jolt initialized as `6.0.0`;
+- UDP initialized on `127.0.0.1:42120`;
+- the 15-second runtime completed;
+- UDP sent `58` datagrams and echoed all `58`;
+- Jolt debug allocation balance changed from `1` initially to `0` at shutdown (`delta=-1`), so no positive native-allocation growth was observed;
+- the executable printed the P0-T12 pass line and Gradle exited successfully.
 
-```text
-P0-T12 passed: integrated native soak completed and all subsystems shut down cleanly.
-```
+The LWJGL `sun.misc.Unsafe::objectFieldOffset` warning is a Java deprecation warning from LWJGL's legacy unsafe memory backend. It did not fail the run or invalidate the feasibility result, but it should be re-evaluated when LWJGL/JDK versions are upgraded.
 
 ## Cleanup checks
 
@@ -72,4 +78,4 @@ The spike fails if it observes a high-severity OpenGL debug message, insufficien
 
 ## Acceptance state
 
-Implementation is complete. P0-T12 remains **in progress** until a local 15-second run succeeds and the generated JFR file is confirmed present.
+**Complete.** The owner-approved 15-second integrated native soak passed under JFR with all selected subsystems active together, complete UDP echo traffic, clean process shutdown, and no observed positive Jolt native-allocation growth. This satisfies the final Phase 0 executable feasibility gate.

@@ -1,9 +1,9 @@
 # Sherko Engine Roadmap
 
-> This file is the **product/engineering roadmap**, not the 217-task implementation checklist.
+> This file is the **product/engineering roadmap**, not the detailed implementation checklist.
 > The canonical detailed task catalog lives in [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md).
 
-Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D first-/third-person, physics-heavy, humorous multiplayer co-op games**. The roadmap is outcome-based: future work stays high level, while only the active phase is expanded into executable GitHub Issues.
+Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D first-/third-person, physics-heavy, humorous multiplayer co-op games**. The roadmap is outcome-based: the technical backlog may stay detailed across all phases, while only work near execution is materialized as GitHub Issues.
 
 ## Roadmap model
 
@@ -11,17 +11,19 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | --- | --- | --- |
 | Product scope | What the engine is and is not | [`ENGINE_SCOPE.md`](ENGINE_SCOPE.md) |
 | Milestones | Major outcomes and ordering | this file |
-| Technical backlog | Stable task IDs, detailed acceptance criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
-| Active work | Work that can be picked up now | GitHub Issues |
-| Code change | Implementation + tests | Pull Request linked to one active Issue |
+| Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
+| Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
+| Code change | Implementation + tests/evidence | Pull Request linked to one active Issue |
 
 ### Planning rule
 
 - **NOW:** expand the current phase into executable Issues.
-- **NEXT:** keep detailed tasks in the technical backlog; create Issues only when the current phase is close to its exit gate.
-- **LATER:** keep outcome-level planning only. Do not pre-create hundreds of Issues.
+- **NEXT:** keep detailed tasks in the technical backlog; create Issues only when the phase is close to execution.
+- **LATER:** detailed tasks may remain in the technical backlog, but they are planning baselines rather than frozen implementation contracts. Do not pre-create hundreds of Issues.
 - Task IDs such as `P10-T06` are permanent identifiers. Issue numbers are not.
-- A phase is complete only when its **exit gate** passes; checking every task is necessary but not sufficient.
+- Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
+- Live task status belongs only in GitHub Issues/Project; roadmap and backlog documents do not track Ready/In Progress/Done state.
+- A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
 
 ## Milestones
@@ -54,7 +56,7 @@ Phase 1 must not begin until one production networking path is concrete.
 4. **Network impairment harness** — P0-T11
 5. **Integrated feasibility soak** — P0-T12
 
-The exact task definitions and acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-0---feasibility-gates-and-irreversible-decisions).
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-0---feasibility-gates-and-irreversible-decisions).
 
 ## Milestone exit outcomes
 
@@ -87,39 +89,35 @@ Examples intentionally deferred: Vulkan/multiple render backends, open-world str
 
 ## GitHub execution policy
 
-For the active phase:
+For work near execution:
 
 1. Create one Issue per independently testable roadmap task.
 2. Copy the permanent task ID into the Issue title, e.g. `[P0-T08] Verify SteamNetworkingSockets Java API coverage`.
-3. Use the repository's engine-task template.
-4. Link dependent Issues explicitly.
-5. Keep only a bounded active queue; do not convert the entire 217-task catalog into Issues.
-6. A PR should normally implement one Issue. If a task is too large for one reviewable PR, split the task before coding.
-7. Merge only after the acceptance criterion and verification commands pass.
+3. Use the repository's engine-task template as a starting point, but include only the sections needed to make the task unambiguous.
+4. Link real dependencies/blockers explicitly.
+5. Keep only a bounded active queue; do not convert the entire technical backlog into Issues.
+6. A PR should normally implement one Issue. If a task is too large for one reviewable PR, split it before coding.
+7. Merge only after the acceptance criteria and verification evidence pass.
 8. Close the Issue through the PR (`Closes #...`) so GitHub remains the work-state source of truth.
 
 ## Definition of Ready
 
-An implementation Issue is ready only when it has:
+Every executable Issue should have:
 
 - one roadmap task ID;
 - a bounded goal;
-- allowed modules/files;
-- interfaces it may change;
-- interfaces it must not change;
 - acceptance criteria;
-- explicit non-goals;
-- dependencies/blockers;
-- verification commands;
-- a stop condition for undeclared architecture changes.
+- dependencies/blockers, or an explicit `None`;
+- a verification method or command.
+
+Add non-goals, required tests, allowed files/modules, interface restrictions, and an architecture stop condition **when they materially reduce ambiguity or architectural risk**. Small documentation, configuration, or isolated spike tasks do not need ceremonial fields that add no useful constraint.
 
 ## Definition of Done
 
 A task is done only when:
 
 - acceptance criteria pass;
-- required tests are committed;
-- verification commands are recorded in the PR;
+- appropriate tests or verification evidence are recorded;
 - no undeclared scope was implemented;
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
@@ -127,4 +125,4 @@ A task is done only when:
 
 ## Status convention
 
-Until automated/project status is established, this file uses only three planning horizons: **NOW**, **NEXT**, and **LATER**. Dates are deliberately omitted until enough Phase 0/1 throughput exists to estimate them credibly.
+This file uses only planning horizons: **NOW**, **NEXT**, and **LATER**. These are not task statuses. Live task status is maintained only in GitHub Issues/Project. Dates are deliberately omitted until enough Phase 0/1 throughput exists to estimate them credibly.

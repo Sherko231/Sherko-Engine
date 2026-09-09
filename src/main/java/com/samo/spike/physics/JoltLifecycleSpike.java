@@ -1,14 +1,13 @@
 package com.samo.spike.physics;
 
-import com.github.stephengold.joltjni.Body;
 import com.github.stephengold.joltjni.BodyCreationSettings;
 import com.github.stephengold.joltjni.BodyInterface;
 import com.github.stephengold.joltjni.BoxShape;
 import com.github.stephengold.joltjni.BroadPhaseLayerInterfaceTable;
 import com.github.stephengold.joltjni.JobSystemThreadPool;
 import com.github.stephengold.joltjni.Jolt;
+import com.github.stephengold.joltjni.ObjVsBpFilter;
 import com.github.stephengold.joltjni.ObjectLayerPairFilterTable;
-import com.github.stephengold.joltjni.ObjectVsBroadPhaseLayerFilterTable;
 import com.github.stephengold.joltjni.PhysicsSystem;
 import com.github.stephengold.joltjni.Quat;
 import com.github.stephengold.joltjni.RVec3;
@@ -31,7 +30,10 @@ public final class JoltLifecycleSpike {
     private static final int OBJ_LAYER_NON_MOVING = 0;
     private static final int OBJ_LAYER_MOVING = 1;
     private static final int NUM_OBJECT_LAYERS = 2;
-    private static final int NUM_BROAD_PHASE_LAYERS = 1;
+
+    private static final int BP_LAYER_NON_MOVING = 0;
+    private static final int BP_LAYER_MOVING = 1;
+    private static final int NUM_BROAD_PHASE_LAYERS = 2;
 
     private JoltLifecycleSpike() {
     }
@@ -90,7 +92,7 @@ public final class JoltLifecycleSpike {
 
         BroadPhaseLayerInterfaceTable layerMap = null;
         ObjectLayerPairFilterTable objectLayerFilter = null;
-        ObjectVsBroadPhaseLayerFilterTable broadPhaseFilter = null;
+        ObjVsBpFilter broadPhaseFilter = null;
         PhysicsSystem physicsSystem = null;
         TempAllocatorMalloc tempAllocator = null;
         JobSystemThreadPool jobSystem = null;
@@ -103,20 +105,27 @@ public final class JoltLifecycleSpike {
             objectLayerFilter = new ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS);
             objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_MOVING);
             objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_NON_MOVING);
-            objectLayerFilter.disableCollision(OBJ_LAYER_NON_MOVING, OBJ_LAYER_NON_MOVING);
 
             layerMap = new BroadPhaseLayerInterfaceTable(
                     NUM_OBJECT_LAYERS,
                     NUM_BROAD_PHASE_LAYERS
             );
-            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_MOVING, 0);
-            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_NON_MOVING, 0);
+            layerMap.mapObjectToBroadPhaseLayer(
+                    OBJ_LAYER_NON_MOVING,
+                    BP_LAYER_NON_MOVING
+            );
+            layerMap.mapObjectToBroadPhaseLayer(
+                    OBJ_LAYER_MOVING,
+                    BP_LAYER_MOVING
+            );
 
-            broadPhaseFilter = new ObjectVsBroadPhaseLayerFilterTable(
-                    layerMap,
-                    NUM_BROAD_PHASE_LAYERS,
-                    objectLayerFilter,
-                    NUM_OBJECT_LAYERS
+            broadPhaseFilter = new ObjVsBpFilter(
+                    NUM_OBJECT_LAYERS,
+                    NUM_BROAD_PHASE_LAYERS
+            );
+            broadPhaseFilter.disablePair(
+                    OBJ_LAYER_NON_MOVING,
+                    BP_LAYER_NON_MOVING
             );
 
             physicsSystem = new PhysicsSystem();
@@ -131,7 +140,10 @@ public final class JoltLifecycleSpike {
             );
 
             tempAllocator = new TempAllocatorMalloc();
-            int workerThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+            int workerThreads = Math.max(
+                    1,
+                    Runtime.getRuntime().availableProcessors() - 1
+            );
             jobSystem = new JobSystemThreadPool(
                     Jolt.cMaxPhysicsJobs,
                     Jolt.cMaxPhysicsBarriers,
@@ -148,9 +160,10 @@ public final class JoltLifecycleSpike {
                     EMotionType.Static,
                     OBJ_LAYER_NON_MOVING
             );
-            Body floor = bodies.createBody(floorSettings);
-            int floorId = floor.getId();
-            bodies.addBody(floorId, EActivation.DontActivate);
+            int floorId = bodies.createAndAddBody(
+                    floorSettings,
+                    EActivation.DontActivate
+            );
 
             boxShape = new BoxShape(new Vec3(0.5f, 0.5f, 0.5f));
             boxSettings = new BodyCreationSettings(
@@ -160,21 +173,31 @@ public final class JoltLifecycleSpike {
                     EMotionType.Dynamic,
                     OBJ_LAYER_MOVING
             );
-            Body box = bodies.createBody(boxSettings);
-            int boxId = box.getId();
-            bodies.addBody(boxId, EActivation.Activate);
+            int boxId = bodies.createAndAddBody(
+                    boxSettings,
+                    EActivation.Activate
+            );
 
             double startY = bodies.getPosition(boxId).y();
             double lowestY = startY;
 
+            physicsSystem.optimizeBroadPhase();
+
             for (int step = 0; step < STEPS_PER_CYCLE; step++) {
-                physicsSystem.update(TIME_STEP_SECONDS, 1, tempAllocator, jobSystem);
+                physicsSystem.update(
+                        TIME_STEP_SECONDS,
+                        1,
+                        tempAllocator,
+                        jobSystem
+                );
                 lowestY = Math.min(lowestY, bodies.getPosition(boxId).y());
             }
 
             double finalY = bodies.getPosition(boxId).y();
             if (lowestY >= startY - 0.5) {
-                throw new IllegalStateException("Dynamic box did not fall under gravity.");
+                throw new IllegalStateException(
+                        "Dynamic box did not fall under gravity."
+                );
             }
             if (Math.abs(finalY - 0.5) > 0.15) {
                 throw new IllegalStateException(
@@ -184,7 +207,9 @@ public final class JoltLifecycleSpike {
 
             System.out.printf(
                     "Cycle %d physics result: startY=%.3f, finalY=%.3f%n",
-                    cycle, startY, finalY
+                    cycle,
+                    startY,
+                    finalY
             );
 
             bodies.removeBody(boxId);
@@ -223,12 +248,19 @@ public final class JoltLifecycleSpike {
         try {
             closeable.close();
         } catch (Exception exception) {
-            throw new RuntimeException("Failed to release Jolt native object", exception);
+            throw new RuntimeException(
+                    "Failed to release Jolt native object",
+                    exception
+            );
         }
     }
 
     private static void loadNativeLibrary() {
-        LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
+        LibraryInfo info = new LibraryInfo(
+                null,
+                "joltjni",
+                DirectoryPath.USER_DIR
+        );
         NativeBinaryLoader loader = new NativeBinaryLoader(info);
         NativeDynamicLibrary[] libraries = {
                 new NativeDynamicLibrary(
@@ -240,7 +272,10 @@ public final class JoltLifecycleSpike {
         try {
             loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
         } catch (Exception exception) {
-            throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
+            throw new IllegalStateException(
+                    "Failed to load Jolt JNI native library",
+                    exception
+            );
         }
     }
 }

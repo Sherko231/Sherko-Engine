@@ -1,83 +1,20 @@
-# GitHub Project Setup — Sherko Engine
+# GitHub Roadmap Model — Sherko Engine
 
-This file defines the live GitHub planning setup. The repository documentation remains the architectural source of truth; GitHub Projects is the execution/tracking layer.
+This document defines the canonical GitHub planning model for Sherko Engine.
 
-## Project
+## Source-of-truth layers
 
-Create one GitHub Project named:
-
-`Sherko Engine Development`
-
-## Views
-
-Create these views over the same project items:
-
-### 1. Roadmap
-- Layout: Roadmap
-- Show: phase epics (`[EPIC][P0]` through `[EPIC][P16]`)
-- Use Start Date / Target Date only when real estimates exist.
-- Do not invent dates just to fill the timeline.
-
-### 2. Board
-- Layout: Board
-- Group by: Status
-- Status values:
-  - Backlog
-  - Ready
-  - In Progress
-  - In Review
-  - Blocked
-  - Done
-
-### 3. Backlog
-- Layout: Table
-- Show all open project items.
-- Sort by Milestone/Phase, then Priority.
-
-### 4. Current Phase
-- Layout: Table
-- Initially filter to `Phase = P0`.
-- This is the operational work queue.
-
-## Custom fields
-
-Create:
-
-- `Status` — Single select
-- `Priority` — Single select: `P0 Critical`, `P1 High`, `P2 Normal`, `P3 Low`
-- `Phase` — Single select: `P0` through `P16`
-- `Subsystem` — Single select
-- `Effort` — Single select: `XS`, `S`, `M`, `L`
-- `Task ID` — Text
-- `Start Date` — Date
-- `Target Date` — Date
-
-Do not create `XL`. Split work that is too large for `L`.
-
-Recommended `Subsystem` values:
-
-- Build / CI
-- Core
-- Platform
-- Input
-- Math
-- Rendering
-- Assets
-- World
-- Physics
-- Gameplay
-- Networking
-- Steam
-- Audio
-- Animation
-- AI / Navigation
-- Editor / Tools
-- Release
-- Documentation
+- `ENGINE_SCOPE.md` — product and architecture boundaries.
+- `ROADMAP.md` — milestone/phase-level roadmap.
+- `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and acceptance criteria.
+- GitHub Milestones — milestone progress over executable Issues.
+- GitHub Labels — durable task type/subsystem classification.
+- GitHub Issues — executable work only.
+- GitHub Project — live roadmap/board layer; phase cards should be Project draft items rather than repository Issues.
 
 ## Milestones
 
-Create these repository Milestones without arbitrary due dates:
+Repository milestones:
 
 - `M0 — Feasibility` — P0
 - `M1 — Engine Foundation` — P1-P4
@@ -87,12 +24,22 @@ Create these repository Milestones without arbitrary due dates:
 - `M5 — Tools` — P15
 - `M6 — Production Base` — P16
 
+Do not assign arbitrary due dates. Add dates only when they represent a real planning commitment.
+
+## Issue model
+
+Issues represent executable tasks only.
+
+- The active phase is expanded into Issues.
+- P0 task Issues are #18-#29.
+- P0-T01 (#18) is completed because the v1 scope is already locked.
+- Future tasks remain in `TECHNICAL_BACKLOG.md` until their phase approaches execution.
+- Closed Issues #1-#17 are obsolete planning artifacts from an earlier setup attempt and must not be used as roadmap epics.
+
 ## Labels
 
-Labels are for durable classification, not Project status/priority duplication.
-
 ### Type
-- `type:epic`
+
 - `type:spike`
 - `type:feature`
 - `type:bug`
@@ -101,6 +48,7 @@ Labels are for durable classification, not Project status/priority duplication.
 - `type:test`
 
 ### Area
+
 - `area:build-ci`
 - `area:core`
 - `area:platform`
@@ -118,56 +66,87 @@ Labels are for durable classification, not Project status/priority duplication.
 - `area:ai-nav`
 - `area:editor`
 - `area:release`
-- `area:docs`
+- `area:documentation`
 
-### State / decision
-- `blocked`
+### Decision
+
 - `decision-needed`
 
-Do not create labels such as `status:done` or `priority:high`; those belong in Project fields.
+Status and priority are Project fields, not labels.
 
-## Issue model
+## GitHub Project model
 
-- Phase epics are the roadmap items: Issues #1 through #17.
-- Only the active phase is expanded into executable task Issues.
-- Phase 0 task Issues are #18 through #29.
-- `P0-T01` (#18) is already completed because the engine scope is locked.
-- Future technical tasks remain in `docs/roadmap/TECHNICAL_BACKLOG.md` until their phase becomes active.
+Project name:
 
-## Initial project item configuration
+`Sherko Engine Development`
 
-### Epics #1-#17
-- Add all to the Project.
-- Set `type:epic`.
-- Set `Phase` to their matching P-number.
-- Put only #1 (`P0`) in active/current focus.
-- Keep future epics in Backlog; do not assign fake Start/Target dates.
+### Phase cards
 
-### P0 tasks #18-#29
-- Add all to the Project.
-- Set `Phase = P0`.
-- Set `Task ID` to the title's task ID.
-- #18 -> Done.
-- #19-#25 and #28-#29 -> Backlog initially; move to Ready only when dependencies permit.
-- #26 (`P0-T09`) -> Blocked by outcome of #25 (`P0-T08`).
-- #27 (`P0-T10`) -> Blocked by failure of both #25 and #26.
+Create the following as **Project draft items**, not Issues:
 
-Suggested priorities for P0:
+- P0 — Feasibility gates and irreversible decisions
+- P1 — Build, modules, and quality gates
+- P2 — Core lifecycle, time, configuration, and native ownership
+- P3 — Platform and input
+- P4 — Math and spatial conventions
+- P5 — Rendering foundation
+- P6 — Asset pipeline and resource lifetime
+- P7 — World, entities, components, prefabs, and scenes
+- P8 — Physics and local interaction
+- P9 — Local first-person vertical slice
+- P10 — Network transport and protocol
+- P11 — Replication and join-in-progress
+- P12 — Prediction, reconciliation, interpolation, and physics correction
+- P13 — Steam session and production transport
+- P14 — Audio, animation, and AI required by the genre
+- P15 — Editor and debugging tools
+- P16 — Production hardening and release gate
 
-- Critical: #25, #26, #27 (networking feasibility critical path)
-- High: #19, #20, #21, #22, #23, #24, #28, #29
-- Normal: #18 (already completed scope task)
+### Project fields
+
+- `Status`: Backlog / Ready / In Progress / In Review / Blocked / Done
+- `Phase`: P0-P16
+- `Priority`: P0 Critical / P1 High / P2 Normal / P3 Low
+- `Subsystem`: Build / CI, Core, Platform, Input, Math, Rendering, Assets, World, Physics, Gameplay, Networking, Steam, Audio, Animation, AI / Navigation, Editor / Tools, Release, Documentation
+- `Effort`: XS / S / M / L
+- `Roadmap Level`: Phase / Task
+- `Task ID`: text
+- `Start Date`: date
+- `Target Date`: date
+
+No `XL`: split work that exceeds L.
+
+### Views
+
+1. `Roadmap` — Roadmap layout, phase draft items only.
+2. `Board` — Board layout, executable task Issues grouped by Status.
+3. `Backlog` — Table layout, open executable tasks.
+4. `Current Phase` — Table layout filtered to the active phase; initially P0.
+
+## Current P0 issue classification
+
+- #18 P0-T01 — Done — Documentation — P2 Normal — XS
+- #19 P0-T02 — Ready — Build / CI — P1 High — S
+- #20 P0-T03 — Backlog — Rendering — P1 High — S
+- #21 P0-T04 — Backlog — Physics — P1 High — S
+- #22 P0-T05 — Backlog — Audio — P1 High — S
+- #23 P0-T06 — Backlog — Networking — P1 High — S
+- #24 P0-T07 — Backlog — Steam — P1 High — S
+- #25 P0-T08 — Backlog — Steam — P0 Critical — M
+- #26 P0-T09 — conditional on P0-T08 failure — Steam — P0 Critical — M
+- #27 P0-T10 — conditional on P0-T08 and P0-T09 failure — Networking — P0 Critical — S
+- #28 P0-T11 — Backlog — Networking — P1 High — M
+- #29 P0-T12 — Backlog — Core — P0 Critical — M
 
 ## Execution rule
 
-For each implementation task:
+1. Pick one executable Issue.
+2. Move it to `In Progress`.
+3. Create a dedicated branch.
+4. Give the coding agent that task only.
+5. Require its acceptance criteria and tests.
+6. Open a PR that closes the Issue.
+7. Merge only after CI/verification passes.
+8. Mark Done only after merge and acceptance verification.
 
-1. Move exactly one task to `In Progress`.
-2. Create a dedicated branch.
-3. Give the coding agent that task only.
-4. Require acceptance-criteria tests/verification.
-5. Open a PR that references/closes the task.
-6. CI must pass before merge.
-7. Move to Done only after merge/verification.
-
-Do not ask an agent to implement a whole phase or subsystem at once.
+Never ask a coding agent to implement an entire phase at once.

@@ -237,6 +237,10 @@ public final class JoltLifecycleSpike {
                 )
         };
         loader.registerNativeLibraries(libraries).initPlatformLibrary();
-        loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
+        try {
+            loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
+        }
     }
 }

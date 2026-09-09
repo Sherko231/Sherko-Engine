@@ -199,3 +199,26 @@ tasks.register<JavaExec>("runSteamFlatApiFfmSpike") {
         systemProperty("spike.steamApi64Path", it)
     }
 }
+
+val nativeSoakDir = layout.buildDirectory.dir("spikes/native-soak")
+
+tasks.register<JavaExec>("runIntegratedNativeSoak") {
+    group = "verification"
+    description = "Runs the P0-T12 15-second GLFW/OpenGL/Jolt/OpenAL/UDP soak under JFR."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.integration.IntegratedNativeSoakSpike"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED",
+        "-XX:StartFlightRecording=filename=${nativeSoakDir.get().file("p0-t12.jfr").asFile.absolutePath},settings=profile,dumponexit=true"
+    )
+    systemProperty(
+        "spike.durationSeconds",
+        providers.gradleProperty("nativeSoakDurationSeconds").orElse("15").get()
+    )
+    doFirst {
+        nativeSoakDir.get().asFile.mkdirs()
+    }
+}

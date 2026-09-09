@@ -10,7 +10,7 @@ See [`../../ROADMAP.md`](../../ROADMAP.md) for milestone-level planning and [`..
 
 Goal: disprove the risky assumptions before building the engine around them.
 
-- [ ] P0-T01 Create `ENGINE_SCOPE.md` containing the exact platform, player count, hosting model, tick rates, world-size limit, minimum GPU level, and excluded features listed above. Acceptance: every field has one value; no field says “later” or “maybe.”
+- [ ] P0-T01 Create `ENGINE_SCOPE.md` containing the exact platform, player count, hosting model, tick rates, world-size limit, and excluded features listed above. Acceptance: every field has one value; no field says “later” or “maybe.”
 - [ ] P0-T02 Install a Java 25 toolchain and pin it through Gradle toolchains. Acceptance: `javaToolchains` reports Java 25 and CI uses the same major version.
 - [ ] P0-T03 Create one LWJGL spike that opens a 1280x720 GLFW window and clears it with OpenGL 4.6 Core. Acceptance: GL debug output contains no high-severity messages for 10 minutes.
 - [ ] P0-T04 Create one Jolt JNI spike containing a static floor and one falling dynamic box. Acceptance: the box settles, all native objects are explicitly released, and repeated start/stop does not grow native memory.
@@ -102,7 +102,7 @@ Goal: render a stable, inspectable 3D room without game or physics dependencies.
 - [ ] P5-T01 Enable the OpenGL debug callback in debug builds and promote high-severity messages to test failures. Acceptance: an intentional invalid call is captured with source and type.
 - [ ] P5-T02 Enforce render-thread ownership for every OpenGL wrapper. Acceptance: a GPU call from a worker thread throws before entering OpenGL.
 - [ ] P5-T03 Implement explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Acceptance: every wrapper is idempotently closeable and registered for leak detection.
-- [ ] P5-T04 Implement persistent or orphaned dynamic buffer upload after benchmarking both choices on the target GPU. Acceptance: selected path and benchmark result are recorded.
+- [ ] P5-T04 Implement persistent or orphaned dynamic buffer upload after benchmarking both choices on representative development hardware. Acceptance: selected path and benchmark result are recorded.
 - [ ] P5-T05 Implement offline GLSL compilation/validation in the build and runtime program-link validation. Acceptance: a broken shader fails before the game enters its loop.
 - [ ] P5-T06 Define camera and per-frame uniform blocks with fixed binding indices. Acceptance: shader reflection test verifies size and binding consistency.
 - [ ] P5-T07 Render one indexed static mesh with depth testing and back-face culling. Acceptance: RenderDoc shows one expected indexed draw and no validation/debug error.
@@ -334,14 +334,14 @@ Exit gate: a developer can construct the test level, inspect entities, diagnose 
 
 Goal: turn the engine slice into a shippable base rather than a permanent prototype.
 
-- [ ] P16-T01 Define CPU frame budgets for 60 Hz and GPU budget for target hardware. Acceptance: automated performance scene reports pass/fail per subsystem.
+- [ ] P16-T01 Define CPU frame budgets for 60 Hz and GPU budget for representative supported hardware. Acceptance: automated performance scene reports pass/fail per subsystem.
 - [ ] P16-T02 Record JFR allocation profiles for menu, level load, quiet gameplay, prop chaos, and disconnect/reconnect. Acceptance: unexpected per-tick allocations have owners or documented exceptions.
 - [ ] P16-T03 Run RenderDoc captures for shadow, opaque, transparent, post-process, UI, and view-model passes. Acceptance: redundant clears, invalid resources, and obvious state churn are removed or recorded.
 - [ ] P16-T04 Implement bounded pools only where profiling proves allocation or native churn. Acceptance: each pool cites a before/after benchmark; speculative pools are rejected.
 - [ ] P16-T05 Add protocol fuzzing for every packet decoder with maximum length/depth/count limits. Acceptance: one million malformed inputs cause no crash or unbounded memory use.
 - [ ] P16-T06 Validate every client action on the server: rate, range, ownership, line of sight, state, cooldown, and payload bounds. Acceptance: a test exists for each rejected rule.
 - [ ] P16-T07 Run 4-client soak tests for 8 hours with periodic join/leave, scene restart, prop spawning, and impairment. Acceptance: native handles, heap, direct memory, entity count, and reliable backlog return to baselines.
-- [ ] P16-T08 Test compatibility on at least NVIDIA, AMD, and Intel GPUs that meet the declared minimum. Acceptance: known driver workarounds are capability-gated, not vendor-wide guesses.
+- [ ] P16-T08 Test compatibility on at least NVIDIA, AMD, and Intel GPUs representative of the project's supported Windows hardware. Acceptance: known driver workarounds are capability-gated, not vendor-wide guesses.
 - [ ] P16-T09 Create a custom runtime image with only required Java modules. Acceptance: game runs on a Windows machine with no Java installation.
 - [ ] P16-T10 Package client with `jpackage`, native DLLs, cooked assets, licenses, and crash/log directory rules. Acceptance: installation and uninstall work from a clean VM.
 - [ ] P16-T11 Package a separate headless server image with no graphics/audio natives. Acceptance: dependency inspection confirms it cannot initialize client subsystems.
@@ -358,7 +358,7 @@ Final release gate:
 6. Eight-hour soak test has no monotonic heap, direct-memory, native-handle, entity, or reliable-queue growth.
 7. Client is distributed with its JVM; players do not install Java separately.
 
-## 5. Rule for AI-generated tasks
+## Rule for AI-generated tasks
 
 Give the coding agent exactly one task ID at a time. Every task prompt must include:
 

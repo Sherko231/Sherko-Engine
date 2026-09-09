@@ -10,14 +10,16 @@ import com.github.stephengold.joltjni.Jolt;
 import com.github.stephengold.joltjni.ObjectLayerPairFilterTable;
 import com.github.stephengold.joltjni.ObjectVsBroadPhaseLayerFilterTable;
 import com.github.stephengold.joltjni.PhysicsSystem;
-import com.github.stephengold.joltjni.RVec3;
 import com.github.stephengold.joltjni.Quat;
+import com.github.stephengold.joltjni.RVec3;
+import com.github.stephengold.joltjni.TempAllocatorMalloc;
 import com.github.stephengold.joltjni.Vec3;
 import com.github.stephengold.joltjni.enumerate.EActivation;
 import com.github.stephengold.joltjni.enumerate.EMotionType;
 import electrostatic4j.snaploader.LibraryInfo;
 import electrostatic4j.snaploader.LoadingCriterion;
 import electrostatic4j.snaploader.NativeBinaryLoader;
+import electrostatic4j.snaploader.filesystem.DirectoryPath;
 import electrostatic4j.snaploader.platform.NativeDynamicLibrary;
 import electrostatic4j.snaploader.platform.util.PlatformPredicate;
 
@@ -29,10 +31,7 @@ public final class JoltLifecycleSpike {
     private static final int OBJ_LAYER_NON_MOVING = 0;
     private static final int OBJ_LAYER_MOVING = 1;
     private static final int NUM_OBJECT_LAYERS = 2;
-
-    private static final int BP_LAYER_NON_MOVING = 0;
-    private static final int BP_LAYER_MOVING = 1;
-    private static final int NUM_BROAD_PHASE_LAYERS = 2;
+    private static final int NUM_BROAD_PHASE_LAYERS = 1;
 
     private JoltLifecycleSpike() {
     }
@@ -45,47 +44,55 @@ public final class JoltLifecycleSpike {
 
         loadNativeLibrary();
         Jolt.registerDefaultAllocator();
+        Jolt.installDefaultTraceCallback();
+        Jolt.installDefaultAssertCallback();
 
-        long baselineBalance = allocationBalance();
-        long previousBalance = baselineBalance;
+        boolean debugBuild = "Debug".equalsIgnoreCase(Jolt.buildType());
+        long previousBalance = debugBuild ? allocationBalance() : 0L;
 
         System.out.printf("Jolt JNI version: %s%n", Jolt.versionString());
         System.out.printf("Native build type: %s%n", Jolt.buildType());
-        System.out.printf("Initial native allocation balance: %d%n", baselineBalance);
+        if (debugBuild) {
+            System.out.printf("Initial native allocation balance: %d%n", previousBalance);
+        }
 
         for (int cycle = 1; cycle <= cycles; cycle++) {
             runCycle(cycle);
 
-            long currentBalance = allocationBalance();
-            long growth = currentBalance - previousBalance;
-            System.out.printf(
-                    "Cycle %d/%d native allocation balance: %d (delta %+d)%n",
-                    cycle, cycles, currentBalance, growth
-            );
-
-            if (cycle > 1 && growth > 0) {
-                throw new IllegalStateException(
-                        "Native allocation balance increased after cleanup: " + growth
+            if (debugBuild) {
+                long currentBalance = allocationBalance();
+                long growth = currentBalance - previousBalance;
+                System.out.printf(
+                        "Cycle %d/%d native allocation balance: %d (delta %+d)%n",
+                        cycle, cycles, currentBalance, growth
                 );
-            }
 
-            previousBalance = currentBalance;
+                if (cycle > 1 && growth > 0) {
+                    throw new IllegalStateException(
+                            "Native allocation balance increased after cleanup: " + growth
+                    );
+                }
+                previousBalance = currentBalance;
+            }
         }
 
         System.out.printf(
-                "P0-T04 passed: %d repeated Jolt start/stop cycles completed without monotonic native allocation growth.%n",
+                "P0-T04 passed: %d repeated Jolt start/stop cycles completed.%n",
                 cycles
         );
     }
 
     private static void runCycle(int cycle) {
-        Jolt.newFactory();
+        if (!Jolt.newFactory()) {
+            throw new IllegalStateException("Failed to create Jolt factory");
+        }
         Jolt.registerTypes();
 
-        BroadPhaseLayerInterfaceTable broadPhaseLayers = null;
+        BroadPhaseLayerInterfaceTable layerMap = null;
         ObjectLayerPairFilterTable objectLayerFilter = null;
-        ObjectVsBroadPhaseLayerFilterTable objectVsBroadPhaseFilter = null;
+        ObjectVsBroadPhaseLayerFilterTable broadPhaseFilter = null;
         PhysicsSystem physicsSystem = null;
+        TempAllocatorMalloc tempAllocator = null;
         JobSystemThreadPool jobSystem = null;
         BoxShape floorShape = null;
         BoxShape boxShape = null;
@@ -93,16 +100,20 @@ public final class JoltLifecycleSpike {
         BodyCreationSettings boxSettings = null;
 
         try {
-            broadPhaseLayers = new BroadPhaseLayerInterfaceTable(NUM_OBJECT_LAYERS, NUM_BROAD_PHASE_LAYERS);
-            broadPhaseLayers.mapObjectToBroadPhaseLayer(OBJ_LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
-            broadPhaseLayers.mapObjectToBroadPhaseLayer(OBJ_LAYER_MOVING, BP_LAYER_MOVING);
-
             objectLayerFilter = new ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS);
-            objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_NON_MOVING);
             objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_MOVING);
+            objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_NON_MOVING);
+            objectLayerFilter.disableCollision(OBJ_LAYER_NON_MOVING, OBJ_LAYER_NON_MOVING);
 
-            objectVsBroadPhaseFilter = new ObjectVsBroadPhaseLayerFilterTable(
-                    broadPhaseLayers,
+            layerMap = new BroadPhaseLayerInterfaceTable(
+                    NUM_OBJECT_LAYERS,
+                    NUM_BROAD_PHASE_LAYERS
+            );
+            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_MOVING, 0);
+            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_NON_MOVING, 0);
+
+            broadPhaseFilter = new ObjectVsBroadPhaseLayerFilterTable(
+                    layerMap,
                     NUM_BROAD_PHASE_LAYERS,
                     objectLayerFilter,
                     NUM_OBJECT_LAYERS
@@ -114,11 +125,12 @@ public final class JoltLifecycleSpike {
                     0,
                     1_024,
                     1_024,
-                    broadPhaseLayers,
-                    objectVsBroadPhaseFilter,
+                    layerMap,
+                    broadPhaseFilter,
                     objectLayerFilter
             );
 
+            tempAllocator = new TempAllocatorMalloc();
             int workerThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
             jobSystem = new JobSystemThreadPool(
                     Jolt.cMaxPhysicsJobs,
@@ -156,7 +168,7 @@ public final class JoltLifecycleSpike {
             double lowestY = startY;
 
             for (int step = 0; step < STEPS_PER_CYCLE; step++) {
-                physicsSystem.update(TIME_STEP_SECONDS, 1, jobSystem);
+                physicsSystem.update(TIME_STEP_SECONDS, 1, tempAllocator, jobSystem);
                 lowestY = Math.min(lowestY, bodies.getPosition(boxId).y());
             }
 
@@ -185,10 +197,15 @@ public final class JoltLifecycleSpike {
             close(boxShape);
             close(floorShape);
             close(jobSystem);
+            close(tempAllocator);
+
+            if (physicsSystem != null) {
+                physicsSystem.forgetMe();
+            }
             close(physicsSystem);
-            close(objectVsBroadPhaseFilter);
+            close(broadPhaseFilter);
             close(objectLayerFilter);
-            close(broadPhaseLayers);
+            close(layerMap);
 
             Jolt.unregisterTypes();
             Jolt.destroyFactory();
@@ -196,9 +213,6 @@ public final class JoltLifecycleSpike {
     }
 
     private static long allocationBalance() {
-        if (!"Debug".equalsIgnoreCase(Jolt.buildType())) {
-            return 0L;
-        }
         return (long) Jolt.countNews() - Jolt.countDeletes();
     }
 
@@ -214,17 +228,15 @@ public final class JoltLifecycleSpike {
     }
 
     private static void loadNativeLibrary() {
-        LibraryInfo library = new LibraryInfo(null, "joltjni", Directory.class);
-        NativeBinaryLoader loader = new NativeBinaryLoader(library);
-        loader.setLoadingCriterion(LoadingCriterion.CLEAN_EXTRACTION);
-        loader.setPlatformPredicate(PlatformPredicate.WIN_X86_64);
-        loader.loadLibrary();
-    }
-
-    private static final class Directory implements NativeDynamicLibrary {
-        @Override
-        public String getPathInNatives() {
-            return "windows/x86_64/com/github/stephengold/joltjni";
-        }
+        LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
+        NativeBinaryLoader loader = new NativeBinaryLoader(info);
+        NativeDynamicLibrary[] libraries = {
+                new NativeDynamicLibrary(
+                        "windows/x86-64/com/github/stephengold",
+                        PlatformPredicate.WIN_X86_64
+                )
+        };
+        loader.registerNativeLibraries(libraries).initPlatformLibrary();
+        loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
     }
 }

@@ -140,6 +140,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
 
+- dependency-lock reproducibility via `resolveAndLockAllDependencies --write-locks` followed by `git diff --exit-code` over all `gradle.lockfile` files;
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
 - root/subproject test aggregation via `test`;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;

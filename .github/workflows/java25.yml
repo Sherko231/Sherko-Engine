@@ -94,6 +94,8 @@ jobs:
     name: Windows native smoke
     runs-on: windows-latest
     timeout-minutes: 5
+    env:
+      ALSOFT_DRIVERS: "null"
 
     steps:
       - uses: actions/checkout@v4
@@ -105,13 +107,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Run integrated GLFW/OpenGL/Jolt/OpenAL/UDP smoke
-        run: .\gradlew.bat runIntegratedNativeSmoke
+      - name: Run GLFW and OpenAL native lifecycle smoke
+        run: .\gradlew.bat runWindowsNativeCiSmoke
 
-      - name: Upload native smoke JFR
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p0-t12-native-smoke-jfr
-          path: build/spikes/native-evidence/p0-t12-smoke.jfr
-          if-no-files-found: warn
+      - name: Run Jolt JNI lifecycle smoke
+        run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1

@@ -8,7 +8,7 @@
 | --- | --- |
 | Last verified predecessor merge | PR #45 — architecture/roadmap coherence |
 | Predecessor `master` commit | `22a99053c3fec74495e2c870c2898d4e85630177` |
-| Handoff-system work | Issue #46; introduced by the commit/PR containing this document |
+| Handoff-system work | Issue #46 / PR #47; introduced by the containing commit |
 | Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04 |
 | Next executable task | P1-T05 — Issue #35, add Checkstyle quality rules |
@@ -64,7 +64,7 @@ These do not block independent Phase 1 foundation tasks unless the active Issue 
 
 - PR #45 CI passed on Windows / Java 25, including the root test suite and `engine-ui` tests.
 - The current build declares 16 subprojects in `settings.gradle.kts`.
-- `buildAllModules` is defined to depend on every subproject build, but the predecessor handoff did not preserve direct execution evidence for the post-`engine-ui` graph. Do not repeat the earlier overclaim; run and record it for this handoff change/CI expansion.
+- PR #47 expands its Windows/Java 25 CI run to execute `projects`, `buildAllModules`, and `test`; the PR run is the required direct evidence before merge.
 - Canonical commands and evidence requirements are in `docs/BUILD_AND_VERIFY.md`.
 
 ## Live-state reconciliation

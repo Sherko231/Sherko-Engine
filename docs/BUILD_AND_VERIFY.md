@@ -33,7 +33,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. At the current checkpoint it reports toolchains and runs `.\gradlew.bat test`. Task P1-T08 / Issue #38 will expand CI to compile, architecture, and selected Windows native smoke gates. Until then, record `projects` and `buildAllModules` separately when they are acceptance requirements.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. At the current checkpoint it reports toolchains, lists projects, builds all modules, and runs the full test selector. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
 
 ## Phase 0 feasibility commands
 

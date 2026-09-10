@@ -58,6 +58,30 @@ Run this audit before implementation and again before handoff:
 - Treat native resources as explicitly owned and closed; garbage collection is not native cleanup.
 - Do not use Java object serialization for disk or network protocols.
 
+## Task contracts and test intent
+
+Before implementing a task that adds or changes a public API or durable architecture decision, put the following in its active Issue:
+
+- one realistic caller/use case with inputs, operation sequence, and observable expected result;
+- relevant failure cases, including invalid input/order, partial failure, ownership, and cleanup where applicable;
+- why this capability or abstraction is needed by the current task, and the simpler alternative considered.
+
+Resolve a missing or contradictory contract before coding; an implementation choice must not silently redefine acceptance. Documentation-only tasks can mark these fields not applicable with a reason.
+
+Derive tests from the Issue's observable requirements. For each behavior or parameterized family, identify the realistic fault it would catch and how the expected result is determined independently of the implementation. Do not use production output as its own expected value or treat a mock-only reproduction as proof that production behavior works. This does not require one document row per test or a new testing framework.
+
+## Review evidence
+
+For public API or durable architecture changes, seek review from a person or a separate agent that did not author the change. The reviewer must inspect the Issue, applicable scope/decisions, actual diff, and tests, rather than relying only on the author's summary.
+
+Use the PR review record to identify the reviewer/type, reviewed commit SHA, findings, their disposition, and remaining uncertainty. Review must question scope, unnecessary complexity, whether the contract itself is correct, and whether tests could pass despite a violated requirement. No findings is a valid result only with stated review coverage.
+
+The author's second pass is self-review, not independent review. If independent review is unavailable, record `not performed`, the reason, and the remaining risk; never invent approval or imply that CI/checklists substitute for review. Any explicit review gate in the active Issue or repository settings still applies. Reassess affected findings after substantive changes and record the final reviewed SHA.
+
+## Phase integration and planning review
+
+Task completion does not establish phase completion. Follow the phase verification procedure in `docs/BUILD_AND_VERIFY.md`: demonstrate the existing backlog exit gate through the relevant integrated runtime/test path, record evidence, and review the next phase before materializing its executable Issues. Use a small integration scenario within an authorized task when its behavior becomes testable; do not add future systems merely to create a demo. Keep the backlog's numeric thresholds, scope, and native evidence limits unchanged unless a separate Issue explicitly authorizes changing them.
+
 ## Stop conditions
 
 Stop implementation and report the conflict when the task would require any of the following without explicit authorization in the Issue:
@@ -110,4 +134,5 @@ Before yielding to another agent:
 4. Update the required documents from the matrix.
 5. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
 6. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
-7. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.
+7. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
+8. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.

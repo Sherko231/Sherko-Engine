@@ -155,6 +155,25 @@ For a general documentation/build-boundary pull request, the minimum clean verif
 
 Do not use Gradle task counts as durable evidence; counts change when modules/plugins/tasks change.
 
+## Phase integration and next-phase readiness
+
+The phase exit gates in [TECHNICAL_BACKLOG.md](roadmap/TECHNICAL_BACKLOG.md) and milestone outcomes in [ROADMAP.md](../ROADMAP.md) remain the acceptance sources. This procedure adds evidence discipline, not new feature requirements or numerical thresholds. It applies to every phase, including a headless/test-only phase; a visual demo is not universally required.
+
+Before claiming a phase is complete:
+
+1. In the bounded phase-exit Issue/PR, link the applicable existing gate and identify every part of it that must be demonstrated. If required behavior is missing, leave the gate open and identify the bounded follow-up instead of weakening acceptance.
+2. Describe one repeatable scenario (or the minimum scenarios needed) through the actual participating systems and public boundaries. Use the sandbox when suitable and available, or a headless/test harness for nonvisual behavior. Mock-only subsystem tests do not demonstrate real integration.
+3. Record exact executable commands or manual steps, inputs/assets/seeds, tested commit, environment, original duration/impairment thresholds where specified, expected behavior, and observed results. Add commands to this file when implemented; do not publish hypothetical commands as runnable.
+4. Retain relevant logs, reports, traces, captures, and cleanup observations. State what was not exercised. Routine CI, a screenshot, or task checkmarks alone cannot replace an unexecuted integration/duration gate.
+5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
+6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
+
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; P2-T01's single-subsystem unit suite does not satisfy that gate. The integrated loop and its command are not implemented yet.
+
+For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
+
+During a phase, add a small integration exercise within a task's authorized scope as soon as meaningful behavior is available. If it requires another task's implementation, record the missing dependency and keep the work bounded. Keep findings and review provenance in existing Issues/PRs and the current handoff documents; no parallel management document is required.
+
 ## CI gate
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five workflow jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging before a passing exact-head run.

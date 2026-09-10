@@ -20,6 +20,14 @@ assignees: ""
 
 - [ ]
 
+## API / architecture contract
+
+<!-- Required for public API or durable architecture work. Otherwise write Not applicable and why. -->
+
+- Realistic usage example: caller, inputs, operation sequence, observable expected result.
+- Failure behavior: invalid use, partial failure, ownership/cleanup where relevant.
+- Current need: why this design is needed now; simpler alternative considered.
+
 ## Dependencies / blockers
 
 - None / #
@@ -45,7 +53,18 @@ assignees: ""
 
 ## Optional: Required tests
 
+<!-- For changed behavior, map each behavior/test family to an acceptance requirement,
+     a realistic fault it should catch, and an independently derived expected result.
+     Do not repeat the implementation algorithm as the expected-value calculation. -->
+
 - [ ]
+
+## Optional: Phase integration evidence
+
+<!-- For an integration or phase-exit task, link the existing backlog gate and specify
+     participating systems, exact scenario/command, unchanged acceptance thresholds,
+     environment and evidence paths. Do not invent commands for unimplemented work.
+     At phase exit, record the next-phase review described in BUILD_AND_VERIFY.md. -->
 
 ## Optional: Non-goals
 

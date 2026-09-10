@@ -7,6 +7,7 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+# P1-T08 keeps each required verification concern visible as its own CI job.
 jobs:
   build:
     name: Build and quality gates

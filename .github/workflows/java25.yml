@@ -41,6 +41,51 @@ jobs:
       - name: Verify headless server runtime boundary
         run: .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 
+      - name: Verify client/server version reporting
+        shell: pwsh
+        run: |
+          $clientLines = & .\gradlew.bat -q :game-client:runClient --args="--version"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $serverLines = & .\gradlew.bat -q :game-server:runServer --args="--version"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          function Convert-VersionReport([string[]] $lines) {
+            $report = @{}
+            foreach ($line in $lines) {
+              if ($line -match '^([^=]+)=(.*)$') {
+                $report[$matches[1]] = $matches[2]
+              }
+            }
+            return $report
+          }
+
+          $client = Convert-VersionReport $clientLines
+          $server = Convert-VersionReport $serverLines
+          $required = @('executable', 'engineCommit', 'protocolVersion', 'assetVersion', 'javaVersion', 'nativeLibraries')
+          foreach ($key in $required) {
+            if (-not $client.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($client[$key])) {
+              throw "Client version report missing required key: $key"
+            }
+            if (-not $server.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($server[$key])) {
+              throw "Server version report missing required key: $key"
+            }
+          }
+
+          foreach ($key in @('engineCommit', 'protocolVersion', 'assetVersion', 'javaVersion')) {
+            if ($client[$key] -ne $server[$key]) {
+              throw "Client/server version mismatch for $key`: client=$($client[$key]) server=$($server[$key])"
+            }
+          }
+
+          if ($client['engineCommit'] -ne '${{ github.sha }}') {
+            throw "Version report commit does not match checked-out PR/push SHA: report=$($client['engineCommit']) github=${{ github.sha }}"
+          }
+
+          Write-Output "Client version report:"
+          $clientLines
+          Write-Output "Server version report:"
+          $serverLines
+
   unit-tests:
     name: Unit tests
     runs-on: windows-latest

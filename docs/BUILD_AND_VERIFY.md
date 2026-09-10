@@ -23,6 +23,8 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Run client foundation entry point | `.\gradlew.bat :game-client:runClient` | Client foundation process starts and exits cleanly. |
 | Run headless server foundation entry point | `.\gradlew.bat :game-server:runServer` | Server foundation process starts in headless mode and exits cleanly. |
+| Report client version metadata | `.\gradlew.bat :game-client:runClient --args="--version"` | Client reports executable, engine commit, protocol version, asset version, Java version, and native libraries available on its runtime classpath. |
+| Report server version metadata | `.\gradlew.bat :game-server:runServer --args="--version"` | Server reports the same shared identifiers plus its executable-specific native-library list. |
 | Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts. |
 | Run hosted-Windows-safe native lifecycle smoke | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | GLFW initializes/terminates, OpenAL opens/closes through the null backend, and one Jolt JNI lifecycle cycle completes with cleanup. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
@@ -83,6 +85,15 @@ For P1-T09 / Issue #39, verify the two executable foundation composition roots a
 
 The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears. This is stronger than relying on a log line that merely claims the server is headless.
 
+For P1-T10 / Issue #40, run both reports from the same checkout/build:
+
+```powershell
+.\gradlew.bat :game-client:runClient --args="--version"
+.\gradlew.bat :game-server:runServer --args="--version"
+```
+
+Both reports must contain non-empty `engineCommit`, `protocolVersion`, `assetVersion`, `javaVersion`, and `nativeLibraries` fields. `engineCommit`, `protocolVersion`, `assetVersion`, and `javaVersion` must match between client and server from the same build. CI additionally requires `engineCommit` to equal the exact GitHub workflow SHA. `protocolVersion` and `assetVersion` come from `config/version.properties`; the commit comes from `git rev-parse HEAD`; native-library values are derived from each executable's resolved runtime artifacts. A runtime with no matching native artifacts reports `nativeLibraries=none` rather than claiming unavailable libraries.
+
 For a general documentation/build-boundary pull request, the minimum clean verification is:
 
 ```powershell
@@ -97,7 +108,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
 
-- build and root quality gates via `buildAllModules`, followed by `:game-client:runClient`, `:game-server:runServer`, and `:game-server:verifyHeadlessServerRuntime` so P1-T09 entry points remain executable and the server remains headless;
+- build and root quality gates via `buildAllModules`, followed by client/server foundation runs, the server headless boundary check, and P1-T10 client/server version-report compatibility verification;
 - unit/root/subproject tests via `test`;
 - explicit architecture boundaries via the root `ModulePackageBoundaryTest` command above;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;

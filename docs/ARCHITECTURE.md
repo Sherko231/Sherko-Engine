@@ -45,9 +45,11 @@ The repository has a working Java 25 multi-project build with 17 declared Gradle
 - one public cross-module API root under that package root;
 - one internal implementation root under that package root.
 
-Code inside a module may use its own implementation packages. Cross-module imports must target the other module's declared API root. Imports of another module's internal root are architectural violations even when the Gradle project dependency itself is otherwise valid.
+Code inside a module may use its own implementation packages. Cross-module source references, whether imports or fully qualified names, must target the other module's declared API root. References to another module's internal root are architectural violations even when the Gradle project dependency itself is otherwise valid.
 
-`ModulePackageBoundaryTest` now lives under `test-support/src/test` because the root has no Java source tree. It verifies registry completeness, verifies source packages stay under their owning module root, and scans production/declared-subproject imports for cross-module implementation shortcuts. A deliberate fixture under `config/architecture/fixtures/` represents a forbidden `game-client -> engine-platform-lwjgl.internal` dependency and remains opt-in negative evidence.
+`ModulePackageBoundaryTest` lives under `test-support/src/test` because the root has no Java source tree. The `test-support` Gradle test task supplies the complete sorted `rootProject.subprojects` inventory; the test validates the registry against that live list rather than maintaining a second hard-coded list. It requires every scanned production Java file to declare a package under its owning module root, then uses the Java 25 compiler-tree API to inspect imports and fully qualified references in both `src/main/java` and `src/test/java`. Overlapping roots are assigned to the most-specific owner before the source module is excluded.
+
+Test-source package ownership is intentionally not enforced because the Phase 1 module smoke tests share the `com.samo.testing` package from `test-support`; their cross-module references are still scanned. This remains source-level verification: it does not inspect compiled bytecode, reflective class names in strings/resources, or generated sources outside the conventional main/test Java trees. A deliberate fixture under `config/architecture/fixtures/` represents a forbidden `game-client -> engine-platform-lwjgl.internal` import and remains opt-in negative evidence; in-suite regressions cover a fully qualified shortcut, a missing production package, and overlapping network roots.
 
 These package roots define boundaries, not future subsystem interfaces. P1-T10A does not create a reusable feasibility API or promote spike code into production architecture.
 
@@ -93,6 +95,6 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Root contains no Java source/runtime spike dependencies | Implemented by P1-T10A / Issue #56 |
 | Shared Java 25/test conventions | Implemented |
 | Dependency locking/version catalog | Implemented |
-| Automated package/module boundary test | Implemented by P1-T07; relocated/extended by P1-T10A |
+| Automated package/module boundary test | Implemented by P1-T07; relocated by P1-T10A; hardened by Issue #62 |
 | Client/server executable composition roots | Implemented by P1-T09 / Issue #39 |
 | Production engine subsystems | Planned: Phase 2 onward |

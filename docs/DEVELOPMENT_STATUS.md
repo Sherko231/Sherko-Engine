@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `559f31c358a6a69f8f0a229347f10edd76c9df94` — post-Phase 1 handoff PR #59 merged; merged-master CI #139 passed |
+| Verified pre-checkpoint `master` | `3c284a85cc1d03516a7d0792c7a0e979f95b2707` — JUnit 6 / handoff correction PR #61 merged; merged-master CI #143 passed |
 | Completed milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
@@ -33,7 +33,7 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - The root dependency lock represents root build/quality configurations; `feasibility-spikes/gradle.lockfile` owns the relocated spike runtime graph.
 - Shared group/version/repository/toolchain/JUnit 6 Platform conventions remain centralized at the root.
 - `test-support` exports JUnit 6 and AssertJ and owns the repository-wide `ModulePackageBoundaryTest` source.
-- D-016 package/API boundary enforcement covers all 17 declared Gradle subprojects, including experimental `feasibility-spikes`, without weakening the cross-module API-only rule.
+- D-016 source-level verification receives all declared subprojects from Gradle, validates exact registry coverage and production package ownership, and scans imports plus fully qualified references in main/test Java trees. Test package ownership, bytecode, reflection strings/resources, and generated sources outside the conventional trees remain explicitly out of scope.
 - Checkstyle 14.1.0 scans production/test sources while explicitly excluding the experimental feasibility source tree; `verifyCheckstyleSourceBoundary` verifies that exclusion.
 - JaCoCo 0.8.15 remains configured for the same 12 test-bearing engine modules.
 - `.github/workflows/java25.yml` contains five Windows Java 25 jobs and selects `[self-hosted, Windows, X64]`.
@@ -51,6 +51,7 @@ P1-T10A completed the final Phase 1 follow-up:
 - Phase 1 Epic #2 closed as completed.
 - The Phase 1 exit gate — repeatable empty client and headless-server build/run commands with the required quality gates — is satisfied.
 - The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier framework-version wording, stale README phase pointer, and CI-enforcement wording, and adds a mandatory agent consistency audit without changing build behavior.
+- Issue #62 hardens D-016 against Gradle-module-list drift, missing production packages, fully qualified shortcuts, and overlapping-root misattribution without changing production code or dependencies.
 
 ## What remains skeleton or planned
 
@@ -84,7 +85,7 @@ Before starting the next task, a fresh agent must:
 
 1. read `AGENTS.md` in full and follow its required read order;
 2. inspect `git status --short --branch`, `git rev-parse HEAD`, remote `master`, open PRs, and active Issues;
-3. confirm Phase 1 Epic #2 and Issue #56 are closed and no newer repository activity supersedes this checkpoint;
+3. confirm Phase 1 Epic #2 and corrective Issues #60 and #62 are closed and no newer repository activity supersedes this checkpoint;
 4. inspect independent follow-up Issues #42–#44 and preserve their evidence limits;
 5. confirm at least one matching self-hosted Windows x64 runner is online before interpreting queued CI;
 6. materialize P2-T01 as the next executable Issue before any Phase 2 implementation;

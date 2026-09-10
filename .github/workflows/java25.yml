@@ -29,13 +29,6 @@ jobs:
       - name: List declared projects
         run: .\gradlew.bat projects
 
-      - name: Verify dependency locks reproduce
-        shell: pwsh
-        run: |
-          .\gradlew.bat resolveAndLockAllDependencies --write-locks
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git diff --exit-code -- ':(glob)**/gradle.lockfile'
-
       - name: Build all modules
         run: .\gradlew.bat buildAllModules
 

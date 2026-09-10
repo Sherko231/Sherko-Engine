@@ -7,8 +7,8 @@
 - **Milestone:** M1 — Engine Foundation
 - **Phase:** P1 — Build, modules, and quality gates
 - **Completed:** P1-T01 — initial four-module Gradle build
-- **Current task:** P1-T02 — Add remaining empty engine modules (Issue #32)
-- **P1-T02 state:** implementation committed on `master`; local verification pending
+- **Completed:** P1-T02 — full target module tree
+- **Current task:** P1-T03 — Centralize dependency versions and lock resolution (Issue #33)
 - **Phase 0:** complete; feasibility spikes remain disposable evidence, not production architecture
 
 ## Proven feasibility baseline
@@ -27,7 +27,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | Task | State | Result |
 | --- | --- | --- |
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
-| P1-T02 | In progress | The full target module tree from `ENGINE_SCOPE.md` is now declared and empty module build files/dependencies are present; local `projects` + full aggregate build verification is still required. |
+| P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
 
 ## Current module tree
 
@@ -51,18 +51,7 @@ test-support
 
 The module graph is intentionally one-way. Lower engine modules do not depend on game modules. `game-server` does not depend on rendering, platform-window, or audio modules, preserving the future headless-server path.
 
-`buildAllModules` now depends on every declared subproject build rather than a hard-coded four-module list.
-
-## Current verification
-
-Run from the repository root:
-
-```powershell
-.\gradlew.bat projects
-.\gradlew.bat buildAllModules
-```
-
-P1-T02 completes only when `projects` lists the full target tree and the aggregate build succeeds without a circular project dependency.
+`buildAllModules` depends on every declared subproject build.
 
 ## Experimental Phase 0 code
 
@@ -72,7 +61,9 @@ The root `src/main/java/com/samo/spike/...` code remains available for feasibili
 
 ## What happens next
 
-After P1-T02 verification succeeds, close Issue #32 and advance to **P1-T03 — Centralize dependency versions and lock resolution**.
+The next executable task is **P1-T03 — Centralize dependency versions and lock resolution** (Issue #33).
+
+P1-T03 will move shared dependency/plugin versions into one central Gradle version catalog and enable dependency locking so clean resolutions remain reproducible across machines. It should not opportunistically upgrade dependencies unless compatibility requires it.
 
 ## Working convention
 

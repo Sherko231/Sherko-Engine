@@ -57,7 +57,7 @@ Its default duration is 900 seconds and its JFR output is `build/spikes/native-e
 
 ## Verified runtime result
 
-The owner ran the integrated soak successfully on the target Windows x64 development machine under Java 25.
+The owner ran the integrated smoke test successfully on the target Windows x64 development machine under Java 25.
 
 Observed runtime evidence:
 

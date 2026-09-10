@@ -1,16 +1,21 @@
 # GitHub Roadmap Model — Sherko Engine
 
-This document defines the stable GitHub planning model for Sherko Engine. It intentionally does **not** duplicate live Issue numbers, current task statuses, or other data that belongs in GitHub itself.
+This document defines the stable GitHub planning model for Sherko Engine. It does not duplicate live board columns. Repository-commit state belongs in `docs/DEVELOPMENT_STATUS.md`; activity after that commit belongs in GitHub.
 
 ## Source-of-truth layers
 
+- `AGENTS.md` — mandatory AI read order, truth hierarchy, and handoff rules.
 - `ENGINE_SCOPE.md` — product and architecture boundaries.
+- `docs/DECISIONS.md` — durable architecture decisions.
+- `docs/ARCHITECTURE.md` — current module roles, dependencies, and maturity.
 - `ROADMAP.md` — milestone/phase-level roadmap and planning rules.
-- `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and planning acceptance criteria.
+- `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and planning acceptance criteria; its checkboxes do not track completion.
+- `docs/BUILD_AND_VERIFY.md` — canonical commands and evidence expectations.
+- `docs/DEVELOPMENT_STATUS.md` — checkpoint represented by the containing commit.
 - GitHub Milestones — milestone progress over executable Issues.
 - GitHub Labels — durable task type/subsystem classification.
 - GitHub Issues — executable work and task-level execution contracts.
-- GitHub Project — live roadmap/board layer and task status.
+- GitHub Project — live roadmap/board layer and workflow status after the commit.
 
 ## Milestones
 

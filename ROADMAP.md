@@ -24,6 +24,8 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
 - Live workflow status belongs in GitHub Issues/Project. The commit-contained completed/next-work checkpoint belongs in `docs/DEVELOPMENT_STATUS.md`; roadmap and backlog documents do not track board state.
 - A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
+- Demonstrate phase exit through the actual integrated runtime/test path and retain scenario, environment, tested SHA, observed results, and evidence using `docs/BUILD_AND_VERIFY.md`. Isolated test success alone does not establish integration.
+- Before materializing the next phase, review its assumptions, dependencies, current use cases, and planned acceptance against the completed phase's evidence. Record the review in the closing Issue/PR. Future task details remain planning baselines; refine them deliberately without changing scope, decisions, or exit thresholds implicitly.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
 
 ## Milestones
@@ -121,6 +123,8 @@ Every executable Issue should have:
 - dependencies/blockers, or an explicit `None`;
 - a verification method or command.
 
+For public API or durable architecture work, also include a realistic usage example, relevant failure behavior, and why the design is needed now, including a simpler alternative considered. Derive test expectations from that contract and identify the plausible faults they detect. `AGENTS.md` and the Issue template define the required detail.
+
 Add non-goals, required tests, allowed files/modules, interface restrictions, and an architecture stop condition **when they materially reduce ambiguity or architectural risk**. Small documentation, configuration, or isolated spike tasks do not need ceremonial fields that add no useful constraint.
 
 ## Definition of Done
@@ -129,6 +133,7 @@ A task is done only when:
 
 - acceptance criteria pass;
 - appropriate tests or verification evidence are recorded;
+- review provenance, findings/dispositions, and unavailable independent review are explicitly recorded as required by `AGENTS.md`; applicable Issue/repository review gates are satisfied;
 - no undeclared scope was implemented;
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;

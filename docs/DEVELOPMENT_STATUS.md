@@ -6,19 +6,19 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `bbdf541287df667e9fd88c15b7231d90c76207dc` — boundary hardening PR #63 merged; merged-master CI #147 passed |
+| Verified pre-checkpoint `master` | `f84ca1d87292daf2648c9f6dc9371156facdb945` — P2-T01 PR #65 merged; merged-master CI #149 passed |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A |
+| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A, P2-T01 |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
-| Current implementation | P2-T01 / Issue #64 — guarded single-subsystem lifecycle and JUnit 6 acceptance suite; completion requires linked PR verification and merge |
-| Next planned implementation | After P2-T01 verification and merge, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
+| Current maintenance | Issue #66 — task-contract, review-evidence, and phase-integration documentation; see linked PR for final verification/merge state |
+| Next planned implementation | After this documentation maintenance is verified and merged, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare with remote `master`, and inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-Phase 1 is complete. P2-T01 / Issue #64 implements the single-subsystem lifecycle in this checkpoint. Inspect its linked PR and exact final CI evidence: if still open or verification is incomplete, finish that handoff first. After its final PR-head checks, merge, and merged-master push checks pass, materialize P2-T02 (subsystem dependency ordering) as the next executable Issue. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03).
+Phase 1 and P2-T01 / Issue #64 are complete. Inspect documentation maintenance Issue #66 and its linked PR first; finish its verification/merge handoff if still open. Then materialize P2-T02 (subsystem dependency ordering) as the next executable Issue using the strengthened task contract. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03). P2 phase exit remains unproven; single-subsystem tests do not demonstrate the ten-minute integrated headless loop.
 
 Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run. At least one matching runner must be online for those jobs to execute; queued jobs are not verification evidence.
 
@@ -41,6 +41,12 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - The architecture job targets `:test-support:test`, and native smoke invokes the preserved root aliases.
 - `game-client` and `game-server` have separate runnable entry points, reproducible `--version` reporting, and server headless runtime-boundary verification.
 
+## Documentation maintenance — Issue #66
+
+The agent contract and existing templates now require concrete API/architecture use cases, failure behavior, and current design need; tests must trace to observable requirements and plausible faults. PRs record independent/self-review provenance, reviewed SHA, findings, and unresolved risks honestly. Phase-exit evidence and next-phase planning review use existing backlog gates and existing handoff documents. No runtime API, architecture, dependency, workflow, or phase threshold changes.
+
+This documentation-only change receives self-review; no independent review is claimed. Final CI/merge results and any remaining handoff blockers are recorded in Issue #66 and its linked PR. P2-T02 remains the next runtime task.
+
 ## P2-T01 implementation and verification handoff
 
 - `engine-core` now contains `com.samo.engine.core.api.EngineSubsystem`, an abstract `AutoCloseable` base with final initialize/start/stop/close guards and protected phase hooks (D-018).
@@ -49,7 +55,7 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - No subsystem graph, coordinated rollback, clock, runtime loop, configuration, or other P2 task is implemented. Client/server entry points are unchanged.
 - The five existing CI jobs now also execute focused lifecycle acceptance and unchanged dependency-lock resolution. Test evidence: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml`, `engine-core/build/reports/tests/test/index.html`, and the `engine-subsystem-tests` CI artifact; coverage remains in `jacoco-reports`.
 - The implementation environment is Linux x64 with JDK 17 only. The starting checkout was materialized from authenticated GitHub API data and every blob, tree, and the original commit SHA verified. The local focused Gradle command failed before compilation because the Gradle 9.3.0 download was blocked by network access. Required Java 25/Windows runtime results must come from actual CI execution, not this local environment.
-- Final workflow IDs, exact tested SHAs, command results, skipped checks, and artifact IDs belong in Issue #64 and its linked PR after execution. This commit does not pre-claim those later CI results.
+- P2-T01 merged via PR #65 as `f84ca1d87292daf2648c9f6dc9371156facdb945`. Final PR CI #148 and merged-master push CI #149 passed all five jobs. Issue #64 is closed as completed; its body and PR #65 retain exact SHA, command, environment, skipped-check, and artifact evidence.
 - Independent #42–#44 remain open and their evidence limits are unchanged.
 
 ## Phase 1 completion evidence

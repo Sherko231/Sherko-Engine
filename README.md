@@ -25,6 +25,6 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 
 Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, Java FFM access to the Steam flat API, and a 15-second combined native smoke run. End-to-end SteamNetworkingSockets and sustained/repeated native lifecycle evidence remain explicit follow-up gates.
 
-Phase 1 is complete; M1 continues through Phases 2–4. P2-T01 defines the single-subsystem lifecycle. After its linked PR passes final verification and merges, the next implementation action is to materialize P2-T02 as one executable Issue. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
+Phase 1 is complete; M1 continues through Phases 2–4. P2-T01 is complete and merged. The next implementation action is to materialize P2-T02 as one executable Issue. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
 
 All agent-authored changes use one active Issue, a dedicated branch, a pull request, and CI before merge.

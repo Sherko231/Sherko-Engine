@@ -14,7 +14,7 @@ dependencies {
 }
 
 val compatibilityVersions = Properties().apply {
-    rootProject.file("config/version.properties").inputStream().use(::load)
+    rootProject.file("config/version.properties").inputStream().use { load(it) }
 }
 val engineCommit = providers.exec {
     workingDir(rootDir)

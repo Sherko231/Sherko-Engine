@@ -16,10 +16,25 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Purpose | Windows command | Expected evidence |
 | --- | --- | --- |
 | Show declared projects | `.\gradlew.bat projects` | All 16 subprojects from `settings.gradle.kts` appear. |
-| Compile/test every module | `.\gradlew.bat buildAllModules` | Every subproject `build` completes. |
+| Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
+| Run the root quality gate | `.\gradlew.bat check` | Checkstyle scans applicable production/module Java sources and tests, the Phase 0 exclusion boundary check passes, and root tests pass. |
 | Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including `engine-ui`. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
+
+For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
+
+```powershell
+.\gradlew.bat check -PcheckstyleIncludeInvalidFixture=true
+```
+
+The fixture intentionally contains a wildcard import, an empty catch block, and a discarded return value from a side-effect-free fully-qualified `java.lang.Math` call. The normal valid command is:
+
+```powershell
+.\gradlew.bat check
+```
+
+The root Checkstyle scan deliberately excludes `src/main/java/com/samo/spike/**`, which remains Phase 0 experimental evidence. `verifyCheckstyleSourceBoundary` makes that exclusion explicit and fails if excluded spike sources leak into the production scan.
 
 For a general documentation/build-boundary pull request, the minimum clean verification is:
 
@@ -33,7 +48,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. At the current checkpoint it reports toolchains, lists projects, builds all modules, and runs the full test selector. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle as part of its ordinary all-module build. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
 
 ## Phase 0 feasibility commands
 

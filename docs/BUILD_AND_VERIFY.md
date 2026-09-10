@@ -1,12 +1,13 @@
 # Sherko Engine Build and Verification
 
-This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is the authoritative clean Windows Java 25 environment for ordinary build/test checks.
+This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when the configured repository self-hosted Windows x64 runner actually executes the jobs.
 
 ## Environment baseline
 
 - JDK: Temurin/OpenJDK 25 through the Gradle toolchain.
 - Build: repository Gradle Wrapper.
-- CI: `windows-latest`.
+- CI runner: repository-scoped self-hosted Windows x64 runner selected by `[self-hosted, Windows, X64]`.
+- Runner availability: the runner is manually operated and must be online before required CI can execute; queued/unstarted jobs are not verification evidence.
 - Runtime target: Windows x64.
 
 Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\gradlew.bat` on Windows.
@@ -26,7 +27,7 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Report client version metadata | `.\gradlew.bat :game-client:runClient --args="--version"` | Client reports executable, engine commit, protocol version, asset version, Java version, and native libraries available on its runtime classpath. |
 | Report server version metadata | `.\gradlew.bat :game-server:runServer --args="--version"` | Server reports the same shared identifiers plus its executable-specific native-library list. |
 | Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts. |
-| Run hosted-Windows-safe native lifecycle smoke | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | Historical root task aliases delegate to `feasibility-spikes`; GLFW/OpenAL/Jolt lifecycle smoke completes. |
+| Run CI-native lifecycle smoke locally | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | Historical root task aliases delegate to `feasibility-spikes`; GLFW/OpenAL/Jolt lifecycle smoke completes. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
 
@@ -138,19 +139,25 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five required jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline/queued/unstarted job is a CI blocker, not a pass.
+
+The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
 - root/subproject test aggregation via `test`;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- hosted-Windows-safe native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.
+- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.
+
+A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
+
+Because only one repository runner is currently expected, independent jobs may execute sequentially. This affects wall-clock time only and does not change pass/fail semantics.
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 
-The hosted Windows runner does not provide the OpenGL 4.6 driver/context required by `runIntegratedNativeSmoke`. CI therefore does not claim an OpenGL 4.6 context or the full P0-T12 integrated graphics/audio/physics/network path. The hosted native gate proves only the headless-safe GLFW/OpenAL/Jolt lifecycle checks already established by P1-T08.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not, but the required CI workflow still runs only the bounded native lifecycle smoke defined above. Do not upgrade this into P0-T12/P0-T13/P0-T14 evidence unless the corresponding explicit feasibility Issue is executed and documented.
 
-This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended hosted CI because they require an authenticated Steam client/account environment.
+This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
 ## Phase 0 feasibility commands
 

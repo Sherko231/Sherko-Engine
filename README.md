@@ -21,10 +21,10 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-The Java 25 multi-project foundation declares all 16 target modules and centralizes toolchain, dependency, lock, and shared test configuration. These modules are architectural skeletons, not implemented engine subsystems.
+The Java 25 multi-project foundation declares all 16 production-target modules plus the experimental `feasibility-spikes` subproject. It centralizes the toolchain, dependency locking, JUnit 6/AssertJ test support, quality gates, and repeatable client/server entry points. Production engine subsystems remain architectural skeletons.
 
 Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, Java FFM access to the Steam flat API, and a 15-second combined native smoke run. End-to-end SteamNetworkingSockets and sustained/repeated native lifecycle evidence remain explicit follow-up gates.
 
-M1 / Phase 1 is active. The next executable engine-foundation task at this checkpoint is P1-T05 / Issue #35. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues/Project state before starting.
+M1 / Phase 1 is complete. The next engine implementation action is to materialize P2-T01 as one executable Issue, then implement only that Issue on a dedicated branch. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
 
 All agent-authored changes use one active Issue, a dedicated branch, a pull request, and CI before merge.

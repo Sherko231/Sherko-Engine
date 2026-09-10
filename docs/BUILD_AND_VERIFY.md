@@ -139,7 +139,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five required jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline/queued/unstarted job is a CI blocker, not a pass.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five workflow jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging before a passing exact-head run.
 
 The five jobs cover:
 

@@ -39,11 +39,11 @@ Goal: make every later AI-generated change small, isolated, testable, and revers
 - [ ] P1-T02A Add `engine-ui` as a renderer-neutral runtime game UI module before package boundaries freeze. Acceptance: it depends only on approved core/asset APIs, exposes no OpenGL/imgui types, appears in `projects`, and participates in root build/test tasks.
 - [ ] P1-T03 Add a centralized dependency version catalog and dependency locking. Acceptance: clean builds resolve identical versions on two machines.
 - [ ] P1-T03A Centralize shared group, version, repository, Java 25 toolchain, and test-platform configuration in the root build while leaving module-specific dependencies local. Acceptance: subproject build files contain no duplicated common metadata and all modules compile/test through the same convention.
-- [ ] P1-T04 Add JUnit 5 and AssertJ to `test-support`. Acceptance: a sample unit test runs in every engine module.
+- [ ] P1-T04 Add JUnit 6 and AssertJ to `test-support`. Acceptance: JUnit 6 is the active shared test baseline and a sample unit test runs in every engine module.
 - [ ] P1-T05 Add Checkstyle with rules forbidding wildcard imports, empty catch blocks, and ignored return values where detectable. Acceptance: a deliberately invalid test file fails the check task.
 - [ ] P1-T06 Add JaCoCo reporting without enforcing an arbitrary global percentage. Acceptance: XML and HTML reports are generated in CI.
 - [ ] P1-T07 Define package roots so each Gradle module exports only its API packages. Acceptance: an architecture test rejects a game-to-platform implementation shortcut.
-- [ ] P1-T08 Add CI jobs for compile, unit tests, architecture tests, and Windows native smoke tests. Acceptance: CI runs on pull requests and pushes to `master`, and a required failure prevents merge.
+- [ ] P1-T08 Add CI jobs for compile, unit tests, architecture tests, and Windows native smoke tests. Acceptance: CI runs on pull requests and pushes to `master`, and a failure in any required job fails the workflow.
 - [ ] P1-T09 Add client and headless-server run tasks with separate main classes. Acceptance: server starts without initializing GLFW, OpenGL, or OpenAL.
 - [ ] P1-T10 Add a reproducible `--version` command reporting engine commit, protocol version, asset version, Java version, and native-library versions. Acceptance: client and server print compatible values.
 - [ ] P1-T10A Move disposable Phase 0 spike sources/dependencies out of the root production project into a clearly named `feasibility-spikes` module after their evidence is preserved. Acceptance: the root becomes an aggregator, production client/server dependency graphs exclude spike-only libraries/resources, and all spike commands remain reproducible or are explicitly archived.

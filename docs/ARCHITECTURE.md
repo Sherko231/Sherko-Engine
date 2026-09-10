@@ -13,7 +13,7 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository currently has a working Java 25 multi-project build with 16 declared subprojects. All target engine/game modules are skeletons: their Gradle boundaries and shared smoke-test wiring exist, but production engine subsystem implementations have not started. The root project contains experimental Phase 0 native/network spikes.
+The repository has a working Java 25 multi-project build with 16 declared subprojects. Engine subsystem modules and `game-sandbox` remain skeletons, while `game-client` and `game-server` now provide minimal executable composition roots for the foundation state. The root project still contains experimental Phase 0 native/network spikes.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
@@ -30,8 +30,8 @@ The repository currently has a working Java 25 multi-project build with 16 decla
 | `engine-steam` | Steam social/session and transport integration | Skeleton | `engine-core`, `engine-network-api` |
 | `engine-editor` | Internal authoring/debug tooling | Skeleton | `engine-core`, `engine-assets`, `engine-world`, `engine-render-opengl` |
 | `game-sandbox` | Game rules and vertical-slice content | Skeleton | `engine-core`, `engine-world`, `engine-physics-jolt`, `engine-network-api`, `engine-ui` |
-| `game-client` | Client composition root | Skeleton | `game-sandbox`, platform, render, audio, IP, Steam adapters |
-| `game-server` | Headless/listen-server composition root | Skeleton | `game-sandbox`, IP and Steam adapters |
+| `game-client` | Client composition root | Minimal executable foundation entry point | `game-sandbox`, platform, render, audio, IP, Steam adapters |
+| `game-server` | Headless/listen-server composition root | Minimal executable headless foundation entry point | `game-sandbox`, IP and Steam adapters |
 | `test-support` | Shared JUnit 5/AssertJ test dependencies and fixtures | Implemented build support | None |
 
 The table reflects the intended Gradle project dependency graph. P1-T07 adds package-level enforcement on top of those project boundaries.
@@ -65,6 +65,8 @@ These package roots define boundaries, not future subsystem interfaces. P1-T07 d
 
 The client will compose platform/input, OpenGL rendering, runtime UI, audio, world/physics, game rules, and either IP or Steam networking. The server will compose world/physics, game rules, and networking without graphics/audio. Server authority owns gameplay state and dynamic physics; clients predict/present but do not submit authoritative transforms.
 
+P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally initialize no production subsystems because those implementations begin in later phases. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
+
 ## Experimental code boundary
 
 Phase 0 code under root `src/main/java/com/samo/spike/` proves isolated capabilities:
@@ -86,5 +88,5 @@ It is experimental, not a reusable engine layer. Moving reusable behavior into m
 | Shared Java 25/test conventions | Implemented |
 | Dependency locking/version catalog | Implemented |
 | Automated package/module boundary test | Implemented by P1-T07 / Issue #37 |
-| Client/server executable composition roots | Planned: P1-T09 / Issue #39 |
+| Client/server executable composition roots | Implemented by P1-T09 / Issue #39 |
 | Production engine subsystems | Planned: Phase 2 onward |

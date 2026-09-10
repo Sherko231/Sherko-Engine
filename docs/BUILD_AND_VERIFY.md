@@ -17,8 +17,8 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | --- | --- | --- |
 | Show declared projects | `.\gradlew.bat projects` | All 16 subprojects from `settings.gradle.kts` appear. |
 | Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
-| Run the root quality gate | `.\gradlew.bat check` | Checkstyle scans applicable production/module Java sources and tests, the Phase 0 exclusion boundary check passes, and root tests pass. |
-| Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including `engine-ui`. |
+| Run the root quality gate | `.\gradlew.bat check` | Checkstyle, architecture-boundary tests, Phase 0 exclusion verification, and root tests pass. |
+| Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including the package/module architecture tests and `engine-ui`. |
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
@@ -50,6 +50,24 @@ JaCoCo is configured only for the 12 engine modules that currently contain the s
 
 `verifyJacocoReports` fails when either format is missing for any configured test-bearing module. Coverage is reported for visibility only; P1-T06 deliberately defines no global or per-module minimum percentage.
 
+For P1-T07 / Issue #37, the valid architecture suite is part of the ordinary root test/check flow. To run only the package-boundary tests locally:
+
+```powershell
+.\gradlew.bat test --tests com.samo.architecture.ModulePackageBoundaryTest
+```
+
+The deliberate negative fixture at `config/architecture/fixtures/ForbiddenGameToPlatformShortcut.java` is disabled by default. To prove the representative `game-client -> engine-platform-lwjgl.internal` shortcut is rejected, run:
+
+```powershell
+$env:JAVA_TOOL_OPTIONS="-Darchitecture.includeInvalidFixture=true"
+.\gradlew.bat test --tests com.samo.architecture.ModulePackageBoundaryTest
+Remove-Item Env:JAVA_TOOL_OPTIONS
+```
+
+That negative run must fail because a cross-module import targets an implementation package instead of the destination module's declared API root. After clearing `JAVA_TOOL_OPTIONS`, rerun the valid architecture command and require success.
+
+The boundary registry is `config/architecture/module-boundaries.properties`. It must contain exactly one `.root`, `.api`, and `.internal` declaration for every one of the 16 Gradle subprojects.
+
 For a general documentation/build-boundary pull request, the minimum clean verification is:
 
 ```powershell
@@ -62,7 +80,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle as part of its ordinary all-module build. CI also runs `verifyJacocoReports` and uploads `*/build/reports/jacoco/test/**` as the `jacoco-reports` artifact so XML and HTML coverage output can be inspected. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle and the P1-T07 package/module architecture tests as part of its ordinary all-module build. CI also runs `verifyJacocoReports` and uploads `*/build/reports/jacoco/test/**` as the `jacoco-reports` artifact so XML and HTML coverage output can be inspected. Task P1-T08 / Issue #38 will further expand CI with dedicated architecture and selected Windows native smoke jobs.
 
 ## Phase 0 feasibility commands
 

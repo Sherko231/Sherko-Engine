@@ -10,8 +10,6 @@ on:
 jobs:
   verify-java:
     runs-on: windows-latest
-    env:
-      JAVA_TOOL_OPTIONS: -Darchitecture.includeInvalidFixture=true
 
     steps:
       - uses: actions/checkout@v4

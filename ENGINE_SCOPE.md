@@ -77,11 +77,15 @@ engine-root/
   test-support/
 ```
 
-Dependency direction:
+Dependency direction principles:
 
 ```text
-game -> world/gameplay -> render/physics/audio/network -> assets/core -> platform
+game rules -> world / UI / network APIs
+client composition -> platform / render / audio / IP or Steam adapters
+render-opengl -> UI draw data / assets / core / platform
+server composition -> world / physics / network APIs and adapters
 ```
+
 
 ## Explicitly rejected for v1
 

@@ -34,7 +34,21 @@ The repository currently has a working Java 25 multi-project build with 16 decla
 | `game-server` | Headless/listen-server composition root | Skeleton | `game-sandbox`, IP and Steam adapters |
 | `test-support` | Shared JUnit 5/AssertJ test dependencies and fixtures | Implemented build support | None |
 
-The table reflects Gradle project dependencies at the checkpoint. `P1-T07` will add automated boundary enforcement; until then, the dependency graph is configured but not architecture-tested.
+The table reflects the intended Gradle project dependency graph. P1-T07 adds package-level enforcement on top of those project boundaries.
+
+## Package/API boundary contract
+
+`config/architecture/module-boundaries.properties` is the machine-readable registry for all 16 declared subprojects. Every module declares:
+
+- one owned package root;
+- one public cross-module API root under that package root;
+- one internal implementation root under that package root.
+
+Code inside a module may use its own implementation packages. Cross-module imports must target the other module's declared API root. Imports of another module's internal root are architectural violations even when the Gradle project dependency itself is otherwise valid.
+
+The root `ModulePackageBoundaryTest` verifies registry completeness, verifies production source packages stay under their owning module root, and scans production imports for cross-module implementation shortcuts. A deliberate fixture under `config/architecture/fixtures/` represents a forbidden `game-client -> engine-platform-lwjgl.internal` dependency and is used only for negative verification.
+
+These package roots define boundaries, not future subsystem interfaces. P1-T07 does not require creating placeholder production APIs merely to populate empty skeleton modules.
 
 ## Dependency rules
 
@@ -45,6 +59,7 @@ The table reflects Gradle project dependencies at the checkpoint. `P1-T07` will 
 - `game-server` must remain runnable without window, renderer, or audio modules.
 - `engine-editor` may consume runtime modules, but runtime modules must not depend on the editor.
 - Asset authoring/import dependencies belong in offline tooling; shipped gameplay consumes cooked formats.
+- Cross-module Java imports target only the destination module's declared API package root; `.internal` packages are never public contracts.
 
 ## Runtime composition target
 
@@ -70,6 +85,6 @@ It is experimental, not a reusable engine layer. Moving reusable behavior into m
 | 16 modules declared | Implemented |
 | Shared Java 25/test conventions | Implemented |
 | Dependency locking/version catalog | Implemented |
-| Automated package/module boundary test | Planned: P1-T07 / Issue #37 |
+| Automated package/module boundary test | Implemented by P1-T07 / Issue #37 |
 | Client/server executable composition roots | Planned: P1-T09 / Issue #39 |
 | Production engine subsystems | Planned: Phase 2 onward |

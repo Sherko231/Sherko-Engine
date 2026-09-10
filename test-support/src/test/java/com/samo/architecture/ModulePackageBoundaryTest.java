@@ -39,7 +39,8 @@ class ModulePackageBoundaryTest {
         "game-sandbox",
         "game-client",
         "game-server",
-        "test-support"
+        "test-support",
+        "feasibility-spikes"
     );
     private static final Pattern PACKAGE_PATTERN = Pattern.compile(
         "^\\s*package\\s+([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)\\s*;"
@@ -230,7 +231,7 @@ class ModulePackageBoundaryTest {
     }
 
     private static Path repositoryRoot() {
-        return Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        return Path.of(System.getProperty("repository.root")).toAbsolutePath().normalize();
     }
 
     private record Boundary(String moduleRoot, String apiRoot, String internalRoot) {

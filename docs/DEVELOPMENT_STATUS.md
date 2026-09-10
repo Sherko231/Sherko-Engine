@@ -6,19 +6,19 @@
 
 | Field | Value |
 | --- | --- |
-| Pre-P1-T06 verified `master` | `c703510ce0927d50b8da450c12dcbe7e765f3485` — merge of P1-T05 / PR #48 |
+| Pre-P1-T07 verified `master` | `4b217208fb614d77dc74828d52d9fbb936c50711` — merge of P1-T06 / PR #49 |
 | Previous handoff-system merge | Issue #46 / PR #47 on predecessor `b53dd3b2cc4b4b08ece74fdc3998dd9f130e64bc` |
-| P1-T06 work | Issue #36 / PR #49; introduced by the containing change |
+| P1-T07 work | Issue #37 / PR #50; introduced by the containing change |
 | Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
-| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06 |
-| Next executable task after this merge | P1-T07 — Issue #37, enforce module API/package boundaries |
+| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07 |
+| Next executable task after this merge | P1-T08 — Issue #38, expand CI for compile/tests/architecture/Windows native smoke |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare the checked-out branch with remote `master`, and then check GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-After PR #49 is merged and `master` push CI is confirmed, unless GitHub shows newer merged/in-progress work, start from current `master`, activate Issue #37, create a dedicated P1-T07 branch, and implement only its module-boundary acceptance criteria. Do not fold P1-T08+ or Phase 2 work into that change.
+After PR #50 is merged and `master` push CI is confirmed, unless GitHub shows newer merged/in-progress work, start from current `master`, activate Issue #38, create a dedicated P1-T08 branch, and implement only its CI acceptance criteria. Do not fold P1-T09+ or Phase 2 work into that change.
 
 ## What is actually implemented
 
@@ -30,21 +30,19 @@ After PR #49 is merged and `master` push CI is confirmed, unless GitHub shows ne
 - `test-support` exporting JUnit 5 and AssertJ.
 - A minimal shared-setup smoke test in each of the 12 current test-bearing engine modules.
 - Root commands for project discovery, all-module build, lock resolution, Checkstyle quality verification, JaCoCo report verification, and Phase 0 spikes.
-- Checkstyle 14.1.0 quality rules for applicable root/module Java production and test sources: wildcard imports and empty catch blocks are errors; a deliberately narrow rule also rejects standalone ignored returns from selected fully-qualified side-effect-free `java.lang.Math` calls.
-- `buildAllModules` includes the root `check` quality gate before/alongside all subproject builds.
-- Root Phase 0 spike sources remain experimental and are deliberately excluded from the production Checkstyle scan; `verifyCheckstyleSourceBoundary` tests that exclusion.
-- An opt-in invalid Checkstyle fixture exists for deterministic negative verification.
-- JaCoCo 0.8.15 is configured on the 12 engine modules that currently carry tests.
-- Each configured module generates JaCoCo XML and HTML reports; `verifyJacocoReports` fails when either format is missing.
-- P1-T06 defines no global or per-module minimum coverage percentage.
-- Pull-request and `master` CI runs on Windows with Java 25, verifies JaCoCo reports, and uploads them as the `jacoco-reports` artifact.
-- Phase 0 feasibility spike source remains under root `src/main/java/com/samo/spike/`.
+- Checkstyle 14.1.0 quality rules for applicable root/module Java production and test sources.
+- JaCoCo 0.8.15 reporting for the 12 current test-bearing engine modules, with XML/HTML verification and CI artifacts.
+- `config/architecture/module-boundaries.properties` declares one owned package root, one public API root, and one internal implementation root for every one of the 16 Gradle subprojects.
+- `ModulePackageBoundaryTest` verifies registry completeness, verifies production source packages stay under their owning module root, and rejects cross-module imports outside the destination module's declared API root.
+- A deliberate negative fixture represents a forbidden `game-client -> engine-platform-lwjgl.internal` shortcut and is disabled during normal builds.
+- Package/API boundary decision D-016 is recorded in `docs/DECISIONS.md` and reflected in `docs/ARCHITECTURE.md`.
+- Root Phase 0 spike sources remain experimental and outside production architecture.
 
 ## What is only skeleton or planned
 
-- All production engine/game modules are Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
-- Module/package boundary enforcement is next in P1-T07 / #37; current direction is configured but not architecture-tested.
-- CI expansion for architecture and selected Windows native smoke gates is planned for P1-T08 / #38.
+- All production engine/game modules are still Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
+- P1-T07 defines package boundaries but deliberately does not create placeholder future subsystem APIs merely to fill empty modules.
+- Dedicated CI jobs for compile, unit tests, architecture tests, and selected Windows native smoke checks are next in P1-T08 / #38.
 - Client and headless-server entry points are planned for P1-T09 / #39.
 - Root Phase 0 spikes are experimental and have not been moved into the planned feasibility module (P1-T10A).
 - A playable local engine begins in later phases; the repository cannot build or run a game yet.
@@ -70,12 +68,13 @@ These do not block independent Phase 1 foundation tasks unless the active Issue 
 
 ## Verification at this checkpoint
 
-- PR #48 final PR-head and merged-`master` CI passed on Windows / Java 25 for the P1-T05 quality gate.
-- PR #49 run #82 at branch commit `e986b3782f96f8875d3d33f4c0093ab2e950dc24` passed `javaToolchains`, `projects`, `buildAllModules`, and `verifyJacocoReports`; CI also uploaded the `jacoco-reports` artifact. This proves XML and HTML report production for all 12 configured test-bearing engine modules.
-- PR #49 run #84 at branch commit `ee244390ab7e7e585280692ae758b26e027f9da5` passed `resolveAndLockAllDependencies --write-locks`, captured the generated dependency locks, then passed `javaToolchains`, `projects`, `buildAllModules`, `verifyJacocoReports`, and JaCoCo artifact upload.
-- The generated lock state adds JaCoCo 0.8.15 agent/report dependencies and ASM transitives only to the 12 configured test-bearing engine modules; those generated lockfiles are committed in PR #49.
-- The final PR-head CI after all durable lock/documentation changes must pass before merge.
-- Canonical commands and report locations are in `docs/BUILD_AND_VERIFY.md`.
+- PR #49 final PR-head and merged-`master` CI passed on Windows / Java 25 for P1-T06, including JaCoCo report verification.
+- PR #50 run #94 exposed an implementation error before acceptance: the first architecture-test draft referenced AssertJ from the root test classpath where it was unavailable. This was corrected by using the root's existing JUnit assertions; no dependency or lockfile change was added.
+- PR #50 valid run #95 at branch commit `7cdc4de8576adce7293e8d1a149df975b2c5d235` passed `javaToolchains`, `projects`, `buildAllModules`, `verifyJacocoReports`, and JaCoCo artifact upload on Windows / Java 25. The normal architecture tests passed as part of the root test/check flow.
+- PR #50 negative run #96 at branch commit `8e717869e431a7be5421a0e0385fe969bfc87991` intentionally set `JAVA_TOOL_OPTIONS=-Darchitecture.includeInvalidFixture=true`. Compilation succeeded; `ModulePackageBoundaryTest.modulesOnlyImportOtherModulesThroughDeclaredApiRoots()` then failed at `:test`, proving the representative forbidden game-to-platform implementation shortcut is rejected. This is expected negative evidence and is not a merge candidate.
+- The workflow was restored immediately after the negative run. The final PR-head CI after this documentation change must pass before merge.
+- P1-T07 adds no dependency, so dependency locks require no refresh.
+- Canonical valid and negative commands are in `docs/BUILD_AND_VERIFY.md`.
 
 ## P1-T05 boundary decision
 
@@ -83,9 +82,13 @@ Issue #35 explicitly allowed either replacing wildcard imports in the Phase 0 sp
 
 ## P1-T06 coverage boundary
 
-Issue #36 requires coverage visibility rather than a coverage target. JaCoCo is therefore applied to the 12 engine modules that currently contain tests, with deterministic XML and HTML report paths and a root verification task. Game modules and `test-support` are not treated as test-bearing coverage targets while they have no tests of their own. No coverage-driven test padding or percentage threshold is introduced.
+Issue #36 requires coverage visibility rather than a coverage target. JaCoCo is applied to the 12 engine modules that currently contain tests, with deterministic XML and HTML report paths and a root verification task. No coverage-driven test padding or percentage threshold is introduced.
 
-No product scope, public API, module dependency direction, protocol, native-ownership rule, or durable architecture decision changed in P1-T06; therefore `ENGINE_SCOPE.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md` do not require changes for this task.
+## P1-T07 package/API boundary
+
+Issue #37 explicitly authorizes defining module API/package boundaries. D-016 records the durable rule: every Gradle subproject owns an explicit package root; other modules may consume only its declared API root, while `.internal` roots are implementation details. The architecture test enforces this on production package declarations and cross-module imports without changing the Gradle dependency graph or inventing future subsystem interfaces.
+
+`ENGINE_SCOPE.md`, `ROADMAP.md`, and `docs/roadmap/TECHNICAL_BACKLOG.md` do not change because P1-T07 implements their existing contract rather than changing product scope, milestone ordering, or task acceptance criteria. No feasibility evidence changes.
 
 ## Live-state reconciliation
 
@@ -94,7 +97,7 @@ Before starting the next task, a fresh agent must:
 1. read `AGENTS.md` in full;
 2. run `git status --short --branch` and `git rev-parse HEAD`;
 3. fetch and compare with remote `master`;
-4. inspect Issue #37, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
+4. inspect Issue #38, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
 5. prefer newer merged code/tests and the active Issue when they legitimately supersede this commit-contained snapshot;
 6. stop if the sources conflict instead of guessing.
 

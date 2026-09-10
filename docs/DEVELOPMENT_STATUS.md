@@ -6,18 +6,19 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `3c284a85cc1d03516a7d0792c7a0e979f95b2707` — JUnit 6 / handoff correction PR #61 merged; merged-master CI #143 passed |
-| Completed milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
+| Verified pre-checkpoint `master` | `bbdf541287df667e9fd88c15b7231d90c76207dc` — boundary hardening PR #63 merged; merged-master CI #147 passed |
+| Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
-| Next planned implementation | Materialize P2-T01 as its own executable Issue, then implement only that Issue on a dedicated branch |
+| Current implementation | P2-T01 / Issue #64 — guarded single-subsystem lifecycle and JUnit 6 acceptance suite; completion requires linked PR verification and merge |
+| Next planned implementation | After P2-T01 verification and merge, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare with remote `master`, and inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-Phase 1 is complete. Before any Phase 2 implementation, create the next executable roadmap Issue for P2-T01 (`EngineSubsystem` lifecycle) and treat that Issue as the sole implementation contract. Do not begin P2-T02 or later work at the same time.
+Phase 1 is complete. P2-T01 / Issue #64 implements the single-subsystem lifecycle in this checkpoint. Inspect its linked PR and exact final CI evidence: if still open or verification is incomplete, finish that handoff first. After its final PR-head checks, merge, and merged-master push checks pass, materialize P2-T02 (subsystem dependency ordering) as the next executable Issue. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03).
 
 Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run. At least one matching runner must be online for those jobs to execute; queued jobs are not verification evidence.
 
@@ -40,6 +41,17 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - The architecture job targets `:test-support:test`, and native smoke invokes the preserved root aliases.
 - `game-client` and `game-server` have separate runnable entry points, reproducible `--version` reporting, and server headless runtime-boundary verification.
 
+## P2-T01 implementation and verification handoff
+
+- `engine-core` now contains `com.samo.engine.core.api.EngineSubsystem`, an abstract `AutoCloseable` base with final initialize/start/stop/close guards and protected phase hooks (D-018).
+- One instance has one lifecycle. Invalid/reentrant transitions are rejected before hooks; unchecked forward hook failures permit only explicit cleanup. Unstarted instances can close directly; running instances require explicit stop. Close is attempted once even if cleanup throws.
+- JUnit 6 acceptance tests exercise the production guards and synthetic resource ownership. They do not prove native restartability or native cleanup safety.
+- No subsystem graph, coordinated rollback, clock, runtime loop, configuration, or other P2 task is implemented. Client/server entry points are unchanged.
+- The five existing CI jobs now also execute focused lifecycle acceptance and unchanged dependency-lock resolution. Test evidence: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml`, `engine-core/build/reports/tests/test/index.html`, and the `engine-subsystem-tests` CI artifact; coverage remains in `jacoco-reports`.
+- The implementation environment is Linux x64 with JDK 17 only. The starting checkout was materialized from authenticated GitHub API data and every blob, tree, and the original commit SHA verified. The local focused Gradle command failed before compilation because the Gradle 9.3.0 download was blocked by network access. Required Java 25/Windows runtime results must come from actual CI execution, not this local environment.
+- Final workflow IDs, exact tested SHAs, command results, skipped checks, and artifact IDs belong in Issue #64 and its linked PR after execution. This commit does not pre-claim those later CI results.
+- Independent #42–#44 remain open and their evidence limits are unchanged.
+
 ## Phase 1 completion evidence
 
 P1-T10A completed the final Phase 1 follow-up:
@@ -55,10 +67,10 @@ P1-T10A completed the final Phase 1 follow-up:
 
 ## What remains skeleton or planned
 
-- Production engine subsystems and `game-sandbox` remain skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
+- Concrete engine subsystems and `game-sandbox` remain skeletons. Only the single-subsystem lifecycle contract is implemented; renderer, asset, world, physics, audio, networking, runtime UI, editor, and gameplay implementations remain planned.
 - Client/server entry points remain intentionally minimal foundation composition roots apart from version reporting.
 - `feasibility-spikes` remains disposable experimental evidence code. Its presence must not be interpreted as production engine implementation.
-- Phase 2 is the next implementation phase and begins with P2-T01 only after that task is materialized as an active Issue.
+- Phase 2 has begun with P2-T01. Its dependency graph, rollback, clock, configuration, ownership registry, and phase exit gate remain unimplemented.
 
 ## Verified feasibility baseline
 
@@ -88,7 +100,7 @@ Before starting the next task, a fresh agent must:
 3. confirm Phase 1 Epic #2 and corrective Issues #60 and #62 are closed and no newer repository activity supersedes this checkpoint;
 4. inspect independent follow-up Issues #42–#44 and preserve their evidence limits;
 5. confirm at least one matching self-hosted Windows x64 runner is online before interpreting queued CI;
-6. materialize P2-T01 as the next executable Issue before any Phase 2 implementation;
+6. confirm Issue #64 and its linked PR completion evidence, then materialize P2-T02 as the next executable Issue;
 7. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule

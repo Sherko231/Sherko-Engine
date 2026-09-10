@@ -21,6 +21,7 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including the package/module architecture tests and `engine-ui`. |
 | Run only the root architecture boundary suite | `.\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks` | The root architecture test executes even when Gradle would otherwise consider `:test` up-to-date. |
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
+| Run hosted-Windows-safe native lifecycle smoke | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | GLFW initializes/terminates, OpenAL opens/closes through the null backend, and one Jolt JNI lifecycle cycle completes with cleanup. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
 
@@ -87,11 +88,13 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 - unit/root/subproject tests via `test`;
 - explicit architecture boundaries via the root `ModulePackageBoundaryTest` command above;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- a short Windows native smoke via `runIntegratedNativeSmoke`, with its JFR uploaded when available.
+- hosted-Windows-safe native lifecycle coverage via `runWindowsNativeCiSmoke` plus one `runJoltLifecycleSpike` cycle.
 
-The native CI job is intentionally the existing 15-second P0-T12 smoke classification. It must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended hosted CI because they require an authenticated Steam client/account environment.
+The hosted Windows runner does not provide the OpenGL 4.6 driver/context required by `runIntegratedNativeSmoke`; the attempted CI run failed with `WGL: The driver does not appear to support OpenGL`. CI therefore does not claim an OpenGL 4.6 context or the full P0-T12 integrated graphics/audio/physics/network path. Those remain target-machine feasibility evidence. The hosted native gate proves GLFW native initialization/cleanup, OpenAL initialization/cleanup through the null backend, and Jolt JNI initialization/use/cleanup only.
 
-P1-T08 requires every required job failure to fail the workflow. During implementation, one controlled failure must be demonstrated and then removed before merge.
+This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended hosted CI because they require an authenticated Steam client/account environment.
+
+P1-T08 requires every required job failure to fail the workflow. During implementation, one controlled architecture failure was demonstrated with `JAVA_TOOL_OPTIONS=-Darchitecture.includeInvalidFixture=true` and then removed before the final merge candidate.
 
 ## Phase 0 feasibility commands
 

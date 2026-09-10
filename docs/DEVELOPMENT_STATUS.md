@@ -26,7 +26,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | Task | State | Result |
 | --- | --- | --- |
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
-| P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
+| P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 16 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
 | P1-T03 | Complete | Shared external dependency versions are centralized in `gradle/libs.versions.toml`; dependency locking is enabled for all projects; generated lock state is committed; and two repeated dependency resolutions completed successfully using the locked graph. |
 | P1-T04 | Complete | `test-support` exports JUnit and AssertJ, all Java test tasks use JUnit Platform, every engine module has a minimal shared-setup smoke test, the root test task passed with 35 actionable tasks, and refreshed dependency lock files are present on `master`. |
 
@@ -36,6 +36,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 engine-core
 engine-platform-lwjgl
 engine-render-opengl
+engine-ui
 engine-assets
 engine-world
 engine-physics-jolt

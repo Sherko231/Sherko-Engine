@@ -64,8 +64,18 @@ These do not block independent Phase 1 foundation tasks unless the active Issue 
 
 - PR #45 CI passed on Windows / Java 25, including the root test suite and `engine-ui` tests.
 - The current build declares 16 subprojects in `settings.gradle.kts`.
-- PR #47 expands its Windows/Java 25 CI run to execute `projects`, `buildAllModules`, and `test`; the PR run is the required direct evidence before merge.
+- PR #47 CI run #70 passed at branch commit `41408ed0f796acaa973559ddff30642350de10b0` on Windows with Temurin 25.0.4. It successfully executed `javaToolchains`, `projects`, `buildAllModules`, and `test`; logs include `engine-ui:test`, `game-client:build`, and `game-server:build`.
 - Canonical commands and evidence requirements are in `docs/BUILD_AND_VERIFY.md`.
+
+## Known baseline for the next task
+
+The repository-wide static scan found no TODO/FIXME markers or empty catch blocks. It found wildcard imports in three experimental Phase 0 sources:
+
+- `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
+- `src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
+- `src/main/java/com/samo/spike/opengl/OpenGL46Spike.java`
+
+Issue #35 records this baseline. P1-T05 must replace the imports or deliberately exclude and test the experimental-source boundary; the valid Checkstyle baseline must not fail accidentally.
 
 ## Live-state reconciliation
 

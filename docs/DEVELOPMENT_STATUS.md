@@ -50,7 +50,7 @@ P1-T10A completed the final Phase 1 follow-up:
 - Issue #56 closed as completed.
 - Phase 1 Epic #2 closed as completed.
 - The Phase 1 exit gate — repeatable empty client and headless-server build/run commands with the required quality gates — is satisfied.
-- The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier JUnit 5 wording and the stale README phase pointer without changing build behavior.
+- The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier framework-version wording and the stale README phase pointer without changing build behavior.
 
 ## What remains skeleton or planned
 

@@ -19,7 +19,7 @@ The containing commit is the exact checkpoint. A Markdown file cannot embed the 
 
 Phase 1 is complete. Before any Phase 2 implementation, create the next executable roadmap Issue for P2-T01 (`EngineSubsystem` lifecycle) and treat that Issue as the sole implementation contract. Do not begin P2-T02 or later work at the same time.
 
-Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At least one matching runner must be online for required PR/push jobs to execute; queued jobs are not verification evidence.
+Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run. At least one matching runner must be online for those jobs to execute; queued jobs are not verification evidence.
 
 ## What is actually implemented
 
@@ -50,7 +50,7 @@ P1-T10A completed the final Phase 1 follow-up:
 - Issue #56 closed as completed.
 - Phase 1 Epic #2 closed as completed.
 - The Phase 1 exit gate — repeatable empty client and headless-server build/run commands with the required quality gates — is satisfied.
-- The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier framework-version wording and the stale README phase pointer without changing build behavior.
+- The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier framework-version wording, stale README phase pointer, and CI-enforcement wording, and adds a mandatory agent consistency audit without changing build behavior.
 
 ## What remains skeleton or planned
 

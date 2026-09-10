@@ -8,10 +8,11 @@ on:
   workflow_dispatch:
 
 # P1-T08 keeps each required verification concern visible as its own CI job.
+# CI currently uses the repository-scoped Windows x64 self-hosted runner.
 jobs:
   build:
     name: Build and quality gates
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +89,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +106,7 @@ jobs:
 
   architecture-tests:
     name: Architecture tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -122,7 +123,7 @@ jobs:
 
   coverage:
     name: JaCoCo coverage reports
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -146,7 +147,7 @@ jobs:
 
   windows-native-smoke:
     name: Windows native smoke
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 5
     env:
       ALSOFT_DRIVERS: "null"

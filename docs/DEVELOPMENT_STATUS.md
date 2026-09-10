@@ -8,8 +8,8 @@
 - **Phase:** P1 — Build, modules, and quality gates
 - **Completed:** P1-T01 — initial four-module Gradle build
 - **Completed:** P1-T02 — full target module tree
-- **Current task:** P1-T03 — Centralize dependency versions and lock resolution (Issue #33)
-- **P1-T03 state:** implementation committed on `master`; dependency-lock generation and repeat-resolution verification pending
+- **Completed:** P1-T03 — centralized dependency versions and dependency locking
+- **Current task:** P1-T04 — Add shared JUnit 5 and AssertJ test support (Issue #34)
 - **Phase 0:** complete; feasibility spikes remain disposable evidence, not production architecture
 
 ## Proven feasibility baseline
@@ -29,7 +29,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | --- | --- | --- |
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
 | P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
-| P1-T03 | In progress | Shared external dependency versions now live in `gradle/libs.versions.toml`. Root dependencies reference the version catalog, dependency locking is enabled across all projects, and `resolveAndLockAllDependencies` is available to resolve every resolvable configuration and write lock state with `--write-locks`. Completion requires generated lock files plus two repeat resolutions showing unchanged locked versions. |
+| P1-T03 | Complete | Shared external dependency versions are centralized in `gradle/libs.versions.toml`; dependency locking is enabled for all projects; generated lock state is committed; and two repeated dependency resolutions completed successfully using the locked graph. |
 
 ## Current module tree
 
@@ -55,27 +55,23 @@ The module graph is intentionally one-way. Lower engine modules do not depend on
 
 `buildAllModules` depends on every declared subproject build.
 
-## P1-T03 dependency reproducibility
+## Dependency reproducibility
 
-The central version catalog is:
+Shared dependency versions are owned by:
 
 ```text
 gradle/libs.versions.toml
 ```
 
-Dependency locking is enabled for every project. Generate or refresh lock state from the repository root with:
+Dependency locking is enabled across the build. Current committed lock state includes the root dependency graph in `gradle.lockfile` plus Gradle settings lock state in `settings-gradle.lockfile`.
+
+Refresh lock state only when dependencies intentionally change:
 
 ```powershell
 .\gradlew.bat resolveAndLockAllDependencies --write-locks
 ```
 
-Then run the same resolution without changing lock state:
-
-```powershell
-.\gradlew.bat resolveAndLockAllDependencies
-```
-
-Repeat the second command once more. P1-T03 completes only after the generated lock files are committed and repeated resolution leaves them unchanged while the build remains successful.
+Normal dependency resolution should run without `--write-locks` so unexpected graph changes fail instead of silently rewriting lock state.
 
 ## Experimental Phase 0 code
 
@@ -85,7 +81,9 @@ The root `src/main/java/com/samo/spike/...` code remains available for feasibili
 
 ## What happens next
 
-Finish P1-T03 verification and commit the generated dependency lock state. After P1-T03 is complete, advance to **P1-T04 — Add shared JUnit 5 and AssertJ test support** (Issue #34).
+The next executable task is **P1-T04 — Add shared JUnit 5 and AssertJ test support** (Issue #34).
+
+P1-T04 will make `test-support` the shared testing foundation, activate JUnit 5 consistently, add AssertJ, and prove the setup with minimal sample unit tests in engine modules intended to carry tests.
 
 ## Working convention
 

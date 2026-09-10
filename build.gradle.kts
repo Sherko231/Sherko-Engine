@@ -1,5 +1,8 @@
+import org.gradle.api.plugins.quality.Checkstyle
+
 plugins {
     id("java")
+    id("checkstyle")
 }
 
 allprojects {
@@ -25,6 +28,70 @@ allprojects {
             useJUnitPlatform()
         }
     }
+}
+
+checkstyle {
+    toolVersion = libs.versions.checkstyle.get()
+    configFile = rootProject.file("config/checkstyle/checkstyle.xml")
+    isIgnoreFailures = false
+    maxErrors = 0
+}
+
+val phaseZeroSpikeDir = rootProject.file("src/main/java/com/samo/spike")
+val phaseZeroSpikeSources = fileTree(phaseZeroSpikeDir) {
+    include("**/*.java")
+}
+val checkstyleMainSources = fileTree(rootDir) {
+    include("src/main/java/**/*.java")
+    include("*/src/main/java/**/*.java")
+    exclude("src/main/java/com/samo/spike/**/*.java")
+}
+val checkstyleTestSources = fileTree(rootDir) {
+    include("src/test/java/**/*.java")
+    include("*/src/test/java/**/*.java")
+}
+val includeInvalidCheckstyleFixture = providers.gradleProperty("checkstyleIncludeInvalidFixture")
+    .map { it.toBoolean() }
+    .orElse(false)
+
+tasks.named<Checkstyle>("checkstyleMain") {
+    setSource(checkstyleMainSources)
+    if (includeInvalidCheckstyleFixture.get()) {
+        source(rootProject.file("config/checkstyle/fixtures/InvalidCheckstyleFixture.java"))
+    }
+    classpath = files()
+}
+
+tasks.named<Checkstyle>("checkstyleTest") {
+    setSource(checkstyleTestSources)
+    classpath = files()
+}
+
+val verifyCheckstyleSourceBoundary by tasks.registering {
+    group = "verification"
+    description = "Verifies that experimental Phase 0 spike sources remain outside the production Checkstyle scan."
+    inputs.files(checkstyleMainSources)
+    inputs.files(phaseZeroSpikeSources)
+
+    doLast {
+        check(phaseZeroSpikeSources.files.isNotEmpty()) {
+            "Phase 0 spike source boundary is empty; revisit the deliberate Checkstyle exclusion."
+        }
+
+        val spikeRoot = phaseZeroSpikeDir.toPath().toAbsolutePath().normalize()
+        val leakedSources = checkstyleMainSources.files
+            .filter { it.toPath().toAbsolutePath().normalize().startsWith(spikeRoot) }
+            .sortedBy { it.path }
+
+        check(leakedSources.isEmpty()) {
+            "Experimental Phase 0 sources leaked into the production Checkstyle scan: " +
+                leakedSources.joinToString { it.relativeTo(rootDir).path }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(verifyCheckstyleSourceBoundary)
 }
 
 val engineTestModules = listOf(
@@ -79,7 +146,8 @@ tasks.test {
 
 tasks.register("buildAllModules") {
     group = "build"
-    description = "Compiles and tests every declared engine/game module."
+    description = "Runs the root quality gate and compiles/tests every declared engine/game module."
+    dependsOn(tasks.named("check"))
     dependsOn(subprojects.map { "${it.path}:build" })
 }
 

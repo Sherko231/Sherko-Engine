@@ -10,7 +10,7 @@
 - **Completed:** P1-T02 — full target module tree
 - **Completed:** P1-T03 — centralized dependency versions and dependency locking
 - **Current task:** P1-T04 — Add shared JUnit 5 and AssertJ test support (Issue #34)
-- **P1-T04 state:** implementation committed on `master`; lock refresh and root test verification pending
+- **P1-T04 state:** root test verification passed; refreshed dependency lock files still need commit/push
 - **Phase 0:** complete; feasibility spikes remain disposable evidence, not production architecture
 
 ## Proven feasibility baseline
@@ -31,7 +31,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
 | P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
 | P1-T03 | Complete | Shared external dependency versions are centralized in `gradle/libs.versions.toml`; dependency locking is enabled for all projects; generated lock state is committed; and two repeated dependency resolutions completed successfully using the locked graph. |
-| P1-T04 | In progress | `test-support` now exports JUnit 5 and AssertJ, all Java test tasks use JUnit Platform, and every engine module has a minimal smoke test that depends on the shared test-support project. Completion requires refreshing lock state for AssertJ and passing the root test task. |
+| P1-T04 | In progress | `test-support` exports JUnit and AssertJ, all Java test tasks use JUnit Platform, and every engine module has a minimal smoke test using the shared setup. After adding the missing JUnit Platform launcher runtime dependency, `gradlew test` completed successfully with 35 actionable tasks. Completion now only requires committing/pushing the refreshed dependency lock files. |
 
 ## Current module tree
 
@@ -61,10 +61,11 @@ The module graph is intentionally one-way. Lower engine modules do not depend on
 
 The shared testing foundation lives in `test-support`.
 
-- JUnit 5 is the active test platform for Java modules.
+- JUnit is the active test platform for Java modules.
 - AssertJ is exported by `test-support` for fluent assertions.
+- The JUnit Platform launcher is provided at test runtime through `test-support`.
 - Engine modules depend on `test-support` only in `testImplementation`, so test infrastructure does not enter production runtime dependencies.
-- Minimal smoke tests exist in each engine module to prove JUnit 5 + AssertJ are available through the common setup.
+- Minimal smoke tests exist in each engine module to prove JUnit + AssertJ are available through the common setup.
 
 After adding or changing test dependencies, refresh dependency lock state:
 
@@ -78,7 +79,7 @@ Then verify all module sample tests from the repository root:
 .\gradlew.bat test
 ```
 
-P1-T04 completes when the root test command executes and passes the engine-module sample tests and the refreshed lock files are committed.
+The root test command has now been verified successfully. P1-T04 completes once the refreshed lock files produced by the successful `--write-locks` run are committed to `master`.
 
 ## Dependency reproducibility
 
@@ -106,7 +107,7 @@ The root `src/main/java/com/samo/spike/...` code remains available for feasibili
 
 ## What happens next
 
-Finish P1-T04 verification and commit the refreshed dependency lock state. After P1-T04 is complete, advance to **P1-T05 — Add Checkstyle quality rules** (Issue #35).
+Commit and push the refreshed dependency lock files from the successful P1-T04 verification. Then close Issue #34 and advance to **P1-T05 — Add Checkstyle quality rules** (Issue #35).
 
 ## Working convention
 

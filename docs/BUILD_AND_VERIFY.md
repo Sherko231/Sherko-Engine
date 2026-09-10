@@ -19,6 +19,7 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
 | Run the root quality gate | `.\gradlew.bat check` | Checkstyle, architecture-boundary tests, Phase 0 exclusion verification, and root tests pass. |
 | Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including the package/module architecture tests and `engine-ui`. |
+| Run only the root architecture boundary suite | `.\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks` | The root architecture test executes even when Gradle would otherwise consider `:test` up-to-date. |
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
@@ -50,17 +51,17 @@ JaCoCo is configured only for the 12 engine modules that currently contain the s
 
 `verifyJacocoReports` fails when either format is missing for any configured test-bearing module. Coverage is reported for visibility only; P1-T06 deliberately defines no global or per-module minimum percentage.
 
-For P1-T07 / Issue #37, the valid architecture suite is part of the ordinary root test/check flow. To run only the package-boundary tests locally:
+For P1-T07 / Issue #37, the valid architecture suite is part of the ordinary root test/check flow. To run only the package-boundary tests locally, target the root `:test` task explicitly and force execution so a changed system property cannot be hidden by Gradle up-to-date state:
 
 ```powershell
-.\gradlew.bat test --tests com.samo.architecture.ModulePackageBoundaryTest
+.\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 ```
 
 The deliberate negative fixture at `config/architecture/fixtures/ForbiddenGameToPlatformShortcut.java` is disabled by default. To prove the representative `game-client -> engine-platform-lwjgl.internal` shortcut is rejected, run:
 
 ```powershell
 $env:JAVA_TOOL_OPTIONS="-Darchitecture.includeInvalidFixture=true"
-.\gradlew.bat test --tests com.samo.architecture.ModulePackageBoundaryTest
+.\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 Remove-Item Env:JAVA_TOOL_OPTIONS
 ```
 
@@ -80,7 +81,17 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle and the P1-T07 package/module architecture tests as part of its ordinary all-module build. CI also runs `verifyJacocoReports` and uploads `*/build/reports/jacoco/test/**` as the `jacoco-reports` artifact so XML and HTML coverage output can be inspected. Task P1-T08 / Issue #38 will further expand CI with dedicated architecture and selected Windows native smoke jobs.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
+
+- build and root quality gates via `buildAllModules`;
+- unit/root/subproject tests via `test`;
+- explicit architecture boundaries via the root `ModulePackageBoundaryTest` command above;
+- JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
+- a short Windows native smoke via `runIntegratedNativeSmoke`, with its JFR uploaded when available.
+
+The native CI job is intentionally the existing 15-second P0-T12 smoke classification. It must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended hosted CI because they require an authenticated Steam client/account environment.
+
+P1-T08 requires every required job failure to fail the workflow. During implementation, one controlled failure must be demonstrated and then removed before merge.
 
 ## Phase 0 feasibility commands
 

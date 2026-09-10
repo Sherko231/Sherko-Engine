@@ -4,22 +4,19 @@
 
 ## Current position
 
-- **Milestone:** M1 — Engine Foundation
-- **Phase:** P1 — Build, modules, and quality gates
-- **Completed:** P1-T01 — initial four-module Gradle build
-- **Completed:** P1-T02 — full target module tree
-- **Completed:** P1-T03 — centralized dependency versions and dependency locking
-- **Current task:** P1-T04 — Add shared JUnit 5 and AssertJ test support (Issue #34)
-- **P1-T04 state:** root test verification passed; refreshed dependency lock files still need commit/push
-- **Phase 0:** complete; feasibility spikes remain disposable evidence, not production architecture
+- Milestone: M1 — Engine Foundation.
+- Phase: P1 — Build, modules, and quality gates.
+- P1-T01 through P1-T04 have verified implementation evidence on master.
+- Exact current-task state belongs to GitHub Issues/Project and is intentionally not duplicated here.
+- Phase 0 native/API smoke evidence remains durable, while P0-T09A, P0-T13, and P0-T14 are explicit follow-up gates before their dependent production claims.
 
 ## Proven feasibility baseline
 
 - Java 25 toolchain and CI baseline work.
 - GLFW/OpenGL 4.6, Jolt JNI, OpenAL, and localhost UDP were proven independently.
-- The integrated P0-T12 run exercised graphics, physics, audio, and UDP together under JFR and shut down cleanly.
+- The integrated P0-T12 smoke run exercised graphics, physics, audio, and UDP together for 15 seconds under JFR and shut down cleanly; it is not long-duration stability evidence.
 - Steamworks4j is sufficient for basic Steam initialization/callbacks but not the required modern `ISteamNetworkingSockets` surface.
-- Java 25 FFM can reach the official Steam flat API / `ISteamNetworkingSockets` path without authored C/C++ glue.
+- Java 25 FFM can reach the official Steam flat API / `ISteamNetworkingSockets` pointer without authored C/C++ glue. End-to-end listen/connect/callback/message ownership remains unproven until P0-T09A passes.
 - Development network impairment injection for latency, jitter, loss, duplication, and reordering is proven.
 
 Detailed feasibility notes live under `docs/feasibility/`.
@@ -31,7 +28,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
 | P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
 | P1-T03 | Complete | Shared external dependency versions are centralized in `gradle/libs.versions.toml`; dependency locking is enabled for all projects; generated lock state is committed; and two repeated dependency resolutions completed successfully using the locked graph. |
-| P1-T04 | In progress | `test-support` exports JUnit and AssertJ, all Java test tasks use JUnit Platform, and every engine module has a minimal smoke test using the shared setup. After adding the missing JUnit Platform launcher runtime dependency, `gradlew test` completed successfully with 35 actionable tasks. Completion now only requires committing/pushing the refreshed dependency lock files. |
+| P1-T04 | Complete | `test-support` exports JUnit and AssertJ, all Java test tasks use JUnit Platform, every engine module has a minimal shared-setup smoke test, the root test task passed with 35 actionable tasks, and refreshed dependency lock files are present on `master`. |
 
 ## Current module tree
 
@@ -79,7 +76,7 @@ Then verify all module sample tests from the repository root:
 .\gradlew.bat test
 ```
 
-The root test command has now been verified successfully. P1-T04 completes once the refreshed lock files produced by the successful `--write-locks` run are committed to `master`.
+The root test command was verified successfully and the refreshed lock files are committed. P1-T04 is complete. Identical module smoke tests are temporary proof of shared setup and should be replaced/removed as real module tests arrive.
 
 ## Dependency reproducibility
 
@@ -105,13 +102,19 @@ The root `src/main/java/com/samo/spike/...` code remains available for feasibili
 
 > **Spikes are disposable. Conclusions are durable.**
 
-## What happens next
+## Execution policy
 
-Commit and push the refreshed dependency lock files from the successful P1-T04 verification. Then close Issue #34 and advance to **P1-T05 — Add Checkstyle quality rules** (Issue #35).
+Implementation work uses one bounded Issue, one dedicated task branch, one pull request, and CI/acceptance verification before merge. Agent-generated changes do not land directly on master.
 
-## Working convention
+## Architecture corrections recorded
 
-Current owner-directed work is performed directly on `master`. Do not create a pull request unless the repository owner explicitly asks for one.
+- Runtime supports 1–4 players; the intended co-op target is 2–4.
+- First-person is the v1 vertical slice; third-person follows stable multiplayer.
+- Gradle Kotlin DSL is retained; Java-only applies to authored engine/game runtime source.
+- A renderer-neutral runtime UI module is required before package boundaries freeze.
+- Basic local audio moves before the Phase 8 exit gate; network-aware audio polish remains later.
+- Exact target hardware is selected before renderer implementation.
+- Phase 0 spikes remain disposable evidence and should eventually move out of the root production project.
 
 ## Documentation rule
 

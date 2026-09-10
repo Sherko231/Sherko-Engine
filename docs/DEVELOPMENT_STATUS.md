@@ -9,6 +9,7 @@
 - **Completed:** P1-T01 — initial four-module Gradle build
 - **Completed:** P1-T02 — full target module tree
 - **Current task:** P1-T03 — Centralize dependency versions and lock resolution (Issue #33)
+- **P1-T03 state:** implementation committed on `master`; dependency-lock generation and repeat-resolution verification pending
 - **Phase 0:** complete; feasibility spikes remain disposable evidence, not production architecture
 
 ## Proven feasibility baseline
@@ -28,6 +29,7 @@ Detailed feasibility notes live under `docs/feasibility/`.
 | --- | --- | --- |
 | P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
 | P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 15 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
+| P1-T03 | In progress | Shared external dependency versions now live in `gradle/libs.versions.toml`. Root dependencies reference the version catalog, dependency locking is enabled across all projects, and `resolveAndLockAllDependencies` is available to resolve every resolvable configuration and write lock state with `--write-locks`. Completion requires generated lock files plus two repeat resolutions showing unchanged locked versions. |
 
 ## Current module tree
 
@@ -53,6 +55,28 @@ The module graph is intentionally one-way. Lower engine modules do not depend on
 
 `buildAllModules` depends on every declared subproject build.
 
+## P1-T03 dependency reproducibility
+
+The central version catalog is:
+
+```text
+gradle/libs.versions.toml
+```
+
+Dependency locking is enabled for every project. Generate or refresh lock state from the repository root with:
+
+```powershell
+.\gradlew.bat resolveAndLockAllDependencies --write-locks
+```
+
+Then run the same resolution without changing lock state:
+
+```powershell
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Repeat the second command once more. P1-T03 completes only after the generated lock files are committed and repeated resolution leaves them unchanged while the build remains successful.
+
 ## Experimental Phase 0 code
 
 The root `src/main/java/com/samo/spike/...` code remains available for feasibility evidence. Do not treat those spike class structures as permanent engine APIs.
@@ -61,9 +85,7 @@ The root `src/main/java/com/samo/spike/...` code remains available for feasibili
 
 ## What happens next
 
-The next executable task is **P1-T03 — Centralize dependency versions and lock resolution** (Issue #33).
-
-P1-T03 will move shared dependency/plugin versions into one central Gradle version catalog and enable dependency locking so clean resolutions remain reproducible across machines. It should not opportunistically upgrade dependencies unless compatibility requires it.
+Finish P1-T03 verification and commit the generated dependency lock state. After P1-T03 is complete, advance to **P1-T04 — Add shared JUnit 5 and AssertJ test support** (Issue #34).
 
 ## Working convention
 

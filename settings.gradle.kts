@@ -4,6 +4,7 @@ include(
     "engine-core",
     "engine-platform-lwjgl",
     "engine-render-opengl",
+    "engine-ui",
     "engine-assets",
     "engine-world",
     "engine-physics-jolt",

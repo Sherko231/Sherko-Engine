@@ -268,6 +268,17 @@ tasks.register<JavaExec>("runOpenAL3DAudioSpike") {
     )
 }
 
+tasks.register<JavaExec>("runWindowsNativeCiSmoke") {
+    group = "verification"
+    description = "Runs the headless-safe GLFW/OpenAL native lifecycle smoke used by Windows hosted CI."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.spike.ci.WindowsNativeCiSmoke"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
 fun JavaExec.configureUdpSpike(role: String) {
     group = "verification"
     classpath = sourceSets.main.get().runtimeClasspath

@@ -12,10 +12,10 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-**M0 / Phase 0 — Feasibility is complete.** The risky native/Steam/networking assumptions have been exercised far enough to pass the milestone exit gate: Java can reach the required SteamNetworkingSockets flat API path, the localhost impairment harness works, and GLFW/OpenGL, Jolt JNI, OpenAL, and UDP run together cleanly in the integrated JFR soak.
+The native Java 25 baseline is proven: GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, and Java FFM access to the Steam flat API have all been exercised.
 
-The repository is now entering **M1 / Phase 1 — Build, modules, and quality gates**. The first executable task is `P1-T01`, which establishes the initial multi-project Gradle structure with `engine-core`, `test-support`, `game-client`, and `game-server`.
+The 15-second combined native run is classified as an integration smoke test. End-to-end SteamNetworkingSockets connection/message ownership and longer native stability tests remain explicit follow-up gates; they are not treated as already-proven production transport.
 
-For the fastest orientation on what has already been proven, what is temporary, and what should happen next, read [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
+M1 / Phase 1 — Build, modules, and quality gates is active. Exact task state belongs only in GitHub Issues/Project so this README does not duplicate a changing task number.
 
-Implementation work should be taken from GitHub Issues for the active phase, not directly from the entire technical backlog. Exact live task state remains in GitHub Issues/Project; repository-level context and durable conclusions are summarized in the development-status document.
+For durable conclusions and implementation notes, read [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md). For executable work, use an active GitHub Issue and complete it through a task branch, pull request, and CI verification.

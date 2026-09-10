@@ -6,10 +6,10 @@
 
 | Field | Value |
 | --- | --- |
-| Pre-P1-T10 verified `master` | `37bc2d9501cb6be3f673089226a55d63c36b7033` — merge of P1-T09 / PR #52 |
-| P1-T10 work | Issue #40; introduced by the containing change |
+| Verified pre-cleanup `master` | `835573704d3e80dc3b00dc309de5661558aa4f27` — merge of P1-T10 / PR #53; merged-master CI #123 passed |
+| Current cleanup | Issue #54; removes only the unused root `Launcher.java` placeholder |
 | Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
-| Completed roadmap implementation after verified merge | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10 |
+| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10 |
 | Next planned Phase 1 item | P1-T10A in `docs/roadmap/TECHNICAL_BACKLOG.md`; no executable Issue exists yet, so it must be materialized before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
@@ -17,7 +17,7 @@ The containing commit is the exact checkpoint. A Markdown file cannot embed the 
 
 ## Exact next action
 
-Complete P1-T10 only after its final PR-head CI passes, PR #53 is merged, and merged-`master` push CI passes. Then reconcile the Phase 1 exit gate and GitHub epic state. P1-T10A is the next planned backlog item but is not executable until a dedicated Issue exists; do not implement it or Phase 2 work without that Issue.
+Complete cleanup Issue #54 only after its pull request CI passes and merged-`master` push CI passes. After that, the next planned Phase 1 item remains P1-T10A. It is not executable until a dedicated Issue exists; do not implement P1-T10A or Phase 2 work without that Issue.
 
 ## What is actually implemented
 
@@ -44,6 +44,7 @@ Complete P1-T10 only after its final PR-head CI passes, PR #53 is merged, and me
 - Both runnable entry points accept `--version` and report executable identity, exact engine Git commit, protocol version, asset version, Java runtime version, and native-library versions resolved for that executable.
 - Version metadata is generated during the build from the current Git checkout plus each executable runtime classpath; an executable with no matching native artifacts reports `nativeLibraries=none`.
 - CI runs both version reports from the same checkout, requires the shared identifiers to match, and requires the reported engine commit to equal the exact workflow SHA.
+- The unused root `src/main/java/com/samo/Launcher.java` placeholder is removed by cleanup Issue #54; the real runnable entry points remain `ClientMain` and `ServerMain`.
 - Root Phase 0 spike sources remain experimental and outside production architecture.
 
 ## What is only skeleton or planned
@@ -74,20 +75,18 @@ Complete P1-T10 only after its final PR-head CI passes, PR #53 is merged, and me
 
 These do not block independent foundation tasks unless the active Issue consumes the missing claim.
 
-## P1-T10 verification requirements
+## Cleanup #54 verification requirements
 
 Before merge, run and record:
 
 ```powershell
-.\gradlew.bat :game-client:runClient --args="--version"
-.\gradlew.bat :game-server:runServer --args="--version"
 .\gradlew.bat buildAllModules
 .\gradlew.bat test
 ```
 
-Acceptance requires both reports to contain engine commit, protocol version, asset version, Java version, and executable-relevant native-library versions. The shared client/server identifiers from the same checkout must match, CI must confirm the reported commit equals its exact workflow SHA, and all required jobs must pass. Merged-`master` push CI must also pass before P1-T10 is treated as fully complete.
+Acceptance requires `src/main/java/com/samo/Launcher.java` to be absent, no `com.samo.Launcher` references to remain, existing client/server entry points to remain unchanged, and the final PR-head CI plus merged-`master` push CI to pass.
 
-No dependency was added or removed by P1-T10, so dependency locks require no refresh. The task adds build/reporting behavior only and does not change product scope, module dependency direction, public engine APIs, packet/protocol layout, asset formats, ownership, or feasibility conclusions.
+This cleanup does not change dependencies, module direction, public engine APIs, protocols, asset formats, ownership, feasibility conclusions, or the planned P1-T10A migration of Phase 0 spikes.
 
 ## Live-state reconciliation
 
@@ -96,8 +95,8 @@ Before starting the next task, a fresh agent must:
 1. read `AGENTS.md` in full;
 2. run `git status --short --branch` and `git rev-parse HEAD`;
 3. fetch and compare with remote `master`;
-4. inspect Issue #40, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
-5. if P1-T10 is complete, confirm whether a P1-T10A executable Issue has been created before attempting that planned backlog item;
+4. inspect the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
+5. confirm whether a P1-T10A executable Issue has been created before attempting that planned backlog item;
 6. prefer newer merged code/tests and the active Issue when they legitimately supersede this commit-contained snapshot;
 7. stop if the sources conflict instead of guessing.
 

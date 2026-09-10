@@ -278,7 +278,7 @@ class ModulePackageBoundaryTest {
     ) throws IOException {
         ParsedSource source = parseSource(sourceFile);
         if (validatePackageOwnership) {
-            validateOwnedPackage(sourceModule, sourceFile, source.packageName(), boundaries.get(sourceModule));
+            validateOwnedPackage(sourceModule, sourceFile, source.packageName(), boundaries);
         }
 
         for (SourceReference reference : source.references()) {
@@ -387,17 +387,28 @@ class ModulePackageBoundaryTest {
         String sourceModule,
         Path sourceFile,
         String packageName,
-        Boundary boundary
+        Map<String, Boundary> boundaries
     ) {
+        Boundary sourceBoundary = boundaries.get(sourceModule);
+        assertNotNull(sourceBoundary, "Missing boundary for source module " + sourceModule);
         assertNotNull(
             packageName,
             sourceModule + " production source " + displayPath(sourceFile)
-                + " must declare a package under " + boundary.moduleRoot()
+                + " must declare a package under " + sourceBoundary.moduleRoot()
         );
         assertTrue(
-            isWithin(packageName, boundary.moduleRoot()),
+            isWithin(packageName, sourceBoundary.moduleRoot()),
             sourceModule + " production source " + displayPath(sourceFile)
-                + " must stay under package root " + boundary.moduleRoot()
+                + " must stay under package root " + sourceBoundary.moduleRoot()
+        );
+
+        BoundaryTarget owner = findOwner(packageName, boundaries);
+        assertNotNull(owner, "No module owns production package " + packageName);
+        assertEquals(
+            sourceModule,
+            owner.module(),
+            sourceModule + " production source " + displayPath(sourceFile)
+                + " uses package " + packageName + " owned by " + owner.module()
         );
     }
 
@@ -406,19 +417,25 @@ class ModulePackageBoundaryTest {
         String sourceModule,
         Map<String, Boundary> boundaries
     ) {
-        BoundaryTarget owner = boundaries.entrySet().stream()
-            .filter(entry -> isWithin(referencedName, entry.getValue().moduleRoot()))
+        BoundaryTarget owner = findOwner(referencedName, boundaries);
+        if (owner != null && owner.module().equals(sourceModule)) {
+            return null;
+        }
+        return owner;
+    }
+
+    private static BoundaryTarget findOwner(
+        String packageOrType,
+        Map<String, Boundary> boundaries
+    ) {
+        return boundaries.entrySet().stream()
+            .filter(entry -> isWithin(packageOrType, entry.getValue().moduleRoot()))
             .sorted(Comparator.comparingInt(
                 (Map.Entry<String, Boundary> entry) -> entry.getValue().moduleRoot().length()
             ).reversed())
             .map(entry -> new BoundaryTarget(entry.getKey(), entry.getValue()))
             .findFirst()
             .orElse(null);
-
-        if (owner != null && owner.module().equals(sourceModule)) {
-            return null;
-        }
-        return owner;
     }
 
     private static boolean isWithin(String packageOrType, String packageRoot) {

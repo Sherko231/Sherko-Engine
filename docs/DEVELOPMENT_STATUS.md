@@ -6,64 +6,53 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-cleanup `master` | `835573704d3e80dc3b00dc309de5661558aa4f27` — merge of P1-T10 / PR #53; merged-master CI #123 passed |
-| Current cleanup | Issue #54; removes only the unused root `Launcher.java` placeholder |
+| Verified pre-P1-T10A `master` | `db822c3a0ebd833717d79d44cbee8bf3428fe909` — cleanup PR #55 merged; merged-master CI #125 passed |
+| P1-T10A work | Issue #56; introduced by the containing change |
 | Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
-| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10 |
-| Next planned Phase 1 item | P1-T10A in `docs/roadmap/TECHNICAL_BACKLOG.md`; no executable Issue exists yet, so it must be materialized before implementation |
+| Completed roadmap implementation in this checkpoint | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A |
+| Next planned work after verified P1-T10A merge | Reconcile/close Phase 1 epic #2, then materialize the next roadmap Issue before implementation; do not begin Phase 2 without its own active Issue |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare the checked-out branch with remote `master`, and then inspect GitHub for activity newer than this snapshot.
+The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare with remote `master`, and inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-Complete cleanup Issue #54 only after its pull request CI passes and merged-`master` push CI passes. After that, the next planned Phase 1 item remains P1-T10A. It is not executable until a dedicated Issue exists; do not implement P1-T10A or Phase 2 work without that Issue.
+Complete P1-T10A only after final PR-head CI passes on the exact candidate head, PR #57 is merged, and merged-`master` push CI passes. Then mark Issue #56 complete, reconcile the Phase 1 exit gate/epic, and create the next executable roadmap Issue before doing more implementation.
 
 ## What is actually implemented
 
 - Gradle Wrapper and Java 25 toolchain configuration.
-- Sixteen declared subprojects matching `ENGINE_SCOPE.md`, including `engine-ui` and `test-support`.
-- One-way Gradle project dependency graph with runtime UI separated from the OpenGL adapter.
-- Central dependency version catalog and committed dependency locks for the current runtime/test/tool dependency graph.
-- Shared group/version/repository/toolchain/JUnit Platform configuration at the root.
-- `test-support` exporting JUnit 5 and AssertJ.
-- A minimal shared-setup smoke test in each of the 12 current test-bearing engine modules.
-- Root commands for project discovery, all-module build, lock resolution, Checkstyle quality verification, JaCoCo report verification, architecture verification, and Phase 0 spikes.
-- Checkstyle 14.1.0 quality rules for applicable root/module Java production and test sources.
-- JaCoCo 0.8.15 reporting for the 12 current test-bearing engine modules, with XML/HTML verification and CI artifacts.
-- `config/architecture/module-boundaries.properties` declares one owned package root, one public API root, and one internal implementation root for every one of the 16 Gradle subprojects.
-- `ModulePackageBoundaryTest` verifies registry completeness, verifies production source packages stay under their owning module root, and rejects cross-module imports outside the destination module's declared API root.
-- A deliberate negative fixture represents a forbidden `game-client -> engine-platform-lwjgl.internal` shortcut and is disabled during normal builds.
-- Package/API boundary decision D-016 is recorded in `docs/DECISIONS.md` and reflected in `docs/ARCHITECTURE.md`.
-- `.github/workflows/java25.yml` has explicit Windows Java 25 jobs for build/quality, unit tests, architecture tests, JaCoCo coverage, and hosted-Windows native smoke.
-- The hosted native smoke initializes/terminates GLFW, initializes/cleans up OpenAL through the null backend, and runs one real Jolt JNI physics lifecycle cycle.
-- `game-client` has `com.samo.game.client.ClientMain` plus repeatable Gradle task `:game-client:runClient`.
-- `game-server` has `com.samo.game.server.ServerMain` plus repeatable Gradle task `:game-server:runServer`.
-- `game-server:check` depends on `verifyHeadlessServerRuntime`, which rejects platform/render/audio engine projects and GLFW/OpenGL/OpenAL artifacts from the server runtime classpath.
-- `config/version.properties` centrally defines protocol and asset compatibility identifiers.
-- Both runnable entry points accept `--version` and report executable identity, exact engine Git commit, protocol version, asset version, Java runtime version, and native-library versions resolved for that executable.
-- Version metadata is generated during the build from the current Git checkout plus each executable runtime classpath; an executable with no matching native artifacts reports `nativeLibraries=none`.
-- CI runs both version reports from the same checkout, requires the shared identifiers to match, and requires the reported engine commit to equal the exact workflow SHA.
-- The unused root `src/main/java/com/samo/Launcher.java` placeholder is removed by cleanup Issue #54; the real runnable entry points remain `ClientMain` and `ServerMain`.
-- Root Phase 0 spike sources remain experimental and outside production architecture.
+- The 16 production-target engine/game/support modules from `ENGINE_SCOPE.md` remain intact.
+- `feasibility-spikes` is an additional experimental Gradle subproject; it is not a production runtime module.
+- The root project is a build/quality/task aggregator with no Java `src/` tree.
+- All nine Phase 0 spike Java sources were relocated unchanged from root `src/main/java/com/samo/spike/**` to `feasibility-spikes/src/main/java/com/samo/spike/**`.
+- Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies and native runtime artifacts are owned by `feasibility-spikes`, not the root project.
+- Existing historical root Phase 0 task names remain as compatibility aliases to identically named tasks in `:feasibility-spikes`; Steam/JFR evidence paths under root `build/spikes/**` are preserved.
+- The root dependency lock now represents only root build/quality configurations; `feasibility-spikes/gradle.lockfile` owns the relocated spike runtime graph. Dependency versions are unchanged.
+- Shared group/version/repository/toolchain/JUnit Platform conventions remain centralized at the root.
+- `test-support` still exports JUnit 5 and AssertJ and now also owns the repository-wide `ModulePackageBoundaryTest` source.
+- D-016 package/API boundary enforcement now covers all 17 declared Gradle subprojects, including experimental `feasibility-spikes`, without weakening the existing cross-module API-only rule.
+- Checkstyle 14.1.0 continues scanning production/test sources while explicitly excluding the experimental feasibility source tree; `verifyCheckstyleSourceBoundary` verifies the exclusion.
+- JaCoCo 0.8.15 remains configured for the same 12 test-bearing engine modules.
+- `.github/workflows/java25.yml` keeps the five required Windows Java 25 jobs; the architecture job now targets `:test-support:test` and hosted native smoke still invokes the preserved root aliases.
+- `game-client` and `game-server` retain their separate runnable entry points, P1-T10 `--version` reporting, and server headless runtime boundary verification.
+- Cleanup Issue #54 previously removed the unused root `Launcher.java`; P1-T10A removes the remaining root Java source tree by relocating spikes and architecture verification.
 
-## What is only skeleton or planned
+## What remains skeleton or planned
 
-- Production engine subsystems and `game-sandbox` remain Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
-- The client/server entry points remain intentionally empty foundation composition roots apart from version reporting. They do not initialize later production subsystems.
-- P1-T10 version identifiers are reporting/build metadata only; protocol negotiation and asset migration are not implemented.
-- Root Phase 0 spikes are experimental and have not been moved into the planned feasibility module (P1-T10A).
-- A playable local engine begins in later phases; Phase 1 proves foundation/build contracts rather than a playable game.
+- Production engine subsystems and `game-sandbox` remain skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
+- Client/server entry points remain intentionally minimal foundation composition roots apart from version reporting.
+- `feasibility-spikes` remains disposable experimental evidence code. Its presence must not be interpreted as production engine implementation.
+- A playable local engine begins in later phases; Phase 1 establishes foundation/build boundaries rather than a playable game.
 
 ## Verified feasibility baseline
 
-- Java 25 and the selected Windows x64 native stack can run together.
-- GLFW/OpenGL 4.6, Jolt JNI, OpenAL, and localhost UDP were exercised independently on a suitable Windows target machine.
-- P0-T11 deterministically reproduced latency, jitter, loss, duplication, and reordering.
-- Steamworks4j initialized Steam and callbacks, but does not expose the required modern `ISteamNetworkingSockets` surface.
-- Java 25 FFM loaded the official Steam flat API and obtained/used an `ISteamNetworkingSockets` pointer. This proves API access only.
-- P0-T12 exercised graphics, physics, audio, and UDP together for 15 seconds under JFR and shut down cleanly. It is a smoke test, not sustained-stability evidence.
-- GitHub-hosted Windows can execute headless-safe GLFW/OpenAL/Jolt lifecycle smoke, but its runner image does not provide an OpenGL 4.6 driver/context suitable for the full P0-T12 integrated graphics smoke.
+P1-T10A changes source/dependency ownership only; it does not strengthen or replace existing feasibility evidence:
+
+- Java 25 and the selected Windows x64 native stack have been exercised together.
+- GLFW/OpenGL 4.6, Jolt JNI, OpenAL, localhost UDP, deterministic impairment, Steam initialization, and Java FFM flat-API access retain their previous evidence classifications.
+- P0-T12 remains a 15-second integrated smoke test, not sustained-stability evidence.
+- GitHub-hosted Windows can run headless-safe GLFW/OpenAL/Jolt lifecycle smoke but does not establish an OpenGL 4.6 context for the full P0-T12 path.
 
 ## Open gates and blockers
 
@@ -73,33 +62,41 @@ Complete cleanup Issue #54 only after its pull request CI passes and merged-`mas
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These do not block independent foundation tasks unless the active Issue consumes the missing claim.
+These remain open after P1-T10A.
 
-## Cleanup #54 verification requirements
+## P1-T10A verification requirements
 
 Before merge, run and record:
 
 ```powershell
+.\gradlew.bat projects
+.\gradlew.bat resolveAndLockAllDependencies --write-locks
 .\gradlew.bat buildAllModules
 .\gradlew.bat test
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat verifyJacocoReports
+.\gradlew.bat :game-client:runClient
+.\gradlew.bat :game-server:runServer
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\gradlew.bat :game-client:runClient --args="--version"
+.\gradlew.bat :game-server:runServer --args="--version"
 ```
 
-Acceptance requires `src/main/java/com/samo/Launcher.java` to be absent, no `com.samo.Launcher` references to remain, existing client/server entry points to remain unchanged, and the final PR-head CI plus merged-`master` push CI to pass.
+Also verify the root has no tracked Java `src/` files, production modules have no project dependency on `:feasibility-spikes`, root aliases still execute the relocated native-safe smoke on hosted Windows, and lock refresh produces only the expected ownership changes.
 
-This cleanup does not change dependencies, module direction, public engine APIs, protocols, asset formats, ownership, feasibility conclusions, or the planned P1-T10A migration of Phase 0 spikes.
+No dependency version, product scope, production module direction, public engine API, protocol/asset format, authority, coordinate convention, native ownership contract, or feasibility conclusion is changed by P1-T10A.
 
 ## Live-state reconciliation
 
 Before starting the next task, a fresh agent must:
 
 1. read `AGENTS.md` in full;
-2. run `git status --short --branch` and `git rev-parse HEAD`;
-3. fetch and compare with remote `master`;
-4. inspect the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
-5. confirm whether a P1-T10A executable Issue has been created before attempting that planned backlog item;
-6. prefer newer merged code/tests and the active Issue when they legitimately supersede this commit-contained snapshot;
-7. stop if the sources conflict instead of guessing.
+2. inspect `git status --short --branch`, `git rev-parse HEAD`, remote `master`, open PRs, and active Issues;
+3. inspect Issue #56 and P1 epic #2;
+4. inspect independent follow-up Issues #42–#44;
+5. if P1-T10A has merged and merged-master CI passed, reconcile/close Phase 1 before materializing the next roadmap Issue;
+6. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule
 
-Update this file when a merge changes completed tasks, the exact next action, blockers, implementation maturity, or verified conclusions. Do not paste board columns or transient in-progress state here. Update the live Issue/Project immediately; update this checkpoint in the same pull request as the durable repository change.
+Update this file when a merge changes completed tasks, the exact next action, blockers, implementation maturity, or verified conclusions. Do not paste transient board state here. Update live GitHub workflow state immediately and this checkpoint in the same PR as durable repository changes.

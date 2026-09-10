@@ -5,10 +5,6 @@ plugins {
 group = "com.samo"
 version = "1.0-SNAPSHOT"
 
-val lwjglVersion = "3.4.3"
-val joltJniVersion = "6.0.0"
-val steamworks4jVersion = "1.10.0"
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
@@ -19,27 +15,33 @@ repositories {
     mavenCentral()
 }
 
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+}
+
 dependencies {
-    implementation("org.lwjgl:lwjgl:$lwjglVersion")
-    implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion")
-    implementation("org.lwjgl:lwjgl-openal:$lwjglVersion")
-    implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion")
+    implementation(libs.lwjgl.core)
+    implementation(libs.lwjgl.glfw)
+    implementation(libs.lwjgl.openal)
+    implementation(libs.lwjgl.opengl)
 
-    runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-opengl:$lwjglVersion:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl-glfw:${libs.versions.lwjgl.get()}:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl-openal:${libs.versions.lwjgl.get()}:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-windows")
 
-    implementation("com.github.stephengold:jolt-jni-Windows64:$joltJniVersion")
-    runtimeOnly("com.github.stephengold:jolt-jni-Windows64:$joltJniVersion:DebugSp")
-    implementation("io.github.electrostat-lab:snaploader:1.1.1-stable")
-    runtimeOnly("com.github.oshi:oshi-core:7.4.2")
+    implementation(libs.jolt.jni.windows64)
+    runtimeOnly("com.github.stephengold:jolt-jni-Windows64:${libs.versions.jolt.jni.get()}:DebugSp")
+    implementation(libs.snaploader)
+    runtimeOnly(libs.oshi.core)
 
-    implementation("com.code-disaster.steamworks4j:steamworks4j-lwjgl3:$steamworks4jVersion")
+    implementation(libs.steamworks4j.lwjgl3)
 
-    testImplementation(platform("org.junit:junit-bom:6.0.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 tasks.test {
@@ -50,6 +52,25 @@ tasks.register("buildAllModules") {
     group = "build"
     description = "Compiles and tests every declared engine/game module."
     dependsOn(subprojects.map { "${it.path}:build" })
+}
+
+val projectsForLocking = rootProject.allprojects
+
+tasks.register("resolveAndLockAllDependencies") {
+    group = "build setup"
+    description = "Resolves all resolvable configurations so dependency lock state can be written with --write-locks."
+
+    doLast {
+        projectsForLocking.forEach { project ->
+            project.configurations
+                .filter { it.isCanBeResolved }
+                .sortedBy { it.name }
+                .forEach { configuration ->
+                    logger.lifecycle("Resolving ${project.path}:${configuration.name}")
+                    configuration.resolve()
+                }
+        }
+    }
 }
 
 tasks.register<JavaExec>("runOpenGL46Spike") {

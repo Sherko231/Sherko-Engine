@@ -64,7 +64,7 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** establish the lifecycle, timing, configuration, cleanup, allocation-observability, logging, and fatal-shutdown contracts that every production subsystem will follow.
 
-Materialize only the next bounded task as an executable Issue. The first task is `P2-T01`, defining `EngineSubsystem` with explicit `initialize`, `start`, `stop`, and `close` phases and unit-tested lifecycle order. Do not treat the remaining Phase 2 catalog as permission to implement it in bulk.
+Materialize only the next bounded task as an executable Issue. The lifecycle foundation is `P2-T01`, defining `EngineSubsystem` with explicit `initialize`, `start`, `stop`, and `close` phases and unit-tested lifecycle order. Consult [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) and live GitHub state for completed work and the exact next action. Do not treat the remaining Phase 2 catalog as permission to implement it in bulk.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-2---core-lifecycle-time-configuration-and-native-ownership).
 

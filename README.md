@@ -21,10 +21,10 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-The Java 25 multi-project foundation declares all 16 production-target modules plus the experimental `feasibility-spikes` subproject. It centralizes the toolchain, dependency locking, JUnit 6/AssertJ test support, quality gates, and repeatable client/server entry points. Production engine subsystems remain architectural skeletons.
+The Java 25 multi-project foundation declares all 16 production-target modules plus the experimental `feasibility-spikes` subproject. It centralizes the toolchain, dependency locking, JUnit 6/AssertJ test support, quality gates, and repeatable client/server entry points. `engine-core` now provides the tested single-subsystem lifecycle contract; concrete production subsystems remain architectural skeletons.
 
 Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, Java FFM access to the Steam flat API, and a 15-second combined native smoke run. End-to-end SteamNetworkingSockets and sustained/repeated native lifecycle evidence remain explicit follow-up gates.
 
-M1 / Phase 1 is complete. The next engine implementation action is to materialize P2-T01 as one executable Issue, then implement only that Issue on a dedicated branch. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
+Phase 1 is complete; M1 continues through Phases 2–4. P2-T01 defines the single-subsystem lifecycle. After its linked PR passes final verification and merges, the next implementation action is to materialize P2-T02 as one executable Issue. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
 
 All agent-authored changes use one active Issue, a dedicated branch, a pull request, and CI before merge.

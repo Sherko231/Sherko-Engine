@@ -30,6 +30,14 @@ jobs:
       - name: List declared projects
         run: .\gradlew.bat projects
 
+      - name: Resolve committed dependency locks
+        shell: powershell
+        run: |
+          & .\gradlew.bat resolveAndLockAllDependencies
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- ':(glob)**/*.lockfile' '*.lockfile'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Build all modules
         run: .\gradlew.bat buildAllModules
 
@@ -103,6 +111,18 @@ jobs:
 
       - name: Run root and subproject tests
         run: .\gradlew.bat test
+
+      - name: Verify single-subsystem lifecycle
+        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --rerun-tasks
+
+      - name: Upload lifecycle test evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-subsystem-tests
+          path: |
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml
+            engine-core/build/reports/tests/test/**
+          if-no-files-found: error
 
   architecture-tests:
     name: Architecture tests

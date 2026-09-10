@@ -7,6 +7,7 @@ steamworks4j = "1.10.0"
 junit = "6.0.0"
 assertj = "3.27.7"
 checkstyle = "14.1.0"
+jacoco = "0.8.15"
 
 [libraries]
 lwjgl-core = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }

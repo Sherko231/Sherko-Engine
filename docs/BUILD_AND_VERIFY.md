@@ -19,6 +19,7 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
 | Run the root quality gate | `.\gradlew.bat check` | Checkstyle scans applicable production/module Java sources and tests, the Phase 0 exclusion boundary check passes, and root tests pass. |
 | Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including `engine-ui`. |
+| Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
 
@@ -36,6 +37,19 @@ The fixture intentionally contains a wildcard import, an empty catch block, and 
 
 The root Checkstyle scan deliberately excludes `src/main/java/com/samo/spike/**`, which remains Phase 0 experimental evidence. `verifyCheckstyleSourceBoundary` makes that exclusion explicit and fails if excluded spike sources leak into the production scan.
 
+For P1-T06 / Issue #36, run:
+
+```powershell
+.\gradlew.bat verifyJacocoReports
+```
+
+JaCoCo is configured only for the 12 engine modules that currently contain the shared smoke tests. Each module writes:
+
+- XML: `<module>/build/reports/jacoco/test/jacocoTestReport.xml`
+- HTML: `<module>/build/reports/jacoco/test/html/index.html`
+
+`verifyJacocoReports` fails when either format is missing for any configured test-bearing module. Coverage is reported for visibility only; P1-T06 deliberately defines no global or per-module minimum percentage.
+
 For a general documentation/build-boundary pull request, the minimum clean verification is:
 
 ```powershell
@@ -48,7 +62,7 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle as part of its ordinary all-module build. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
+`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. `buildAllModules` includes the root `check` quality gate, so the current workflow enforces Checkstyle as part of its ordinary all-module build. CI also runs `verifyJacocoReports` and uploads `*/build/reports/jacoco/test/**` as the `jacoco-reports` artifact so XML and HTML coverage output can be inspected. Task P1-T08 / Issue #38 will further expand CI with automated architecture and selected Windows native smoke gates.
 
 ## Phase 0 feasibility commands
 

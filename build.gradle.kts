@@ -19,6 +19,34 @@ allprojects {
     dependencyLocking {
         lockAllConfigurations()
     }
+
+    plugins.withId("java") {
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
+        }
+    }
+}
+
+val engineTestModules = listOf(
+    "engine-core",
+    "engine-platform-lwjgl",
+    "engine-render-opengl",
+    "engine-assets",
+    "engine-world",
+    "engine-physics-jolt",
+    "engine-audio-openal",
+    "engine-network-api",
+    "engine-network-ip",
+    "engine-steam",
+    "engine-editor"
+)
+
+engineTestModules.forEach { moduleName ->
+    project(":$moduleName") {
+        pluginManager.withPlugin("java") {
+            dependencies.add("testImplementation", project(":test-support"))
+        }
+    }
 }
 
 dependencies {

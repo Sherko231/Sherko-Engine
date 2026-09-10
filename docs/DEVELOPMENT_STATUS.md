@@ -6,18 +6,18 @@
 
 | Field | Value |
 | --- | --- |
-| Pre-P1-T08 verified `master` | `b74ac96e506813f1ab67a19433078ffcbbc9f419` — merge of P1-T07 / PR #50 |
-| P1-T08 work | Issue #38 / PR #51; introduced by the containing change |
+| Pre-P1-T09 verified `master` | `476d46b5fd5c2b812804f91ee523ad54647b5780` — merge of P1-T08 / PR #51 |
+| P1-T09 work | Issue #39; introduced by the containing change |
 | Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
-| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08 |
-| Next executable task after this merge | P1-T09 — Issue #39, add client and headless-server entry points |
+| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09 |
+| Next executable task after this merge | P1-T10 — Issue #40, add reproducible `--version` reporting |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare the checked-out branch with remote `master`, and then inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-After PR #51 is merged and merged-`master` push CI is confirmed, unless GitHub shows newer merged/in-progress work, start from current `master`, activate Issue #39, create a dedicated P1-T09 branch, and implement only its entry-point acceptance criteria. Do not fold P1-T10+ or Phase 2 work into that change.
+After the P1-T09 pull request is merged and merged-`master` push CI is confirmed, unless GitHub shows newer merged/in-progress work, start from current `master`, activate Issue #40, create a dedicated P1-T10 branch, and implement only its `--version` acceptance criteria. Do not fold P1-T10A or Phase 2 work into that change.
 
 ## What is actually implemented
 
@@ -37,15 +37,18 @@ After PR #51 is merged and merged-`master` push CI is confirmed, unless GitHub s
 - Package/API boundary decision D-016 is recorded in `docs/DECISIONS.md` and reflected in `docs/ARCHITECTURE.md`.
 - `.github/workflows/java25.yml` has explicit Windows Java 25 jobs for build/quality, unit tests, architecture tests, JaCoCo coverage, and hosted-Windows native smoke.
 - The hosted native smoke initializes/terminates GLFW, initializes/cleans up OpenAL through the null backend, and runs one real Jolt JNI physics lifecycle cycle.
+- `game-client` has `com.samo.game.client.ClientMain` plus repeatable Gradle task `:game-client:runClient`.
+- `game-server` has `com.samo.game.server.ServerMain` plus repeatable Gradle task `:game-server:runServer`.
+- `game-server:check` depends on `verifyHeadlessServerRuntime`, which rejects platform/render/audio engine projects and GLFW/OpenGL/OpenAL artifacts from the server runtime classpath.
 - Root Phase 0 spike sources remain experimental and outside production architecture.
 
 ## What is only skeleton or planned
 
-- All production engine/game modules are still Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
-- P1-T07 defines package boundaries but deliberately does not create placeholder future subsystem APIs merely to fill empty modules.
-- Client and headless-server entry points are next in P1-T09 / #39.
+- Production engine subsystems and `game-sandbox` remain Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
+- The P1-T09 client/server entry points are intentionally empty foundation composition roots. They start and exit cleanly but do not initialize later production subsystems.
+- P1-T10 / #40 will add reproducible version reporting to the two runnable entry points.
 - Root Phase 0 spikes are experimental and have not been moved into the planned feasibility module (P1-T10A).
-- A playable local engine begins in later phases; the repository cannot build or run a game yet.
+- A playable local engine begins in later phases; P1-T09 proves executable composition roots, not a playable game.
 
 ## Verified feasibility baseline
 
@@ -67,23 +70,21 @@ After PR #51 is merged and merged-`master` push CI is confirmed, unless GitHub s
 
 These do not block independent Phase 1 foundation tasks unless the active Issue consumes the missing claim.
 
-## P1-T08 verification evidence
+## P1-T09 verification requirements
 
-- PR #51 run #100 proved the new build, unit-test, architecture, and JaCoCo jobs were valid, while the initial native job using `runIntegratedNativeSmoke` failed on GitHub-hosted Windows with `WGL: The driver does not appear to support OpenGL`. This was treated as an environment limitation rather than ignored or converted to a false pass.
-- The native CI design was changed to a hosted-Windows-safe smoke: `runWindowsNativeCiSmoke` initializes/terminates GLFW and OpenAL with `ALSOFT_DRIVERS=null`, followed by `runJoltLifecycleSpike -PjoltSpikeCycles=1`.
-- PR #51 run #105 at branch commit `338b7311a339f01934b486fc428372eb1a52561a` passed all five required jobs. The native job reported GLFW initialization success, OpenAL 1.1 success, and one Jolt JNI physics cycle with native allocation balance returning to zero.
-- PR #51 run #107 at branch commit `8246ca19ecd557e03f03c041cce760bd370710e9` intentionally set `JAVA_TOOL_OPTIONS=-Darchitecture.includeInvalidFixture=true` only for the architecture job. `ModulePackageBoundaryTest.modulesOnlyImportOtherModulesThroughDeclaredApiRoots()` failed and the workflow concluded failure. This is the required controlled negative evidence and is not a merge candidate.
-- The controlled-failure environment override was removed immediately afterward.
-- Final PR-head CI after this documentation update must pass before merge.
-- Merged-`master` push CI must pass after merge before P1-T08 is considered fully complete.
-- No dependency was added, so dependency locks require no refresh.
-- Canonical commands and CI environment limitations are recorded in `docs/BUILD_AND_VERIFY.md`.
+Before merge, run and record:
 
-## P1-T08 CI boundary
+```powershell
+.\gradlew.bat :game-client:runClient
+.\gradlew.bat :game-server:runServer
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\gradlew.bat buildAllModules
+.\gradlew.bat test
+```
 
-Issue #38 requires automatic compile/build, unit-test, architecture-test, and Windows native smoke coverage. The hosted runner cannot create the OpenGL 4.6 context required by the existing integrated graphics spike, so the unattended CI gate proves only the native lifecycles it can support reliably: GLFW initialization/cleanup, OpenAL initialization/cleanup through its null backend, and Jolt JNI initialization/use/cleanup. Full OpenGL 4.6 and integrated P0-T12 graphics evidence remains target-machine feasibility evidence.
+Acceptance requires both executable entry points to start and exit cleanly, the server runtime dependency verification to pass, and the final PR-head CI to pass. Merged-`master` push CI must also pass before P1-T09 is treated as fully complete.
 
-This does not change `ENGINE_SCOPE.md`, `ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, or `docs/roadmap/TECHNICAL_BACKLOG.md`; P1-T08 implements their existing contract without changing product scope, module ownership, public API, protocol, or milestone order.
+No dependency was added or removed by P1-T09, so dependency locks require no refresh. The task implements the existing composition-root plan without changing product scope, module dependency direction, public engine APIs, protocols, ownership, or feasibility conclusions.
 
 ## Live-state reconciliation
 
@@ -92,7 +93,7 @@ Before starting the next task, a fresh agent must:
 1. read `AGENTS.md` in full;
 2. run `git status --short --branch` and `git rev-parse HEAD`;
 3. fetch and compare with remote `master`;
-4. inspect Issue #39, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
+4. inspect Issue #40, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
 5. prefer newer merged code/tests and the active Issue when they legitimately supersede this commit-contained snapshot;
 6. stop if the sources conflict instead of guessing.
 

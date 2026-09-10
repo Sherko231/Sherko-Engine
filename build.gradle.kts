@@ -52,7 +52,7 @@ val checkstyleTestSources = fileTree(rootDir) {
 }
 val includeInvalidCheckstyleFixture = providers.gradleProperty("checkstyleIncludeInvalidFixture")
     .map { it.toBoolean() }
-    .orElse(false)
+    .orElse(true)
 
 tasks.named<Checkstyle>("checkstyleMain") {
     setSource(checkstyleMainSources)

@@ -8,3 +8,7 @@ dependencies {
     api(libs.assertj.core)
     runtimeOnly(libs.junit.platform.launcher)
 }
+
+tasks.withType<Test>().configureEach {
+    systemProperty("repository.root", rootProject.projectDir.absolutePath)
+}

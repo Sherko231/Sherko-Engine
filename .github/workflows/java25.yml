@@ -8,10 +8,11 @@ on:
   workflow_dispatch:
 
 # P1-T08 keeps each required verification concern visible as its own CI job.
+# CI currently uses the repository-scoped Windows x64 self-hosted runner.
 jobs:
   build:
     name: Build and quality gates
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +43,7 @@ jobs:
         run: .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 
       - name: Verify client/server version reporting
-        shell: pwsh
+        shell: powershell
         run: |
           $clientLines = & .\gradlew.bat -q :game-client:runClient --args="--version"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -88,7 +89,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +106,7 @@ jobs:
 
   architecture-tests:
     name: Architecture tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -118,11 +119,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Enforce module API/package boundaries
-        run: .\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+        run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 
   coverage:
     name: JaCoCo coverage reports
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - uses: actions/checkout@v4
@@ -146,7 +147,7 @@ jobs:
 
   windows-native-smoke:
     name: Windows native smoke
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 5
     env:
       ALSOFT_DRIVERS: "null"

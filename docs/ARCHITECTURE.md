@@ -13,7 +13,7 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 16 declared subprojects. Engine subsystem modules and `game-sandbox` remain skeletons, while `game-client` and `game-server` now provide minimal executable composition roots for the foundation state. The root project still contains experimental Phase 0 native/network spikes.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. Engine subsystem modules and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
@@ -32,13 +32,14 @@ The repository has a working Java 25 multi-project build with 16 declared subpro
 | `game-sandbox` | Game rules and vertical-slice content | Skeleton | `engine-core`, `engine-world`, `engine-physics-jolt`, `engine-network-api`, `engine-ui` |
 | `game-client` | Client composition root | Minimal executable foundation entry point | `game-sandbox`, platform, render, audio, IP, Steam adapters |
 | `game-server` | Headless/listen-server composition root | Minimal executable headless foundation entry point | `game-sandbox`, IP and Steam adapters |
-| `test-support` | Shared JUnit 5/AssertJ test dependencies and fixtures | Implemented build support | None |
+| `test-support` | Shared JUnit 5/AssertJ support plus repository architecture verification | Implemented build/test support | None |
+| `feasibility-spikes` | Disposable Phase 0 native/network feasibility executables | Experimental | None; external native/library dependencies only |
 
-The table reflects the intended Gradle project dependency graph. P1-T07 adds package-level enforcement on top of those project boundaries.
+`feasibility-spikes` is not a seventeenth production engine module. It is deliberately outside the locked 16-module runtime target in `ENGINE_SCOPE.md`, and no production client/server module depends on it.
 
 ## Package/API boundary contract
 
-`config/architecture/module-boundaries.properties` is the machine-readable registry for all 16 declared subprojects. Every module declares:
+`config/architecture/module-boundaries.properties` is the machine-readable registry for all 17 declared Gradle subprojects. Every declared subproject, including the experimental feasibility module, declares:
 
 - one owned package root;
 - one public cross-module API root under that package root;
@@ -46,9 +47,9 @@ The table reflects the intended Gradle project dependency graph. P1-T07 adds pac
 
 Code inside a module may use its own implementation packages. Cross-module imports must target the other module's declared API root. Imports of another module's internal root are architectural violations even when the Gradle project dependency itself is otherwise valid.
 
-The root `ModulePackageBoundaryTest` verifies registry completeness, verifies production source packages stay under their owning module root, and scans production imports for cross-module implementation shortcuts. A deliberate fixture under `config/architecture/fixtures/` represents a forbidden `game-client -> engine-platform-lwjgl.internal` dependency and is used only for negative verification.
+`ModulePackageBoundaryTest` now lives under `test-support/src/test` because the root has no Java source tree. It verifies registry completeness, verifies source packages stay under their owning module root, and scans production/declared-subproject imports for cross-module implementation shortcuts. A deliberate fixture under `config/architecture/fixtures/` represents a forbidden `game-client -> engine-platform-lwjgl.internal` dependency and remains opt-in negative evidence.
 
-These package roots define boundaries, not future subsystem interfaces. P1-T07 does not require creating placeholder production APIs merely to populate empty skeleton modules.
+These package roots define boundaries, not future subsystem interfaces. P1-T10A does not create a reusable feasibility API or promote spike code into production architecture.
 
 ## Dependency rules
 
@@ -60,6 +61,7 @@ These package roots define boundaries, not future subsystem interfaces. P1-T07 d
 - `engine-editor` may consume runtime modules, but runtime modules must not depend on the editor.
 - Asset authoring/import dependencies belong in offline tooling; shipped gameplay consumes cooked formats.
 - Cross-module Java imports target only the destination module's declared API package root; `.internal` packages are never public contracts.
+- Production engine/game modules must not depend on `feasibility-spikes`; its external dependencies exist only to reproduce Phase 0 evidence.
 
 ## Runtime composition target
 
@@ -69,24 +71,28 @@ P1-T09 establishes only the runnable composition roots and their Gradle tasks. T
 
 ## Experimental code boundary
 
-Phase 0 code under root `src/main/java/com/samo/spike/` proves isolated capabilities:
+Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
 
 - GLFW/OpenGL initialization;
 - Jolt lifecycle;
 - OpenAL lifecycle;
 - localhost UDP and deterministic impairment;
 - Steam initialization and FFM flat-API access;
-- a 15-second combined native smoke run.
+- combined native smoke/soak executables.
 
-It is experimental, not a reusable engine layer. Moving reusable behavior into modules requires the planned `P1-T10A` task or another explicit Issue, with ownership contracts and tests.
+The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible.
+
+P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independent follow-up gates. Moving their supporting code does not satisfy those gates or strengthen prior feasibility claims.
 
 ## Architecture verification status
 
 | Property | Status |
 | --- | --- |
-| 16 modules declared | Implemented |
+| 16 production-target modules declared | Implemented |
+| Experimental `feasibility-spikes` subproject isolated | Implemented by P1-T10A / Issue #56 |
+| Root contains no Java source/runtime spike dependencies | Implemented by P1-T10A / Issue #56 |
 | Shared Java 25/test conventions | Implemented |
 | Dependency locking/version catalog | Implemented |
-| Automated package/module boundary test | Implemented by P1-T07 / Issue #37 |
+| Automated package/module boundary test | Implemented by P1-T07; relocated/extended by P1-T10A |
 | Client/server executable composition roots | Implemented by P1-T09 / Issue #39 |
 | Production engine subsystems | Planned: Phase 2 onward |

@@ -16,5 +16,6 @@ include(
     "game-sandbox",
     "game-client",
     "game-server",
-    "test-support"
+    "test-support",
+    "feasibility-spikes"
 )

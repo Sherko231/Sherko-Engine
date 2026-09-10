@@ -1,4 +1,6 @@
 import org.gradle.api.plugins.quality.Checkstyle
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     id("java")
@@ -113,6 +115,59 @@ engineTestModules.forEach { moduleName ->
     project(":$moduleName") {
         pluginManager.withPlugin("java") {
             dependencies.add("testImplementation", project(":test-support"))
+            pluginManager.apply("jacoco")
+
+            extensions.configure<JacocoPluginExtension> {
+                toolVersion = libs.versions.jacoco.get()
+            }
+
+            tasks.named<JacocoReport>("jacocoTestReport") {
+                dependsOn(tasks.named("test"))
+                reports {
+                    xml.required.set(true)
+                    xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml"))
+                    html.required.set(true)
+                    html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/test/html"))
+                    csv.required.set(false)
+                }
+            }
+        }
+    }
+}
+
+val jacocoTestReportAllModules by tasks.registering {
+    group = "verification"
+    description = "Runs tests and generates JaCoCo XML/HTML reports for every test-bearing engine module."
+    dependsOn(engineTestModules.map { ":$it:jacocoTestReport" })
+}
+
+val verifyJacocoReports by tasks.registering {
+    group = "verification"
+    description = "Verifies that every test-bearing engine module produced JaCoCo XML and HTML reports."
+    dependsOn(jacocoTestReportAllModules)
+
+    doLast {
+        val missingReports = mutableListOf<String>()
+
+        engineTestModules.forEach { moduleName ->
+            val module = project(":$moduleName")
+            val xmlReport = module.layout.buildDirectory
+                .file("reports/jacoco/test/jacocoTestReport.xml")
+                .get().asFile
+            val htmlReport = module.layout.buildDirectory
+                .file("reports/jacoco/test/html/index.html")
+                .get().asFile
+
+            if (!xmlReport.isFile) {
+                missingReports += "$moduleName XML: ${xmlReport.relativeTo(rootDir).path}"
+            }
+            if (!htmlReport.isFile) {
+                missingReports += "$moduleName HTML: ${htmlReport.relativeTo(rootDir).path}"
+            }
+        }
+
+        check(missingReports.isEmpty()) {
+            "Missing JaCoCo reports:\n" + missingReports.joinToString("\n")
         }
     }
 }

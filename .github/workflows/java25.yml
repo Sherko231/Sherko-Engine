@@ -52,8 +52,6 @@ jobs:
   architecture-tests:
     name: Architecture tests
     runs-on: windows-latest
-    env:
-      JAVA_TOOL_OPTIONS: "-Darchitecture.includeInvalidFixture=true"
 
     steps:
       - uses: actions/checkout@v4

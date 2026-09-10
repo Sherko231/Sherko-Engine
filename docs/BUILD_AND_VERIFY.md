@@ -97,13 +97,13 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
 
-- build and root quality gates via `buildAllModules`;
+- build and root quality gates via `buildAllModules`, followed by `:game-client:runClient`, `:game-server:runServer`, and `:game-server:verifyHeadlessServerRuntime` so P1-T09 entry points remain executable and the server remains headless;
 - unit/root/subproject tests via `test`;
 - explicit architecture boundaries via the root `ModulePackageBoundaryTest` command above;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - hosted-Windows-safe native lifecycle coverage via `runWindowsNativeCiSmoke` plus one `runJoltLifecycleSpike` cycle.
 
-Because `game-server:check` depends on `verifyHeadlessServerRuntime`, the ordinary all-module build also enforces the server headless dependency boundary.
+Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary even before the explicit runtime smoke steps.
 
 The hosted Windows runner does not provide the OpenGL 4.6 driver/context required by `runIntegratedNativeSmoke`; the attempted CI run failed with `WGL: The driver does not appear to support OpenGL`. CI therefore does not claim an OpenGL 4.6 context or the full P0-T12 integrated graphics/audio/physics/network path. Those remain target-machine feasibility evidence. The hosted native gate proves GLFW native initialization/cleanup, OpenAL initialization/cleanup through the null backend, and Jolt JNI initialization/use/cleanup only.
 

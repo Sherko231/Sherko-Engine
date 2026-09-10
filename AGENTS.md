@@ -36,6 +36,16 @@ If a lower source conflicts with a higher source, stop and report the conflict. 
 - Inspect uncommitted and untracked files. They belong to the user unless proven otherwise; preserve them.
 - Check the active Issue and open pull requests for newer live state. Markdown alone cannot represent uncommitted work or GitHub activity after the commit.
 
+## Consistency audit
+
+Run this audit before implementation and again before handoff:
+
+- Verify every documented dependency or tool major version against the version catalog, relevant Gradle build files, and committed dependency lockfiles. When they disagree, stop and reconcile the active Issue before editing.
+- Treat `README.md` as repository orientation, not an independent status authority. If it names the current phase, completed milestone, module count, or next task, reconcile it with `docs/DEVELOPMENT_STATUS.md`, the roadmap, and live GitHub state.
+- Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before a passing exact-head run.
+- Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
+- Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
+
 ## Work rules
 
 - Use Java 25 for authored engine/game runtime source. Gradle Kotlin DSL is allowed only for build configuration.
@@ -83,6 +93,7 @@ Never claim a check passed because configuration appears correct. Record actual 
 | Module role/dependency/status change | `docs/ARCHITECTURE.md` |
 | Build command, CI gate, or evidence command change | `docs/BUILD_AND_VERIFY.md` |
 | Completed task, next action, blocker, or verified conclusion | `docs/DEVELOPMENT_STATUS.md` |
+| Repository orientation or current-state summary | `README.md` plus `docs/DEVELOPMENT_STATUS.md`; the README must not contradict the checkpoint or live-state instructions |
 | Milestone ordering/outcome change | `ROADMAP.md` |
 | Planned task definition or acceptance change | `docs/roadmap/TECHNICAL_BACKLOG.md`; update an existing executable Issue too |
 | Feasibility run/result change | matching file under `docs/feasibility/` plus status if the conclusion is durable |
@@ -97,5 +108,6 @@ Before yielding to another agent:
 2. Confirm the active Issue and pull request state.
 3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`.
 4. Update the required documents from the matrix.
-5. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
-6. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.
+5. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
+6. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
+7. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.

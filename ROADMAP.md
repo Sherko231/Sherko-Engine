@@ -13,7 +13,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Milestones | Major outcomes and ordering | this file |
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
-| Code change | Implementation + tests/evidence | Direct commit to the owner-selected branch unless a PR is explicitly requested |
+| Code change | Implementation + tests/evidence | Dedicated task branch and pull request linked to one active Issue |
 
 ### Planning rule
 
@@ -22,7 +22,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - **LATER:** detailed tasks may remain in the technical backlog, but they are planning baselines rather than frozen implementation contracts. Do not pre-create hundreds of Issues.
 - Task IDs such as `P10-T06` are permanent identifiers. Issue numbers are not.
 - Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
-- Live task status belongs only in GitHub Issues/Project; roadmap and backlog documents do not track Ready/In Progress/Done state.
+- Live workflow status belongs in GitHub Issues/Project. The commit-contained completed/next-work checkpoint belongs in `docs/DEVELOPMENT_STATUS.md`; roadmap and backlog documents do not track board state.
 - A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
 
@@ -56,7 +56,7 @@ The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must
 
 **Goal:** make later engine changes isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
 
-Exact live task state is intentionally not duplicated here; GitHub Issues/Project is authoritative.
+The commit-contained checkpoint is in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md). Verify GitHub Issues/Project for activity newer than the checked-out commit.
 
 ### Phase 1 work packages
 
@@ -109,7 +109,7 @@ For work near execution:
 6. Create a dedicated task branch from current `master`; never implement agent-generated work directly on `master`.
 7. Open a pull request linked to the Issue and require CI/verification before merge.
 8. Close the Issue only after merge and acceptance evidence pass.
-9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with durable conclusions, without copying exact live task state.
+9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the merged commit checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
 
 ## Definition of Ready
 
@@ -137,4 +137,4 @@ A task is done only when:
 
 ## Status convention
 
-This file uses planning horizons such as **NOW**, **NEXT**, **LATER**, and **COMPLETE** at milestone level. Exact live task state is maintained in GitHub Issues/Project. Dates are deliberately omitted until enough Phase 1 throughput exists to estimate them credibly.
+This file uses planning horizons such as **NOW**, **NEXT**, **LATER**, and **COMPLETE** at milestone level. `docs/DEVELOPMENT_STATUS.md` records the checkpoint contained by the current commit; GitHub Issues/Project records newer live workflow state. Dates are deliberately omitted until enough Phase 1 throughput exists to estimate them credibly.

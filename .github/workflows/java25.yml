@@ -24,5 +24,11 @@ jobs:
       - name: Report Java toolchains
         run: .\gradlew.bat javaToolchains
 
+      - name: List declared projects
+        run: .\gradlew.bat projects
+
+      - name: Build all modules
+        run: .\gradlew.bat buildAllModules
+
       - name: Run tests
         run: .\gradlew.bat test

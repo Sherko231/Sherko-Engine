@@ -3,6 +3,8 @@
 > Canonical detailed task catalog. Existing task IDs remain stable; newly discovered work receives additive IDs and is not automatically materialized as GitHub Issues.
 >
 > Only the active roadmap phase should normally be materialized as Issues. Keep task IDs stable even when wording is refined.
+>
+> **Status warning:** every task is written as an unchecked catalog item for readability. These checkboxes are not maintained and do not mean “not done.” Use `docs/DEVELOPMENT_STATUS.md` for the containing-commit checkpoint and GitHub Issues/Project for newer live state.
 
 See [`../../ROADMAP.md`](../../ROADMAP.md) for milestone-level planning and [`../../ENGINE_SCOPE.md`](../../ENGINE_SCOPE.md) for product/architecture boundaries.
 

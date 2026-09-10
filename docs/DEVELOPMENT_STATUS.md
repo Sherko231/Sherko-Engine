@@ -1,122 +1,93 @@
 # Sherko Engine — Development Status
 
-> Living snapshot for the current repository state. GitHub Issues remain the authoritative source for exact live task status.
+> Commit-contained handoff checkpoint. This file describes the repository commit that contains it; GitHub Issues/Project is authoritative for workflow activity after that commit.
 
-## Current position
+## Checkpoint identity
 
-- Milestone: M1 — Engine Foundation.
-- Phase: P1 — Build, modules, and quality gates.
-- P1-T01 through P1-T04 have verified implementation evidence on master.
-- Exact current-task state belongs to GitHub Issues/Project and is intentionally not duplicated here.
-- Phase 0 native/API smoke evidence remains durable, while P0-T09A, P0-T13, and P0-T14 are explicit follow-up gates before their dependent production claims.
+| Field | Value |
+| --- | --- |
+| Last verified predecessor merge | PR #45 — architecture/roadmap coherence |
+| Predecessor `master` commit | `22a99053c3fec74495e2c870c2898d4e85630177` |
+| Handoff-system work | Issue #46 / PR #47; introduced by the containing commit |
+| Active milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
+| Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04 |
+| Next executable task | P1-T05 — Issue #35, add Checkstyle quality rules |
+| Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-## Proven feasibility baseline
+The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare the checked-out branch with remote `master`, and then check GitHub for activity newer than this snapshot.
 
-- Java 25 toolchain and CI baseline work.
-- GLFW/OpenGL 4.6, Jolt JNI, OpenAL, and localhost UDP were proven independently.
-- The integrated P0-T12 smoke run exercised graphics, physics, audio, and UDP together for 15 seconds under JFR and shut down cleanly; it is not long-duration stability evidence.
-- Steamworks4j is sufficient for basic Steam initialization/callbacks but not the required modern `ISteamNetworkingSockets` surface.
-- Java 25 FFM can reach the official Steam flat API / `ISteamNetworkingSockets` pointer without authored C/C++ glue. End-to-end listen/connect/callback/message ownership remains unproven until P0-T09A passes.
-- Development network impairment injection for latency, jitter, loss, duplication, and reordering is proven.
+## Exact next action
 
-Detailed feasibility notes live under `docs/feasibility/`.
+Unless GitHub shows newer merged/in-progress work, start from current `master`, activate Issue #35, create a dedicated P1-T05 branch, and implement only its Checkstyle acceptance criteria. Do not begin Phase 2 or fold P1-T06+ work into that change.
 
-## Phase 1 progress
+## What is actually implemented
 
-| Task | State | Result |
+- Gradle Wrapper and Java 25 toolchain configuration.
+- Sixteen declared subprojects matching `ENGINE_SCOPE.md`, including `engine-ui` and `test-support`.
+- One-way Gradle project dependency graph with runtime UI separated from the OpenGL adapter.
+- Central dependency version catalog and committed dependency locks.
+- Shared group/version/repository/toolchain/JUnit Platform configuration at the root.
+- `test-support` exporting JUnit 5 and AssertJ.
+- A minimal shared-setup smoke test in each engine module.
+- Root commands for project discovery, all-module build, lock resolution, and Phase 0 spikes.
+- Pull-request and `master` CI triggers on Windows with Java 25; current CI runs toolchain reporting and the Gradle test suite.
+- Phase 0 feasibility spike source under root `src/main/java/com/samo/spike/`.
+
+## What is only skeleton or planned
+
+- All production engine/game modules are Gradle skeletons; no production lifecycle, renderer, asset, world, physics, audio, networking, runtime UI, editor, or gameplay implementation exists yet.
+- Module/package boundary enforcement is planned for P1-T07 / #37; current direction is configured but not architecture-tested.
+- Client and headless-server entry points are planned for P1-T09 / #39.
+- Root Phase 0 spikes are experimental and have not been moved into the planned feasibility module (P1-T10A).
+- A playable local engine begins in later phases; the repository cannot build or run a game yet.
+
+## Verified feasibility baseline
+
+- Java 25 and the selected Windows x64 native stack can run together.
+- GLFW/OpenGL 4.6, Jolt JNI, OpenAL, and localhost UDP were exercised independently.
+- P0-T11 deterministically reproduced latency, jitter, loss, duplication, and reordering.
+- Steamworks4j initialized Steam and callbacks, but does not expose the required modern `ISteamNetworkingSockets` surface.
+- Java 25 FFM loaded the official Steam flat API and obtained/used an `ISteamNetworkingSockets` pointer. This proves API access only.
+- P0-T12 exercised graphics, physics, audio, and UDP together for 15 seconds under JFR and shut down cleanly. It is a smoke test, not sustained-stability evidence.
+
+## Open gates and blockers
+
+| Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
-| P1-T01 | Complete | `engine-core`, `test-support`, `game-client`, and `game-server` are declared Gradle subprojects; `gradlew projects` and `gradlew buildAllModules` were verified successfully. |
-| P1-T02 | Complete | The complete target module tree from `ENGINE_SCOPE.md` is declared. Local verification showed all 16 modules in `gradlew projects`, `gradlew buildAllModules` succeeded, and `:engine-network-ip:test` also completed successfully. The project dependency graph remains one-way with no circular project dependency observed. |
-| P1-T03 | Complete | Shared external dependency versions are centralized in `gradle/libs.versions.toml`; dependency locking is enabled for all projects; generated lock state is committed; and two repeated dependency resolutions completed successfully using the locked graph. |
-| P1-T04 | Complete | `test-support` exports JUnit and AssertJ, all Java test tasks use JUnit Platform, every engine module has a minimal shared-setup smoke test, the root test task passed with 35 actionable tasks, and refreshed dependency lock files are present on `master`. |
+| P0-T09A / #42 | Production Steam transport work in P10/P13 | Two-process connect/accept/callback/send/receive/message-release/close lifecycle through `ISteamNetworkingSockets`. |
+| P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
+| P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-## Current module tree
+These do not block independent Phase 1 foundation tasks unless the active Issue consumes the missing claim.
 
-```text
-engine-core
-engine-platform-lwjgl
-engine-render-opengl
-engine-ui
-engine-assets
-engine-world
-engine-physics-jolt
-engine-audio-openal
-engine-network-api
-engine-network-ip
-engine-steam
-engine-editor
-game-sandbox
-game-client
-game-server
-test-support
-```
+## Verification at this checkpoint
 
-The module graph is intentionally one-way. Lower engine modules do not depend on game modules. `game-server` does not depend on rendering, platform-window, or audio modules, preserving the future headless-server path.
+- PR #45 CI passed on Windows / Java 25, including the root test suite and `engine-ui` tests.
+- The current build declares 16 subprojects in `settings.gradle.kts`.
+- PR #47 CI run #70 passed at branch commit `41408ed0f796acaa973559ddff30642350de10b0` on Windows with Temurin 25.0.4. It successfully executed `javaToolchains`, `projects`, `buildAllModules`, and `test`; logs include `engine-ui:test`, `game-client:build`, and `game-server:build`.
+- Canonical commands and evidence requirements are in `docs/BUILD_AND_VERIFY.md`.
 
-`buildAllModules` depends on every declared subproject build.
+## Known baseline for the next task
 
-## Shared test infrastructure
+The repository-wide static scan found no TODO/FIXME markers or empty catch blocks. It found wildcard imports in three experimental Phase 0 sources:
 
-The shared testing foundation lives in `test-support`.
+- `src/main/java/com/samo/spike/audio/OpenAL3DAudioSpike.java`
+- `src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
+- `src/main/java/com/samo/spike/opengl/OpenGL46Spike.java`
 
-- JUnit is the active test platform for Java modules.
-- AssertJ is exported by `test-support` for fluent assertions.
-- The JUnit Platform launcher is provided at test runtime through `test-support`.
-- Engine modules depend on `test-support` only in `testImplementation`, so test infrastructure does not enter production runtime dependencies.
-- Minimal smoke tests exist in each engine module to prove JUnit + AssertJ are available through the common setup.
+Issue #35 records this baseline. P1-T05 must replace the imports or deliberately exclude and test the experimental-source boundary; the valid Checkstyle baseline must not fail accidentally.
 
-After adding or changing test dependencies, refresh dependency lock state:
+## Live-state reconciliation
 
-```powershell
-.\gradlew.bat resolveAndLockAllDependencies --write-locks
-```
+Before starting work, a fresh agent must:
 
-Then verify all module sample tests from the repository root:
+1. read `AGENTS.md` in full;
+2. run `git status --short --branch` and `git rev-parse HEAD`;
+3. fetch and compare with remote `master`;
+4. inspect Issue #35, the P1 epic #2, open pull requests, and follow-up Issues #42–#44;
+5. prefer newer merged code/tests and the active Issue when they legitimately supersede this commit-contained snapshot;
+6. stop if the sources conflict instead of guessing.
 
-```powershell
-.\gradlew.bat test
-```
+## Maintenance rule
 
-The root test command was verified successfully and the refreshed lock files are committed. P1-T04 is complete. Identical module smoke tests are temporary proof of shared setup and should be replaced/removed as real module tests arrive.
-
-## Dependency reproducibility
-
-Shared dependency versions are owned by:
-
-```text
-gradle/libs.versions.toml
-```
-
-Dependency locking is enabled across the build. Current committed lock state includes the root dependency graph in `gradle.lockfile` plus Gradle settings lock state in `settings-gradle.lockfile`.
-
-Refresh lock state only when dependencies intentionally change:
-
-```powershell
-.\gradlew.bat resolveAndLockAllDependencies --write-locks
-```
-
-Normal dependency resolution should run without `--write-locks` so unexpected graph changes fail instead of silently rewriting lock state.
-
-## Experimental Phase 0 code
-
-The root `src/main/java/com/samo/spike/...` code remains available for feasibility evidence. Do not treat those spike class structures as permanent engine APIs.
-
-> **Spikes are disposable. Conclusions are durable.**
-
-## Execution policy
-
-Implementation work uses one bounded Issue, one dedicated task branch, one pull request, and CI/acceptance verification before merge. Agent-generated changes do not land directly on master.
-
-## Architecture corrections recorded
-
-- Runtime supports 1–4 players; the intended co-op target is 2–4.
-- First-person is the v1 vertical slice; third-person follows stable multiplayer.
-- Gradle Kotlin DSL is retained; Java-only applies to authored engine/game runtime source.
-- A renderer-neutral runtime UI module is required before package boundaries freeze.
-- Basic local audio moves before the Phase 8 exit gate; network-aware audio polish remains later.
-- Exact target hardware is selected before renderer implementation.
-- Phase 0 spikes remain disposable evidence and should eventually move out of the root production project.
-
-## Documentation rule
-
-After meaningful repository changes, review and update documentation whose status, commands, architecture, decisions, or scope changed. At minimum, keep this file synchronized with current implementation and verification reality.
+Update this file when a merge changes completed tasks, the exact next action, blockers, implementation maturity, or verified conclusions. Do not paste board columns or transient in-progress state here. Update the live Issue/Project immediately; update this checkpoint in the same pull request as the durable repository change.

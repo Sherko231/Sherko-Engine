@@ -21,18 +21,6 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Resolve and write dependency locks for P1-T06 verification
-        run: .\gradlew.bat resolveAndLockAllDependencies --write-locks
-
-      - name: Upload generated dependency locks
-        uses: actions/upload-artifact@v4
-        with:
-          name: p1-t06-generated-locks
-          path: |
-            gradle.lockfile
-            */gradle.lockfile
-          if-no-files-found: error
-
       - name: Report Java toolchains
         run: .\gradlew.bat javaToolchains
 

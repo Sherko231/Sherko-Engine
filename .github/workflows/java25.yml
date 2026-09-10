@@ -7,8 +7,10 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+# P1-T08 keeps each required verification concern visible as its own CI job.
 jobs:
-  verify-java:
+  build:
+    name: Build and quality gates
     runs-on: windows-latest
 
     steps:
@@ -30,6 +32,54 @@ jobs:
       - name: Build all modules
         run: .\gradlew.bat buildAllModules
 
+  unit-tests:
+    name: Unit tests
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run root and subproject tests
+        run: .\gradlew.bat test
+
+  architecture-tests:
+    name: Architecture tests
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Enforce module API/package boundaries
+        run: .\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+
+  coverage:
+    name: JaCoCo coverage reports
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
       - name: Run tests and verify JaCoCo reports
         run: .\gradlew.bat verifyJacocoReports
 
@@ -39,3 +89,26 @@ jobs:
           name: jacoco-reports
           path: '*/build/reports/jacoco/test/**'
           if-no-files-found: error
+
+  windows-native-smoke:
+    name: Windows native smoke
+    runs-on: windows-latest
+    timeout-minutes: 5
+    env:
+      ALSOFT_DRIVERS: "null"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run GLFW and OpenAL native lifecycle smoke
+        run: .\gradlew.bat runWindowsNativeCiSmoke
+
+      - name: Run Jolt JNI lifecycle smoke
+        run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1

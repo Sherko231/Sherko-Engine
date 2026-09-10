@@ -3,6 +3,7 @@ package com.samo.architecture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -159,6 +160,11 @@ class ModulePackageBoundaryTest {
 
         assertNotNull(target);
         assertEquals("engine-network-ip", target.module());
+        assertNull(findTarget(
+            "com.samo.engine.network.ip.internal.UdpTransport",
+            "engine-network-ip",
+            boundaries
+        ));
     }
 
     private static List<String> declaredModules() {
@@ -296,12 +302,14 @@ class ModulePackageBoundaryTest {
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null)) {
-            JavacTask task = (JavTaskFactory.create(
-                compiler,
+            JavacTask task = (JavacTask) compiler.getTask(
+                null,
                 fileManager,
                 diagnostics,
-                sourceFile
-            ));
+                List.of("-proc:none"),
+                null,
+                fileManager.getJavaFileObjects(sourceFile.toFile())
+            );
             List<CompilationUnitTree> units = new ArrayList<>();
             task.parse().forEach(units::add);
 
@@ -398,8 +406,7 @@ class ModulePackageBoundaryTest {
         String sourceModule,
         Map<String, Boundary> boundaries
     ) {
-        return boundaries.entrySet().stream()
-            .filter(entry -> !entry.getKey().equals(sourceModule))
+        BoundaryTarget owner = boundaries.entrySet().stream()
             .filter(entry -> isWithin(referencedName, entry.getValue().moduleRoot()))
             .sorted(Comparator.comparingInt(
                 (Map.Entry<String, Boundary> entry) -> entry.getValue().moduleRoot().length()
@@ -407,6 +414,11 @@ class ModulePackageBoundaryTest {
             .map(entry -> new BoundaryTarget(entry.getKey(), entry.getValue()))
             .findFirst()
             .orElse(null);
+
+        if (owner != null && owner.module().equals(sourceModule)) {
+            return null;
+        }
+        return owner;
     }
 
     private static boolean isWithin(String packageOrType, String packageRoot) {
@@ -465,27 +477,6 @@ class ModulePackageBoundaryTest {
         public String toString() {
             return sourceModule + " -> " + targetModule + " at " + file + ":" + line
                 + " references " + referencedName + "; expected target API root " + requiredApiRoot;
-        }
-    }
-
-    private static final class JavTaskFactory {
-        private JavTaskFactory() {
-        }
-
-        private static JavacTask create(
-            JavaCompiler compiler,
-            StandardJavaFileManager fileManager,
-            DiagnosticCollector<JavaFileObject> diagnostics,
-            Path sourceFile
-        ) {
-            return (JavacTask) compiler.getTask(
-                null,
-                fileManager,
-                diagnostics,
-                List.of("-proc:none"),
-                null,
-                fileManager.getJavaFileObjects(sourceFile.toFile())
-            );
         }
     }
 }

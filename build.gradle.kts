@@ -46,6 +46,17 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.register("buildAllModules") {
+    group = "build"
+    description = "Compiles and tests the initial P1 multi-project modules."
+    dependsOn(
+        ":engine-core:build",
+        ":test-support:build",
+        ":game-client:build",
+        ":game-server:build"
+    )
+}
+
 tasks.register<JavaExec>("runOpenGL46Spike") {
     group = "verification"
     description = "Runs the P0-T03 LWJGL/GLFW/OpenGL 4.6 feasibility spike."

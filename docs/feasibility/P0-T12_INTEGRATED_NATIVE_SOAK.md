@@ -30,7 +30,7 @@ The canonical backlog now records the 15-second contract directly. P0-T13 owns t
 From the repository root on the target Windows x64 development machine:
 
 ```powershell
-.\gradlew.bat runIntegratedNativeSoak
+.\gradlew.bat runIntegratedNativeSmoke
 ```
 
 Default duration: `15` seconds.
@@ -38,14 +38,22 @@ Default duration: `15` seconds.
 Optional override:
 
 ```powershell
-.\gradlew.bat runIntegratedNativeSoak -PnativeSoakDurationSeconds=15
+.\gradlew.bat runIntegratedNativeSmoke -PnativeEvidenceDurationSeconds=15
 ```
 
 ## JFR output
 
 The Gradle task starts Java Flight Recorder automatically with the `profile` settings and dumps the recording on exit to:
 
-`build/spikes/native-soak/p0-t12.jfr`
+`build/spikes/native-evidence/p0-t12-smoke.jfr`
+
+For the separate sustained test, run:
+
+```powershell
+.\gradlew.bat runIntegratedNativeSoak
+```
+
+Its default duration is 900 seconds and its JFR output is `build/spikes/native-evidence/p0-t13-soak.jfr`.
 
 ## Verified runtime result
 

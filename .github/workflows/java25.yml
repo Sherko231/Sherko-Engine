@@ -43,7 +43,7 @@ jobs:
         run: .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 
       - name: Verify client/server version reporting
-        shell: pwsh
+        shell: powershell
         run: |
           $clientLines = & .\gradlew.bat -q :game-client:runClient --args="--version"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

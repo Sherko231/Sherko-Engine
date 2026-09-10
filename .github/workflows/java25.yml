@@ -1,4 +1,4 @@
-name: Java 25 CI
+name: Java 25 Toolchain Check
 
 on:
   push:

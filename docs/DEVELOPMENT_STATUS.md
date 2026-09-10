@@ -17,7 +17,7 @@ The containing commit is the exact checkpoint. A Markdown file cannot embed the 
 
 ## Exact next action
 
-Complete P1-T10A only after final PR-head CI passes on the exact candidate head, PR #57 is merged, and merged-`master` push CI passes. Then mark Issue #56 complete, reconcile the Phase 1 exit gate/epic, and create the next executable roadmap Issue before doing more implementation.
+Complete P1-T10A only after final PR-head CI passes on the exact candidate head, PR #57 is merged, and merged-`master` push CI passes. The repository CI now selects a repository-scoped self-hosted Windows x64 runner, so that runner must be online for the required workflow jobs to execute. Then mark Issue #56 complete, reconcile the Phase 1 exit gate/epic, and create the next executable roadmap Issue before doing more implementation.
 
 ## What is actually implemented
 
@@ -34,7 +34,8 @@ Complete P1-T10A only after final PR-head CI passes on the exact candidate head,
 - D-016 package/API boundary enforcement now covers all 17 declared Gradle subprojects, including experimental `feasibility-spikes`, without weakening the existing cross-module API-only rule.
 - Checkstyle 14.1.0 continues scanning production/test sources while explicitly excluding the experimental feasibility source tree; `verifyCheckstyleSourceBoundary` verifies the exclusion.
 - JaCoCo 0.8.15 remains configured for the same 12 test-bearing engine modules.
-- `.github/workflows/java25.yml` keeps the five required Windows Java 25 jobs; the architecture job now targets `:test-support:test` and hosted native smoke still invokes the preserved root aliases.
+- `.github/workflows/java25.yml` keeps the five required Windows Java 25 jobs; all five now select `[self-hosted, Windows, X64]`. The runner is manually operated and must be online before CI can execute.
+- The architecture job targets `:test-support:test`, and native smoke invokes the preserved root aliases.
 - `game-client` and `game-server` retain their separate runnable entry points, P1-T10 `--version` reporting, and server headless runtime boundary verification.
 - Cleanup Issue #54 previously removed the unused root `Launcher.java`; P1-T10A removes the remaining root Java source tree by relocating spikes and architecture verification.
 
@@ -52,7 +53,7 @@ P1-T10A changes source/dependency ownership only; it does not strengthen or repl
 - Java 25 and the selected Windows x64 native stack have been exercised together.
 - GLFW/OpenGL 4.6, Jolt JNI, OpenAL, localhost UDP, deterministic impairment, Steam initialization, and Java FFM flat-API access retain their previous evidence classifications.
 - P0-T12 remains a 15-second integrated smoke test, not sustained-stability evidence.
-- GitHub-hosted Windows can run headless-safe GLFW/OpenAL/Jolt lifecycle smoke but does not establish an OpenGL 4.6 context for the full P0-T12 path.
+- The current self-hosted CI runner may have different graphics/native capabilities than previous GitHub-hosted Windows runners, but P1-T10A does not expand any feasibility claim. Only explicitly executed feasibility Issues may do that.
 
 ## Open gates and blockers
 
@@ -82,7 +83,9 @@ Before merge, run and record:
 .\gradlew.bat :game-server:runServer --args="--version"
 ```
 
-Also verify the root has no tracked Java `src/` files, production modules have no project dependency on `:feasibility-spikes`, root aliases still execute the relocated native-safe smoke on hosted Windows, and lock refresh produces only the expected ownership changes.
+The current candidate has already passed those local Windows/Java 25 checks, including a clean dependency-lock refresh with no resulting `git status` or lockfile diff. Final PR-head CI and merged-`master` CI still remain mandatory and must actually execute on the configured self-hosted runner.
+
+Also verify the root has no tracked Java `src/` files, production modules have no project dependency on `:feasibility-spikes`, root aliases still execute the relocated native-safe smoke, and lock refresh produces only the expected ownership changes.
 
 No dependency version, product scope, production module direction, public engine API, protocol/asset format, authority, coordinate convention, native ownership contract, or feasibility conclusion is changed by P1-T10A.
 
@@ -94,9 +97,10 @@ Before starting the next task, a fresh agent must:
 2. inspect `git status --short --branch`, `git rev-parse HEAD`, remote `master`, open PRs, and active Issues;
 3. inspect Issue #56 and P1 epic #2;
 4. inspect independent follow-up Issues #42–#44;
-5. if P1-T10A has merged and merged-master CI passed, reconcile/close Phase 1 before materializing the next roadmap Issue;
-6. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
+5. confirm the repository self-hosted Windows x64 runner is online before interpreting queued CI as evidence;
+6. if P1-T10A has merged and merged-master CI passed, reconcile/close Phase 1 before materializing the next roadmap Issue;
+7. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule
 
-Update this file when a merge changes completed tasks, the exact next action, blockers, implementation maturity, or verified conclusions. Do not paste transient board state here. Update live GitHub workflow state immediately and this checkpoint in the same PR as durable repository changes.
+Update this file when a merge changes completed tasks, the exact next action, blockers, implementation maturity, or verified conclusions. Do not paste transient board state here. Update live GitHub workflow state immediately and this checkpoint in the same PR as the durable repository change.

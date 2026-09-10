@@ -1,0 +1,12 @@
+name: P1-T08 Workflow Probe
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - name: Confirm pull request workflow trigger
+        run: Write-Output "P1-T08 workflow trigger probe"

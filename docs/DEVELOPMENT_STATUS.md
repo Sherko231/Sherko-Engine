@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `b3924cad533d5ed774fc4c92fd2ed22e856e91c2` — P1-T10A PR #57 merged; merged-master CI #137 passed |
+| Verified pre-checkpoint `master` | `559f31c358a6a69f8f0a229347f10edd76c9df94` — post-Phase 1 handoff PR #59 merged; merged-master CI #139 passed |
 | Completed milestone / phase | M1 — Engine Foundation / P1 — Build, modules, and quality gates |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
@@ -31,8 +31,8 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies and native runtime artifacts are owned by `feasibility-spikes`, not the root project.
 - Existing historical root Phase 0 task names remain compatibility aliases to identically named tasks in `:feasibility-spikes`; Steam/JFR evidence paths under root `build/spikes/**` are preserved.
 - The root dependency lock represents root build/quality configurations; `feasibility-spikes/gradle.lockfile` owns the relocated spike runtime graph.
-- Shared group/version/repository/toolchain/JUnit Platform conventions remain centralized at the root.
-- `test-support` exports JUnit 5 and AssertJ and owns the repository-wide `ModulePackageBoundaryTest` source.
+- Shared group/version/repository/toolchain/JUnit 6 Platform conventions remain centralized at the root.
+- `test-support` exports JUnit 6 and AssertJ and owns the repository-wide `ModulePackageBoundaryTest` source.
 - D-016 package/API boundary enforcement covers all 17 declared Gradle subprojects, including experimental `feasibility-spikes`, without weakening the cross-module API-only rule.
 - Checkstyle 14.1.0 scans production/test sources while explicitly excluding the experimental feasibility source tree; `verifyCheckstyleSourceBoundary` verifies that exclusion.
 - JaCoCo 0.8.15 remains configured for the same 12 test-bearing engine modules.
@@ -50,6 +50,7 @@ P1-T10A completed the final Phase 1 follow-up:
 - Issue #56 closed as completed.
 - Phase 1 Epic #2 closed as completed.
 - The Phase 1 exit gate — repeatable empty client and headless-server build/run commands with the required quality gates — is satisfied.
+- The existing JUnit 6.0.0 implementation is the accepted shared test baseline; Issue #60 corrects the earlier JUnit 5 wording and the stale README phase pointer without changing build behavior.
 
 ## What remains skeleton or planned
 

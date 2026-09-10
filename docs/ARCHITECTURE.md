@@ -32,7 +32,7 @@ The repository has a working Java 25 multi-project build with 17 declared Gradle
 | `game-sandbox` | Game rules and vertical-slice content | Skeleton | `engine-core`, `engine-world`, `engine-physics-jolt`, `engine-network-api`, `engine-ui` |
 | `game-client` | Client composition root | Minimal executable foundation entry point | `game-sandbox`, platform, render, audio, IP, Steam adapters |
 | `game-server` | Headless/listen-server composition root | Minimal executable headless foundation entry point | `game-sandbox`, IP and Steam adapters |
-| `test-support` | Shared JUnit 5/AssertJ support plus repository architecture verification | Implemented build/test support | None |
+| `test-support` | Shared JUnit 6/AssertJ support plus repository architecture verification | Implemented build/test support | None |
 | `feasibility-spikes` | Disposable Phase 0 native/network feasibility executables | Experimental | None; external native/library dependencies only |
 
 `feasibility-spikes` is not a seventeenth production engine module. It is deliberately outside the locked 16-module runtime target in `ENGINE_SCOPE.md`, and no production client/server module depends on it.

@@ -39,7 +39,7 @@ Goal: make every later AI-generated change small, isolated, testable, and revers
 - [ ] P1-T02A Add `engine-ui` as a renderer-neutral runtime game UI module before package boundaries freeze. Acceptance: it depends only on approved core/asset APIs, exposes no OpenGL/imgui types, appears in `projects`, and participates in root build/test tasks.
 - [ ] P1-T03 Add a centralized dependency version catalog and dependency locking. Acceptance: clean builds resolve identical versions on two machines.
 - [ ] P1-T03A Centralize shared group, version, repository, Java 25 toolchain, and test-platform configuration in the root build while leaving module-specific dependencies local. Acceptance: subproject build files contain no duplicated common metadata and all modules compile/test through the same convention.
-- [ ] P1-T04 Add JUnit 5 and AssertJ to `test-support`. Acceptance: a sample unit test runs in every engine module.
+- [ ] P1-T04 Add JUnit 6 and AssertJ to `test-support`. Acceptance: JUnit 6 is the active shared test baseline and a sample unit test runs in every engine module.
 - [ ] P1-T05 Add Checkstyle with rules forbidding wildcard imports, empty catch blocks, and ignored return values where detectable. Acceptance: a deliberately invalid test file fails the check task.
 - [ ] P1-T06 Add JaCoCo reporting without enforcing an arbitrary global percentage. Acceptance: XML and HTML reports are generated in CI.
 - [ ] P1-T07 Define package roots so each Gradle module exports only its API packages. Acceptance: an architecture test rejects a game-to-platform implementation shortcut.

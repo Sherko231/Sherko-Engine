@@ -1,6 +1,9 @@
 package com.samo.architecture;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -9,9 +12,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -47,17 +52,20 @@ class ModulePackageBoundaryTest {
     void everyDeclaredModuleHasValidPackageBoundaryRoots() throws IOException {
         Map<String, Boundary> boundaries = loadBoundaries();
 
-        assertThat(boundaries.keySet()).containsExactlyElementsOf(MODULES);
+        assertEquals(new LinkedHashSet<>(MODULES), boundaries.keySet());
         boundaries.forEach((module, boundary) -> {
-            assertThat(boundary.apiRoot())
-                .as("%s API root", module)
-                .startsWith(boundary.moduleRoot() + ".");
-            assertThat(boundary.internalRoot())
-                .as("%s internal root", module)
-                .startsWith(boundary.moduleRoot() + ".");
-            assertThat(boundary.apiRoot())
-                .as("%s API/internal roots must differ", module)
-                .isNotEqualTo(boundary.internalRoot());
+            assertTrue(
+                boundary.apiRoot().startsWith(boundary.moduleRoot() + "."),
+                module + " API root must be below its module root"
+            );
+            assertTrue(
+                boundary.internalRoot().startsWith(boundary.moduleRoot() + "."),
+                module + " internal root must be below its module root"
+            );
+            assertFalse(
+                boundary.apiRoot().equals(boundary.internalRoot()),
+                module + " API/internal roots must differ"
+            );
         });
     }
 
@@ -78,9 +86,11 @@ class ModulePackageBoundaryTest {
             scanSourceFile("game-client", fixture, boundaries, violations);
         }
 
-        assertThat(violations)
-            .as("Cross-module implementation imports must use the target module API root")
-            .isEmpty();
+        assertTrue(
+            violations.isEmpty(),
+            () -> "Cross-module implementation imports must use the target module API root:\n"
+                + violations.stream().map(Violation::toString).reduce("", (left, right) -> left + right + "\n")
+        );
     }
 
     private static Map<String, Boundary> loadBoundaries() throws IOException {
@@ -99,13 +109,12 @@ class ModulePackageBoundaryTest {
             ));
         }
 
-        assertThat(properties.stringPropertyNames())
-            .containsExactlyInAnyOrderElementsOf(expectedPropertyNames());
+        assertEquals(expectedPropertyNames(), properties.stringPropertyNames());
         return boundaries;
     }
 
-    private static List<String> expectedPropertyNames() {
-        List<String> names = new ArrayList<>();
+    private static Set<String> expectedPropertyNames() {
+        Set<String> names = new LinkedHashSet<>();
         for (String module : MODULES) {
             names.add(module + ".root");
             names.add(module + ".api");
@@ -116,7 +125,8 @@ class ModulePackageBoundaryTest {
 
     private static String required(Properties properties, String key) {
         String value = properties.getProperty(key);
-        assertThat(value).as("Missing package-boundary property %s", key).isNotBlank();
+        assertNotNull(value, "Missing package-boundary property " + key);
+        assertFalse(value.isBlank(), "Blank package-boundary property " + key);
         return value.trim();
     }
 
@@ -189,12 +199,11 @@ class ModulePackageBoundaryTest {
         for (String line : lines) {
             Matcher matcher = PACKAGE_PATTERN.matcher(line);
             if (matcher.find()) {
-                assertThat(isWithin(matcher.group(1), boundary.moduleRoot()))
-                    .as("%s source %s must stay under package root %s",
-                        sourceModule,
-                        repositoryRoot().relativize(sourceFile),
-                        boundary.moduleRoot())
-                    .isTrue();
+                assertTrue(
+                    isWithin(matcher.group(1), boundary.moduleRoot()),
+                    sourceModule + " source " + repositoryRoot().relativize(sourceFile)
+                        + " must stay under package root " + boundary.moduleRoot()
+                );
                 return;
             }
         }

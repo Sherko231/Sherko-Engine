@@ -27,6 +27,7 @@ This is the durable, append-only summary of accepted engineering decisions. It r
 | D-013 | Accepted | Agent-authored changes use one Issue, one dedicated branch, one pull request, and CI before merge. | Makes handoff state reviewable and prevents undocumented direct changes to `master`. |
 | D-014 | Accepted | Commit-contained status and live workflow status are separate. | `docs/DEVELOPMENT_STATUS.md` describes its containing commit; GitHub Issues/Project describes activity after that commit. |
 | D-015 | Accepted | The 15-second P0-T12 combined run is a smoke test, not a soak test. | P0-T13 / Issue #43 owns the 15-minute sustained run; P0-T14 / Issue #44 owns repeated lifecycle evidence. |
+| D-016 | Accepted | Every declared Gradle subproject owns an explicit package root and exposes only its declared `.api` root as a cross-module contract; declared `.internal` roots are implementation details and must not be imported by other modules. | Makes module boundaries machine-checkable without designing future subsystem APIs early. A source-scanning architecture test validates the registry and rejects cross-module implementation imports, including a representative game-to-platform shortcut. |
 
 ## Adding or changing a decision
 

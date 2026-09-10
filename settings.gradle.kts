@@ -2,7 +2,18 @@ rootProject.name = "sherkoengine"
 
 include(
     "engine-core",
-    "test-support",
+    "engine-platform-lwjgl",
+    "engine-render-opengl",
+    "engine-assets",
+    "engine-world",
+    "engine-physics-jolt",
+    "engine-audio-openal",
+    "engine-network-api",
+    "engine-network-ip",
+    "engine-steam",
+    "engine-editor",
+    "game-sandbox",
     "game-client",
-    "game-server"
+    "game-server",
+    "test-support"
 )

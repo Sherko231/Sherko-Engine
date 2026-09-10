@@ -48,13 +48,8 @@ tasks.test {
 
 tasks.register("buildAllModules") {
     group = "build"
-    description = "Compiles and tests the initial P1 multi-project modules."
-    dependsOn(
-        ":engine-core:build",
-        ":test-support:build",
-        ":game-client:build",
-        ":game-server:build"
-    )
+    description = "Compiles and tests every declared engine/game module."
+    dependsOn(subprojects.map { "${it.path}:build" })
 }
 
 tasks.register<JavaExec>("runOpenGL46Spike") {

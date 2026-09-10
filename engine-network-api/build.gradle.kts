@@ -1,5 +1,5 @@
 plugins {
-    java
+    `java-library`
 }
 
 group = "com.samo"
@@ -16,7 +16,5 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":game-sandbox"))
-    implementation(project(":engine-network-ip"))
-    implementation(project(":engine-steam"))
+    implementation(project(":engine-core"))
 }

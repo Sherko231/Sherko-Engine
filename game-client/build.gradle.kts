@@ -16,5 +16,10 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":engine-core"))
+    implementation(project(":game-sandbox"))
+    implementation(project(":engine-platform-lwjgl"))
+    implementation(project(":engine-render-opengl"))
+    implementation(project(":engine-audio-openal"))
+    implementation(project(":engine-network-ip"))
+    implementation(project(":engine-steam"))
 }

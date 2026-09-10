@@ -12,6 +12,7 @@
 - **Current work package:** Multi-project Gradle foundation
 - **M0 / Phase 0:** complete; exit gate passed
 - **Current executable task:** P1-T01 — Initialize multi-project Gradle build (Issue #31)
+- **P1-T01 state:** implementation committed; local/root verification pending
 - **Production engine architecture:** beginning with build/module boundaries; Phase 0 spike code remains temporary feasibility evidence
 
 Phase 0 successfully discharged the major native, Steam, and networking feasibility risks that blocked foundation work. Phase 1 now establishes the project structure and quality boundaries that later engine code will depend on.
@@ -32,6 +33,7 @@ Phase 0 successfully discharged the major native, Steam, and networking feasibil
 | P0-T10 | Not required | The dedicated-server fallback trigger did not fire because P0-T09 established a viable Java-to-Steam flat-API path. |
 | P0-T11 | Complete | The localhost UDP impairment harness successfully injected and independently observed latency, jitter, packet loss, duplication, and reordering. |
 | P0-T12 | Complete | The owner-approved 15-second integrated JFR soak initialized GLFW/OpenGL, OpenAL, Jolt, and UDP together; UDP completed 58/58 echoes; Jolt allocation balance changed from 1 to 0; and shutdown completed cleanly. |
+| P1-T01 | In progress | The repository now declares the initial `engine-core`, `test-support`, `game-client`, and `game-server` Gradle subprojects; client/server depend on `engine-core`; the root keeps Phase 0 spikes intact and exposes `buildAllModules` to build all four modules. Final completion awaits `projects` and aggregate-build verification. |
 
 The M0 exit gate is therefore satisfied: a concrete Java production-networking path exists, and the selected native stack can run together cleanly in one process.
 
@@ -56,7 +58,7 @@ Current examples include:
 - `src/main/java/com/samo/spike/steam/SteamFlatApiFfmSpike.java`
 - `src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
 
-P1-T01 must preserve access to this evidence while introducing the initial multi-project build. Do not silently delete or reinterpret spike code as permanent engine APIs.
+P1-T01 preserves this evidence at the root project while introducing the first multi-project modules. Do not silently delete or reinterpret spike code as permanent engine APIs.
 
 > **Spikes are disposable. Conclusions are durable.**
 
@@ -76,23 +78,31 @@ The proven baseline entering Phase 1 is:
 - explicit native-resource cleanup as a required ownership discipline
 - development-only network impairment infrastructure for latency, jitter, loss, duplication, and reordering
 - JFR available for runtime/native integration profiling
+- initial Gradle multi-project structure: `engine-core`, `test-support`, `game-client`, `game-server`
 
 The production transport wrapper/design is still a later implementation task. P0 proved reachability and feasibility, not the final networking abstraction.
 
 ## What happens next
 
-The immediate task is **P1-T01 — Initialize multi-project Gradle build** (Issue #31).
+The immediate task remains **P1-T01 — Initialize multi-project Gradle build** (Issue #31) until verification passes.
 
-P1-T01 must establish exactly these initial modules:
+Current implementation establishes exactly these initial modules:
 
 - `engine-core`
 - `test-support`
 - `game-client`
 - `game-server`
 
-The Gradle Wrapper remains the project entry point. One root command must compile and test all four modules successfully. Existing Phase 0 spike code must remain accessible during the transition.
+The Gradle Wrapper remains the project entry point. Existing Phase 0 spike code remains in the root project. `game-client` and `game-server` currently depend on `engine-core`; broader module architecture belongs to P1-T02/P1-T07.
 
-P1-T02 will add the remaining planned modules only after this initial structure is proven.
+Required verification from the repository root:
+
+```powershell
+.\gradlew.bat projects
+.\gradlew.bat buildAllModules
+```
+
+`projects` must list the four subprojects and `buildAllModules` must compile/test all four successfully. Once that evidence passes, close P1-T01 and advance to P1-T02.
 
 ## Documentation maintenance policy
 

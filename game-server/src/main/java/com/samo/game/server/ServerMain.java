@@ -1,10 +1,17 @@
 package com.samo.game.server;
 
+import com.samo.game.server.internal.VersionReport;
+
 public final class ServerMain {
     private ServerMain() {
     }
 
     public static void main(String[] args) {
+        if (args.length == 1 && "--version".equals(args[0])) {
+            VersionReport.print();
+            return;
+        }
+
         System.out.println("Sherko Engine game-server foundation started in headless mode.");
         System.out.println("Sherko Engine game-server foundation stopped cleanly.");
     }

@@ -1,0 +1,17 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.code-disaster.steamworks4j:steamworks4j-lwjgl3:1.10.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.code-disaster.steamworks4j:steamworks4j:1.10.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.github.oshi:oshi-common:7.4.2=runtimeClasspath,testRuntimeClasspath
+com.github.oshi:oshi-core:7.4.2=runtimeClasspath,testRuntimeClasspath
+com.github.stephengold:jolt-jni-Windows64:6.0.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+io.github.electrostat-lab:snaploader:1.1.1-stable=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+net.java.dev.jna:jna-jpms:5.19.1=runtimeClasspath,testRuntimeClasspath
+net.java.dev.jna:jna-platform-jpms:5.19.1=runtimeClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl-glfw:3.4.3=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl-openal:3.4.3=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl-opengl:3.4.3=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl:3.4.3=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+org.slf4j:slf4j-api:2.0.18=runtimeClasspath,testRuntimeClasspath
+empty=annotationProcessor,testAnnotationProcessor

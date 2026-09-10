@@ -1,0 +1,20 @@
+[versions]
+lwjgl = "3.4.3"
+jolt-jni = "6.0.0"
+snaploader = "1.1.1-stable"
+oshi = "7.4.2"
+steamworks4j = "1.10.0"
+junit = "6.0.0"
+
+[libraries]
+lwjgl-core = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
+lwjgl-glfw = { module = "org.lwjgl:lwjgl-glfw", version.ref = "lwjgl" }
+lwjgl-openal = { module = "org.lwjgl:lwjgl-openal", version.ref = "lwjgl" }
+lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
+jolt-jni-windows64 = { module = "com.github.stephengold:jolt-jni-Windows64", version.ref = "jolt-jni" }
+snaploader = { module = "io.github.electrostat-lab:snaploader", version.ref = "snaploader" }
+oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
+steamworks4j-lwjgl3 = { module = "com.code-disaster.steamworks4j:steamworks4j-lwjgl3", version.ref = "steamworks4j" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

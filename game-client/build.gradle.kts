@@ -10,3 +10,13 @@ dependencies {
     implementation(project(":engine-network-ip"))
     implementation(project(":engine-steam"))
 }
+
+tasks.register<JavaExec>("runClient") {
+    group = "application"
+    description = "Runs the game-client foundation entry point."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.samo.game.client.ClientMain"
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}

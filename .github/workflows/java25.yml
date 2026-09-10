@@ -32,6 +32,15 @@ jobs:
       - name: Build all modules
         run: .\gradlew.bat buildAllModules
 
+      - name: Run client foundation entry point
+        run: .\gradlew.bat :game-client:runClient
+
+      - name: Run headless server foundation entry point
+        run: .\gradlew.bat :game-server:runServer
+
+      - name: Verify headless server runtime boundary
+        run: .\gradlew.bat :game-server:verifyHeadlessServerRuntime
+
   unit-tests:
     name: Unit tests
     runs-on: windows-latest

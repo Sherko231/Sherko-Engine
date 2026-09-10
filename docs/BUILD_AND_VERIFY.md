@@ -21,6 +21,9 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Run root and subproject tests | `.\gradlew.bat test` | JUnit Platform tasks pass, including the package/module architecture tests and `engine-ui`. |
 | Run only the root architecture boundary suite | `.\gradlew.bat :test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks` | The root architecture test executes even when Gradle would otherwise consider `:test` up-to-date. |
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
+| Run client foundation entry point | `.\gradlew.bat :game-client:runClient` | Client foundation process starts and exits cleanly. |
+| Run headless server foundation entry point | `.\gradlew.bat :game-server:runServer` | Server foundation process starts in headless mode and exits cleanly. |
+| Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts. |
 | Run hosted-Windows-safe native lifecycle smoke | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | GLFW initializes/terminates, OpenAL opens/closes through the null backend, and one Jolt JNI lifecycle cycle completes with cleanup. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
@@ -70,6 +73,16 @@ That negative run must fail because a cross-module import targets an implementat
 
 The boundary registry is `config/architecture/module-boundaries.properties`. It must contain exactly one `.root`, `.api`, and `.internal` declaration for every one of the 16 Gradle subprojects.
 
+For P1-T09 / Issue #39, verify the two executable foundation composition roots and the server headless boundary with:
+
+```powershell
+.\gradlew.bat :game-client:runClient
+.\gradlew.bat :game-server:runServer
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+```
+
+The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears. This is stronger than relying on a log line that merely claims the server is headless.
+
 For a general documentation/build-boundary pull request, the minimum clean verification is:
 
 ```powershell
@@ -84,11 +97,13 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master` using required Windows Java 25 jobs for:
 
-- build and root quality gates via `buildAllModules`;
+- build and root quality gates via `buildAllModules`, followed by `:game-client:runClient`, `:game-server:runServer`, and `:game-server:verifyHeadlessServerRuntime` so P1-T09 entry points remain executable and the server remains headless;
 - unit/root/subproject tests via `test`;
 - explicit architecture boundaries via the root `ModulePackageBoundaryTest` command above;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - hosted-Windows-safe native lifecycle coverage via `runWindowsNativeCiSmoke` plus one `runJoltLifecycleSpike` cycle.
+
+Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary even before the explicit runtime smoke steps.
 
 The hosted Windows runner does not provide the OpenGL 4.6 driver/context required by `runIntegratedNativeSmoke`; the attempted CI run failed with `WGL: The driver does not appear to support OpenGL`. CI therefore does not claim an OpenGL 4.6 context or the full P0-T12 integrated graphics/audio/physics/network path. Those remain target-machine feasibility evidence. The hosted native gate proves GLFW native initialization/cleanup, OpenAL initialization/cleanup through the null backend, and Jolt JNI initialization/use/cleanup only.
 

@@ -1,8 +1,8 @@
-# P0-T12 — Integrated Native Feasibility Soak
+# P0-T12 — Integrated Native Feasibility Smoke Test
 
 ## Purpose
 
-Run the previously proven native subsystems together in one disposable Java 25 feasibility executable before Phase 1 begins.
+Run the previously proven native subsystems together in one disposable Java 25 feasibility executable and verify short startup, interaction, and orderly shutdown.
 
 This spike combines:
 
@@ -15,9 +15,11 @@ This spike combines:
 
 It is not production engine architecture.
 
-## Duration decision
+## Classification and duration
 
-The repository owner explicitly changed the P0-T12 acceptance duration from **15 minutes** to **15 seconds** on 2026-09-10. GitHub Issue #29 contains the updated live acceptance criteria and supersedes the older 15-minute wording still present in the canonical backlog.
+The repository owner changed P0-T12 from 15 minutes to 15 seconds on 2026-09-10. The run therefore proves integrated startup/use/shutdown only and is classified as a smoke test, not a soak or long-duration leak/stability test.
+
+The canonical backlog now records the 15-second contract directly. P0-T13 owns the sustained 15-minute run and P0-T14 owns repeated lifecycle evidence.
 
 ## Entry point
 
@@ -28,7 +30,7 @@ The repository owner explicitly changed the P0-T12 acceptance duration from **15
 From the repository root on the target Windows x64 development machine:
 
 ```powershell
-.\gradlew.bat runIntegratedNativeSoak
+.\gradlew.bat runIntegratedNativeSmoke
 ```
 
 Default duration: `15` seconds.
@@ -36,14 +38,22 @@ Default duration: `15` seconds.
 Optional override:
 
 ```powershell
-.\gradlew.bat runIntegratedNativeSoak -PnativeSoakDurationSeconds=15
+.\gradlew.bat runIntegratedNativeSmoke -PnativeEvidenceDurationSeconds=15
 ```
 
 ## JFR output
 
 The Gradle task starts Java Flight Recorder automatically with the `profile` settings and dumps the recording on exit to:
 
-`build/spikes/native-soak/p0-t12.jfr`
+`build/spikes/native-evidence/p0-t12-smoke.jfr`
+
+For the separate sustained test, run:
+
+```powershell
+.\gradlew.bat runIntegratedNativeSoak
+```
+
+Its default duration is 900 seconds and its JFR output is `build/spikes/native-evidence/p0-t13-soak.jfr`.
 
 ## Verified runtime result
 
@@ -78,4 +88,4 @@ The spike fails if it observes a high-severity OpenGL debug message, insufficien
 
 ## Acceptance state
 
-**Complete.** The owner-approved 15-second integrated native soak passed under JFR with all selected subsystems active together, complete UDP echo traffic, clean process shutdown, and no observed positive Jolt native-allocation growth. This satisfies the final Phase 0 executable feasibility gate.
+**Complete as a smoke test.** The 15-second integrated run passed under JFR with all selected subsystems active together, complete UDP echo traffic, clean process shutdown, and no observed positive Jolt native-allocation growth. It does not claim sustained stability; P0-T13 and P0-T14 must provide that evidence.

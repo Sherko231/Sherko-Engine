@@ -65,6 +65,7 @@ Issues represent executable tasks only.
 - `area:animation`
 - `area:ai-nav`
 - `area:editor`
+- `area:runtime-ui`
 - `area:release`
 - `area:documentation`
 
@@ -107,7 +108,7 @@ Create the following as **Project draft items**, not Issues:
 - `Status`: Backlog / Ready / In Progress / In Review / Blocked / Done
 - `Phase`: P0-P16
 - `Priority`: P0 Critical / P1 High / P2 Normal / P3 Low
-- `Subsystem`: Build / CI, Core, Platform, Input, Math, Rendering, Assets, World, Physics, Gameplay, Networking, Steam, Audio, Animation, AI / Navigation, Editor / Tools, Release, Documentation
+- `Subsystem`: Build / CI, Core, Platform, Input, Math, Rendering, Runtime UI, Assets, World, Physics, Gameplay, Networking, Steam, Audio, Animation, AI / Navigation, Editor / Tools, Release, Documentation
 - `Effort`: XS / S / M / L
 - `Roadmap Level`: Phase / Task
 - `Task ID`: text
@@ -133,5 +134,7 @@ No `XL`: split work that exceeds L.
 6. Open a PR that closes the Issue.
 7. Merge only after CI/verification passes.
 8. Mark Done only after merge and acceptance verification.
+
+Direct commits to `master` are reserved for explicit owner-directed emergencies. AI-generated implementation work always uses the branch/PR flow above.
 
 Never ask a coding agent to implement an entire phase at once.

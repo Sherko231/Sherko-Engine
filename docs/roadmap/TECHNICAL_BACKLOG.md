@@ -1,6 +1,6 @@
 # Sherko Engine Technical Backlog
 
-> Canonical detailed task catalog. **217 task IDs are defined here; they are not 217 active GitHub Issues.**
+> Canonical detailed task catalog. Existing task IDs remain stable; newly discovered work receives additive IDs and is not automatically materialized as GitHub Issues.
 >
 > Only the active roadmap phase should normally be materialized as Issues. Keep task IDs stable even when wording is refined.
 
@@ -19,11 +19,14 @@ Goal: disprove the risky assumptions before building the engine around them.
 - [ ] P0-T07 Initialize Steam from Java in a disposable spike and receive at least one callback. Acceptance: Steam user identity is printed and shutdown completes without a native crash.
 - [ ] P0-T08 Verify whether the selected Java Steam binding exposes the exact `ISteamNetworkingSockets` calls required for listen sockets, outbound connections, accepting connections, sending messages, receiving messages, and status callbacks. Acceptance: a written API coverage table links every required operation to a callable Java method.
 - [ ] P0-T09 If P0-T08 fails, implement a throwaway Java FFM proof that invokes one harmless Steam flat-API networking function. Acceptance: Java loads the official redistributable and receives a valid return value without authored C/C++ glue.
+- [ ] P0-T09A Extend the Java FFM proof through the complete risky `ISteamNetworkingSockets` lifecycle: create a listen socket, connect a second process/account, receive and accept the status callback, send and receive a message, release received message memory, close connection/listen handles, and shut down. Acceptance: two Windows processes exchange numbered payloads through the official API, observe expected callbacks, and finish with all owned native handles released. This task blocks production Steam transport claims but does not block independent Phase 1 foundation work.
 - [ ] P0-T10 If P0-T09 fails, change the product decision from listen server to reachable dedicated server before proceeding. Acceptance: `ENGINE_SCOPE.md` contains the replacement topology and expected server operating cost is recorded.
 - [ ] P0-T11 Create a network impairment harness supporting configurable latency, jitter, packet loss, duplication, and reordering. Acceptance: the localhost spike observes each impairment independently.
-- [ ] P0-T12 Produce a single feasibility executable combining GLFW, OpenGL, Jolt JNI, OpenAL, and UDP. Acceptance: it starts, runs for 15 minutes, and exits cleanly under Java Flight Recorder.
+- [ ] P0-T12 Produce a single feasibility executable combining GLFW, OpenGL, Jolt JNI, OpenAL, and UDP. Acceptance: it starts, runs for 15 seconds, exchanges UDP traffic, simulates physics, exercises audio/rendering, and exits cleanly under Java Flight Recorder. Classification: integrated smoke test, not soak evidence.
+- [ ] P0-T13 Run the integrated native executable continuously for at least 15 minutes with periodic traffic and metrics. Acceptance: heap, direct memory, Jolt allocation balance, native handles, and UDP queue/echo counts show no monotonic growth and shutdown remains clean.
+- [ ] P0-T14 Run 100 supported initialize/use/shutdown lifecycle cycles for independently restartable native subsystems or document which process-global subsystem cannot be restarted safely. Acceptance: every supported cycle returns tracked resources to baseline; process-global limitations become explicit lifecycle contracts.
 
-Exit gate: do not start Phase 1 unless P0-T08, P0-T09, or P0-T10 has produced a concrete production networking path.
+Exit gates: Phase 1 may proceed after the original API-access/native smoke gates. P0-T09A must pass before P10/P13 may select Steam as production transport. P0-T13 and P0-T14 must pass before documentation claims sustained native stability.
 
 ## Phase 1 - Build, modules, and quality gates
 
@@ -31,14 +34,17 @@ Goal: make every later AI-generated change small, isolated, testable, and revers
 
 - [ ] P1-T01 Initialize a Gradle Wrapper and multi-project build with only `engine-core`, `test-support`, `game-client`, and `game-server`. Acceptance: one command compiles and tests all four modules.
 - [ ] P1-T02 Add the remaining empty modules from the target tree. Acceptance: `projects` lists every module and no circular project dependency exists.
+- [ ] P1-T02A Add `engine-ui` as a renderer-neutral runtime game UI module before package boundaries freeze. Acceptance: it depends only on approved core/asset APIs, exposes no OpenGL/imgui types, appears in `projects`, and participates in root build/test tasks.
 - [ ] P1-T03 Add a centralized dependency version catalog and dependency locking. Acceptance: clean builds resolve identical versions on two machines.
+- [ ] P1-T03A Centralize shared group, version, repository, Java 25 toolchain, and test-platform configuration in the root build while leaving module-specific dependencies local. Acceptance: subproject build files contain no duplicated common metadata and all modules compile/test through the same convention.
 - [ ] P1-T04 Add JUnit 5 and AssertJ to `test-support`. Acceptance: a sample unit test runs in every engine module.
 - [ ] P1-T05 Add Checkstyle with rules forbidding wildcard imports, empty catch blocks, and ignored return values where detectable. Acceptance: a deliberately invalid test file fails the check task.
 - [ ] P1-T06 Add JaCoCo reporting without enforcing an arbitrary global percentage. Acceptance: XML and HTML reports are generated in CI.
 - [ ] P1-T07 Define package roots so each Gradle module exports only its API packages. Acceptance: an architecture test rejects a game-to-platform implementation shortcut.
-- [ ] P1-T08 Add CI jobs for compile, unit tests, architecture tests, and Windows native smoke tests. Acceptance: a pull request cannot pass when any job fails.
+- [ ] P1-T08 Add CI jobs for compile, unit tests, architecture tests, and Windows native smoke tests. Acceptance: CI runs on pull requests and pushes to `master`, and a required failure prevents merge.
 - [ ] P1-T09 Add client and headless-server run tasks with separate main classes. Acceptance: server starts without initializing GLFW, OpenGL, or OpenAL.
 - [ ] P1-T10 Add a reproducible `--version` command reporting engine commit, protocol version, asset version, Java version, and native-library versions. Acceptance: client and server print compatible values.
+- [ ] P1-T10A Move disposable Phase 0 spike sources/dependencies out of the root production project into a clearly named `feasibility-spikes` module after their evidence is preserved. Acceptance: the root becomes an aggregator, production client/server dependency graphs exclude spike-only libraries/resources, and all spike commands remain reproducible or are explicitly archived.
 
 Exit gate: empty client and server applications build and run through repeatable commands.
 
@@ -97,12 +103,13 @@ Exit gate: spatial tests pass independently of OpenGL and Jolt.
 
 ## Phase 5 - Rendering foundation
 
-Goal: render a stable, inspectable 3D room without game or physics dependencies.
+Goal: render a stable, inspectable 3D room without game or physics dependencies. Reach a basic end-to-end room before adding visual polish.
 
+- [ ] P5-T00 Select and document exact minimum/reference Windows hardware (CPU, GPU, driver floor, RAM, VRAM) for the 1080p/60 target using a representative benchmark rather than the high-end development machine. Acceptance: `ENGINE_SCOPE.md` contains exact values and the benchmark result is reproducible.
 - [ ] P5-T01 Enable the OpenGL debug callback in debug builds and promote high-severity messages to test failures. Acceptance: an intentional invalid call is captured with source and type.
 - [ ] P5-T02 Enforce render-thread ownership for every OpenGL wrapper. Acceptance: a GPU call from a worker thread throws before entering OpenGL.
 - [ ] P5-T03 Implement explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Acceptance: every wrapper is idempotently closeable and registered for leak detection.
-- [ ] P5-T04 Implement persistent or orphaned dynamic buffer upload after benchmarking both choices on representative development hardware. Acceptance: selected path and benchmark result are recorded.
+- [ ] P5-T04 Implement the simplest bounded dynamic-buffer upload path that satisfies the first room workload; defer persistent-mapping comparison until representative frame data exists. Acceptance: upload bounds and synchronization are tested, and no unsupported performance claim is recorded.
 - [ ] P5-T05 Implement offline GLSL compilation/validation in the build and runtime program-link validation. Acceptance: a broken shader fails before the game enters its loop.
 - [ ] P5-T06 Define camera and per-frame uniform blocks with fixed binding indices. Acceptance: shader reflection test verifies size and binding consistency.
 - [ ] P5-T07 Render one indexed static mesh with depth testing and back-face culling. Acceptance: RenderDoc shows one expected indexed draw and no validation/debug error.
@@ -111,13 +118,13 @@ Goal: render a stable, inspectable 3D room without game or physics dependencies.
 - [ ] P5-T10 Implement render submission as immutable per-frame packets built from world state. Acceptance: renderer has no dependency on gameplay component classes.
 - [ ] P5-T11 Implement CPU frustum culling using world AABBs. Acceptance: debug counters prove off-camera meshes generate no draw submission.
 - [ ] P5-T12 Sort opaque draws by program/material/mesh and transparent draws back-to-front. Acceptance: a capture confirms order for a controlled scene.
-- [ ] P5-T13 Implement one directional light and cascades are explicitly excluded; use a single shadow map first. Acceptance: moving geometry casts and receives a stable shadow.
+- [ ] P5-T13 Implement one unshadowed directional light with explicit linear-space inputs. Acceptance: a reference normal/light direction produces the expected brightness without requiring the shadow pipeline.
 - [ ] P5-T14 Add point and spot lights with a strict configurable maximum per frame. Acceptance: exceeding the maximum logs one bounded warning and does not corrupt buffers.
-- [ ] P5-T15 Add fog, tonemapping, gamma, and a minimal post-process pass. Acceptance: every effect can be disabled independently through config.
+- [ ] P5-T15 Implement correct gamma/sRGB presentation only. Acceptance: reference linear colors match expected display-space output; fog, tonemapping, and general post-processing remain deferred until gameplay proves their need.
 - [ ] P5-T16 Add debug line, AABB, sphere, ray, and text counters. Acceptance: physics and networking modules can submit debug primitives through an interface without importing OpenGL.
 - [ ] P5-T17 Add a first-person view-model render layer with separate FOV/depth handling. Acceptance: held hands/tools do not clip through nearby world geometry.
 
-Exit gate: a textured room with lighting, shadows, fog, debug geometry, and a view model renders without gameplay code.
+Exit gate: a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code. Shadows, fog, tonemapping, and other polish do not block the foundation.
 
 ## Phase 6 - Asset pipeline and resource lifetime
 
@@ -179,6 +186,9 @@ Goal: create the local physics sandbox that networking must later reproduce.
 - [ ] P8-T13 Implement release and throw using server-ready intent parameters: target entity and normalized charge, not arbitrary client force. Acceptance: identical commands produce bounded forces.
 - [ ] P8-T14 Implement pushable buttons, hinged doors, and breakable constraints through reusable components. Acceptance: none of these require a renderer-specific or object-name branch.
 - [ ] P8-T15 Add Jolt body/shape/constraint leak accounting. Acceptance: loading and unloading the sandbox 100 times returns counts to baseline.
+- [ ] P8-T16 Implement production OpenAL device/context/buffer/source lifecycle in `engine-audio-openal`. Acceptance: one mono sound plays through the engine API and every native object is released idempotently.
+- [ ] P8-T17 Add renderer/world-independent listener and emitter pose inputs with distance attenuation. Acceptance: a moving source pans/attenuates correctly without gameplay code importing OpenAL.
+- [ ] P8-T18 Convert bounded physics impacts into cooldown/threshold-filtered local audio events. Acceptance: controlled collisions produce one readable sound event while resting contacts cannot create an audio storm.
 
 Exit gate: one local player can traverse a room, grab/throw props, open doors, press buttons, and trigger collision sounds.
 
@@ -196,8 +206,15 @@ Goal: prove the engine can support the intended game before network complexity i
 - [ ] P9-T08 Implement downed, revive, respawn, and team-wipe states as a state machine. Acceptance: every transition and illegal transition is tested.
 - [ ] P9-T09 Implement one cooperative objective requiring two distinct interactions. Acceptance: objective completion is driven by component state/events, not level object names.
 - [ ] P9-T10 Add deterministic input recording and local replay for the vertical slice. Acceptance: replay reaches the same non-physics gameplay states and records physics divergence metrics.
+- [ ] P9-T11 Define renderer-neutral runtime UI nodes, layout inputs, and immutable draw commands in `engine-ui`. Acceptance: UI code contains no OpenGL or imgui imports and a fake renderer consumes a deterministic draw list.
+- [ ] P9-T12 Implement font-atlas/text measurement with bounded glyph fallback and cooked font metadata. Acceptance: known strings measure/render consistently and missing glyphs produce an explicit fallback.
+- [ ] P9-T13 Implement anchors, padding, alignment, stacking, scaling, clipping, buttons, labels, images, sliders, and scroll lists. Acceptance: layout fixtures pass at 1280x720, 1920x1080, and 2560x1440.
+- [ ] P9-T14 Implement UI focus, keyboard/mouse/controller navigation, and input consumption. Acceptance: controller-only navigation reaches every interactive control and consumed UI input never triggers gameplay actions.
+- [ ] P9-T15 Implement main menu, pause, settings, loading, results/retry, and error-dialog screen states. Acceptance: the local vertical slice enters/exits each screen without directly manipulating renderer state.
+- [ ] P9-T16 Implement HUD, interaction prompt, objective state, and downed/revive indicators from presentation data. Acceptance: HUD reads immutable presentation state and cannot mutate authoritative gameplay.
+- [ ] P9-T17 Add UI accessibility hooks for remapping, text scale, reduced motion, subtitle metadata, and non-color-only critical state. Acceptance: settings are data-driven and persist through the engine configuration layer.
 
-Exit gate: a five-minute local level demonstrates movement, props, one cooperative objective, failure, and restart.
+Exit gate: a five-minute local level demonstrates movement, props, basic audio, runtime menu/HUD flows, one cooperative objective, failure, and restart.
 
 ## Phase 10 - Network transport and protocol
 
@@ -287,7 +304,7 @@ Goal: add presentation and server-driven behaviors after network correctness exi
 
 ### Audio
 
-- [ ] P14-T01 Implement OpenAL device/context lifecycle and capability logging. Acceptance: device loss produces a controlled mute/error state rather than a crash.
+- [ ] P14-T01 Extend the Phase 8 OpenAL lifecycle with capability reporting plus device-loss/mute/recovery behavior. Acceptance: device loss produces a controlled mute/error state rather than a crash and recovery does not leak sources/buffers.
 - [ ] P14-T02 Implement pooled 3D sources with distance attenuation and priority stealing. Acceptance: exceeding source count steals the lowest-priority inaudible source.
 - [ ] P14-T03 Update listener pose from presentation camera and source pose from interpolated presentation transforms. Acceptance: network corrections do not create abrupt audio teleport artifacts.
 - [ ] P14-T04 Define data-driven audio events with random clips, pitch range, gain range, cooldown, and concurrency limit. Acceptance: repeated prop impacts vary but cannot create an audio storm.
@@ -309,7 +326,14 @@ Goal: add presentation and server-driven behaviors after network correctness exi
 - [ ] P14-T14 Implement perception with explicit vision cone, distance, occlusion ray, hearing event radius, and memory timeout. Acceptance: each sensor has isolated fixtures.
 - [ ] P14-T15 Implement a small explicit AI state machine: idle, investigate, chase, interact/attack, recover. Acceptance: transitions are logged and replayable from recorded stimuli.
 
-Exit gate: remote player animation, hand IK, collision audio, one server-controlled enemy, and optional ragdoll work in the network test map.
+### Third-person presentation and visual feedback
+
+- [ ] P14-T16 Implement a third-person orbit/follow camera with configurable distance, shoulder side, pitch limits, collision sweep, and obstruction recovery. Acceptance: the camera cannot remain inside level geometry and camera motion never changes the authoritative capsule.
+- [ ] P14-T17 Implement third-person character facing and aim alignment rules separate from movement authority. Acceptance: local aim, remote replicated facing, and camera-relative movement remain consistent under network correction.
+- [ ] P14-T18 Add a first/third-person presentation acceptance map covering view-model/body visibility, camera switching policy, held-object alignment, and animation continuity. Acceptance: perspective changes permitted by the game do not duplicate meshes, alter collision, or transfer authority.
+- [ ] P14-T19 Add only gameplay-proven visual feedback such as particles, decals, shadows, fog, tonemapping, or post-processing, each behind an independent budget/config switch. Acceptance: every added effect cites a target interaction and has CPU/GPU evidence; unused generic effects remain absent.
+
+Exit gate: remote player animation, hand IK, collision audio, third-person presentation, one server-controlled enemy, and optional ragdoll work in the network test map.
 
 ## Phase 15 - Editor and debugging tools
 
@@ -360,7 +384,7 @@ Final release gate:
 
 ## Rule for AI-generated tasks
 
-Give the coding agent exactly one task ID at a time. Every task prompt must include:
+Give the coding agent exactly one task ID at a time, on a dedicated task branch with a linked pull request. Every task prompt must include:
 
 1. Allowed modules and files.
 2. Interfaces it may change.

@@ -30,39 +30,39 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 
 | Milestone | Name | Horizon | Phases | Outcome |
 | --- | --- | --- | --- | --- |
-| M0 | Feasibility | COMPLETE | P0 | Prove the risky native/Steam/networking assumptions before the architecture depends on them. |
-| M1 | Engine foundation | NOW | P1-P4 | Establish the build, module boundaries, lifecycle, timing, input, math, and spatial contracts. |
-| M2 | Local playable runtime | NEXT | P5-P9 | Render and load a room, build the world/physics stack, then prove a five-minute local co-op-style vertical slice. |
+| M0 | Feasibility | FOLLOW-UP GATES | P0 | Native-stack feasibility is proven; end-to-end Steam transport and sustained-lifecycle evidence remain explicit blockers for the phases that consume them. |
+| M1 | Engine foundation | NOW | P1-P4 | Establish the build, module boundaries (including runtime UI), lifecycle, timing, input, math, and spatial contracts. |
+| M2 | Local playable runtime | NEXT | P5-P9 | Render and load a room, build world/physics/basic-audio/runtime-UI stacks, then prove a five-minute local co-op-style vertical slice. |
 | M3 | Multiplayer core | LATER | P10-P13 | Build transport, replication, prediction/correction, join-in-progress, and Steam session flow. |
-| M4 | Genre systems | LATER | P14 | Add network-aware audio, animation, IK, navigation, perception, and one server-authoritative enemy. |
+| M4 | Genre and presentation systems | LATER | P14 | Add network-aware audio, animation, IK, third-person presentation, visual feedback, navigation, perception, and one server-authoritative enemy. |
 | M5 | Tools | LATER | P15 | Add the minimum editor and diagnostics needed to author and debug the game without source edits. |
 | M6 | Production base | LATER | P16 | Profile, fuzz, soak-test, package, and freeze a v1 engine API only after the network slice survives release gates. |
 
-## Completed — M0 / Phase 0
+## Feasibility baseline — M0 / Phase 0
 
-M0 passed its exit gate.
+The original Phase 0 task contracts passed. The review found that two claims must remain narrower than “production proven”: the 15-second integrated run is a smoke test, and the FFM spike proves API access rather than a complete Steam transport.
 
 Durable Phase 0 conclusions include:
 
 1. Java 25 and the selected native stack are viable on the target Windows x64 environment.
 2. Steamworks4j is sufficient for basic Steam client integration but not for the required modern `ISteamNetworkingSockets` surface.
-3. Java 25 FFM can call the official Steam flat API directly and reach `ISteamNetworkingSockets` without authored C/C++ glue.
+3. Java 25 FFM can call the official Steam flat API directly and obtain/use an `ISteamNetworkingSockets` pointer without authored C/C++ glue; an end-to-end connection/message spike is still required.
 4. The localhost impairment harness can reproduce latency, jitter, loss, duplication, and reordering.
-5. GLFW/OpenGL, Jolt JNI, OpenAL, and UDP can run together cleanly under JFR in the owner-approved 15-second integrated soak.
+5. GLFW/OpenGL, Jolt JNI, OpenAL, and UDP can initialize, run together for 15 seconds under JFR, and shut down cleanly in the integrated smoke test.
 
-The conditional dedicated-server fallback P0-T10 was not required because P0-T09 established a viable Java-to-Steam networking path.
+The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as a production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
 
 ## Current focus — M1 / Phase 1
 
 **Goal:** make later engine changes isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
 
-The current executable task is `P1-T01 — Initialize multi-project Gradle build`.
+Exact live task state is intentionally not duplicated here; GitHub Issues/Project is authoritative.
 
 ### Phase 1 work packages
 
 1. **Initial multi-project structure** — P1-T01
-2. **Remaining module skeletons** — P1-T02
-3. **Dependency/version reproducibility** — P1-T03
+2. **Remaining module skeletons and runtime UI boundary** — P1-T02, P1-T02A
+3. **Dependency/version reproducibility and shared build conventions** — P1-T03, P1-T03A
 4. **Testing and code-quality gates** — P1-T04..P1-T08
 5. **Client/server entry points and version reporting** — P1-T09..P1-T10
 
@@ -71,13 +71,13 @@ The exact task definitions and planning acceptance criteria are in the [technica
 ## Milestone exit outcomes
 
 ### M0 — Feasibility
-**Passed.** The project has a concrete production networking path and the selected native stack runs together cleanly.
+The base stack passed its smoke gates. P0-T09A blocks production Steam transport claims; P0-T13/P0-T14 block long-duration native-stability claims.
 
 ### M1 — Engine foundation
-Client and headless server run from repeatable commands; fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.
+Client and headless server run from repeatable commands; the runtime UI module boundary, fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.
 
 ### M2 — Local playable runtime
-A five-minute local level proves rendering, cooked assets, component-driven scenes, player movement, physics interactions, one cooperative objective, failure, and restart.
+A five-minute local level proves rendering, cooked assets, component-driven scenes, player movement, physics interactions, basic audio, runtime HUD/menu flows, one cooperative objective, failure, and restart.
 
 ### M3 — Multiplayer core
 Four players can connect, join in progress, move responsively, interact with shared physics props, and complete the vertical slice under realistic network impairment and through Steam.
@@ -106,9 +106,10 @@ For work near execution:
 3. Use the repository's engine-task template as a starting point, but include only the sections needed to make the task unambiguous.
 4. Link real dependencies/blockers explicitly.
 5. Keep only a bounded active queue; do not convert the entire technical backlog into Issues.
-6. Implement on the explicitly selected working branch, currently `master`, unless the repository owner explicitly requests another branch or a PR.
-7. Close the Issue only after its acceptance criteria and verification evidence pass.
-8. Keep `docs/DEVELOPMENT_STATUS.md` synchronized after meaningful repository developments.
+6. Create a dedicated task branch from current `master`; never implement agent-generated work directly on `master`.
+7. Open a pull request linked to the Issue and require CI/verification before merge.
+8. Close the Issue only after merge and acceptance evidence pass.
+9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with durable conclusions, without copying exact live task state.
 
 ## Definition of Ready
 
@@ -131,6 +132,7 @@ A task is done only when:
 - no undeclared scope was implemented;
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
+- the linked pull request is merged after CI/verification;
 - the linked Issue is closed consistently with the verified result.
 
 ## Status convention

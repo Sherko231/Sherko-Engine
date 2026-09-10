@@ -2,25 +2,25 @@ plugins {
     id("java")
 }
 
-group = "com.samo"
-version = "1.0-SNAPSHOT"
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
 allprojects {
+    group = "com.samo"
+    version = "1.0-SNAPSHOT"
+
+    repositories {
+        mavenCentral()
+    }
+
     dependencyLocking {
         lockAllConfigurations()
     }
 
     plugins.withId("java") {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+        }
+
         tasks.withType<Test>().configureEach {
             useJUnitPlatform()
         }
@@ -31,6 +31,7 @@ val engineTestModules = listOf(
     "engine-core",
     "engine-platform-lwjgl",
     "engine-render-opengl",
+    "engine-ui",
     "engine-assets",
     "engine-world",
     "engine-physics-jolt",
@@ -255,11 +256,14 @@ tasks.register<JavaExec>("runSteamFlatApiFfmSpike") {
     }
 }
 
-val nativeSoakDir = layout.buildDirectory.dir("spikes/native-soak")
+val nativeEvidenceDir = layout.buildDirectory.dir("spikes/native-evidence")
 
-tasks.register<JavaExec>("runIntegratedNativeSoak") {
+fun JavaExec.configureIntegratedNativeEvidence(
+    evidenceTask: String,
+    defaultDurationSeconds: String,
+    recordingName: String
+) {
     group = "verification"
-    description = "Runs the P0-T12 15-second GLFW/OpenGL/Jolt/OpenAL/UDP soak under JFR."
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass = "com.samo.spike.integration.IntegratedNativeSoakSpike"
     javaLauncher = javaToolchains.launcherFor {
@@ -267,13 +271,26 @@ tasks.register<JavaExec>("runIntegratedNativeSoak") {
     }
     jvmArgs(
         "--enable-native-access=ALL-UNNAMED",
-        "-XX:StartFlightRecording=filename=${nativeSoakDir.get().file("p0-t12.jfr").asFile.absolutePath},settings=profile,dumponexit=true"
+        "-XX:StartFlightRecording=filename=${nativeEvidenceDir.get().file(recordingName).asFile.absolutePath},settings=profile,dumponexit=true"
     )
+    systemProperty("spike.evidenceTask", evidenceTask)
     systemProperty(
         "spike.durationSeconds",
-        providers.gradleProperty("nativeSoakDurationSeconds").orElse("15").get()
+        providers.gradleProperty("nativeEvidenceDurationSeconds")
+            .orElse(defaultDurationSeconds)
+            .get()
     )
     doFirst {
-        nativeSoakDir.get().asFile.mkdirs()
+        nativeEvidenceDir.get().asFile.mkdirs()
     }
+}
+
+tasks.register<JavaExec>("runIntegratedNativeSmoke") {
+    description = "Runs the P0-T12 15-second GLFW/OpenGL/Jolt/OpenAL/UDP smoke test under JFR."
+    configureIntegratedNativeEvidence("P0-T12", "15", "p0-t12-smoke.jfr")
+}
+
+tasks.register<JavaExec>("runIntegratedNativeSoak") {
+    description = "Runs the P0-T13 15-minute GLFW/OpenGL/Jolt/OpenAL/UDP sustained test under JFR."
+    configureIntegratedNativeEvidence("P0-T13", "900", "p0-t13-soak.jfr")
 }

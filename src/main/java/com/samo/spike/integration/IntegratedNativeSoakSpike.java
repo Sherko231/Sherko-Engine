@@ -66,7 +66,10 @@ public final class IntegratedNativeSoakSpike {
             throw new IllegalArgumentException("spike.durationSeconds must be > 0");
         }
 
-        System.out.printf("P0-T12 integrated native soak: %d seconds%n", durationSeconds);
+        String evidenceTask = System.getProperty("spike.evidenceTask", "P0-T12");
+        String runKind = durationSeconds >= 900 ? "sustained test" : "smoke test";
+        System.out.printf("%s integrated native %s: %d seconds%n",
+                evidenceTask, runKind, durationSeconds);
 
         GLFWErrorCallback glfwError = GLFWErrorCallback.createPrint(System.err);
         glfwSetErrorCallback(glfwError);
@@ -117,7 +120,13 @@ public final class IntegratedNativeSoakSpike {
             glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-            window = glfwCreateWindow(960, 540, "Sherko Engine - P0-T12 Integrated Native Soak", NULL, NULL);
+            window = glfwCreateWindow(
+                    960,
+                    540,
+                    "Sherko Engine - " + evidenceTask + " Integrated Native " + runKind,
+                    NULL,
+                    NULL
+            );
             if (window == NULL) {
                 throw new IllegalStateException("Failed to create OpenGL 4.6 window");
             }
@@ -368,7 +377,11 @@ public final class IntegratedNativeSoakSpike {
             glfwError.free();
         }
 
-        System.out.println("P0-T12 passed: integrated native soak completed and all subsystems shut down cleanly.");
+        System.out.printf(
+                "%s passed: integrated native %s completed and all subsystems shut down cleanly.%n",
+                evidenceTask,
+                runKind
+        );
     }
 
     private static ByteBuffer packetBuffer() {

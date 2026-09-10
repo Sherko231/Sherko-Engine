@@ -52,21 +52,21 @@ Durable Phase 0 conclusions include:
 
 The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as a production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
 
-## Current focus — M1 / Phase 1
+## Completed foundation — M1 / Phase 1
 
-**Goal:** make later engine changes isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
+**Outcome:** later engine changes are isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
 
-The commit-contained checkpoint is in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md). Verify GitHub Issues/Project for activity newer than the checked-out commit.
+Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
 
-### Phase 1 work packages
+The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 
-1. **Initial multi-project structure** — P1-T01
-2. **Remaining module skeletons and runtime UI boundary** — P1-T02, P1-T02A
-3. **Dependency/version reproducibility and shared build conventions** — P1-T03, P1-T03A
-4. **Testing and code-quality gates** — P1-T04..P1-T08
-5. **Client/server entry points and version reporting** — P1-T09..P1-T10
+## Current focus — M1 / Phase 2
 
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-1---build-modules-and-quality-gates).
+**Goal:** establish the lifecycle, timing, configuration, cleanup, allocation-observability, logging, and fatal-shutdown contracts that every production subsystem will follow.
+
+Materialize only the next bounded task as an executable Issue. The first task is `P2-T01`, defining `EngineSubsystem` with explicit `initialize`, `start`, `stop`, and `close` phases and unit-tested lifecycle order. Do not treat the remaining Phase 2 catalog as permission to implement it in bulk.
+
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-2---core-lifecycle-time-configuration-and-native-ownership).
 
 ## Milestone exit outcomes
 

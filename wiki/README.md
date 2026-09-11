@@ -5,10 +5,12 @@ This directory is the human- and AI-readable usage guide for the **implemented**
 Use it when you want to answer questions such as:
 
 - How do I create and shut down an engine subsystem?
+- How do I order and start multiple dependent subsystems?
 - How do I create a production GLFW/OpenGL window?
 - How do I log structured engine events?
 - How do I track native resources safely?
 - How does the fixed-step timing foundation work?
+- How does orderly fatal shutdown work?
 - Which APIs are production-ready today, and which features are still planned?
 
 ## Start here
@@ -16,14 +18,16 @@ Use it when you want to answer questions such as:
 1. [Getting started](GETTING_STARTED.md)
 2. [Current API index](API_INDEX.md)
 3. [Lifecycle and subsystem ownership](CORE/LIFECYCLE.md)
-4. [Timing and fixed-step simulation](CORE/TIMING.md)
-5. [Configuration](CORE/CONFIGURATION.md)
-6. [Structured logging](CORE/LOGGING.md)
-7. [Native resource ownership](CORE/NATIVE_RESOURCES.md)
-8. [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-9. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
-10. [Current limitations](LIMITATIONS.md)
-11. [How this wiki must be maintained](MAINTENANCE.md)
+4. [Subsystem composition and startup](CORE/SUBSYSTEM_COMPOSITION.md)
+5. [Timing and fixed-step simulation](CORE/TIMING.md)
+6. [Configuration](CORE/CONFIGURATION.md)
+7. [Structured logging](CORE/LOGGING.md)
+8. [Native resource ownership](CORE/NATIVE_RESOURCES.md)
+9. [Fatal termination](CORE/FATAL_TERMINATION.md)
+10. [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
+11. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
+12. [Current limitations](LIMITATIONS.md)
+13. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

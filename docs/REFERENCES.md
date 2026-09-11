@@ -43,3 +43,7 @@ Java adaptation: the book primarily assumes C++. Its architectural boundaries re
 - imgui-java: https://github.com/SpaiR/imgui-java
 - Recast4j: https://github.com/recast4j/recast4j
 - Java packaging: https://docs.oracle.com/en/java/javase/25/docs/specs/man/jpackage.html
+
+## Wiki synchronization
+
+These references provide background rather than consumer API truth. If a future task uses or changes a referenced technology in a way that changes the implemented public engine API or how callers use it, update the relevant [`../wiki/`](../wiki/README.md) pages in the same PR. Otherwise record `Wiki impact: none — <reason>`.

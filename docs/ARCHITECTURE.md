@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract and graph-only dependency ordering; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, and bounded startup rollback coordination; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Single-subsystem lifecycle (P2-T01) and graph-only dependency ordering (P2-T02); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -87,7 +87,7 @@ Invalid calls fail before invoking a hook. Transient states reject reentrant lif
 
 An unchecked initialize/start/stop failure propagates unchanged and leaves FAILED, allowing only explicit close. The close hook must tolerate no setup, partial setup, or failed activation/stopping; it must quiesce remaining activity before releasing resources. A close attempt is terminal even if it throws, avoiding automatic repeated cleanup of potentially invalid native handles. CLOSED means the attempt ended, not that every resource was successfully released; cleanup failures must be reported by the owner.
 
-Each instance has one lifetime, with no restart promise. This does not establish whether a native process-global subsystem supports reinitialization; P0-T14 remains the evidence gate. A successful running instance requires explicit stop before close. Coordinated rollback (P2-T03), the clock and runtime loop remain unimplemented. Client/server composition roots do not yet instantiate a subsystem.
+Each instance has one lifetime, with no restart promise. This does not establish whether a native process-global subsystem supports reinitialization; P0-T14 remains the evidence gate. A successful running instance requires explicit stop before close. Client/server composition roots do not yet instantiate a subsystem.
 
 ## Subsystem dependency ordering — P2-T02 / Issue #72
 
@@ -97,7 +97,17 @@ Each instance has one lifetime, with no restart promise. This does not establish
 
 A cycle anywhere, including a self-cycle or later disconnected component, fails with `IllegalStateException` before any order is returned. Its message contains the closed dependent-to-dependency path, excluding any incoming noncyclic tail, for example `Subsystem dependency cycle: A -> B -> C -> A`. The caller can print/log that diagnostic; no logging framework is introduced.
 
-The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not prove native safety, rollback, or the ten-minute P2 phase gate.
+The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not prove native safety or the ten-minute P2 phase gate.
+
+## Coordinated startup rollback — P2-T03 / Issue #73
+
+`com.samo.engine.core.api.SubsystemStartup` is a stateless utility above D-018 and D-019. It accepts an already-resolved dependency-first `List<EngineSubsystem>`, snapshots the complete list before any hook executes, then calls `initialize()` and `start()` on each subsystem before advancing to the next.
+
+Successful startup does not transfer ownership or register a normal shutdown callback. The composition owner remains responsible for reverse-order `stop()` and `close()` during ordinary shutdown.
+
+If initialize/start fails, the exact `RuntimeException` or `Error` remains primary. The failing subsystem receives one `close()` attempt. Every previously started subsystem is then visited in reverse order and receives `stop()` followed by `close()`; close is still attempted when stop fails because D-018 transitions a failed stop to FAILED, which permits explicit close. Rollback failures are appended to the original failure with `addSuppressed` in cleanup-attempt order, except the same throwable instance is not self-suppressed. Cleanup continues after rollback failures.
+
+This is intentionally not a general lifecycle manager, dependency injection framework, restart mechanism, or native-lifecycle proof. It adds no state accessor and does not change `EngineSubsystem` or `SubsystemGraph`. Synthetic Java tests establish ordering and failure preservation only; P0-T14 and the ten-minute P2 phase exit remain separate evidence gates.
 
 ## Experimental code boundary
 
@@ -127,4 +137,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Client/server executable composition roots | Implemented by P1-T09 / Issue #39 |
 | Single-subsystem lifecycle order | Implemented by P2-T01 / Issue #64 with JUnit 6 tests |
 | Subsystem dependency ordering without lifecycle side effects | Implemented by P2-T02 / Issue #72 with JUnit 6 tests |
-| Concrete production engine subsystems / orchestration | Planned: Phase 2 onward |
+| Coordinated partial-startup rollback | Implemented by P2-T03 / Issue #73 with JUnit 6 tests |
+| Concrete production engine subsystems | Planned: later Phase 2+ tasks |

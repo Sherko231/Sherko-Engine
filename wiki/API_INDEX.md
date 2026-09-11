@@ -53,9 +53,10 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 | Type | Purpose |
 | --- | --- |
-| `GlfwWindow` | Owns one production GLFW window and OpenGL 4.6 Core context for one subsystem lifetime. |
+| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, and separated logical/framebuffer size delivery. |
+| `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
 
-`GlfwWindow` is currently the only top-level public production platform type. It intentionally does not expose a raw GLFW window handle, polling/swap API, fullscreen API, size events, or input state yet.
+`GlfwWindow` still intentionally exposes no raw GLFW window handle, buffer-swap API, fullscreen API, focus/input API, or content-scale callback API.
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md) and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 

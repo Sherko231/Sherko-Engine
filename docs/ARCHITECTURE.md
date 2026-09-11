@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, and explicit native-resource ownership diagnostics. P2-T11 adds test-only JFR allocation-observability evidence without changing the production `engine-core` API. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, explicit native-resource ownership diagnostics, and the synchronous structured `EngineLogger` boundary. P2-T11 adds test-only JFR allocation-observability evidence. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10); P2-T11 adds test-only allocation evidence; other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12); P2-T11 adds test-only allocation evidence; other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -193,6 +193,16 @@ An allocating control must produce usable sampled evidence; otherwise the benchm
 
 This evidence is sampled Java-heap allocation pressure, not an exact per-call counter. It excludes direct/native allocations, GPU/driver memory, retained-heap size, and GC pause cost. The render channel is not evidence from the future OpenGL renderer. No product budget or threshold is established by P2-T11, and no durable architecture decision is added.
 
+## Structured runtime logging boundary — P2-T12 / Issue #82
+
+`EngineLogger` is the shared `engine-core` structured logging seam selected by D-028. It owns no persistence format or logging backend. A caller supplies one `Sink`, and each valid `log(...)` call synchronously creates an immutable `Event` containing `Instant.now()`, severity, message, the actual calling thread ID/name, and one immutable `Context` snapshot before invoking `Sink.write`.
+
+`Context` carries nullable frame, simulation tick, subsystem, connection, and entity fields. Present frame/tick values must be nonnegative. Present string values are `String.strip()` normalized and must remain nonblank; `null` is the only missing-field representation. Connection/entity/subsystem remain opaque strings until later networking/world tasks define stronger domain ID types.
+
+Every severity from `DEBUG` through `FATAL` is forwarded; the logger performs no threshold routing. `FATAL` is only a label and does not terminate the process. `flush()` explicitly delegates to the sink. One private synchronization boundary serializes `write` and `flush` callbacks across concurrent callers while event thread fields still identify the original caller. Sink unchecked failures propagate unchanged and are neither retried nor swallowed.
+
+The sink is caller-owned and is not closed by `EngineLogger`. P2-T12 adds no background worker, queue, buffering, retry/drop policy, shutdown hook, global singleton, file/console/JSON format, rotation policy, or composition-root wiring. P2-T13 may consume this boundary later under its own contract.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -230,4 +240,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Layered startup configuration precedence | Implemented by P2-T09 / Issue #79 with JUnit 6 tests |
 | Explicit native-resource ownership diagnostics | Implemented by P2-T10 / Issue #80 with JUnit 6 tests |
 | Sampled Java-heap allocation observability evidence | P2-T11 test/evidence path; no production API |
+| Synchronous structured logging boundary | Implemented by P2-T12 / Issue #82 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

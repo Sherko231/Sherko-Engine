@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract and graph-only dependency ordering; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Single-subsystem lifecycle implemented by P2-T01; other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Single-subsystem lifecycle (P2-T01) and graph-only dependency ordering (P2-T02); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -87,7 +87,17 @@ Invalid calls fail before invoking a hook. Transient states reject reentrant lif
 
 An unchecked initialize/start/stop failure propagates unchanged and leaves FAILED, allowing only explicit close. The close hook must tolerate no setup, partial setup, or failed activation/stopping; it must quiesce remaining activity before releasing resources. A close attempt is terminal even if it throws, avoiding automatic repeated cleanup of potentially invalid native handles. CLOSED means the attempt ended, not that every resource was successfully released; cleanup failures must be reported by the owner.
 
-Each instance has one lifetime, with no restart promise. This does not establish whether a native process-global subsystem supports reinitialization; P0-T14 remains the evidence gate. A successful running instance requires explicit stop before close. Subsystem dependency ordering (P2-T02) and coordinated rollback (P2-T03) remain unimplemented, as do the clock and runtime loop. Client/server composition roots do not yet instantiate a subsystem.
+Each instance has one lifetime, with no restart promise. This does not establish whether a native process-global subsystem supports reinitialization; P0-T14 remains the evidence gate. A successful running instance requires explicit stop before close. Coordinated rollback (P2-T03), the clock and runtime loop remain unimplemented. Client/server composition roots do not yet instantiate a subsystem.
+
+## Subsystem dependency ordering — P2-T02 / Issue #72
+
+`com.samo.engine.core.api.SubsystemGraph` snapshots a list of nested `Registration` records: an exact case-sensitive nonblank ID, an `EngineSubsystem` reference, and ordered prerequisite IDs. Lists are defensively copied. The constructor rejects duplicate IDs, repeated subsystem instances by identity, and missing dependencies after indexing the full list; forward references are valid. A registration rejects null/blank IDs and duplicate prerequisite IDs.
+
+`initializationOrder()` returns an unmodifiable list of the original subsystem references in depth-first postorder, visiting roots in registration order and prerequisites in declaration order. Shared prerequisites appear once. An explicit heap traversal stack handles deep graphs without recursive call-stack growth. Each call uses fresh traversal state.
+
+A cycle anywhere, including a self-cycle or later disconnected component, fails with `IllegalStateException` before any order is returned. Its message contains the closed dependent-to-dependency path, excluding any incoming noncyclic tail, for example `Subsystem dependency cycle: A -> B -> C -> A`. The caller can print/log that diagnostic; no logging framework is introduced.
+
+The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not prove native safety, rollback, or the ten-minute P2 phase gate.
 
 ## Experimental code boundary
 
@@ -116,4 +126,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Automated package/module boundary test | Implemented by P1-T07; relocated by P1-T10A; hardened by Issue #62 |
 | Client/server executable composition roots | Implemented by P1-T09 / Issue #39 |
 | Single-subsystem lifecycle order | Implemented by P2-T01 / Issue #64 with JUnit 6 tests |
+| Subsystem dependency ordering without lifecycle side effects | Implemented by P2-T02 / Issue #72 with JUnit 6 tests |
 | Concrete production engine subsystems / orchestration | Planned: Phase 2 onward |

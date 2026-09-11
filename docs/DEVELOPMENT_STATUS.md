@@ -6,12 +6,12 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `6f242aab4cd9c031bf1992c8cc46de45f41f41c1` — P2-T08 / PR #117 merged; merged-master workflow #185 passed |
+| Verified pre-checkpoint `master` | `f7ea7dca6559a0afc2ea9e5c83b2c9b25ca27e41` — post-P2-T08 handoff reconciled; accidental direct README preparation commit repaired through maintenance PR #121 |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
 | Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T08 |
-| Current executable work | Maintenance Issue #118 — reconcile post-P2-T08 handoff status |
-| Current branch | `maint-post-p2-t08-handoff` |
-| Next planned roadmap implementation | P2-T09 / Issue #79 — layered configuration loading; planning-only until explicitly refined and activated after #118 completes |
+| Current executable work | P2-T09 / Issue #79 — layered startup configuration loading |
+| Current branch | `p2-t09-layered-config` |
+| Next planned roadmap implementation | P2-T10 — native-resource registry; planning-only until P2-T09 completes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
@@ -30,30 +30,52 @@ P2-T08 / Issue #78 is complete:
 - Merged-master `jacoco-reports` artifact: ID `10261470658`, digest `sha256:d56620d4b0e0c0b2fce11435fe61d361894885ac119a8d08a4d10ef21f18c98d`.
 - Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and self-review were not represented as independent review.
 
-P2-T08 established the typed startup schema in `engine-core`: source-aware raw entries, canonical typed keys for fullscreen width/height and the locked 60 Hz simulation rate, defaults, bounds, aggregated ordered validation errors, unknown-key rejection, immutable validated output, and no lifecycle side effects. P2-T09 retains configuration source layering and precedence.
+P2-T08 established the typed startup schema in `engine-core`: source-aware raw entries, canonical typed keys for fullscreen width/height and the locked 60 Hz simulation rate, defaults, bounds, aggregated ordered validation errors, unknown-key rejection, immutable validated output, and no lifecycle side effects.
+
+## Handoff maintenance before P2-T09
+
+- Documentation-only Issue #118 / PR #119 reconciled the post-P2-T08 handoff and merged as `3e3e0b78ae001c55cdcba11dcbd566157b7a51eb`; its complete diff was Markdown-only and correctly produced no build/test workflow.
+- During the following P2-T09 startup audit, an accidental README preparation edit was committed directly to `master` as `95b3a0df390794160095f053a1e3dbb68547251e`. Work stopped immediately.
+- Maintenance Issue #120 / PR #121 restored the exact pre-accident README through the required branch/PR path and merged as `f7ea7dca6559a0afc2ea9e5c83b2c9b25ca27e41`. Its complete diff was one Markdown file, so the Markdown-only CI exemption applied.
+- No P2-T09 code was written to `master`; the active task branch starts from the repaired master commit above.
+
+## P2-T09 executable contract
+
+Issue #79 is activated and is the sole executable roadmap task for this branch.
+
+The new `EngineConfigLoader` composes startup configuration in the fixed order:
+
+`EngineConfigSchema` defaults < game file < user file < command-line overrides.
+
+Game and user layers are optional caller-supplied UTF-8 `key=value` files. Blank/comment lines are ignored; malformed lines, blank keys, and duplicate keys in one file fail deterministically with path/line diagnostics. Missing files are absent layers; existing unreadable paths propagate `IOException`. Command-line values are supplied as an already-parsed map and use source `command line`.
+
+Only the final effective raw map is validated through the existing `EngineConfigSchema`. Consequently, an invalid lower-precedence value replaced by a valid higher-precedence value does not fail startup, while an invalid winning value reports the winning source. Loading/validation invokes no subsystem lifecycle method.
+
+P2-T09 does not add environment variables, raw argv parsing, automatic OS path discovery, persistence, Java `Properties` escaping semantics, hot reload, mutable settings, arbitrary config keys, configurable tick rate, or P2-T10 work.
 
 ## Exact next action
 
-Finish maintenance Issue #118 only:
+On `p2-t09-layered-config`:
 
-1. keep the complete diff restricted to `README.md` and `docs/DEVELOPMENT_STATUS.md`;
-2. verify both documents against live GitHub state;
-3. open one linked PR;
-4. audit the complete PR changed-file list and require exactly those two `.md` paths;
-5. apply the Markdown-only CI exemption — no PR-head or merged-`master` build/test CI is required for this maintenance change;
-6. merge the maintenance PR and confirm #118 closes consistently.
+1. finish only the files authorized by Issue #79;
+2. run/audit `EngineConfigLoaderTest` through exact-head CI and preserve the existing P2-T08 regression suite;
+3. audit the complete changed-file list against Issue #79;
+4. perform author self-review and record independent-review provenance honestly;
+5. open one linked PR;
+6. require passing exact-head PR CI because Java/YAML files change;
+7. merge only after the current-head workflow passes;
+8. require separate passing push CI on the exact resulting `master` merge commit;
+9. record final artifacts/evidence and confirm Issue #79 closes consistently.
 
-After #118 completes, perform a fresh startup audit and then refine/activate P2-T09 / Issue #79 before any P2-T09 code is written. Do not implement #79 from its current planning body without first finalizing its executable contract.
-
-A future agent must not create another handoff-only maintenance task merely because this document correctly describes its containing maintenance checkpoint. After #118 is merged, reconcile live GitHub state with this checkpoint and proceed to the fresh #79 activation audit unless another real conflict exists.
+Do not activate or implement P2-T10 until P2-T09 is merged and verified.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, renderer-facing interpolation alpha, and typed startup configuration validation.
-- P2-T08 added no dependency, lockfile, module-edge, native-binding, protocol, persistence-format, or scope change.
+- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, and on this branch layered startup configuration loading.
+- P2-T09 adds no dependency, lockfile, module edge, native binding, protocol, persisted game format, or scope change.
 - CI retains five Windows x64 self-hosted jobs and the Markdown-only path exemption.
 
 ## Phase 2 status
@@ -69,19 +91,19 @@ Completed and merged:
 - P2-T07 / #77 — renderer-facing interpolation alpha separated from whole simulation ticks.
 - P2-T08 / #78 — typed configuration keys/defaults/bounds/source-aware validation.
 
-Current maintenance:
+Active:
 
-- #118 — reconcile post-P2-T08 handoff status; documentation-only.
+- P2-T09 / #79 — fixed-precedence layered config loading.
 
-Next roadmap task after maintenance:
+Next after P2-T09:
 
-- P2-T09 / #79 — layered config loading and exact precedence; planning-only until explicitly activated.
+- P2-T10 — native-resource registry; planning-only until explicitly activated.
 
 P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2 task tests do not satisfy that integrated gate.
 
 ## Repository maintenance policy
 
-Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively `.md` paths. Issue #118 is intended to qualify because only `README.md` and `docs/DEVELOPMENT_STATUS.md` are authorized; verify the complete PR file list before relying on the exemption.
+Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively `.md` paths. P2-T09 is non-exempt because it changes Java source/tests and workflow YAML.
 
 ## Open gates and blockers
 
@@ -91,7 +113,7 @@ Markdown-only changes are exempt from automatic PR-head and merged-master build/
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block the current Phase 2 configuration work, but unrelated unit/CI success must not strengthen their claims.
+These gates do not block P2-T09, but unrelated unit/CI success must not strengthen their claims.
 
 ## Live-state reconciliation
 
@@ -100,7 +122,9 @@ Before implementation or handoff, a fresh agent must:
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
 3. compare remote `master`, open PRs, active Issues, and workflow state with this checkpoint;
-4. while #118 is open, verify it remains the sole active maintenance task and that its diff is exactly the two authorized Markdown files;
-5. after #118 merges, treat #79 as the next planned roadmap task, not as executable code authorization until it is refined and activated;
-6. preserve P2's still-unproven ten-minute integrated exit gate;
-7. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.
+4. verify #79 remains the sole active executable roadmap task;
+5. audit all changed paths against #79;
+6. require exact-head PR CI and exact merged-master CI because this task is non-Markdown;
+7. keep P2-T10 and later tasks planning-only until activated one at a time;
+8. preserve P2's still-unproven ten-minute integrated exit gate;
+9. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.

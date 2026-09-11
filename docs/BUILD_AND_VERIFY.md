@@ -179,6 +179,28 @@ Config XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.E
 
 P2-T08 proves validation of one effective raw map only. It does not load or merge config sources, change source precedence, make tick rate configurable, perform runtime hot reload, or satisfy the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
 
+## P2-T09 layered configuration verification
+
+Issue #79 adds `EngineConfigLoader`, which composes the fixed startup precedence `EngineConfigSchema` defaults < game file < user file < command-line overrides and validates the final effective raw map once through the existing P2-T08 schema.
+
+Run the focused acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --rerun-tasks
+```
+
+The suite uses temporary UTF-8 files and handwritten expectations for all four precedence levels, fallback when each higher layer is removed, independent keys falling through different layers, missing optional files, normalized `path:line` and `command line` source provenance, an invalid lower value replaced by a valid higher value, malformed lines, blank keys, duplicate keys, comments/blank lines, first-separator behavior, programmer-contract nulls, an existing unreadable/non-file path, immutable successful output, and a synthetic startup trace proving loading/validation failure prevents subsystem initialization.
+
+Also rerun the complete focused `engine-core` lifecycle/timing/config regression set together:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --rerun-tasks
+```
+
+Loader XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigLoaderTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
+
+P2-T09 proves only the fixed four-level startup source precedence, bounded UTF-8 `key=value` parsing, source attribution, and validate-after-merge behavior. It does not add environment variables, raw argv parsing, OS path discovery, config persistence, Java `Properties` escaping/continuations, hot reload, mutable settings, configurable tick rate, subsystem startup orchestration, or the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -304,7 +326,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T08 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T09 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -335,7 +357,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, and `EngineConfigSchemaTest` suites and their XML/HTML evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, and `EngineConfigLoaderTest` suites and their XML/HTML evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

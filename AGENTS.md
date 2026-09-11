@@ -108,6 +108,19 @@ Use `docs/BUILD_AND_VERIFY.md` to choose the required commands. A handoff must s
 
 Never claim a check passed because configuration appears correct. Record actual execution or say it was not run.
 
+## CI run authority and obsolete-run handling
+
+Before interpreting pull-request CI, determine the pull request's current head SHA and compare each workflow run against it.
+
+- A pull-request workflow run whose head SHA is older than the current PR head is obsolete verification evidence for that PR.
+- Obsolete queued or in-progress PR runs may be cancelled when the available tooling and permissions support cancellation. Cancelling stale work is an efficiency measure, not a verification result.
+- Never cancel the workflow run for the current PR head merely to reduce runner usage.
+- A cancelled obsolete run is neither a pass nor a failure of the current PR head. Do not use it to satisfy or defeat acceptance.
+- Only a completed passing workflow for the exact current PR head satisfies the pre-merge CI requirement.
+- After merge, the push workflow on the resulting `master` merge commit is separate required evidence. Do not cancel or ignore it as though it were an obsolete PR run.
+- If cancellation tooling is unavailable, leave obsolete runs alone and state that they remain stale; never claim that they were cancelled.
+- Repository workflow concurrency may cancel superseded runs automatically. Still inspect the exact current PR head and the final `master` merge commit before recording verification.
+
 ## Documentation update matrix
 
 | Change type | Required documentation |

@@ -359,6 +359,40 @@ P3-T01 also changes dependency ownership: after adding the existing LWJGL core/G
 
 CI keeps the deterministic suite in ordinary aggregate `test` with the native test skipped. The existing Windows native job enables `GlfwWindowNativeTest` exactly once, after the historical GLFW/OpenAL smoke, and uploads its JUnit XML plus `p3-t01-glfw-window.txt` as artifact `p3-t01-glfw-window`. The final exact-head PR run and separate exact merged-master push run must both pass; inspect the retained report from each required authority before accepting native evidence.
 
+## P3-T02 logical/framebuffer sizing verification
+
+Issue #85 extends the production `GlfwWindow` boundary with `WindowSizeListener` and owner-thread `pollEvents()` while keeping logical window units distinct from framebuffer pixels. It adds no dependency, renderer, fullscreen/input behavior, raw handle, or content-scale callback API.
+
+Run the deterministic acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+```
+
+The suite must cover intentionally unequal logical/framebuffer pairs, initial independent queries, latest-value coalescing and logical-before-framebuffer delivery, valid zero framebuffer axes, negative platform-dimension rejection before consumer delivery, illegal polling state, wrong-thread polling, receiver failure propagation, callback setup/cleanup failure, and the preserved P3-T01 lifecycle/ownership behavior.
+
+Run the real native acceptance only on target Windows x64 / Java 25:
+
+```powershell
+$env:SHERKO_P3_T02_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowSizeNativeTest" --rerun-tasks
+Remove-Item Env:SHERKO_P3_T02_NATIVE
+```
+
+Without `SHERKO_P3_T02_NATIVE=true`, that JUnit test is skipped by assumption and does not count as P3-T02 native evidence.
+
+The enabled test must use the production `GlfwWindow`, resize the real window, poll only through the production `pollEvents()` API, and compare delivered logical/framebuffer values against independent direct GLFW `glfwGetWindowSize` and `glfwGetFramebufferSize` observations from test code. It also records `glfwGetWindowContentScale`. A 100% scaling machine is allowed to report equal logical/framebuffer dimensions; the test/report must state the observed equality honestly rather than fabricating DPI separation. A DPI-scaled environment may naturally produce distinct dimensions.
+
+The enabled run must create:
+
+`engine-platform-lwjgl/build/reports/p3/p3-t02-window-size.txt`
+
+Require stable fields for `task=P3-T02`, `result=PASS`, logical and framebuffer dimensions, whether the observed pairs are distinct, X/Y content scale, exact `GITHUB_SHA` in CI, Java/OS environment, and empty-registry cleanup. This is bounded production window-size integration evidence only; it is not renderer, P0-T13 soak, or P0-T14 repeated-lifecycle evidence.
+
+No dependency or lockfile change is expected for P3-T02. Run `resolveAndLockAllDependencies` without write mode and require the tracked lockfiles to remain unchanged. The routine verification matrix still applies.
+
+CI keeps deterministic P3-T02 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowSizeNativeTest` exactly once after the P3-T01 native window test and uploads its JUnit XML plus report as artifact `p3-t02-window-size`. Final acceptance requires all five jobs on the exact PR head and a separate all-five-job push workflow on the exact merged `master` commit.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -518,7 +552,7 @@ The five jobs cover:
 - root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest` and its retained report when Issue #84 is in the repository state.
+- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest` and the P3-T02 production `GlfwWindowSizeNativeTest` with their retained reports.
 
 A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
@@ -526,7 +560,7 @@ Because independent jobs may execute sequentially when fewer matching runners ar
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 deliberately uses the real production GLFW/OpenGL acceptance path there; its single-window result must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 and P3-T02 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
 
 This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
@@ -572,7 +606,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02 adds no dependency or dependency-ownership change and therefore expects no lockfile change.
 
 ## Wiki/API-guide verification
 

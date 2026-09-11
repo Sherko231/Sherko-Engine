@@ -6,19 +6,21 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `cf52a5c4de58bb0ad0f50dbc2a89b81144ca8416` — README reconciliation PR #69 merged under the owner's explicit one-time no-runner CI override; no CI pass is claimed for that docs-only maintenance |
+| Verified pre-checkpoint `master` | `66ae658fb13901f040093bb486ad0f87443e1b4f` — handoff PR #71 merged; exact-head PR CI #154 and merged-master push CI #155 passed |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A, P2-T01 |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
-| Current maintenance | Issue #70 — refresh this handoff after completed documentation maintenance #66/#68 and PRs #67/#69 |
-| Next planned implementation | After Issue #70 is completed, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
+| Current implementation | P2-T02 / Issue #72 — graph-only dependency ordering is present in this checkpoint; inspect its PR for final verification and merge state |
+| Next planned implementation | After P2-T02 / #72 is verified and merged, refine P2-T03 / #73 for coordinated rollback; do not recreate existing planning Issues |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare with remote `master`, and inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-Phase 1 and P2-T01 / Issue #64 are complete. Documentation maintenance Issues #66 and #68 and their PRs #67 and #69 are complete; those docs-only merges used explicit owner-approved one-time CI overrides because no matching self-hosted Windows x64 runner was available, and no cancelled/queued run is recorded as a pass. Finish Issue #70, then materialize P2-T02 (subsystem dependency ordering) as the next executable Issue using the strengthened task contract. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03). P2 phase exit remains unproven; single-subsystem tests do not demonstrate the ten-minute integrated headless loop.
+Phase 1 and P2-T01 / Issue #64 are complete. Documentation maintenance #66/#68/#70 is complete; PR #71 and its merged master passed CI #154/#155. P2-T02 / #72 adds graph-only dependency ordering in this checkpoint. Inspect its linked PR and finish verification/merge if still open, then refine the existing P2-T03 / #73 planning contract. Do not combine rollback with P2-T02.
+
+The owner explicitly requested planning Issues for remaining P2 and all P3/P4 work: P2 #72–#83, P3 #84–#93, P4 #94–#102. This is newer live workflow state than the prior checkpoint, not completed implementation or permission to run phases in bulk. P3/P4 still require the preceding phase exit and planning review. P2 phase exit remains unproven; graph and lifecycle tests do not demonstrate the ten-minute integrated headless loop.
 
 Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run unless the owner explicitly grants a separate bounded exception. At least one matching runner must be online for those jobs to execute; queued, cancelled, or unstarted jobs are not verification evidence.
 
@@ -47,14 +49,24 @@ Issue #66 strengthened the agent contract and templates with concrete API/archit
 
 PR #67 merged as `a28fa6d8c1da7c385da129ab19320c0960091fc6`. Its PR-head run #150 and merged-master run #151 did not execute successfully because no matching self-hosted Windows x64 runner was available; the owner explicitly authorized a one-time bypass for Issue #66 only. Those runs are not recorded as passes.
 
-Issue #68 corrected the stale README Phase 2 next-action pointer. PR #69 merged as `cf52a5c4de58bb0ad0f50dbc2a89b81144ca8416` under a separate explicit one-time owner override for that README-only maintenance. The exception does not modify `AGENTS.md`, `docs/BUILD_AND_VERIFY.md`, or future task requirements. P2-T02 remains the next runtime task.
+Issue #68 corrected the stale README Phase 2 next-action pointer. PR #69 merged as `cf52a5c4de58bb0ad0f50dbc2a89b81144ca8416` under a separate explicit one-time owner override for that README-only maintenance. The exception did not modify `AGENTS.md`, `docs/BUILD_AND_VERIFY.md`, or future task requirements. Subsequent handoff maintenance #70 / PR #71 passed PR CI #154 and merged-master push CI #155; no exception is assumed for P2-T02.
+
+## P2-T02 implementation and verification handoff
+
+- `engine-core` contains `SubsystemGraph` and its nested immutable `Registration` record (D-019). The graph validates IDs, instance identity and missing prerequisites; it returns a deterministic unmodifiable dependency-first order or a closed cycle diagnostic.
+- Graph construction/resolution never invokes lifecycle hooks, acquires resources, or assumes ownership. Each resolution uses a fresh iterative traversal; lifecycle state, initialization, shutdown and rollback remain caller responsibilities.
+- JUnit 6 acceptance tests cover forward references, diamonds/disconnected components, deterministic ordering, self/later-component cycles with printed diagnostics and zero hooks, input validation, identity versus equality, defensive copies, repeated resolution, a 10,000-node chain, and a successful caller-owned synthetic composition using the real D-018 guards.
+- Existing CI retains all five jobs and now runs the focused lifecycle and graph suites together. Graph evidence is `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml` and `engine-core/build/reports/tests/test/index.html`, uploaded alongside lifecycle results in `engine-subsystem-tests`; coverage remains in `jacoco-reports`.
+- Local implementation environment: Linux x64, OpenJDK 17.0.20. The current master snapshot was fetched through authenticated GitHub API data; every blob, the complete tree and original signed commit SHA were verified. Direct `git fetch` lacked shell authentication. `./gradlew` was not executable in the existing tracked file mode; invoking `bash gradlew` reached the wrapper but failed before compilation because the Gradle 9.3.0 download was unreachable. No local Java 25 test pass is claimed, and the target/toolchain is not weakened.
+- Final review provenance, PR-head CI, merged-master push CI, executed command results and artifact references belong in Issue #72 and its PR after they execute. Do not interpret this checkpoint as a CI pass or completed merge.
+- No native, dependency, lockfile, entry-point, protocol, scope, or module-edge changes. P2-T03 rollback and the P2 phase gate remain unimplemented; #42–#44 evidence limits are unchanged.
 
 ## P2-T01 implementation and verification handoff
 
 - `engine-core` now contains `com.samo.engine.core.api.EngineSubsystem`, an abstract `AutoCloseable` base with final initialize/start/stop/close guards and protected phase hooks (D-018).
 - One instance has one lifecycle. Invalid/reentrant transitions are rejected before hooks; unchecked forward hook failures permit only explicit cleanup. Unstarted instances can close directly; running instances require explicit stop. Close is attempted once even if cleanup throws.
 - JUnit 6 acceptance tests exercise the production guards and synthetic resource ownership. They do not prove native restartability or native cleanup safety.
-- No subsystem graph, coordinated rollback, clock, runtime loop, configuration, or other P2 task is implemented. Client/server entry points are unchanged.
+- At the P2-T01 checkpoint, no subsystem graph or other P2 task was implemented. P2-T02 adds graph-only ordering above; coordinated rollback, clock, runtime loop and configuration remain unimplemented. Client/server entry points are unchanged.
 - The five existing CI jobs now also execute focused lifecycle acceptance and unchanged dependency-lock resolution. Test evidence: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml`, `engine-core/build/reports/tests/test/index.html`, and the `engine-subsystem-tests` CI artifact; coverage remains in `jacoco-reports`.
 - The implementation environment is Linux x64 with JDK 17 only. The starting checkout was materialized from authenticated GitHub API data and every blob, tree, and the original commit SHA verified. The local focused Gradle command failed before compilation because the Gradle 9.3.0 download was blocked by network access. Required Java 25/Windows runtime results must come from actual CI execution, not this local environment.
 - P2-T01 merged via PR #65 as `f84ca1d87292daf2648c9f6dc9371156facdb945`. Final PR CI #148 and merged-master push CI #149 passed all five jobs. Issue #64 is closed as completed; its body and PR #65 retain exact SHA, command, environment, skipped-check, and artifact evidence.
@@ -75,10 +87,10 @@ P1-T10A completed the final Phase 1 follow-up:
 
 ## What remains skeleton or planned
 
-- Concrete engine subsystems and `game-sandbox` remain skeletons. Only the single-subsystem lifecycle contract is implemented; renderer, asset, world, physics, audio, networking, runtime UI, editor, and gameplay implementations remain planned.
+- Concrete engine subsystems and `game-sandbox` remain skeletons. Single-subsystem lifecycle and graph-only ordering are implemented; renderer, asset, world, physics, audio, networking, runtime UI, editor, and gameplay implementations remain planned.
 - Client/server entry points remain intentionally minimal foundation composition roots apart from version reporting.
 - `feasibility-spikes` remains disposable experimental evidence code. Its presence must not be interpreted as production engine implementation.
-- Phase 2 has begun with P2-T01. Its dependency graph, rollback, clock, configuration, ownership registry, and phase exit gate remain unimplemented.
+- Phase 2 now contains P2-T01 lifecycle and P2-T02 graph-only ordering. Rollback, clock, configuration, ownership registry, and the phase exit gate remain unimplemented.
 
 ## Verified feasibility baseline
 
@@ -108,7 +120,7 @@ Before starting the next task, a fresh agent must:
 3. confirm Phase 1 Epic #2 and corrective Issues #60 and #62 are closed and no newer repository activity supersedes this checkpoint;
 4. inspect independent follow-up Issues #42–#44 and preserve their evidence limits;
 5. confirm at least one matching self-hosted Windows x64 runner is online before interpreting queued CI;
-6. confirm Issue #64 and its linked PR completion evidence, confirm documentation maintenance #66/#68 is complete, then materialize P2-T02 as the next executable Issue;
+6. confirm #64 and documentation maintenance #66/#68/#70 are complete; inspect #72 and its PR for final CI/merge state, then refine existing P2-T03 / #73 after completion;
 7. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule

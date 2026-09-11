@@ -45,6 +45,20 @@ Focused outputs are `engine-core/build/test-results/test/TEST-com.samo.engine.co
 
 The build job additionally runs `resolveAndLockAllDependencies` without `--write-locks` and verifies that tracked lockfiles did not change. No lockfile or dependency change is expected for this task. Record exact-head PR and merged-master workflow results in the linked Issue/PR; an unstarted or queued job is not a pass.
 
+## P2-T02 dependency-order verification
+
+Issue #72 adds `SubsystemGraph` without lifecycle orchestration or new dependencies. Run the full routine matrix above and the combined focused suite:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --rerun-tasks
+```
+
+The graph suite tests dependency-first ordering, deterministic declaration-order traversal, shared/disconnected prerequisites, null/blank/duplicate/missing inputs, reference identity, defensive copies, repeatability and a 10,000-node chain. A cyclic synthetic caller prints the exact closed cycle diagnostic and proves no lifecycle hook runs, even for an earlier valid disconnected component. A successful synthetic caller exercises returned ordering with real `EngineSubsystem` guards and explicit cleanup; this is not rollback, native-resource evidence or the P2 phase exit.
+
+Graph XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml`. HTML: `engine-core/build/reports/tests/test/index.html`. The existing `engine-subsystem-tests` artifact now includes both lifecycle and graph XML/HTML, and `jacoco-reports` retains unfiltered coverage. The combined filtered command supersedes the lifecycle-only CI rerun so both focused reports survive together; the lifecycle-only command above remains usable on its own.
+
+No lockfile change is expected. Inspect actual exact-head PR and merged-master push runs; local download/toolchain failures or queued jobs cannot be reported as passes.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -181,7 +195,7 @@ During a phase, add a small integration exercise within a task's authorized scop
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest` suite and its XML/HTML evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest` and `SubsystemGraphTest` suites and their XML/HTML evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

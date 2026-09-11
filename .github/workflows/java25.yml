@@ -112,15 +112,17 @@ jobs:
       - name: Run root and subproject tests
         run: .\gradlew.bat test
 
-      - name: Verify single-subsystem lifecycle
-        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --rerun-tasks
+      - name: Verify subsystem lifecycle and dependency ordering
+        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --rerun-tasks
 
       - name: Upload lifecycle test evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: engine-subsystem-tests
           path: |
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml
             engine-core/build/reports/tests/test/**
           if-no-files-found: error
 

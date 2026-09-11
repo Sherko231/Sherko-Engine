@@ -206,5 +206,17 @@ class EngineConfigSchemaTest {
         protected void onInitialize() {
             initializeCalls++;
         }
+
+        @Override
+        protected void onStart() {
+        }
+
+        @Override
+        protected void onStop() {
+        }
+
+        @Override
+        protected void onClose() {
+        }
     }
 }

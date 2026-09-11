@@ -71,7 +71,7 @@ The rollback suite uses handwritten global hook traces to verify per-subsystem i
 
 Startup XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupTest.xml`. HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact includes lifecycle, graph, and startup XML/HTML; `jacoco-reports` remains unfiltered.
 
-These tests use synthetic Java subsystems. They do not establish native restartability, native leak freedom, sustained stability, or the P2 ten-minute integrated headless exit gate. No dependency or lockfile change is expected.
+These tests use synthetic Java subsystems. They do not establish native restartability, native leak freedom, sustained stability, or D-030's 60-second integrated Phase 2 exit gate. No dependency or lockfile change is expected.
 
 ## P2-T04 EngineClock verification
 
@@ -91,7 +91,7 @@ Also rerun the prior lifecycle/graph/startup suite to guard existing `engine-cor
 
 CI runs those four suites together after aggregate `test` so all focused XML files survive in one report directory. Clock XML is `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineClockTest.xml`; HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact name is retained for continuity and now includes lifecycle, graph, startup, and clock XML/HTML. `jacoco-reports` remains the unfiltered coverage artifact.
 
-These tests establish deterministic elapsed-time semantics only. They do not implement or prove the P2-T05 fixed-step accumulator, P2-T06 catch-up limits, P2-T07 interpolation, frame pacing, concurrency, native timing behavior, or the P2 ten-minute integrated headless-loop exit gate. No dependency or lockfile change is expected.
+These tests establish deterministic elapsed-time semantics only. They do not implement or prove the P2-T05 fixed-step accumulator, P2-T06 catch-up limits, P2-T07 interpolation, frame pacing, concurrency, native timing behavior, or D-030's 60-second integrated headless-loop exit gate. No dependency or lockfile change is expected.
 
 ## P2-T05 fixed-step accumulator verification
 
@@ -111,7 +111,7 @@ Also rerun all existing `engine-core` lifecycle/timing acceptance suites togethe
 
 Accumulator XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepAccumulatorTest.xml`. HTML remains `engine-core/build/reports/tests/test/index.html`. CI retains lifecycle, graph, startup, clock, and accumulator XML plus HTML in the existing `engine-subsystem-tests` artifact; `jacoco-reports` remains the ordinary unfiltered coverage artifact.
 
-P2-T05 proves cadence-independent 60 Hz accumulation only. It does not clamp incoming frame gaps, cap catch-up work, expose interpolation alpha, pace frames, execute simulation callbacks, or satisfy the ten-minute P2 integrated headless-loop exit gate. P2-T06 and P2-T07 remain separate tasks. No dependency or lockfile change is expected.
+P2-T05 proves cadence-independent 60 Hz accumulation only. It does not clamp incoming frame gaps, cap catch-up work, expose interpolation alpha, pace frames, execute simulation callbacks, or satisfy D-030's 60-second integrated headless-loop exit gate. P2-T06 and P2-T07 remain separate tasks. No dependency or lockfile change is expected.
 
 ## P2-T06 bounded catch-up verification
 
@@ -133,7 +133,7 @@ Also rerun all current `engine-core` lifecycle/timing suites together:
 
 Catch-up XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepCatchUpPolicyTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
 
-P2-T06 proves bounded per-update recovery policy only. It does not expose interpolation alpha, pace frames, execute simulation callbacks, integrate a runtime loop, configure limits through P2-T08/P2-T09, or satisfy the ten-minute P2 exit gate by itself. No dependency or lockfile change is expected.
+P2-T06 proves bounded per-update recovery policy only. It does not expose interpolation alpha, pace frames, execute simulation callbacks, integrate a runtime loop, configure limits through P2-T08/P2-T09, or satisfy D-030's 60-second Phase 2 exit gate by itself. No dependency or lockfile change is expected.
 
 ## P2-T07 interpolation-alpha verification
 
@@ -155,7 +155,7 @@ Also rerun all current `engine-core` lifecycle/timing suites together:
 
 Interpolation XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepInterpolationTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; `jacoco-reports` remains unfiltered.
 
-P2-T07 proves only the simulation/render timing separation and normalized retained fraction. It does not implement a renderer, transform interpolation, callbacks, pacing, a runtime loop, configuration, or the ten-minute integrated Phase 2 exit gate. No dependency or lockfile change is expected.
+P2-T07 proves only the simulation/render timing separation and normalized retained fraction. It does not implement a renderer, transform interpolation, callbacks, pacing, a runtime loop, configuration, or D-030's 60-second integrated Phase 2 exit gate. No dependency or lockfile change is expected.
 
 ## P2-T08 typed configuration verification
 
@@ -177,7 +177,7 @@ Also rerun the current focused engine-core regression set together:
 
 Config XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigSchemaTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
 
-P2-T08 proves validation of one effective raw map only. It does not load or merge config sources, change source precedence, make tick rate configurable, perform runtime hot reload, or satisfy the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
+P2-T08 proves validation of one effective raw map only. It does not load or merge config sources, change source precedence, make tick rate configurable, perform runtime hot reload, or satisfy D-030's 60-second integrated Phase 2 gate. No dependency or lockfile change is expected.
 
 ## P2-T09 layered configuration verification
 
@@ -199,7 +199,7 @@ Also rerun the complete focused `engine-core` lifecycle/timing/config regression
 
 Loader XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigLoaderTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
 
-P2-T09 proves only the fixed four-level startup source precedence, bounded UTF-8 `key=value` parsing, source attribution, and validate-after-merge behavior. It does not add environment variables, raw argv parsing, OS path discovery, config persistence, Java `Properties` escaping/continuations, hot reload, mutable settings, configurable tick rate, subsystem startup orchestration, or the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
+P2-T09 proves only the fixed four-level startup source precedence, bounded UTF-8 `key=value` parsing, source attribution, and validate-after-merge behavior. It does not add environment variables, raw argv parsing, OS path discovery, config persistence, Java `Properties` escaping/continuations, hot reload, mutable settings, configurable tick rate, subsystem startup orchestration, or D-030's 60-second integrated Phase 2 gate. No dependency or lockfile change is expected.
 
 ## P2-T10 native-resource registry verification
 
@@ -221,7 +221,7 @@ Also rerun the complete focused `engine-core` lifecycle/timing/config/native-own
 
 Registry XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.NativeResourceRegistryTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
 
-P2-T10 proves Java bookkeeping and shutdown diagnostics only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free or restartable, does not add force-close-all behavior or thread-affinity dispatch, and does not satisfy P0-T13/P0-T14 or the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
+P2-T10 proves Java bookkeeping and shutdown diagnostics only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free or restartable, does not add force-close-all behavior or thread-affinity dispatch, and does not satisfy P0-T13/P0-T14 or D-030's 60-second integrated Phase 2 gate. No dependency or lockfile change is expected.
 
 ## P2-T11 allocation-metric verification
 
@@ -241,7 +241,7 @@ The focused run must create:
 
 The report records Java version, measurement source, `estimate=true`, warm-up/measured iteration counts, sample counts, sampled weight bytes, durations, estimated bytes/tick and bytes/frame, control observations, and explicit limitations. Numeric JFR results are machine/run dependent; tests do not assert an exact live sampled value. The allocating control must produce at least one usable positive-weight sample or the benchmark fails instead of fabricating zero evidence.
 
-This metric covers sampled Java heap allocation pressure only. It does not measure direct/native/GPU allocations, retained heap, GC pause cost, or exact object-by-object allocation. The render workload is synthetic/headless and is not OpenGL-renderer evidence. P2-T11 defines no allocation budget and does not satisfy P0-T13/P0-T14 or the ten-minute P2 phase gate.
+This metric covers sampled Java heap allocation pressure only. It does not measure direct/native/GPU allocations, retained heap, GC pause cost, or exact object-by-object allocation. The render workload is synthetic/headless and is not OpenGL-renderer evidence. P2-T11 defines no allocation budget and does not satisfy P0-T13/P0-T14 or D-030's 60-second P2 gate.
 
 CI runs `AllocationMetricBenchmarkTest` with the existing focused engine-core suite and uploads both its JUnit XML and `p2-t11-allocation-metric.txt` in the retained engine-core evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
 
@@ -289,7 +289,41 @@ Also rerun the complete current focused `engine-core` regression set together:
 
 Fatal-shutdown XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FatalTerminationTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; the child marker file remains temporary test evidence and is not a production or retained log format. `jacoco-reports` remains unfiltered.
 
-P2-T13 proves Java fatal-shutdown orchestration only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam native cleanup, long-duration stability, restartability, or the separate ten-minute Phase 2 integrated exit gate. P0-T09A/P0-T13/P0-T14 remain independent feasibility gates. No dependency or lockfile change is expected.
+P2-T13 proves Java fatal-shutdown orchestration only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam native cleanup, long-duration stability, restartability, or D-030's separate 60-second Phase 2 integrated exit gate. P0-T09A/P0-T13/P0-T14 remain independent feasibility gates. No dependency or lockfile change is expected.
+
+## P2 integrated exit-gate verification — Issue #135 / D-030
+
+Issue #135 changes only the Phase 2 integration duration from the original ten minutes to 60 continuous seconds. The gate still requires deterministic fixed 60 Hz simulation ticks, bounded catch-up, orderly lifecycle shutdown, and verified cleanup together. It is an integration-correctness gate, not native soak/restartability evidence.
+
+The long-running JUnit path is deliberately opt-in so ordinary aggregate tests and JaCoCo generation do not each add another minute. Run it explicitly on Windows or another supported Java 25 environment with:
+
+```powershell
+$env:SHERKO_P2_EXIT_GATE="true"
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.Phase2IntegratedGateTest" --rerun-tasks
+Remove-Item Env:SHERKO_P2_EXIT_GATE
+```
+
+Without `SHERKO_P2_EXIT_GATE=true`, the JUnit test is skipped by assumption and **does not count as exit-gate evidence**.
+
+The enabled test must:
+
+- observe at least 60 continuous seconds of runtime;
+- use the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy` in one loop;
+- execute simulation only as whole fixed 60 Hz steps returned by the production policy;
+- inject one real two-second stall after startup and observe at most the configured five exposed catch-up steps; the expected default result for that stall is exactly five exposed steps after the 250 ms clamp;
+- start a synthetic subsystem through `SubsystemStartup`, then stop and close it orderly;
+- release its tracked `NativeResourceRegistry` registration through owner cleanup exactly once;
+- require `NativeResourceRegistry.assertNoOpenResources()` to pass after cleanup.
+
+The enabled run must create:
+
+`engine-core/build/reports/phase2/p2-exit-60-second-gate.txt`
+
+Require the report to record `result=PASS`, configured/observed duration, fixed tick rate, executed tick count, loop update count, catch-up cap and observed maximum, injected stall observation, lifecycle trace, registry-empty result, exact `GITHUB_SHA` when run in CI, Java/OS environment, and the explicit limitation that this is Java headless integration evidence rather than native soak/stability evidence.
+
+CI enables this test exactly once in the focused `engine-core` evidence step and uploads both its JUnit XML and the report inside `engine-subsystem-tests`. The aggregate `test` and JaCoCo jobs do not enable it, preventing duplicate 60-second runs. Exact-head PR CI must pass on the current PR head, and after merge a separate exact merged-master push CI must pass with a retained report whose `engine.commit` matches that merge SHA before Phase 2 can be marked complete.
+
+P0-T13 remains the separate 15-minute combined-native sustained-stability gate and P0-T14 remains repeated native lifecycle/restartability evidence. A passing 60-second Java gate must not be represented as satisfying either one.
 
 ## Checkstyle boundary
 
@@ -416,7 +450,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T13 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, D-030 / Issue #135 defines the gate as one headless loop running deterministic fixed 60 Hz simulation ticks for at least 60 continuous seconds with bounded catch-up and verified cleanup. The gate evidence must show those properties together; isolated P2-T01 through P2-T13 suites do not satisfy it. The explicit command and retained report are defined in the P2 integrated exit-gate section above.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -447,7 +481,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, and `FatalTerminationTest` suites and their XML/HTML/allocation-report evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

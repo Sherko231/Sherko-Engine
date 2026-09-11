@@ -6,71 +6,73 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` | `1b37910e0e32dd6138920131adc6d9c829deb567` — post-P2-T12 handoff PR #133 merged |
+| Verified starting `master` | `10721da73553ee03afdce60e6eea1bb642a57880` — P2-T13 / PR #134 merged |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T12 |
-| Current executable work | P2-T13 / Issue #83 — orderly fatal termination |
-| Current branch | `p2-t13-fatal-termination` |
-| Phase 2 exit gate | Still separate and unproven: deterministic headless fixed-tick loop for ten minutes with bounded catch-up and verified cleanup |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13 |
+| Current executable work | P2-EXIT / Issue #135 — integrated Phase 2 gate |
+| Current branch | `p2-exit-60-second-gate` |
+| Phase 2 exit gate | 60 continuous seconds of integrated headless fixed 60 Hz ticks, bounded catch-up, orderly shutdown, and verified cleanup; not yet claimed complete in this checkpoint |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
 
-## P2-T12 completion and handoff evidence
+## P2-T13 completion evidence
 
-P2-T12 / Issue #82 is complete:
+P2-T13 / Issue #83 is complete:
 
-- PR #131 merged to `master` as `9bee2d23efca1f084058864c8db0f707a0ef0c45`.
-- Final exact-head PR workflow #193 / run `34605423530` passed all five required jobs on head `ad3d48cf8b22199be643c01130ad1625e3ce8caf`.
-- Merged-master workflow #194 / run `34606052497` passed all five required jobs on exact merge commit `9bee2d23efca1f084058864c8db0f707a0ef0c45`.
-- Merged-master `engine-subsystem-tests` artifact: ID `10266071766`, digest `sha256:e3d63cbc744be6362abfb6fe14986733b53c4748f3de4cc16243bbeec21df7cd`.
-- Merged-master `jacoco-reports` artifact: ID `10266536993`, digest `sha256:e1b4738f157293d6af0d532c04f3a9e53dbaea0cff04be76b09c76c990ae525a`.
-- D-028 is accepted: `EngineLogger` is the JDK-only synchronous structured logging boundary in `engine-core`.
+- PR #134 merged to `master` as `10721da73553ee03afdce60e6eea1bb642a57880`.
+- Final exact-head PR workflow #195 / run `34610085446` passed all five required jobs on head `10d30867d4ae024851c22201253a3782b08129e2`.
+- Merged-master workflow #196 / run `34610606050` passed all five required jobs on exact merge commit `10721da73553ee03afdce60e6eea1bb642a57880`.
+- Merged-master `engine-subsystem-tests` artifact: ID `10269040322`, digest `sha256:1a2ae917ec7cd203659b7f8c581895b2e98bcaa6e8a58ea7da6e472511946be1`.
+- Merged-master `jacoco-reports` artifact: ID `10268376050`, digest `sha256:2ddb014b391505eb5ec8df655997d80070c8e4586922b54688e97135de2659ee`.
+- D-029 is accepted: `FatalTermination` performs one-shot synchronous fatal logging, reverse stop/close cleanup, native-resource verification, best-effort cleanup diagnostics, log flush, and then exit status 1.
 - Independent review was not performed because no separate reviewer/agent identity was available; CI and author self-review were not represented as independent review.
 
-Documentation-only Issue #132 / PR #133 then reconciled the post-P2-T12 handoff and merged as `1b37910e0e32dd6138920131adc6d9c829deb567`. Its complete diff contained only `README.md` and this file, so the Markdown-only CI exemption applied and no automatic PR-head or merged-master build/test workflow was required.
+P2-T01 through P2-T13 are therefore all implemented and merged. Task completion alone does not establish Phase 2 completion.
 
-## P2-T13 executable contract
+## P2-EXIT / Issue #135 executable contract
 
-Issue #83 is activated and is the sole executable roadmap task for this branch.
+Issue #135 is the sole active Phase 2 executable task. The repository owner deliberately refined the original ten-minute Phase 2 integration duration to **60 continuous seconds**. D-030 records this duration change; all behavioral parts of the gate remain unchanged.
 
-P2-T13 adds one `engine-core` public type, `FatalTermination`, as bounded one-shot synchronous fatal-shutdown orchestration above the existing lifecycle/resource/logging contracts. A valid fatal call:
+The integrated gate must demonstrate together:
 
-1. emits one structured `FATAL` event;
-2. visits the successfully started subsystem initialization order in strict reverse order and attempts `stop()` then `close()` for each subsystem;
-3. calls `NativeResourceRegistry.assertNoOpenResources()` after owner cleanup;
-4. best-effort emits one structured `ERROR` event per captured pre-report failure;
-5. flushes `EngineLogger` once;
-6. invokes process termination with exit status `1` only after those attempts.
+1. the real `EngineClock` sampling elapsed monotonic time;
+2. the real `FixedStepAccumulator` executing whole fixed 60 Hz simulation ticks;
+3. the real `FixedStepCatchUpPolicy` bounding a deliberately injected long frame/stall;
+4. subsystem startup/lifecycle followed by orderly reverse shutdown;
+5. owner cleanup closing a registered `NativeResourceRegistry` resource;
+6. `NativeResourceRegistry.assertNoOpenResources()` succeeding after cleanup;
+7. at least 60 continuous seconds of observed runtime with retained evidence.
 
-Unchecked logging, stop, close, registry-verification, failure-reporting, and flush failures are contained so later cleanup and the final termination attempt still occur. The package-private terminator seam is test-only; the public constructor uses `System.exit(1)`. A child-JVM test is required to prove the real public process-exit path without terminating the JUnit runner.
+The implementation is test/evidence-only in `engine-core`; it does not add a new production API, dependency, module edge, force-close behavior, production thread, or Phase 3 feature. The long-running test is opt-in for ordinary Gradle test runs and is explicitly enabled once in the CI evidence step so routine aggregate/coverage runs do not duplicate the 60-second gate.
 
-P2-T13 does not add a new logging framework, persisted production log format, force-close registry behavior, shutdown hook, background thread, global fatal singleton, general lifecycle manager, dependency, module edge, native binding, or composition-root wiring.
+The retained report path is:
+
+`engine-core/build/reports/phase2/p2-exit-60-second-gate.txt`
+
+The report must record configured/observed duration, fixed tick rate, executed tick count, loop update count, catch-up cap/observed maximum, injected-stall observation, lifecycle trace, cleanup success, tested commit/environment, and an explicit statement that this is Java headless integration evidence rather than native soak/stability evidence.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` production contracts through P2-T12 remain intact; P2-T11 remains benchmark/test evidence only.
-- P2-T13 implementation is confined to the API/test/docs/workflow paths authorized by Issue #83.
-- D-018 stop-before-close, D-027 non-force-closing native-resource diagnostics, and D-028 synchronous logging remain unchanged.
-- P0-T09A/#42, P0-T13/#43, and P0-T14/#44 remain independent feasibility gates and are not strengthened by synthetic P2-T13 tests.
+- All listed P2 production contracts through P2-T13 are implemented; P2-T11 remains test-only allocation-observability evidence.
+- Issue #135 adds only integrated test/evidence, CI retention, and the documentation needed to define the 60-second gate.
+- P0-T09A/#42, P0-T13/#43, and P0-T14/#44 remain independent feasibility gates. In particular, P0-T13 still owns the 15-minute native sustained-stability run and P0-T14 still owns 100-cycle/native restartability evidence.
 
 ## Exact next action
 
-On `p2-t13-fatal-termination`:
+On `p2-exit-60-second-gate`:
 
-1. finish `FatalTermination`, `FatalTerminationTest`, and the child-JVM harness exactly to Issue #83;
-2. record D-029 in `docs/DECISIONS.md` and the fatal-shutdown boundary in `docs/ARCHITECTURE.md`;
-3. add the focused P2-T13 command/evidence expectations to `docs/BUILD_AND_VERIFY.md` and CI;
-4. audit the complete changed-file list against the nine authorized paths;
-5. self-review fatal ordering, reverse cleanup, failure aggregation, registry non-force-close behavior, log flush ordering, one-shot/reentrancy/concurrency, thread affinity, and child-process safety;
-6. seek independent review because P2-T13 adds a public API and durable architecture decision; if unavailable, record `not performed`, reason, and residual risk honestly;
-7. require passing exact-head PR CI on the final PR head SHA;
-8. merge only after exact-head CI passes, then require a separate passing push CI on the exact resulting `master` merge commit;
-9. record completion evidence and close #83 consistently;
-10. do not mark Phase 2 complete from P2-T13 alone — create/activate separate bounded integration evidence work for the existing ten-minute exit gate.
+1. finish the opt-in `Phase2IntegratedGateTest` and CI evidence retention exactly to Issue #135;
+2. reconcile the canonical Phase 2 exit-gate duration to 60 seconds in backlog/build/architecture/decision/orientation docs without changing the independent P0 gates;
+3. audit the complete changed-file set for unrelated scope;
+4. open one linked PR and require exact-head CI because Java/workflow files changed;
+5. inspect the retained `p2-exit-60-second-gate.txt` evidence and require the observed runtime to be at least 60 seconds, the stall to be bounded to at most five exposed steps, and registry cleanup to pass;
+6. merge only after exact-head CI passes, then require a separate passing push CI on the exact merged `master` commit;
+7. only after the merged-master gate evidence passes may Issue #135 be closed and Phase 2 be marked complete;
+8. then perform a bounded post-Phase-2 handoff/planning review before activating P3-T01.
 
 ## Phase 2 status
 
@@ -88,21 +90,22 @@ Completed and merged:
 - P2-T10 / #80 — explicit native-resource registry and shutdown leak diagnostics.
 - P2-T11 / #81 — sampled JFR allocation-observability benchmark/evidence.
 - P2-T12 / #82 — synchronous structured logging boundary.
-
-Active:
-
 - P2-T13 / #83 — orderly fatal termination.
 
-After P2-T13 implementation completion, no listed P2 implementation task remains, but the phase is still incomplete until the existing integrated exit gate passes.
+Active integration gate:
+
+- P2-EXIT / #135 — 60-second integrated headless gate.
+
+Phase 2 remains **incomplete** in this checkpoint until #135 passes on the exact merged-master commit and its evidence is recorded.
 
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
 | P0-T09A / #42 | Production Steam transport work in P10/P13 | Two-process connect/accept/callback/send/receive/message-release/close lifecycle through `ISteamNetworkingSockets`. |
-| P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
+| P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined native execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
-| P2 exit gate | Phase 2 completion | Integrated deterministic headless loop: fixed ticks for ten minutes, bounded catch-up, verified cleanup. |
+| P2-EXIT / #135 | Phase 2 completion | One integrated 60-second headless run proving fixed ticks, bounded catch-up, orderly shutdown, and empty native-resource registry after cleanup. |
 
 ## Live-state reconciliation
 
@@ -110,9 +113,9 @@ Before implementation or handoff, a fresh agent must:
 
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
-3. compare remote `master`, open PRs, Issue #83, and workflow state with this checkpoint;
-4. verify #83 remains the sole active executable roadmap task;
-5. audit all changed paths against #83;
-6. require exact-head PR CI and exact merged-master push CI because this task is non-Markdown;
-7. preserve the still-unproven ten-minute integrated exit gate and independent native feasibility gates;
+3. compare remote `master`, open PRs, Issue #135, and workflow state with this checkpoint;
+4. verify #135 remains the sole active Phase 2 executable task;
+5. require exact-head PR CI and exact merged-master push CI because this task is non-Markdown;
+6. inspect the retained Phase 2 gate report rather than inferring success from workflow configuration;
+7. preserve P0-T09A/P0-T13/P0-T14 as independent gates;
 8. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.

@@ -68,7 +68,7 @@ Goal: establish the contracts every subsystem will follow.
 - [ ] P2-T12 Add structured logging fields for frame, simulation tick, thread, subsystem, connection, and entity. Acceptance: a test log can be filtered by one connection ID.
 - [ ] P2-T13 Add fatal assertion behavior that writes logs and terminates only after orderly subsystem shutdown. Acceptance: assertion test closes all registered resources.
 
-Exit gate: a headless loop can run deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup.
+Exit gate (D-030 / Issue #135): a headless loop can run deterministic fixed 60 Hz simulation ticks for at least 60 continuous seconds with bounded catch-up and verified cleanup. This is an integration-correctness gate, not a replacement for P0-T13/P0-T14 sustained/repeated native evidence.
 
 ## Phase 3 - Platform and input
 

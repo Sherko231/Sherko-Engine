@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -329,10 +330,14 @@ class FatalTerminationTest {
                         "bin",
                         isWindows() ? "java.exe" : "java")
                 .toString();
+        String childClasspath = String.join(
+                File.pathSeparator,
+                codeSourcePath(FatalTerminationChildProcess.class),
+                codeSourcePath(FatalTermination.class));
         Process process = new ProcessBuilder(
                         javaExecutable,
                         "-cp",
-                        System.getProperty("java.class.path"),
+                        childClasspath,
                         FatalTerminationChildProcess.class.getName(),
                         marker.toString())
                 .redirectErrorStream(true)
@@ -348,6 +353,10 @@ class FatalTerminationTest {
         assertEquals(
                 List.of("fatal", "stop", "close", "resource-close", "flush"),
                 Files.readAllLines(marker));
+    }
+
+    private static String codeSourcePath(Class<?> type) throws Exception {
+        return Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
     }
 
     private static void verifyInitialFatalWriteFailure(Throwable failure) {

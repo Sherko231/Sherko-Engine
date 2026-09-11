@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
 class GlfwWindowNativeTest {
@@ -30,7 +31,7 @@ class GlfwWindowNativeTest {
     void createsRealOpenGl46WindowLogsActualIdentityAndCleansOwnership() throws Exception {
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
                 () -> "Set " + ENABLE_ENV + "=true to run the P3-T01 native acceptance");
-        assertTrue(System.getProperty("os.name").toLowerCase().contains("windows"),
+        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
                 "P3-T01 native acceptance targets Windows x64");
 
         List<EngineLogger.Event> events = new ArrayList<>();
@@ -57,8 +58,9 @@ class GlfwWindowNativeTest {
             actualVersion = glGetString(GL_VERSION);
             actualRenderer = glGetString(GL_RENDERER);
 
+            String observedVersion = actualMajor + "." + actualMinor;
             assertTrue(actualMajor > 4 || actualMajor == 4 && actualMinor >= 6,
-                    () -> "expected OpenGL >= 4.6 but observed " + actualMajor + "." + actualMinor);
+                    "expected OpenGL >= 4.6 but observed " + observedVersion);
             assertTrue(actualVersion != null && !actualVersion.isBlank());
             assertTrue(actualRenderer != null && !actualRenderer.isBlank());
             assertEquals(2, events.size());

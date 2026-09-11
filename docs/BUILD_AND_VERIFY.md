@@ -223,6 +223,28 @@ Registry XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api
 
 P2-T10 proves Java bookkeeping and shutdown diagnostics only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free or restartable, does not add force-close-all behavior or thread-affinity dispatch, and does not satisfy P0-T13/P0-T14 or the ten-minute integrated Phase 2 gate. No dependency or lockfile change is expected.
 
+## P2-T11 allocation-metric verification
+
+Issue #81 adds a test-only allocation-observability benchmark using Java 25 JFR `jdk.ObjectAllocationSample`. It adds no production API and no dependency.
+
+Run the focused acceptance benchmark:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --rerun-tasks
+```
+
+The benchmark warms each workload before recording, then measures a uniquely named dedicated platform thread in a separate JFR recording window. Only that thread's allocation samples are attributed to the channel. `weight` values are summed as sampled heap-allocation pressure and divided by measured iteration count for an estimated bytes-per-iteration value. Simulation-tick and synthetic/headless render-frame channels are recorded independently, and an allocating control plus a nonallocating arithmetic control exercise evidence availability and attribution.
+
+The focused run must create:
+
+`engine-core/build/reports/allocation/p2-t11-allocation-metric.txt`
+
+The report records Java version, measurement source, `estimate=true`, warm-up/measured iteration counts, sample counts, sampled weight bytes, durations, estimated bytes/tick and bytes/frame, control observations, and explicit limitations. Numeric JFR results are machine/run dependent; tests do not assert an exact live sampled value. The allocating control must produce at least one usable positive-weight sample or the benchmark fails instead of fabricating zero evidence.
+
+This metric covers sampled Java heap allocation pressure only. It does not measure direct/native/GPU allocations, retained heap, GC pause cost, or exact object-by-object allocation. The render workload is synthetic/headless and is not OpenGL-renderer evidence. P2-T11 defines no allocation budget and does not satisfy P0-T13/P0-T14 or the ten-minute P2 phase gate.
+
+CI runs `AllocationMetricBenchmarkTest` with the existing focused engine-core suite and uploads both its JUnit XML and `p2-t11-allocation-metric.txt` in the retained engine-core evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -348,7 +370,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T10 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T11 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -379,7 +401,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, and `NativeResourceRegistryTest` suites and their XML/HTML evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, and `AllocationMetricBenchmarkTest` suites and their XML/HTML/allocation-report evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

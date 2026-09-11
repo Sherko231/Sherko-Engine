@@ -79,21 +79,22 @@ class GlfwWindowNativeTest {
         } finally {
             if (!closed) {
                 if (started && !stopAttempted) {
-                    try {
-                        window.stop();
-                    } catch (RuntimeException | Error ignored) {
-                        // Continue to the terminal close attempt below.
-                    }
+                    attemptCleanup(window::stop);
                 }
-                try {
-                    window.close();
-                } catch (RuntimeException | Error ignored) {
-                    // The original test failure remains the useful acceptance diagnostic.
-                }
+                attemptCleanup(window::close);
             }
         }
 
         writeReport(actualMajor, actualMinor, actualVersion, actualRenderer);
+    }
+
+    private static boolean attemptCleanup(Runnable cleanup) {
+        try {
+            cleanup.run();
+            return true;
+        } catch (RuntimeException | Error cleanupFailure) {
+            return false;
+        }
     }
 
     private static void assertLog(EngineLogger.Event event, String message) {

@@ -1,4 +1,7 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-empty=annotationProcessor,compileClasspath,runtimeClasspath,testAnnotationProcessor,testCompileClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl-glfw:3.4.3=runtimeClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl-opengl:3.4.3=runtimeClasspath,testRuntimeClasspath
+org.lwjgl:lwjgl:3.4.3=runtimeClasspath,testRuntimeClasspath
+empty=annotationProcessor,compileClasspath,testAnnotationProcessor,testCompileClasspath

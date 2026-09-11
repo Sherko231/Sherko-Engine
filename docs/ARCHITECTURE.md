@@ -13,12 +13,12 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, explicit native-resource ownership diagnostics, the synchronous structured `EngineLogger` boundary, and one-shot orderly `FatalTermination` orchestration. P2-T11 adds test-only JFR allocation-observability evidence. Issue #135 adds test-only integrated Phase 2 exit-gate evidence across the existing contracts without adding a production runtime API. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2. `engine-platform-lwjgl` now begins concrete production implementation with the P3-T01 `GlfwWindow` lifecycle boundary over the already-selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. Other concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
 | `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13); P2-T11 and #135 add test/evidence paths only; other responsibilities planned | None |
-| `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
+| `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; later window/input responsibilities planned | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Skeleton | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
@@ -69,7 +69,7 @@ These package roots define boundaries, not future subsystem interfaces. P1-T10A 
 
 The client will compose platform/input, OpenGL rendering, runtime UI, audio, world/physics, game rules, and either IP or Steam networking. The server will compose world/physics, game rules, and networking without graphics/audio. Server authority owns gameplay state and dynamic physics; clients predict/present but do not submit authoritative transforms.
 
-P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally initialize no production subsystems because those implementations begin in later phases. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
+P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally do not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, while later bounded tasks/composition work decide when the client owns it. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
 
 ## Single-subsystem lifecycle — P2-T01 / Issue #64
 
@@ -227,6 +227,20 @@ After the duration completes, the harness stops and closes the subsystem, the ow
 
 The test is opt-in for ordinary Gradle test runs and is explicitly enabled once by the CI evidence step so routine aggregate/coverage tasks do not duplicate the 60-second delay. A passing gate proves Java headless integration correctness for the Phase 2 contracts only. It does not exercise actual GLFW/OpenGL/Jolt/OpenAL/Steam ownership, does not claim sustained native stability or restartability, and does not replace P0-T13 or P0-T14.
 
+## Production GLFW/OpenGL window lifecycle — P3-T01 / Issue #84
+
+`com.samo.engine.platform.api.GlfwWindow` is the first concrete production platform subsystem and the D-031 ownership boundary. Construction validates positive dimensions, a nonblank preserved title, an `EngineLogger`, and a caller-owned `NativeResourceRegistry` without making a native call. The public surface adds no raw GLFW handle, LWJGL capability type, event API, swap/poll API, size API, fullscreen API, or input API.
+
+`initialize()` captures the lifecycle/native-affinity thread, installs one task-owned GLFW error callback while retaining any previous callback for later restoration, initializes GLFW, resets hints, and requests an OpenGL 4.6 Core forward-compatible context in a hidden resizable window. The nonzero GLFW window handle is immediately registered in the caller-owned D-027 registry, and that registration owns `glfwDestroyWindow`. Partial initialization rolls back all state acquired by that attempt while preserving the original unchecked failure and suppressing cleanup failures in attempt order.
+
+`start()` requires the same owner thread, makes the context current, creates LWJGL capabilities, requires actual `OpenGL46` support, queries nonblank `GL_VERSION` and `GL_RENDERER`, emits exactly two D-028 INFO events with `subsystem=platform`, then shows the window. A start failure detaches the current context and clears the thread's LWJGL capabilities while retaining the window/GLFW ownership for D-018 close.
+
+`stop()` hides the window, detaches its current context, and clears thread-local capabilities, attempting all cleanup steps even when an earlier step fails. `close()` is D-018 terminal cleanup: it handles NEW, failed initialization/start, or STOPPED state, releases any remaining context state, closes the native-registry registration exactly once, terminates the owned GLFW session, restores the previous GLFW error callback without freeing it, and frees only the callback created by this instance. Native-bearing lifecycle hooks remain on the initialize thread; no dispatcher, worker, shutdown hook, global window manager, multi-window/shared-context contract, or restartability claim is introduced.
+
+The platform module now places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL libraries plus Windows natives on its production classpath. Its repository project dependency remains only `engine-core`; `engine-core` itself stays native-library free. Deterministic tests use a package-private backend seam to verify ordering/failure cleanup without a display, while an opt-in Windows x64 native test uses the public constructor, independently observes OpenGL >=4.6 and version/renderer strings, proves log equality, and verifies no current context plus an empty native-resource registry after close. This one lifecycle run is production integration evidence, not P0-T13 soak or P0-T14 repeated-lifecycle evidence.
+
+P3-T01 intentionally does not install the OpenGL debug callback (P5-T01), run a frame/render loop, swap buffers/poll events, expose framebuffer/logical sizes, change fullscreen mode, capture input, or implement the Phase 3 replay exit gate.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -238,9 +252,9 @@ Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` 
 - Steam initialization and FFM flat-API access;
 - combined native smoke/soak executables.
 
-The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible.
+The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible. P3-T01 separately places only the scope-approved LWJGL core/GLFW/OpenGL dependencies needed by the production platform adapter; this does not promote the spike executable or its debug/render-loop behavior.
 
-P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independent follow-up gates. Moving their supporting code does not satisfy those gates or strengthen prior feasibility claims.
+P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independent follow-up gates. Moving or reusing proven dependency choices does not satisfy those gates or strengthen prior feasibility claims.
 
 ## Architecture verification status
 
@@ -267,4 +281,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Synchronous structured logging boundary | Implemented by P2-T12 / Issue #82 with JUnit 6 tests |
 | One-shot orderly fatal termination | Implemented by P2-T13 / Issue #83 with JUnit 6 + child-JVM tests |
 | 60-second integrated Phase 2 headless gate | Completed under Issue #135 / D-030; retained exact-head PR and merged-`master` CI evidence passed |
-| Concrete production engine subsystems | Planned: later phases |
+| Production GLFW/OpenGL window lifecycle | P3-T01 / Issue #84: `GlfwWindow`, deterministic tests, and real Windows native acceptance |
+| Other concrete production engine subsystems | Planned: later phases |

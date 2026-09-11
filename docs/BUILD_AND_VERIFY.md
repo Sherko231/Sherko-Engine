@@ -325,6 +325,40 @@ CI enables this test exactly once in the focused `engine-core` evidence step and
 
 P0-T13 remains the separate 15-minute combined-native sustained-stability gate and P0-T14 remains repeated native lifecycle/restartability evidence. A passing 60-second Java gate must not be represented as satisfying either one.
 
+## P3-T01 production GLFW/OpenGL window verification
+
+Issue #84 adds `com.samo.engine.platform.api.GlfwWindow` as the first production `engine-platform-lwjgl` subsystem. The task uses the existing LWJGL 3.4.3 selection and D-018/D-027/D-028 contracts; it does not introduce another window library, renderer loop, input/event API, or OpenGL debug callback.
+
+Run the deterministic acceptance suite, which uses the package-private backend seam and no real display:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+```
+
+The suite uses handwritten traces/fixtures to verify constructor validation before native calls, the exact OpenGL 4.6 Core GLFW hint sequence, window registration/ownership, actual-version/renderer structured logging, initialize/start rollback, error-callback ownership/restoration, stop cleanup after failure, owner-thread affinity, and empty-registry cleanup. These tests are ownership/failure-policy evidence; they do not establish real GPU/context support.
+
+Run the real native acceptance only on the target Windows x64 / Java 25 environment:
+
+```powershell
+$env:SHERKO_P3_T01_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowNativeTest" --rerun-tasks
+Remove-Item Env:SHERKO_P3_T01_NATIVE
+```
+
+Without `SHERKO_P3_T01_NATIVE=true`, the native JUnit is skipped by assumption and does not count as P3-T01 acceptance evidence.
+
+The enabled native test uses the public production constructor. It creates the hidden-then-shown window/context, independently queries the current OpenGL major/minor plus `GL_VERSION` and `GL_RENDERER`, requires actual OpenGL >=4.6, requires the two captured D-028 INFO events to equal those independently observed strings with `subsystem=platform`, then stops/closes and requires no current context plus `NativeResourceRegistry.assertNoOpenResources()` success.
+
+The enabled run must create:
+
+`engine-platform-lwjgl/build/reports/p3/p3-t01-glfw-window.txt`
+
+Require stable fields for `result=PASS`, requested `4.6 Core`, actual major/minor/version/renderer, exact `GITHUB_SHA` in CI, Java/OS environment, lifecycle cleanup, registry emptiness, and the stated limitation that this is one production window/context lifecycle run rather than P0-T13 soak or P0-T14 repeated-lifecycle evidence.
+
+P3-T01 also changes dependency ownership: after adding the existing LWJGL core/GLFW/OpenGL libraries and Windows natives to `engine-platform-lwjgl`, regenerate locks with `resolveAndLockAllDependencies --write-locks`, inspect `engine-platform-lwjgl/gradle.lockfile`, then run `resolveAndLockAllDependencies` without write mode and require a clean lock diff. The selected LWJGL version and repository project-edge direction must remain unchanged.
+
+CI keeps the deterministic suite in ordinary aggregate `test` with the native test skipped. The existing Windows native job enables `GlfwWindowNativeTest` exactly once, after the historical GLFW/OpenAL smoke, and uploads its JUnit XML plus `p3-t01-glfw-window.txt` as artifact `p3-t01-glfw-window`. The final exact-head PR run and separate exact merged-master push run must both pass; inspect the retained report from each required authority before accepting native evidence.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -484,7 +518,7 @@ The five jobs cover:
 - root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.
+- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest` and its retained report when Issue #84 is in the repository state.
 
 A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
@@ -492,7 +526,7 @@ Because independent jobs may execute sequentially when fewer matching runners ar
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not, but the required CI workflow still runs only the bounded native lifecycle smoke defined above. Do not upgrade this into P0-T12/P0-T13/P0-T14 evidence unless the corresponding explicit feasibility Issue is executed and documented.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 deliberately uses the real production GLFW/OpenGL acceptance path there; its single-window result must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
 
 This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
@@ -538,4 +572,4 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions, so only ownership-related lock changes are expected.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized.

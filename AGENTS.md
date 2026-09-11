@@ -11,6 +11,7 @@ This is the mandatory starting point for any AI coding agent working in this rep
 5. The active GitHub Issue — the executable implementation contract.
 6. The relevant phase/task in `docs/roadmap/TECHNICAL_BACKLOG.md`.
 7. Relevant sections of `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/BUILD_AND_VERIFY.md`, and feasibility evidence.
+8. Relevant pages under `wiki/` when the task adds, removes, renames, behaviorally changes, or changes the intended consumption of a public engine API.
 
 Do not read the entire backlog as permission to implement future work. One active Issue defines one bounded change.
 
@@ -25,8 +26,9 @@ Use the highest applicable source when information conflicts:
 5. `docs/DEVELOPMENT_STATUS.md` for the repository-commit checkpoint and handoff summary.
 6. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
 7. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
+8. `wiki/` for human/AI consumer guidance and practical usage of already implemented public engine APIs.
 
-If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one.
+If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki never overrides scope, decisions, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the wiki instead.
 
 ## Freshness and repository state
 
@@ -45,6 +47,7 @@ Run this audit before implementation and again before handoff:
 - Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before a passing exact-head run unless the complete diff qualifies for the Markdown-only exemption below.
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
+- When public API or consumer-visible usage changed, compare `wiki/API_INDEX.md`, relevant usage/example pages, and `wiki/LIMITATIONS.md` with the actual production signatures and behavior. Remove stale examples and never document planned APIs as implemented.
 
 ## Work rules
 
@@ -58,6 +61,7 @@ Run this audit before implementation and again before handoff:
 - Do not convert feasibility spikes under the root `src/` tree into production architecture by accident.
 - Treat native resources as explicitly owned and closed; garbage collection is not native cleanup.
 - Do not use Java object serialization for disk or network protocols.
+- Keep `wiki/` synchronized with production consumer behavior: when a task adds/removes/renames a public engine API, changes a public signature, or changes lifecycle/ownership/threading/failure/configuration semantics visible to callers, update the relevant wiki pages in the same PR. If there is no wiki impact, record `Wiki impact: none — <reason>` rather than making meaningless wiki churn.
 
 ## Task contracts and test intent
 
@@ -73,9 +77,9 @@ Derive tests from the Issue's observable requirements. For each behavior or para
 
 ## Review evidence
 
-For public API or durable architecture changes, seek review from a person or a separate agent that did not author the change. The reviewer must inspect the Issue, applicable scope/decisions, actual diff, and tests, rather than relying only on the author's summary.
+For public API or durable architecture changes, seek review from a person or a separate agent that did not author the change. The reviewer must inspect the Issue, applicable scope/decisions, actual diff, tests, and the relevant wiki/API usage guidance when consumer behavior changed, rather than relying only on the author's summary.
 
-Use the PR review record to identify the reviewer/type, reviewed commit SHA, findings, their disposition, and remaining uncertainty. Review must question scope, unnecessary complexity, whether the contract itself is correct, and whether tests could pass despite a violated requirement. No findings is a valid result only with stated review coverage.
+Use the PR review record to identify the reviewer/type, reviewed commit SHA, findings, their disposition, and remaining uncertainty. Review must question scope, unnecessary complexity, whether the contract itself is correct, whether tests could pass despite a violated requirement, and whether wiki examples or limitations misrepresent the implemented public API. No findings is a valid result only with stated review coverage.
 
 The author's second pass is self-review, not independent review. If independent review is unavailable, record `not performed`, the reason, and the remaining risk; never invent approval or imply that CI/checklists substitute for review. Any explicit review gate in the active Issue or repository settings still applies. Reassess affected findings after substantive changes and record the final reviewed SHA.
 
@@ -120,7 +124,7 @@ For a qualifying Markdown-only pull request:
 - exact-head build/test CI is not required before merge;
 - merged-`master` build/test CI is not required after merge;
 - the absence of those workflow runs is expected and is not a skipped failure;
-- this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, or any explicit manual verification required by the Issue.
+- this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, wiki synchronization requirements, or any explicit manual verification required by the Issue.
 
 For every non-exempt pull request:
 
@@ -148,8 +152,9 @@ Manual `workflow_dispatch` remains available regardless of file type.
 | Milestone ordering/outcome change | `ROADMAP.md` |
 | Planned task definition or acceptance change | `docs/roadmap/TECHNICAL_BACKLOG.md`; update an existing executable Issue too |
 | Feasibility run/result change | matching file under `docs/feasibility/` plus status if the conclusion is durable |
+| Public engine API or consumer-visible API usage/lifecycle/ownership/configuration behavior change | relevant `wiki/` pages, including `wiki/API_INDEX.md` and `wiki/LIMITATIONS.md` when public surface/availability changes |
 
-Update only the rows that apply. Do not copy volatile live status into every document.
+Update only the rows that apply. Do not copy volatile live status into every document. The wiki is consumer guidance and must not become a competing status/architecture authority.
 
 ## Handoff checklist
 
@@ -159,7 +164,8 @@ Before yielding to another agent:
 2. Confirm the active Issue and pull request state.
 3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
 4. Update the required documents from the matrix.
-5. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
-6. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
-7. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
-8. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.
+5. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
+6. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
+7. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
+8. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
+9. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.

@@ -266,5 +266,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Sampled Java-heap allocation observability evidence | P2-T11 test/evidence path; no production API |
 | Synchronous structured logging boundary | Implemented by P2-T12 / Issue #82 with JUnit 6 tests |
 | One-shot orderly fatal termination | Implemented by P2-T13 / Issue #83 with JUnit 6 + child-JVM tests |
-| 60-second integrated Phase 2 headless gate | Test/evidence path under Issue #135; completion requires retained passing CI evidence |
+| 60-second integrated Phase 2 headless gate | Completed under Issue #135 / D-030; retained exact-head PR and merged-`master` CI evidence passed |
 | Concrete production engine subsystems | Planned: later phases |

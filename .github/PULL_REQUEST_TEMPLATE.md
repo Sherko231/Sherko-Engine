@@ -1,7 +1,8 @@
 ## Roadmap task
 
 **Task ID / maintenance Issue:** P?-T?? / #
-**Closes:** #
+**Issue link:** Refs #
+**Closure:** For a non-Markdown PR, keep `Refs #` and close the Issue manually only after exact merged-`master` push CI passes. A qualifying Markdown-only PR may use `Closes #` only after its complete-diff exemption and all other acceptance checks are confirmed.
 
 ## What changed
 

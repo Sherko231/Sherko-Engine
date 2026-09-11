@@ -10,7 +10,7 @@
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
 | Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, plus the Phase 2 exit gate |
 | Current executable work | None; post-Phase-2 handoff only |
-| Current maintenance branch | `maint-phase2-complete-phase3-handoff` |
+| Checkpoint source branch | `maint-phase2-complete-phase3-handoff` |
 | Next planned roadmap task | P3-T01 — GLFW window creation with explicit OpenGL version/profile hints; planning-only until separately refined/activated |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 

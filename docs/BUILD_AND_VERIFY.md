@@ -73,6 +73,26 @@ Startup XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.
 
 These tests use synthetic Java subsystems. They do not establish native restartability, native leak freedom, sustained stability, or the P2 ten-minute integrated headless exit gate. No dependency or lockfile change is expected.
 
+## P2-T04 EngineClock verification
+
+Issue #74 adds `EngineClock` as an elapsed-nanosecond sampler only. Run the full routine matrix above and the focused acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineClockTest" --rerun-tasks
+```
+
+The clock suite uses deterministic injected readings and handwritten expectations for first-sample zero, incremental positive deltas, equal readings, negative absolute source values, forward signed-`long` wraparound, regression rejection without baseline mutation, null source, source `RuntimeException`/`Error` identity with baseline preservation, one source read per sample attempt, and default-constructor baseline establishment. It does not sleep or infer expected values from production output.
+
+Also rerun the prior lifecycle/graph/startup suite to guard existing `engine-core` behavior:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --rerun-tasks
+```
+
+CI runs those four suites together after aggregate `test` so all focused XML files survive in one report directory. Clock XML is `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineClockTest.xml`; HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact name is retained for continuity and now includes lifecycle, graph, startup, and clock XML/HTML. `jacoco-reports` remains the unfiltered coverage artifact.
+
+These tests establish deterministic elapsed-time semantics only. They do not implement or prove the P2-T05 fixed-step accumulator, P2-T06 catch-up limits, P2-T07 interpolation, frame pacing, concurrency, native timing behavior, or the P2 ten-minute integrated headless-loop exit gate. No dependency or lockfile change is expected.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -196,7 +216,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; P2-T01/P2-T02/P2-T03 isolated suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; P2-T01/P2-T02/P2-T03/P2-T04 isolated suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -209,7 +229,7 @@ During a phase, add a small integration exercise within a task's authorized scop
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, and `SubsystemStartupTest` suites and their XML/HTML evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, and `EngineClockTest` suites and their XML/HTML evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

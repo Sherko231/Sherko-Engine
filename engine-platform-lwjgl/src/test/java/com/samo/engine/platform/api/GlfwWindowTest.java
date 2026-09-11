@@ -19,19 +19,22 @@ class GlfwWindowTest {
         FakeBackend backend = new FakeBackend();
         EngineLogger logger = new EngineLogger(event -> { });
         NativeResourceRegistry registry = new NativeResourceRegistry();
+        RecordingSizeListener listener = new RecordingSizeListener();
 
         assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(0, 720, "window", logger, registry, backend));
+                () -> new GlfwWindow(0, 720, "window", logger, registry, listener, backend));
         assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(1280, -1, "window", logger, registry, backend));
+                () -> new GlfwWindow(1280, -1, "window", logger, registry, listener, backend));
         assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, null, logger, registry, backend));
+                () -> new GlfwWindow(1280, 720, null, logger, registry, listener, backend));
         assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(1280, 720, "   ", logger, registry, backend));
+                () -> new GlfwWindow(1280, 720, "   ", logger, registry, listener, backend));
         assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", null, registry, backend));
+                () -> new GlfwWindow(1280, 720, "window", null, registry, listener, backend));
         assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", logger, null, backend));
+                () -> new GlfwWindow(1280, 720, "window", logger, null, listener, backend));
+        assertThrows(NullPointerException.class,
+                () -> new GlfwWindow(1280, 720, "window", logger, registry, null, backend));
         assertEquals(List.of(), backend.trace);
     }
 
@@ -94,7 +97,11 @@ class GlfwWindowTest {
                 "create:1280x720:  title  ",
                 "context:101",
                 "capabilities-create",
+                "size-callbacks-install:101",
+                "logical-query:101",
+                "framebuffer-query:101",
                 "show:101",
+                "size-callbacks-release:101",
                 "hide:101",
                 "context:0",
                 "capabilities-clear",
@@ -102,6 +109,196 @@ class GlfwWindowTest {
                 "glfw-terminate",
                 "callback-restore",
                 "callback-free"), backend.trace);
+    }
+
+    @Test
+    void initialLogicalAndFramebufferSizesStayIndependentUntilPoll() {
+        FakeBackend backend = new FakeBackend();
+        backend.logicalSize = new GlfwWindow.Dimensions(800, 600);
+        backend.framebufferSize = new GlfwWindow.Dimensions(1200, 900);
+        RecordingSizeListener listener = new RecordingSizeListener();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>(), listener);
+
+        window.initialize();
+        window.start();
+        assertEquals(List.of(), listener.events);
+
+        window.pollEvents();
+
+        assertEquals(List.of("logical:800x600", "framebuffer:1200x900"), listener.events);
+        assertEquals(1, backend.pollCount);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void nativeSizeCallbacksCoalesceIndependentlyAndAllowZeroFramebuffer() {
+        FakeBackend backend = new FakeBackend();
+        RecordingSizeListener listener = new RecordingSizeListener();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>(), listener);
+        window.initialize();
+        window.start();
+        window.pollEvents();
+        listener.events.clear();
+
+        backend.queueLogicalSize(810, 610);
+        backend.queueFramebufferSize(1620, 1220);
+        backend.queueLogicalSize(820, 620);
+        backend.queueFramebufferSize(0, 0);
+        window.pollEvents();
+
+        assertEquals(List.of("logical:820x620", "framebuffer:0x0"), listener.events);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void negativeNativeDimensionsFailBeforePublicReceiver() {
+        FakeBackend backend = new FakeBackend();
+        RecordingSizeListener listener = new RecordingSizeListener();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>(), listener);
+        window.initialize();
+        window.start();
+        window.pollEvents();
+        listener.events.clear();
+
+        backend.queueLogicalSize(-1, 600);
+        IllegalStateException failure = assertThrows(IllegalStateException.class, window::pollEvents);
+
+        assertTrue(failure.getMessage().contains("negative logical window dimensions"));
+        assertEquals(List.of(), listener.events);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void negativeInitialDimensionsFailStartAndReleaseCallbacks() {
+        FakeBackend backend = new FakeBackend();
+        backend.framebufferSize = new GlfwWindow.Dimensions(-1, 720);
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, window::start);
+
+        assertTrue(failure.getMessage().contains("negative framebuffer dimensions"));
+        assertTrue(backend.trace.contains("size-callbacks-release:101"));
+        assertTrue(backend.trace.contains("context:0"));
+        assertTrue(backend.trace.contains("capabilities-clear"));
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void pollEventsRequiresStartedOwnerThreadAndNeverPollsWhenIllegal() throws Exception {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+
+        assertThrows(IllegalStateException.class, window::pollEvents);
+        assertEquals(0, backend.pollCount);
+
+        window.initialize();
+        assertThrows(IllegalStateException.class, window::pollEvents);
+        window.start();
+
+        AtomicReference<Throwable> result = new AtomicReference<>();
+        Thread thread = Thread.ofPlatform().start(() -> {
+            try {
+                window.pollEvents();
+            } catch (Throwable failure) {
+                result.set(failure);
+            }
+        });
+        thread.join(5_000L);
+
+        assertTrue(result.get() instanceof IllegalStateException);
+        assertEquals(0, backend.pollCount);
+
+        window.pollEvents();
+        assertEquals(1, backend.pollCount);
+        window.stop();
+        assertThrows(IllegalStateException.class, window::pollEvents);
+        assertEquals(1, backend.pollCount);
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void receiverFailurePropagatesUnchangedAfterNativePoll() {
+        FakeBackend backend = new FakeBackend();
+        RuntimeException receiverFailure = new IllegalStateException("receiver failed");
+        WindowSizeListener listener = new WindowSizeListener() {
+            @Override
+            public void onLogicalWindowSizeChanged(int width, int height) {
+                throw receiverFailure;
+            }
+
+            @Override
+            public void onFramebufferSizeChanged(int width, int height) {
+                throw new AssertionError("framebuffer delivery must not run after logical failure");
+            }
+        };
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>(), listener);
+        window.initialize();
+        window.start();
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
+
+        assertSame(receiverFailure, actual);
+        assertEquals(1, backend.pollCount);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void sizeSetupFailureCleansContextAndLaterCloseDestroysOnce() {
+        FakeBackend backend = new FakeBackend();
+        RuntimeException sizeFailure = new IllegalStateException("size setup failed");
+        backend.sizeInstallFailure = sizeFailure;
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::start);
+
+        assertSame(sizeFailure, actual);
+        assertTrue(backend.trace.contains("context:0"));
+        assertTrue(backend.trace.contains("capabilities-clear"));
+        window.close();
+        registry.assertNoOpenResources();
+        assertEquals(1, backend.destroyCount);
+    }
+
+    @Test
+    void stopContinuesCleanupWhenSizeCallbackReleaseFails() {
+        FakeBackend backend = new FakeBackend();
+        RuntimeException releaseFailure = new IllegalStateException("callback release failed");
+        backend.sizeReleaseFailure = releaseFailure;
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::stop);
+
+        assertSame(releaseFailure, actual);
+        assertTrue(backend.trace.contains("hide:101"));
+        assertTrue(backend.trace.contains("context:0"));
+        assertTrue(backend.trace.contains("capabilities-clear"));
+
+        backend.sizeReleaseFailure = null;
+        window.close();
+        registry.assertNoOpenResources();
+        assertEquals(2, backend.sizeReleaseCount);
     }
 
     @Test
@@ -252,12 +449,21 @@ class GlfwWindowTest {
             FakeBackend backend,
             NativeResourceRegistry registry,
             List<EngineLogger.Event> events) {
+        return window(backend, registry, events, new RecordingSizeListener());
+    }
+
+    private static GlfwWindow window(
+            FakeBackend backend,
+            NativeResourceRegistry registry,
+            List<EngineLogger.Event> events,
+            WindowSizeListener listener) {
         return new GlfwWindow(
                 1280,
                 720,
                 "  title  ",
                 new EngineLogger(events::add),
                 registry,
+                listener,
                 backend);
     }
 
@@ -282,16 +488,46 @@ class GlfwWindowTest {
         throw (Error) failure;
     }
 
+    private static final class RecordingSizeListener implements WindowSizeListener {
+        private final List<String> events = new ArrayList<>();
+
+        @Override
+        public void onLogicalWindowSizeChanged(int width, int height) {
+            events.add("logical:" + width + "x" + height);
+        }
+
+        @Override
+        public void onFramebufferSizeChanged(int width, int height) {
+            events.add("framebuffer:" + width + "x" + height);
+        }
+    }
+
     private static final class FakeBackend implements GlfwWindow.Backend {
         private final List<String> trace = new ArrayList<>();
+        private final List<Runnable> queuedEvents = new ArrayList<>();
         private boolean initResult = true;
         private long windowHandle = 101L;
         private boolean openGl46 = true;
         private String version = "4.6 fixture";
         private String renderer = "fixture renderer";
+        private GlfwWindow.Dimensions logicalSize = new GlfwWindow.Dimensions(1280, 720);
+        private GlfwWindow.Dimensions framebufferSize = new GlfwWindow.Dimensions(1280, 720);
+        private RuntimeException sizeInstallFailure;
+        private RuntimeException sizeReleaseFailure;
         private RuntimeException hideFailure;
+        private GlfwWindow.SizeEventSink sizeEventSink;
+        private int pollCount;
+        private int sizeReleaseCount;
         private int destroyCount;
         private int terminateCount;
+
+        void queueLogicalSize(int width, int height) {
+            queuedEvents.add(() -> sizeEventSink.onLogicalSize(width, height));
+        }
+
+        void queueFramebufferSize(int width, int height) {
+            queuedEvents.add(() -> sizeEventSink.onFramebufferSize(width, height));
+        }
 
         @Override
         public GlfwWindow.CallbackState installErrorCallback() {
@@ -371,6 +607,47 @@ class GlfwWindowTest {
         @Override
         public String glRenderer() {
             return renderer;
+        }
+
+        @Override
+        public GlfwWindow.SizeCallbackState installSizeCallbacks(long handle, GlfwWindow.SizeEventSink sink) {
+            trace.add("size-callbacks-install:" + handle);
+            if (sizeInstallFailure != null) {
+                throw sizeInstallFailure;
+            }
+            sizeEventSink = sink;
+            return new GlfwWindow.SizeCallbackState(new Object(), new Object());
+        }
+
+        @Override
+        public void releaseSizeCallbacks(long handle, GlfwWindow.SizeCallbackState state) {
+            trace.add("size-callbacks-release:" + handle);
+            sizeReleaseCount++;
+            if (sizeReleaseFailure != null) {
+                throw sizeReleaseFailure;
+            }
+            sizeEventSink = null;
+        }
+
+        @Override
+        public GlfwWindow.Dimensions queryLogicalSize(long handle) {
+            trace.add("logical-query:" + handle);
+            return logicalSize;
+        }
+
+        @Override
+        public GlfwWindow.Dimensions queryFramebufferSize(long handle) {
+            trace.add("framebuffer-query:" + handle);
+            return framebufferSize;
+        }
+
+        @Override
+        public void pollEvents() {
+            trace.add("poll-events");
+            pollCount++;
+            List<Runnable> current = List.copyOf(queuedEvents);
+            queuedEvents.clear();
+            current.forEach(Runnable::run);
         }
 
         @Override

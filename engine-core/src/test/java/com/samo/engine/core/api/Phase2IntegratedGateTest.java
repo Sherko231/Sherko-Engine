@@ -73,14 +73,14 @@ class Phase2IntegratedGateTest {
                     totalTicks++;
                 }
             }
-        } catch (Throwable failure) {
+        } catch (RuntimeException | Error failure) {
             loopFailure = failure;
             throw failure;
         } finally {
             try {
                 shutdownReverse(initializationOrder);
                 registry.assertNoOpenResources();
-            } catch (Throwable cleanupFailure) {
+            } catch (RuntimeException | Error cleanupFailure) {
                 if (loopFailure != null && cleanupFailure != loopFailure) {
                     loopFailure.addSuppressed(cleanupFailure);
                 } else {
@@ -136,6 +136,7 @@ class Phase2IntegratedGateTest {
                 "observed.duration.seconds=" + String.format(
                         Locale.ROOT, "%.3f", evidence.wallDurationNanos() / 1_000_000_000.0),
                 "fixed.tick.rate.hz=" + FixedStepAccumulator.TICKS_PER_SECOND,
+                "fixed.tick.execution.integer.steps.only=true",
                 "executed.fixed.ticks=" + evidence.totalTicks(),
                 "loop.updates=" + evidence.loopUpdates(),
                 "catchup.max.steps.configured=" + FixedStepCatchUpPolicy.DEFAULT_MAX_STEPS_PER_UPDATE,

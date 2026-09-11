@@ -22,7 +22,7 @@ Goal: disprove the risky assumptions before building the engine around them.
 - [ ] P0-T08 Verify whether the selected Java Steam binding exposes the exact `ISteamNetworkingSockets` calls required for listen sockets, outbound connections, accepting connections, sending messages, receiving messages, and status callbacks. Acceptance: a written API coverage table links every required operation to a callable Java method.
 - [ ] P0-T09 If P0-T08 fails, implement a throwaway Java FFM proof that invokes one harmless Steam flat-API networking function. Acceptance: Java loads the official redistributable and receives a valid return value without authored C/C++ glue.
 - [ ] P0-T09A Extend the Java FFM proof through the complete risky `ISteamNetworkingSockets` lifecycle: create a listen socket, connect a second process/account, receive and accept the status callback, send and receive a message, release received message memory, close connection/listen handles, and shut down. Acceptance: two Windows processes exchange numbered payloads through the official API, observe expected callbacks, and finish with all owned native handles released. This task blocks production Steam transport claims but does not block independent Phase 1 foundation work.
-- [ ] P0-T10 If P0-T09 fails, change the product decision from listen server to reachable dedicated server before proceeding. Acceptance: `ENGINE_SCOPE.md` contains the replacement topology and expected server operating cost is recorded.
+- [ ] P0-T10 If P0-T08 fails, change the product decision from listen server to reachable dedicated server before proceeding. Acceptance: `ENGINE_SCOPE.md` contains the replacement topology and expected server operating cost is recorded.
 - [ ] P0-T11 Create a network impairment harness supporting configurable latency, jitter, packet loss, duplication, and reordering. Acceptance: the localhost spike observes each impairment independently.
 - [ ] P0-T12 Produce a single feasibility executable combining GLFW, OpenGL, Jolt JNI, OpenAL, and UDP. Acceptance: it starts, runs for 15 seconds, exchanges UDP traffic, simulates physics, exercises audio/rendering, and exits cleanly under Java Flight Recorder. Classification: integrated smoke test, not soak evidence.
 - [ ] P0-T13 Run the integrated native executable continuously for at least 15 minutes with periodic traffic and metrics. Acceptance: heap, direct memory, Jolt allocation balance, native handles, and UDP queue/echo counts show no monotonic growth and shutdown remains clean.
@@ -68,7 +68,7 @@ Goal: establish the contracts every subsystem will follow.
 - [ ] P2-T12 Add structured logging fields for frame, simulation tick, thread, subsystem, connection, and entity. Acceptance: a test log can be filtered by one connection ID.
 - [ ] P2-T13 Add fatal assertion behavior that writes logs and terminates only after orderly subsystem shutdown. Acceptance: assertion test closes all registered resources.
 
-Exit gate: a headless loop can run deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup.
+Exit gate (D-030 / Issue #135): a headless loop can run deterministic fixed 60 Hz simulation ticks for at least 60 continuous seconds with bounded catch-up and verified cleanup. This is an integration-correctness gate, not a replacement for P0-T13/P0-T14 sustained/repeated native evidence.
 
 ## Phase 3 - Platform and input
 

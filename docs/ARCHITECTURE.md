@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, explicit native-resource ownership diagnostics, the synchronous structured `EngineLogger` boundary, and one-shot orderly `FatalTermination` orchestration. P2-T11 adds test-only JFR allocation-observability evidence. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, explicit native-resource ownership diagnostics, the synchronous structured `EngineLogger` boundary, and one-shot orderly `FatalTermination` orchestration. P2-T11 adds test-only JFR allocation-observability evidence. Issue #135 adds test-only integrated Phase 2 exit-gate evidence across the existing contracts without adding a production runtime API. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13); P2-T11 adds test-only allocation evidence; other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13); P2-T11 and #135 add test/evidence paths only; other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -97,7 +97,7 @@ Each instance has one lifetime, with no restart promise. This does not establish
 
 A cycle anywhere, including a self-cycle or later disconnected component, fails with `IllegalStateException` before any order is returned. Its message contains the closed dependent-to-dependency path, excluding any incoming noncyclic tail, for example `Subsystem dependency cycle: A -> B -> C -> A`. The caller can print/log that diagnostic; no logging framework is introduced.
 
-The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not prove native safety or the ten-minute P2 phase gate.
+The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not by themselves satisfy D-030's 60-second integrated Phase 2 gate or prove native safety.
 
 ## Coordinated startup rollback — P2-T03 / Issue #73
 
@@ -107,7 +107,7 @@ Successful startup does not transfer ownership or register a normal shutdown cal
 
 If initialize/start fails, the exact `RuntimeException` or `Error` remains primary. The failing subsystem receives one `close()` attempt. Every previously started subsystem is then visited in reverse order and receives `stop()` followed by `close()`; close is still attempted when stop fails because D-018 transitions a failed stop to FAILED, which permits explicit close. Rollback failures are appended to the original failure with `addSuppressed` in cleanup-attempt order, except the same throwable instance is not self-suppressed. Cleanup continues after rollback failures.
 
-This is intentionally not a general lifecycle manager, dependency injection framework, restart mechanism, or native-lifecycle proof. It adds no state accessor and does not change `EngineSubsystem` or `SubsystemGraph`. Synthetic Java tests establish ordering and failure preservation only; P0-T14 and the ten-minute P2 phase exit remain separate evidence gates.
+This is intentionally not a general lifecycle manager, dependency injection framework, restart mechanism, or native-lifecycle proof. It adds no state accessor and does not change `EngineSubsystem` or `SubsystemGraph`. Synthetic Java tests establish ordering and failure preservation only; P0-T14 remains an independent native lifecycle gate, and D-030's 60-second integrated Phase 2 gate is separate evidence.
 
 ## Monotonic elapsed-time sampling — P2-T04 / Issue #74
 
@@ -117,7 +117,7 @@ Construction performs no source read. The first successful call establishes the 
 
 Ordinary two's-complement subtraction is deliberate: a forward interval smaller than `2^63` nanoseconds remains a positive difference even when the raw source crosses `Long.MAX_VALUE` to `Long.MIN_VALUE`. Source `RuntimeException` or `Error` propagates unchanged before any baseline update. The clock does not expose floating-point seconds and does not impose synchronization; the runtime loop externally serializes calls.
 
-`EngineClock` does not own the fixed-step accumulator, the locked 60 Hz target, frame-gap clamping, catch-up limits, render interpolation, sleeping/pacing, frame identity, wall-clock/calendar time, profiling, or subsystem lifecycle. Those remain separate Phase 2 tasks. P2-T04 tests prove only deterministic elapsed-time semantics; they do not satisfy the P2 ten-minute integrated fixed-tick exit gate.
+`EngineClock` does not own the fixed-step accumulator, the locked 60 Hz target, frame-gap clamping, catch-up limits, render interpolation, sleeping/pacing, frame identity, wall-clock/calendar time, profiling, or subsystem lifecycle. Those remain separate Phase 2 contracts. P2-T04 tests prove deterministic elapsed-time semantics only; D-030/#135 owns the 60-second integrated fixed-tick evidence.
 
 ## Fixed-step simulation accumulation — P2-T05 / Issue #75
 
@@ -139,7 +139,7 @@ Two kinds of recovery time are deliberately discarded: elapsed nanoseconds beyon
 
 The default 2-second-stall behavior is therefore bounded: 2,000,000,000 ns is clamped to 250 ms; the accumulator makes 15 ticks due at 60 Hz; the policy exposes exactly 5 and discards the other 10 whole ticks. A later ordinary frame starts without those 10 ticks queued.
 
-The policy owns no clock, simulation callback, tick numbering, cumulative simulation counter, pacing, lifecycle, synchronization, or interpolation. P2-T08/P2-T09 own configuration, and the deterministic ten-minute headless-loop phase exit remains separate evidence.
+The policy owns no clock, simulation callback, tick numbering, cumulative simulation counter, pacing, lifecycle, synchronization, or interpolation. P2-T08/P2-T09 own configuration. D-030/#135 integrates this policy with the real clock/accumulator/lifecycle path for the 60-second Phase 2 exit evidence.
 
 ## Render interpolation alpha — P2-T07 / Issue #77
 
@@ -181,7 +181,7 @@ A live identity is `(resourceType, handle)`. Duplicate live identities fail befo
 
 `assertNoOpenResources()` is a non-cleaning debug-shutdown verifier. Empty registries pass. Otherwise it throws `IllegalStateException` with the tracked count and deterministic registration-order entries containing normalized type, decimal handle, state, and allocation site. Verification never invokes a closer, removes an entry, or changes ownership state. Build-mode detection and composition-root integration are outside P2-T10; a later debug shutdown path decides when to call the verifier.
 
-The registry is not thread-safe. Registration, close, and verification remain externally serialized, preserving caller/native thread-affinity. Synthetic Java tests establish bookkeeping and diagnostics only; they are not evidence that GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free, sustained-stable, or restartable. P0-T13/P0-T14 and the P2 ten-minute integrated cleanup gate remain separate.
+The registry is not thread-safe. Registration, close, and verification remain externally serialized, preserving caller/native thread-affinity. Synthetic Java tests establish bookkeeping and diagnostics only; they are not evidence that GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free, sustained-stable, or restartable. P0-T13/P0-T14 remain separate native evidence gates; D-030/#135 owns the 60-second Java headless integration-cleanup gate.
 
 ## Allocation observability evidence — P2-T11 / Issue #81
 
@@ -215,7 +215,17 @@ Unchecked failures from the initial fatal log, stop/close hooks, registry verifi
 
 Each `FatalTermination` instance is one-shot. Reentrant, concurrent, and later calls are rejected before they can duplicate logging, cleanup, verification, flushing, or termination. The coordinator creates no worker, executor, JVM shutdown hook, global singleton, persisted log format, force-close API, module edge, or composition-root wiring.
 
-JUnit tests use handwritten traces/counters plus a real child JVM. The child uses the public constructor and proves exit status `1` occurs only after a synthetic subsystem stops, closes its registered resource, and flushes its sink. This is Java orchestration evidence only; it does not establish native GLFW/OpenGL/Jolt/OpenAL/Steam cleanup, sustained stability, restartability, or the separate ten-minute Phase 2 integration gate.
+JUnit tests use handwritten traces/counters plus a real child JVM. The child uses the public constructor and proves exit status `1` occurs only after a synthetic subsystem stops, closes its registered resource, and flushes its sink. This is Java orchestration evidence only; it does not establish native GLFW/OpenGL/Jolt/OpenAL/Steam cleanup, sustained stability, or restartability. D-030/#135 separately owns the 60-second integrated Phase 2 gate.
+
+## Phase 2 integrated exit evidence — Issue #135 / D-030
+
+`Phase2IntegratedGateTest` is a test-only integration harness in `engine-core`; it adds no production API, dependency, module edge, lifecycle manager, or force-close behavior. When explicitly enabled, it starts a synthetic `EngineSubsystem` through `SubsystemStartup`, registers one synthetic owned handle through `NativeResourceRegistry`, and then runs a headless loop with the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy`.
+
+The gate runs for at least 60 continuous seconds. Normal iterations sample monotonic elapsed time and execute only the whole simulation steps returned by the exact 60 Hz accumulator/policy combination. Once after startup it injects a real two-second delay; the following clock sample must expose no more than the default five catch-up steps, demonstrating the 250 ms input clamp and five-step cap through the integrated path rather than an isolated policy test.
+
+After the duration completes, the harness stops and closes the subsystem, the owner close releases the tracked registration exactly once, and `NativeResourceRegistry.assertNoOpenResources()` must pass. The retained report at `engine-core/build/reports/phase2/p2-exit-60-second-gate.txt` records observed duration, executed fixed ticks, loop update count, stall/catch-up observations, lifecycle trace, cleanup result, commit/environment, and evidence limits.
+
+The test is opt-in for ordinary Gradle test runs and is explicitly enabled once by the CI evidence step so routine aggregate/coverage tasks do not duplicate the 60-second delay. A passing gate proves Java headless integration correctness for the Phase 2 contracts only. It does not exercise actual GLFW/OpenGL/Jolt/OpenAL/Steam ownership, does not claim sustained native stability or restartability, and does not replace P0-T13 or P0-T14.
 
 ## Experimental code boundary
 
@@ -256,4 +266,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Sampled Java-heap allocation observability evidence | P2-T11 test/evidence path; no production API |
 | Synchronous structured logging boundary | Implemented by P2-T12 / Issue #82 with JUnit 6 tests |
 | One-shot orderly fatal termination | Implemented by P2-T13 / Issue #83 with JUnit 6 + child-JVM tests |
-| Concrete production engine subsystems | Planned: later Phase 2+ tasks |
+| 60-second integrated Phase 2 headless gate | Test/evidence path under Issue #135; completion requires retained passing CI evidence |
+| Concrete production engine subsystems | Planned: later phases |

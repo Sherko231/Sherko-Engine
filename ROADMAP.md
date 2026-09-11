@@ -54,21 +54,25 @@ Durable Phase 0 conclusions include:
 
 The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as a production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
 
-## Completed foundation — M1 / Phase 1
+## Completed foundation — M1 / Phases 1–2
 
-**Outcome:** later engine changes are isolated, testable, repeatable, and reversible through a disciplined multi-project build and quality gates.
+**Outcome so far:** the build/module foundation plus the shared lifecycle, timing, configuration, ownership, allocation-observability, logging, and fatal-shutdown contracts are implemented and verified.
 
 Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
 
+Phase 2 is also complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
+
 The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 
-## Current focus — M1 / Phase 2
+## Current focus — M1 / Phase 3
 
-**Goal:** establish the lifecycle, timing, configuration, cleanup, allocation-observability, logging, and fatal-shutdown contracts that every production subsystem will follow.
+**Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-Materialize only the next bounded task as an executable Issue. The lifecycle foundation is `P2-T01`, defining `EngineSubsystem` with explicit `initialize`, `start`, `stop`, and `close` phases and unit-tested lifecycle order. Consult [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) and live GitHub state for completed work and the exact next action. Do not treat the remaining Phase 2 catalog as permission to implement it in bulk.
+The post-Phase-2 planning review found no scope or dependency conflict with the existing Phase 3 plan. `engine-platform-lwjgl` already exists as the intended platform adapter skeleton, and the completed Phase 2 contracts provide the lifecycle/timing/resource primitives Phase 3 will build on. P3-T01 remains the first planned bounded task: implement `GlfwWindow` creation with explicit OpenGL version/profile hints and verify the actual GL version and renderer string are logged.
 
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-2---core-lifecycle-time-configuration-and-native-ownership).
+P3-T01 is planning-only until a separate executable Issue refines and activates its exact API, ownership, failure, thread-affinity, and verification contract. Do not materialize or implement later Phase 3 tasks in bulk. Consult [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) and live GitHub state for the exact next action.
+
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 
 ## Milestone exit outcomes
 

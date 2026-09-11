@@ -42,7 +42,7 @@ Run this audit before implementation and again before handoff:
 
 - Verify every documented dependency or tool major version against the version catalog, relevant Gradle build files, and committed dependency lockfiles. When they disagree, stop and reconcile the active Issue before editing.
 - Treat `README.md` as repository orientation, not an independent status authority. If it names the current phase, completed milestone, module count, or next task, reconcile it with `docs/DEVELOPMENT_STATUS.md`, the roadmap, and live GitHub state.
-- Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before a passing exact-head run.
+- Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before a passing exact-head run unless the complete diff qualifies for the Markdown-only exemption below.
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
 
@@ -51,7 +51,7 @@ Run this audit before implementation and again before handoff:
 - Use Java 25 for authored engine/game runtime source. Gradle Kotlin DSL is allowed only for build configuration.
 - Implement exactly one executable Issue on one dedicated branch.
 - Never commit agent-generated work directly to `master`.
-- Open a pull request linked to the Issue and merge only after required verification and CI pass.
+- Open a pull request linked to the Issue and merge only after required verification and CI pass, except that a qualifying Markdown-only change does not require the build/test CI described below.
 - Keep lower engine modules independent of game-specific modules.
 - Do not pull deferred features into v1 unless `ENGINE_SCOPE.md` is deliberately changed.
 - Do not convert feasibility spikes under the root `src/` tree into production architecture by accident.
@@ -106,11 +106,22 @@ Use `docs/BUILD_AND_VERIFY.md` to choose the required commands. A handoff must s
 - skipped checks and the reason;
 - artifact/evidence path for native, performance, or protocol work.
 
-Never claim a check passed because configuration appears correct. Record actual execution or say it was not run.
+Never claim a check passed because configuration appears correct. Record actual execution or say it was not run. For a qualifying Markdown-only change, explicitly record the complete-diff audit and that build/test CI was not required by policy; do not describe the absence of a run as a pass.
 
 ## CI run authority and obsolete-run handling
 
 Before interpreting pull-request CI, determine the pull request's current head SHA and compare each workflow run against it.
+
+A pull request qualifies for the **Markdown-only CI exemption** only when its complete changed-file set is non-empty and every changed path ends in `.md`. The agent must inspect the complete PR diff/file list before relying on this exemption. If any changed path has any other extension or file type — including `.java`, `.gradle.kts`, `.yml`, `.yaml`, `.properties`, lockfiles, configuration, scripts, resources, or binaries — the exemption does not apply and the normal CI rules below apply in full. If a later commit adds any non-Markdown path, the PR immediately becomes non-exempt and exact-head CI is required.
+
+For a qualifying Markdown-only pull request:
+
+- exact-head build/test CI is not required before merge;
+- merged-`master` build/test CI is not required after merge;
+- the absence of those workflow runs is expected and is not a skipped failure;
+- this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, or any explicit manual verification required by the Issue.
+
+For every non-exempt pull request:
 
 - A pull-request workflow run whose head SHA is older than the current PR head is obsolete verification evidence for that PR.
 - Obsolete queued or in-progress PR runs may be cancelled when the available tooling and permissions support cancellation. Cancelling stale work is an efficiency measure, not a verification result.
@@ -120,6 +131,8 @@ Before interpreting pull-request CI, determine the pull request's current head S
 - After merge, the push workflow on the resulting `master` merge commit is separate required evidence. Do not cancel or ignore it as though it were an obsolete PR run.
 - If cancellation tooling is unavailable, leave obsolete runs alone and state that they remain stale; never claim that they were cancelled.
 - Repository workflow concurrency may cancel superseded runs automatically. Still inspect the exact current PR head and the final `master` merge commit before recording verification.
+
+Manual `workflow_dispatch` remains available regardless of file type.
 
 ## Documentation update matrix
 
@@ -143,7 +156,7 @@ Before yielding to another agent:
 
 1. Confirm `git status`, branch, and HEAD.
 2. Confirm the active Issue and pull request state.
-3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`.
+3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
 4. Update the required documents from the matrix.
 5. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
 6. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.

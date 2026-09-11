@@ -213,7 +213,9 @@ Also confirm no Java source remains under root `src/`, and no production Gradle 
 
 ## General change verification
 
-For a general documentation/build-boundary pull request, the minimum clean verification is:
+First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.
+
+If any non-Markdown path is present, the exemption does not apply. For a general documentation/build-boundary pull request that contains any non-Markdown file, the minimum clean verification is:
 
 ```powershell
 .\gradlew.bat projects
@@ -244,11 +246,17 @@ During a phase, add a small integration exercise within a task's authorized scop
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five workflow jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging before a passing exact-head run.
+`.github/workflows/java25.yml` runs automatically on pull requests targeting `master` and pushes to `master` only when the event includes at least one non-Markdown changed path. Markdown-only changes are excluded with `paths-ignore` for `*.md` and `**/*.md`. `workflow_dispatch` remains available regardless of file type. All five workflow jobs select `[self-hosted, Windows, X64]`.
 
-The workflow uses a top-level concurrency group keyed by workflow name plus PR number for pull requests, or by Git ref for push/manual runs, with `cancel-in-progress: true`. A newer commit on the same PR therefore supersedes older queued/in-progress runs for that PR without grouping it together with other PRs. A push to `master` uses the `master` ref group and is independent from PR groups.
+A pull request is Markdown-only only when the complete PR changed-file set is non-empty and every path ends in `.md`. Audit the complete file list before applying the exemption. If any non-Markdown path is present, or a later commit adds one, the normal full CI contract applies immediately. The exemption changes only build/runtime execution requirements; it does not waive Issue scope, truth hierarchy, review/architecture rules, documentation consistency, branch/PR discipline, or explicit manual verification from the active Issue.
 
-Before interpreting CI evidence:
+For qualifying Markdown-only pull requests, no automatic exact-head PR workflow is expected and no merged-`master` workflow is required for the Markdown-only merge. Record the complete-diff audit and policy exemption instead. Do not classify the absence of those runs as success, failure, or a skipped check.
+
+For every non-exempt change, the repository runner must be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging a non-exempt change before a passing exact-head run.
+
+The workflow uses a top-level concurrency group keyed by workflow name plus PR number for pull requests, or by Git ref for push/manual runs, with `cancel-in-progress: true`. A newer commit on the same PR therefore supersedes older queued/in-progress runs for that PR without grouping it together with other PRs. A non-exempt push to `master` uses the `master` ref group and is independent from PR groups.
+
+Before interpreting CI evidence for a non-exempt change:
 
 1. Read the current PR head SHA.
 2. Match the candidate workflow run to that exact SHA. Runs for older PR-head SHAs are obsolete evidence.
@@ -298,7 +306,7 @@ Read the matching document under `docs/feasibility/` before interpreting a resul
 
 ## Evidence record
 
-For every pull request, list each executed command and result. For native/performance/protocol work also record:
+For every pull request, list each executed command and result, or for a qualifying Markdown-only change record the complete changed-file audit and that build/test CI was not required by policy. For native/performance/protocol work also record:
 
 - OS, JDK, relevant GPU/driver/native-library versions;
 - configured duration, iteration count, or impairment parameters;
@@ -307,7 +315,7 @@ For every pull request, list each executed command and result. For native/perfor
 - cleanup/leak observations;
 - checks skipped because the environment could not support them.
 
-Configuration review is not runtime evidence. If a command was not run, write `not run` and why.
+Configuration review is not runtime evidence. If a command was not run, write `not run` and why; a Markdown-only policy exemption is a reason, not a passing execution result.
 
 ## Dependency changes
 

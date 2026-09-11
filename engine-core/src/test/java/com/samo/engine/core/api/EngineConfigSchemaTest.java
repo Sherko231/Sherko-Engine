@@ -174,7 +174,12 @@ class EngineConfigSchemaTest {
         raw.put("fullscreen.width", entry("0", "game.properties:4"));
         raw.put("simulation.tickRate", entry("120", "game.properties:8"));
 
-        assertThrows(ConfigValidationException.class, () -> schema.validate(raw));
+        assertThrows(
+                ConfigValidationException.class,
+                () -> {
+                    schema.validate(raw);
+                    subsystem.initialize();
+                });
 
         assertEquals(0, subsystem.initializeCalls);
     }

@@ -8,11 +8,10 @@
 | --- | --- |
 | Verified starting `master` | `4a757207aa1c3eca5286e0b4a6dbafddea349e05` — engine API wiki/synchronization task merged through PR #145 after P3-T01 |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, Phase 2 exit gate, and P3-T01 |
-| Current executable work | P3-T02 / Issue #85 — separate framebuffer and logical window sizing |
-| Current task branch | `p3-t02-window-sizing` |
-| Current pull request | PR #146 — draft until final exact-head verification/review is complete |
-| Next planned roadmap task | P3-T03 / Issue #86 — planning-only until P3-T02 is merged/verified and separately activated |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, Phase 2 exit gate, and P3-T01; P3-T02 implementation is present in this checkpoint but formal task closure remains live-state gated |
+| P3-T02 implementation vehicle | Issue #85 / branch `p3-t02-window-sizing` / PR #146; branch/PR wording becomes historical after merge |
+| Formal P3-T02 completion authority | Exact final PR-head CI, PR merge, exact merged-`master` push CI, then Issue #85 closure; inspect live GitHub state |
+| Next planned roadmap task | P3-T03 / Issue #86 — planning-only until live GitHub confirms P3-T02 is formally complete and #86 is freshly refined/activated |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
@@ -37,15 +36,16 @@ P3-T01 / Issue #84 is complete.
 - Retained report recorded `result=PASS`, requested OpenGL `4.6 Core`, actual OpenGL `4.6`, `GL_VERSION=4.6.0 NVIDIA 592.02`, renderer `NVIDIA GeForce RTX 5090 Laptop GPU/PCIe/SSE2`, Java 25.0.4.1 on Windows 11 amd64, lifecycle cleanup PASS, and an empty native-resource registry after cleanup.
 - The retained merged-master report records `engine.commit=a781c34a7959e207b29058803a2fb74a9cf0d662`, matching the exact merge commit.
 - D-031 records the production `GlfwWindow` ownership/thread-affinity boundary.
+- The final diff contained exactly the 14 paths authorized by Issue #84 plus its dependency-lock amendment; no later Phase 3/P5 implementation was included.
 - Independent review was not performed because no separate reviewer/person/agent identity was available. CI and self-review are not treated as substitutes; residual risk is the absence of a second independent inspection of the public `GlfwWindow` API and native cleanup boundary.
 
 P3-T01 added the first concrete production platform subsystem in `engine-platform-lwjgl`. It requests explicit OpenGL 4.6 Core GLFW hints, verifies actual OpenGL 4.6 support, logs actual version/renderer through D-028, tracks the window through the caller-owned D-027 registry, and keeps native-bearing lifecycle hooks on the initializing thread.
 
-## P3-T02 active implementation — logical versus framebuffer sizing
+## P3-T02 implementation checkpoint — logical versus framebuffer sizing
 
-Issue #85 was freshly audited against current `master`, the implemented P3-T01 `GlfwWindow`, D-031, the Phase 3 backlog, module boundaries, and the API wiki, then refined into an executable contract before implementation began.
+Issue #85 was freshly audited against verified starting `master`, the implemented P3-T01 `GlfwWindow`, D-031, the Phase 3 backlog, module boundaries, and the API wiki, then refined into an executable contract before implementation began.
 
-The active implementation on `p3-t02-window-sizing` / PR #146:
+PR #146 implements only the bounded P3-T02 contract:
 
 - keeps the existing five-argument `GlfwWindow` constructor source-compatible;
 - adds renderer-neutral `WindowSizeListener` callbacks for logical window dimensions and framebuffer pixel dimensions;
@@ -53,12 +53,15 @@ The active implementation on `p3-t02-window-sizing` / PR #146:
 - stages native GLFW size callbacks and delivers consumer callbacks only after polling returns, avoiding direct consumer execution inside native callbacks;
 - queries initial logical and framebuffer sizes independently rather than deriving one from the other;
 - permits zero framebuffer axes as valid minimized-window state and rejects negative platform dimensions before public delivery;
-- owns and releases the per-window size callbacks within the existing D-031 lifecycle boundary;
+- owns the per-window size callback lifecycle inside D-031, with callback release treated as a terminal cleanup attempt to avoid unsafe double-free retries after partial native cleanup failure;
 - adds deterministic tests with intentionally different logical/pixel pairs plus a real Windows native acceptance test and retained P3-T02 report;
 - adds D-032 for the durable public event/threading contract;
-- updates the public API wiki in the same PR.
+- updates the public API wiki in the same PR;
+- adds no dependency, lockfile, module edge, renderer, fullscreen, focus/input, raw-handle, content-scale callback API, or later Phase 3 implementation.
 
-This checkpoint does **not** claim P3-T02 complete yet. Completion still requires the final exact PR head to pass all applicable CI jobs, final diff/review provenance to be recorded, merge to `master`, and the separate merged-master push CI to pass. Until then P3-T03 / #86 remains planning-only.
+A pre-handoff validation run, workflow #230 / run `34634744872`, passed all five required jobs on implementation head `b6e136b7327f3958db9ca3b52f080b14eab5cdcc`, including the real Windows P3-T02 native sizing acceptance and artifact upload. Because handoff/documentation reconciliation followed that validation, workflow #230 is supporting implementation evidence rather than authority for any later final PR head. Final acceptance always follows the live exact-head/merged-master rules below.
+
+This commit-contained checkpoint intentionally does not predict whether PR #146 has already merged by the time it is read. Formal P3-T02 completion is a live workflow fact: require a successful workflow on the exact final PR head, merge PR #146, require the separate push workflow on the exact resulting `master` commit, then close Issue #85 as completed. Until all of those live steps have happened, P3-T03 / #86 remains planning-only.
 
 ## Engine API wiki
 
@@ -68,20 +71,18 @@ P3-T02 changes public API and caller-visible threading/event behavior, so PR #14
 
 ## Phase 3 status
 
-Phase 3 is in progress. P3-T01 is complete and P3-T02 / Issue #85 is the one current executable roadmap task.
+Phase 3 is in progress. P3-T01 is complete. The P3-T02 implementation is contained in this checkpoint; its formal open/merged/completed workflow state must be read from live PR #146 / Issue #85 rather than inferred from this Markdown file.
 
-P3-T03 / Issue #86 and later Phase 3 tasks remain planning-only. P3-T02 does not implement fullscreen, focus/input, raw mouse, input snapshots/actions/commands, a renderer loop, buffer swapping, or the Phase 3 exit gate.
+P3-T03 / Issue #86 and later Phase 3 tasks remain planning-only until live GitHub confirms P3-T02's exact merged-master verification and Issue #85 closure. P3-T02 does not implement fullscreen, focus/input, raw mouse, input snapshots/actions/commands, a renderer loop, buffer swapping, or the Phase 3 exit gate.
 
 ## Exact next action
 
-1. Continue only P3-T02 / Issue #85 on `p3-t02-window-sizing`.
-2. Reconcile the implementation, deterministic tests, real Windows native acceptance, D-032, architecture/build docs, and wiki against the active Issue.
-3. Run/inspect all applicable routine and focused verification on the exact final PR head; queued/cancelled/obsolete runs are not acceptance evidence.
-4. Perform the final complete diff and scope audit against `4a757207aa1c3eca5286e0b4a6dbafddea349e05`.
-5. Record independent-review provenance honestly; if unavailable, record `not performed` and the residual risk rather than treating CI/self-review as independent review.
-6. Mark PR #146 ready only after its exact head is complete and coherent; merge only after its required exact-head CI passes.
-7. After merge, verify remote `master` and require the separate merged-master push workflow to pass before closing Issue #85.
-8. Only then freshly audit/refine/activate P3-T03 / #86.
+1. Read `AGENTS.md` fully and inspect live `master`, PR #146, Issue #85, and workflow state.
+2. If PR #146 is still open, continue only P3-T02: require the exact final PR-head workflow to pass, complete the final diff/review audit, and merge only then.
+3. If PR #146 is merged but Issue #85 is still open, verify remote `master` equals the merge result and require the separate push workflow on that exact merged commit to pass before closing #85.
+4. Record independent-review provenance honestly; if no separate reviewer was available, record `not performed`, the reason, and residual risk instead of treating CI/self-review as independent review.
+5. Preserve P0-T09A/P0-T13/P0-T14 as independent gates; P3-T02 does not satisfy them.
+6. Only after live GitHub confirms #85 is completed, freshly audit/refine/activate P3-T03 / #86. Do not infer activation from task numbering.
 
 ## Open gates and blockers
 
@@ -99,9 +100,9 @@ Before implementation or handoff, a fresh agent must:
 
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
-3. compare remote `master`, open PRs, open Issues, and workflow state with this checkpoint;
-4. treat Issue #85 and PR #146 as the current executable work only while live GitHub state agrees;
-5. preserve P0-T09A/P0-T13/P0-T14 as independent gates;
-6. reconcile relevant `wiki/` pages against the production API whenever a task changes consumer-visible behavior;
-7. keep P3-T03 / #86 planning-only until P3-T02 has merged and passed merged-master CI;
-8. stop if code, docs, wiki, live GitHub state, or the active Issue conflict instead of guessing.
+3. compare remote `master`, PR #146, Issue #85, other open Issues/PRs, and workflow state with this checkpoint;
+4. treat this file's P3-T02 branch/PR references as implementation provenance, not proof that the task is still open;
+5. keep P3-T03 / #86 planning-only unless live GitHub explicitly shows P3-T02 is formally complete and #86 was separately refined/activated;
+6. preserve P0-T09A/P0-T13/P0-T14 as independent gates;
+7. reconcile relevant `wiki/` pages against the production API whenever a task changes consumer-visible behavior;
+8. stop if code, docs, wiki, live GitHub state, or an active Issue conflict instead of guessing.

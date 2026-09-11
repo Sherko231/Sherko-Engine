@@ -133,3 +133,7 @@ server composition -> world / physics / network APIs and adapters
 ## Scope-change rule
 
 A new feature may enter v1 only when it is required to pass an existing roadmap milestone exit outcome. Otherwise it remains deferred until a real game demonstrates the need.
+
+## Wiki synchronization
+
+This scope document remains higher authority than the consumer wiki. When an approved scope/technology change also changes a public engine API or how consumers are expected to use the engine, update the relevant [`wiki/`](wiki/README.md) pages in the same task. If there is no consumer/API impact, record `Wiki impact: none — <reason>` instead of editing the wiki unnecessarily.

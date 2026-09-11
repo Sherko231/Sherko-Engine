@@ -245,6 +245,28 @@ This metric covers sampled Java heap allocation pressure only. It does not measu
 
 CI runs `AllocationMetricBenchmarkTest` with the existing focused engine-core suite and uploads both its JUnit XML and `p2-t11-allocation-metric.txt` in the retained engine-core evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
 
+## P2-T12 structured logging verification
+
+Issue #82 adds the JDK-only synchronous `EngineLogger` structured logging boundary in `engine-core` and no external logging dependency or persisted format.
+
+Run the focused acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineLoggerTest" --rerun-tasks
+```
+
+The suite uses handwritten capturing, failing, and blocking sinks. It verifies all required context fields, caller-thread ID/name capture, nullable missing fields, string normalization, negative frame/tick rejection, connection-field filtering independent of message text, forwarding of every severity, invalid-input rejection before sink invocation, exact sink `RuntimeException`/`Error` propagation, explicit flush delegation, and serialized sink callbacks across concurrent caller threads while preserving each event's original caller identity.
+
+Also rerun the complete current focused `engine-core` regression set together:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --rerun-tasks
+```
+
+Logger XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineLoggerTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; `jacoco-reports` remains unfiltered. P2-T12 does not create a file/console log artifact because it defines no persisted log format.
+
+P2-T12 proves the typed in-memory event/sink contract only. It does not establish threshold routing, persistence, rotation, asynchronous logging, a global singleton, concrete runtime call sites, or fatal process termination. P2-T13 owns orderly fatal assertion/shutdown behavior. No dependency or lockfile change is expected.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -370,7 +392,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T11 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T12 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -401,7 +423,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, and `AllocationMetricBenchmarkTest` suites and their XML/HTML/allocation-report evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, and `EngineLoggerTest` suites and their XML/HTML/allocation-report evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

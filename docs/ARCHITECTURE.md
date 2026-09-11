@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, and exact 60 Hz fixed-step accumulation; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, and bounded frame-gap/catch-up policy; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -129,6 +129,18 @@ The accumulator owns neither a clock nor tick execution. A caller typically samp
 
 P2-T05 intentionally does not expose the remainder or interpolation alpha, clamp long frame gaps, cap catch-up work, drop backlog, pace frames, invoke callbacks, integrate with subsystem lifecycle, or make the tick rate configurable. P2-T06 owns clamp/catch-up policy and P2-T07 owns interpolation exposure. Isolated accumulator tests do not satisfy the ten-minute P2 phase exit gate.
 
+## Bounded frame-gap and catch-up policy — P2-T06 / Issue #76
+
+`com.samo.engine.core.api.FixedStepCatchUpPolicy` composes with a caller-owned `FixedStepAccumulator`. The default policy accepts at most 250,000,000 ns from one update and exposes at most 5 whole simulation steps from that update. An explicit constructor accepts different strictly positive limits without changing the semantics.
+
+`advance(accumulator, elapsedNanos)` rejects a null accumulator and negative elapsed input before mutation. Otherwise it clamps the elapsed duration to the configured frame-gap limit, advances the supplied accumulator exactly once with that clamped value, and returns at most the configured step cap.
+
+Two kinds of recovery time are deliberately discarded: elapsed nanoseconds beyond the frame-gap clamp never reach the accumulator, and whole due ticks above the step cap are not returned or carried as future backlog. Fractional sub-tick progress from the accepted elapsed duration remains preserved inside `FixedStepAccumulator`. This keeps D-022's exact rational 60 Hz arithmetic separate from the recovery policy while preventing a spiral-of-death catch-up queue.
+
+The default 2-second-stall behavior is therefore bounded: 2,000,000,000 ns is clamped to 250 ms; the accumulator makes 15 ticks due at 60 Hz; the policy exposes exactly 5 and discards the other 10 whole ticks. A later ordinary frame starts without those 10 ticks queued.
+
+The policy owns no clock, simulation callback, tick numbering, cumulative simulation counter, pacing, lifecycle, synchronization, or interpolation. P2-T07 still owns interpolation exposure, P2-T08/P2-T09 own configuration, and the deterministic ten-minute headless-loop phase exit remains separate evidence.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -160,4 +172,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Coordinated partial-startup rollback | Implemented by P2-T03 / Issue #73 with JUnit 6 tests |
 | Monotonic elapsed-time sampling | Implemented by P2-T04 / Issue #74 with JUnit 6 tests |
 | Exact 60 Hz fixed-step accumulation | Implemented by P2-T05 / Issue #75 with JUnit 6 tests |
+| Bounded frame-gap/catch-up recovery policy | Implemented by P2-T06 / Issue #76 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

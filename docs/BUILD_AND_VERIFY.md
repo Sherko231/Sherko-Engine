@@ -113,6 +113,28 @@ Accumulator XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.
 
 P2-T05 proves cadence-independent 60 Hz accumulation only. It does not clamp incoming frame gaps, cap catch-up work, expose interpolation alpha, pace frames, execute simulation callbacks, or satisfy the ten-minute P2 integrated headless-loop exit gate. P2-T06 and P2-T07 remain separate tasks. No dependency or lockfile change is expected.
 
+## P2-T06 bounded catch-up verification
+
+Issue #76 adds `FixedStepCatchUpPolicy` above the existing accumulator. The default policy clamps a single elapsed duration to 250,000,000 ns and returns at most 5 whole simulation steps from that update; elapsed time above the clamp and whole due ticks above the step cap are discarded, while accepted fractional sub-tick progress remains in `FixedStepAccumulator`.
+
+Run the focused acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --rerun-tasks
+```
+
+The suite uses integer-nanosecond expectations to cover the default constants, below/exactly-at/above frame-gap boundaries, exactly-at/above step-cap boundaries, a deterministic two-second stall, proof that dropped whole steps and clamped elapsed do not become later backlog, fractional remainder preservation across a capped call, zero elapsed, negative elapsed without mutation, null accumulator, and invalid explicit limits. It uses no sleep, scheduler, floating-point timing oracle, interpolation, callback, or clock sampling.
+
+Also rerun all current `engine-core` lifecycle/timing suites together:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --rerun-tasks
+```
+
+Catch-up XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepCatchUpPolicyTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
+
+P2-T06 proves bounded per-update recovery policy only. It does not expose interpolation alpha, pace frames, execute simulation callbacks, integrate a runtime loop, configure limits through P2-T08/P2-T09, or satisfy the ten-minute P2 exit gate by itself. No dependency or lockfile change is expected.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -238,7 +260,7 @@ Before claiming a phase is complete:
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
 6. Review the next phase against the demonstrated behavior: are its assumptions and dependencies satisfied, are proposed abstractions needed by its current use cases, and do its acceptance criteria still describe the required outcome? Record the next bounded task and any refinements in the closing Issue/PR. Update backlog definitions and affected executable Issues only when an authorized refinement is needed; never silently change locked scope or decisions.
 
-For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; P2-T01/P2-T02/P2-T03/P2-T04/P2-T05 isolated suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
+For the current P2 phase, the existing gate is a headless loop running deterministic fixed ticks for ten minutes with bounded catch-up and verified cleanup. The eventual gate evidence must show those properties together; isolated P2-T01 through P2-T06 suites do not satisfy that gate. The integrated loop and its command are not implemented yet.
 
 For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
@@ -269,7 +291,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, and `FixedStepAccumulatorTest` suites and their XML/HTML evidence upload;
+- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, and `FixedStepCatchUpPolicyTest` suites and their XML/HTML evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`.

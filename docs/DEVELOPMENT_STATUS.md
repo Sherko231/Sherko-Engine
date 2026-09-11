@@ -6,61 +6,84 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `d7464276ce9bf5cf3ef3fb66fe4e1d5ced1781ea` — P2-T04 PR #105 merged; merged-master push CI #169 passed |
+| Verified pre-checkpoint `master` | `a6e1da1f083ce65ffed6b156a10bf3ecfae23e5b` — maintenance PR #107 merged; merged-master push CI #172 passed |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
 | Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01, P2-T02, P2-T03, P2-T04 |
-| Current executable work | Maintenance Issue #106 — exact-head CI authority and obsolete PR-run cancellation policy |
-| Current branch | `maint-obsolete-pr-ci` |
-| Next planned roadmap implementation | P2-T05 / #75 remains planning-only until #106 is merged and its merged-master CI passes |
+| Current executable work | P2-T05 / Issue #75 — fixed-step simulation accumulator |
+| Current branch | `p2-t05-fixed-step-accumulator` |
+| Next planned roadmap implementation | P2-T06 — frame-gap clamp and catch-up cap; remains planning-only until P2-T05 completes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect the live branch/HEAD, compare with remote `master`, and inspect GitHub for newer activity.
 
 ## Exact next action
 
-Issue #106 is the only active executable change. It is repository-maintenance work, not a roadmap task. Its bounded goal is to make obsolete PR CI runs cancel automatically and to teach future agents that only the exact current PR-head run is authoritative before merge, while merged-`master` push CI remains separate required evidence.
+Issue #75 is the one active executable roadmap contract. Its API/architecture choices were finalized in the Issue before coding, as required by `AGENTS.md`. The task branch contains the bounded P2-T05 implementation, tests, D-022, architecture/build/orientation updates, and CI evidence wiring.
 
-The authorized file set for #106 is:
+The next action is to audit the complete branch diff against Issue #75, record review provenance, open the dedicated linked PR, and require a passing exact-head PR workflow before merge. After merge, require a separate passing `master` push workflow on the exact merge commit. Superseded PR runs are obsolete under the repository concurrency policy.
 
-- `AGENTS.md`
-- `docs/BUILD_AND_VERIFY.md`
-- `.github/workflows/java25.yml`
-- this `docs/DEVELOPMENT_STATUS.md`
+Do not activate or implement P2-T06 until P2-T05 is merged and merged-master verification passes. Do not use P2-T05 unit tests to claim the Phase 2 ten-minute integrated exit gate.
 
-Do not modify production Java, dependencies, lockfiles, module declarations, roadmap/backlog task definitions, architecture decisions, product scope, runner labels, branch protection, or P2-T05 implementation under #106. `README.md` still contains stale P2-T04 live-status wording on `master`; it is intentionally outside #106 and must not be edited silently under this maintenance contract.
+## Maintenance #106 completion evidence
 
-## Maintenance implementation — Issue #106
+The CI-run authority maintenance task is complete and no longer active:
 
-The workflow now uses top-level concurrency:
+- Issue #106 is closed as completed.
+- PR #107 merged to `master` as `a6e1da1f083ce65ffed6b156a10bf3ecfae23e5b`.
+- Superseded PR workflow #170 / run `34584434102` was automatically cancelled after the PR head advanced, demonstrating same-PR `cancel-in-progress` behavior.
+- Final exact-head PR workflow #171 / run `34584496552` passed all five required jobs on head `d03f83c22c169e6f96caad6f1aad756bbd3dbf49`.
+- Merged-master workflow #172 / run `34584853136` passed all five required jobs on exact merge commit `a6e1da1f083ce65ffed6b156a10bf3ecfae23e5b`.
+- Merged-master artifacts: `engine-subsystem-tests` ID `10193233861`, digest `sha256:c5b8a5e5f85ca7c0f9c026c0257c107695510cd63f65afdc8dd5632e5a8323df`; `jacoco-reports` ID `10193211828`, digest `sha256:e4a313fd615b6129d60032591249e3145a4fc72d4aa664f7282b6d1dc9bba940`.
+- The workflow now cancels superseded runs using a PR-number/ref concurrency group while preserving exact-head and merged-master evidence requirements.
 
-```yaml
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+## Implemented Phase 2 foundation
+
+### P2-T01 / Issue #64 — subsystem lifecycle
+
+`EngineSubsystem` defines one guarded initialize/start/stop/close lifetime with explicit cleanup and externally serialized calls. P2-T01 merged via PR #65; its exact-head and merged-master CI passed.
+
+### P2-T02 / Issue #72 — subsystem dependency ordering
+
+`SubsystemGraph` snapshots registrations, validates duplicate/missing/cyclic dependencies, and returns deterministic dependency-first ordering without invoking lifecycle hooks. P2-T02 merged via PR #103; its exact-head and merged-master CI passed.
+
+### P2-T03 / Issue #73 — partial-startup rollback
+
+`SubsystemStartup` activates an already resolved order and performs deterministic reverse rollback while preserving the original failure and suppressing cleanup failures. P2-T03 merged via PR #104; its exact-head and merged-master CI passed.
+
+### P2-T04 / Issue #74 — monotonic elapsed-time sampling
+
+`EngineClock` samples monotonic elapsed nanoseconds through `System.nanoTime` or an injected `LongSupplier`, preserves the last accepted baseline on rejected/failing samples, and uses ordinary signed `long` subtraction for supported wraparound semantics. P2-T04 merged via PR #105 as `d7464276ce9bf5cf3ef3fb66fe4e1d5ced1781ea`; exact-head workflow #168 and merged-master workflow #169 passed all five required jobs.
+
+## P2-T05 implementation handoff
+
+`com.samo.engine.core.api.FixedStepAccumulator` is implemented on the task branch with the exact public surface authorized by Issue #75:
+
+```java
+public final class FixedStepAccumulator {
+    public static final int TICKS_PER_SECOND = 60;
+    public FixedStepAccumulator();
+    public long advance(long elapsedNanos);
+}
 ```
 
-Expected operational semantics:
+The implemented contract is:
 
-- commits to the same PR share a PR-number concurrency group, so newer runs supersede older queued/in-progress runs;
-- different PRs use different groups and therefore never cancel each other's runs;
-- pushes to `master` use the `master` ref group and remain independent from PR groups;
-- `workflow_dispatch` uses its ref group;
-- the five existing CI jobs, triggers, runner labels, commands, artifact paths, and pass/fail requirements remain unchanged.
+- the fixed rate is exactly 60 ticks per 1,000,000,000 elapsed nanoseconds;
+- accepted elapsed input is non-negative `long` nanoseconds, normally supplied by `EngineClock` through the caller;
+- cumulative due ticks equal `floor(totalAcceptedElapsedNanos * 60 / 1_000_000_000)`;
+- exact fractional progress is retained in integer rational units rather than rounding a simulation step to integer nanoseconds or using floating-point timing;
+- quotient/remainder decomposition avoids intermediate overflow even for `Long.MAX_VALUE` elapsed input;
+- zero input is valid and preserves fractional progress;
+- negative input throws `IllegalArgumentException` before state mutation;
+- the accumulator owns only fractional progress; the caller owns tick execution, tick numbering, and cumulative simulation state;
+- calls are externally serialized;
+- no clock sampling, frame-gap clamping, catch-up cap/backlog dropping, interpolation exposure, pacing, callback ownership, lifecycle integration, or configurable tick rate is included.
 
-`AGENTS.md` and `docs/BUILD_AND_VERIFY.md` now define the evidence policy explicitly: determine the current PR head SHA first; runs for older PR-head SHAs are obsolete; stale runs may be cancelled when tooling allows; cancellation is neither success nor failure for the current head; only a completed passing exact-head PR run permits merge; after merge, a separate successful push run on the exact resulting `master` commit is required.
+`FixedStepAccumulatorTest` provides independent deterministic acceptance coverage for 30/60/144/irregular one-second partitions, equivalent longer totals, sub-tick carry, boundary remainder preservation, zero input, negative rejection without mutation, and `Long.MAX_VALUE` against a `BigInteger` oracle. It contains no sleeps or scheduler-dependent timing.
 
-## P2-T04 completion evidence
+D-022 records the durable fixed-step accumulation decision. `docs/ARCHITECTURE.md` and `docs/BUILD_AND_VERIFY.md` document the boundary and focused verification. CI extends the existing engine-core focused suite/artifact to retain `FixedStepAccumulatorTest` XML/HTML evidence without weakening any prior job.
 
-P2-T04 / Issue #74 is complete:
-
-- PR #105 merged to `master` as `d7464276ce9bf5cf3ef3fb66fe4e1d5ced1781ea`.
-- Final PR-head workflow #168 / run `34582615496` passed all five required jobs on head `5a4455c3b1044325b71875276ec01dc979069465`.
-- Merged-master workflow #169 / run `34583617608` passed all five required jobs on exact merge commit `d7464276ce9bf5cf3ef3fb66fe4e1d5ced1781ea`.
-- PR artifacts: `engine-subsystem-tests` ID `10192533830`, digest `sha256:c846b8f97b83dae4a2b003256ec49d761700de5350d6d9062635d42beab354db`; `jacoco-reports` ID `10192522333`, digest `sha256:d79b3ecd6184549334e31951a7658e4df75189d7c8611998cbd6d40ff387dc6b`.
-- Merged-master artifacts: `engine-subsystem-tests` ID `10192703114`, digest `sha256:4292d576b5096b93e8857d361a153526d6065950a90b6afa62680dbfe295361e`; `jacoco-reports` ID `10192683664`, digest `sha256:3a2969aa3d531f1df663c8b0516ddcf96196d5b8e51b63ba0c1e1f1e8da3cd06`.
-- Independent review for P2-T04 was recorded as `not performed`; CI and self-review were not represented as independent review.
-
-`engine-core` now contains the implemented P2 foundation through D-021: `EngineSubsystem`, `SubsystemGraph`, `SubsystemStartup`, and `EngineClock`.
+No P2-T05 CI pass is claimed by this checkpoint until the actual PR workflow executes. This task changes a public engine API and durable timing decision, so review provenance must be recorded honestly. If no separate reviewer is available, record `not performed`, the reason, and residual arithmetic/API risk; self-review and CI are not substitutes.
 
 ## Current repository state
 
@@ -68,24 +91,18 @@ P2-T04 / Issue #74 is complete:
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
 - Shared JUnit 6/AssertJ, Checkstyle, JaCoCo, dependency locking, architecture verification, client/server entry points, and native-smoke tasks remain in place.
-- CI still has five Windows x64 self-hosted jobs: build/quality, unit tests, architecture tests, JaCoCo, and Windows native smoke.
-- `master` is not platform-protected by required status checks; the agent contract nevertheless forbids merge before passing exact-head PR CI and requires merged-master verification.
-- No Phase 2 fixed-step accumulator, catch-up policy, interpolation, configuration system, native-resource registry, allocation metric, structured logging, fatal-shutdown coordination, or phase-exit loop is implemented yet.
+- CI has five Windows x64 self-hosted jobs: build/quality, unit tests, architecture tests, JaCoCo, and Windows native smoke.
+- CI uses workflow concurrency to cancel superseded same-PR runs; only passing exact-head PR CI and the separate exact merged-master push run count as completion evidence.
+- `engine-core` contains D-018 `EngineSubsystem`, D-019 `SubsystemGraph`, D-020 `SubsystemStartup`, D-021 `EngineClock`, and on this task branch D-022 `FixedStepAccumulator`.
+- No dependency, lockfile, module-edge, native binding, entry-point, protocol, persisted format, product-scope, or backlog definition change is part of P2-T05.
 
-## Phase 2 status
+## What remains planned
 
-Completed:
-
-- P2-T01 / #64 — `EngineSubsystem` lifecycle.
-- P2-T02 / #72 — `SubsystemGraph` dependency ordering.
-- P2-T03 / #73 — coordinated partial-startup rollback.
-- P2-T04 / #74 — monotonic `EngineClock` elapsed-nanosecond sampling.
-
-Next roadmap item after maintenance #106:
-
-- P2-T05 / #75 — fixed-step accumulator at 1/60 second; still planning-only until #106 is complete.
-
-P2 phase completion is not claimed. The existing phase exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup.
+- P2-T06 frame-gap clamping and catch-up limiting is not implemented.
+- P2-T07 render interpolation alpha is not implemented.
+- P2-T08 through P2-T13 configuration/ownership/observability/logging/fatal-shutdown work remains planned.
+- Concrete renderer, asset, world, physics, audio, networking, runtime UI, editor, and gameplay subsystems remain skeleton/planned work.
+- Phase 2 completion remains unproven: the exit gate requires a deterministic fixed-tick headless loop for ten minutes with bounded catch-up and verified cleanup.
 
 ## Open gates and blockers
 
@@ -95,7 +112,7 @@ P2 phase completion is not claimed. The existing phase exit gate remains a deter
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block #106 or the independent P2 timing work, but their evidence limits must not be strengthened by unrelated CI success.
+These gates do not block the independent P2-T05 timing work, but their evidence limits must not be strengthened by unrelated unit/CI success.
 
 ## Live-state reconciliation
 
@@ -104,13 +121,13 @@ Before implementation or handoff, a fresh agent must:
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local `git status --short --branch` and `git rev-parse HEAD` when a local checkout is used;
 3. compare remote `master`, open PRs, and active Issues with this checkpoint;
-4. confirm #106 is still the sole active executable change until it merges;
-5. identify the current PR head SHA before interpreting workflow results;
-6. treat runs for older PR-head SHAs as obsolete evidence and cancel them only when tooling/permissions allow;
+4. confirm Issue #75 remains the one active executable roadmap task until it completes;
+5. compare the exact branch diff with Issue #75's allowed file set and public API contract;
+6. identify the current PR head SHA before interpreting CI and disregard/cancel obsolete older runs;
 7. require exact-head PR CI success before merge and separate exact-merge `master` push CI success afterward;
-8. confirm #75 remains planning-only until #106 completes;
+8. keep P2-T06 and later tasks planning-only until #75 completes;
 9. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule
 
-Update this file when #106 final exact-head verification completes and again when merge changes the current/next-work checkpoint. Live GitHub workflow state remains authoritative for activity newer than the containing commit.
+Update this file when P2-T05 final exact-head verification completes and again when merge changes the completed-task/next-action checkpoint. Live GitHub workflow state remains authoritative for activity newer than the containing commit.

@@ -116,8 +116,8 @@ jobs:
       - name: Run root and subproject tests
         run: .\gradlew.bat test
 
-      - name: Verify core lifecycle, ordering, rollback, and clock
-        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --rerun-tasks
+      - name: Verify core lifecycle and timing contracts
+        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --rerun-tasks
 
       - name: Upload engine-core acceptance evidence
         if: always()
@@ -129,6 +129,7 @@ jobs:
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineClockTest.xml
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepAccumulatorTest.xml
             engine-core/build/reports/tests/test/**
           if-no-files-found: error
 

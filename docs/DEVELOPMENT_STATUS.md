@@ -6,81 +6,70 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `36f612259d29829971302c6f3df2e0a8c1d1f2bf` — P2-T06 / PR #115 merged; merged-master workflow #180 passed |
+| Verified pre-checkpoint `master` | `b9c98ec3bf494122c849fa5a9c670923d7cff191` — P2-T07 / PR #116 merged; merged-master workflow #182 passed |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T06 |
-| Current executable work | P2-T07 / Issue #77 — renderer-facing interpolation alpha |
-| Current branch | `p2-t07-interpolation-alpha` |
-| Next planned roadmap implementation | P2-T08 — typed configuration keys; remains planning-only until P2-T07 completes |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T07 |
+| Current executable work | P2-T08 / Issue #78 — typed startup configuration validation |
+| Current branch | `p2-t08-typed-config` |
+| Next planned roadmap implementation | P2-T09 — layered configuration loading; remains planning-only until P2-T08 completes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect the live branch/HEAD, compare with remote `master`, and inspect GitHub for newer activity.
+The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
+
+## P2-T07 completion evidence
+
+P2-T07 / Issue #77 is complete:
+
+- PR #116 merged to `master` as `b9c98ec3bf494122c849fa5a9c670923d7cff191`.
+- Final exact-head PR workflow #181 / run `34591718600` passed all five jobs on head `c417a4716ff532bfa9a98486a28a505526bd6d6c`.
+- PR `engine-subsystem-tests` artifact: ID `10195974227`, digest `sha256:84fe900ca2228a7b978c402e916555e9832615e6be6468cc876a76102d97011a`.
+- PR `jacoco-reports` artifact: ID `10195952652`, digest `sha256:f262542e6ddfea5f33efe1102d577c5a9948f1a438b152efe89b5967e53e8cd9`.
+- Merged-master workflow #182 / run `34592107752` passed all five jobs on the exact merge commit.
+- Merged-master `engine-subsystem-tests` artifact: ID `10196104080`, digest `sha256:70b428c85256123d34ec4c2136a0898853e182b5bbf64901a219c364d6ac9e7e`.
+- Merged-master `jacoco-reports` artifact: ID `10196104719`, digest `sha256:e76cfa6566622cca179cb1a4d02d8e71292e02aaeb349caf0b74b1244253720a`.
+- Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and self-review were not represented as independent review.
+
+## P2-T08 executable contract
+
+Issue #78 is activated and is the sole executable roadmap task for this branch. It adds a fixed startup schema in `engine-core` for one already-resolved raw configuration map.
+
+Authorized public behavior:
+
+- `ConfigSource` preserves opaque diagnostic source text.
+- `ConfigEntry` pairs one raw value with its source.
+- canonical typed `ConfigKey<Integer>` values define `fullscreen.width`, `fullscreen.height`, and `simulation.tickRate`.
+- defaults are width `1920`, height `1080`, tick rate `60`.
+- width bounds are inclusive `320..16384`.
+- height bounds are inclusive `200..16384`.
+- tick rate accepts exactly `60`; P2-T08 does not make simulation rate configurable.
+- `EngineConfigSchema.validate(...)` aggregates user errors in supplied-map iteration order, rejects unknown keys, preserves sources, returns all typed defaults/values on success, and performs no lifecycle call.
+- `ConfigValidationException` exposes an immutable ordered list of `ConfigError` values.
+
+P2-T09 retains source loading/layering/precedence. P2-T08 does not add file I/O, CLI/environment parsing, hot reload, arbitrary extensible keys, persistence, or a mutable runtime settings service.
 
 ## Exact next action
 
-Issue #77 is the active executable contract. Its public API and durable interpolation semantics were finalized before coding. The task branch contains:
+On the active branch:
 
-- `FixedStepAccumulator.interpolationAlpha()` as the only new public API;
-- `FixedStepInterpolationTest` with deterministic JUnit 6 coverage;
-- D-024;
-- architecture, build/verification, README, CI-evidence, and status updates.
+1. finish the authorized implementation/tests/docs only;
+2. audit the complete changed-file list against Issue #78;
+3. perform author self-review and record independent-review provenance honestly;
+4. open one linked PR;
+5. require passing exact-head PR CI because Java/YAML files change;
+6. merge only after the current-head workflow passes;
+7. require separate passing push CI on the exact resulting `master` merge commit;
+8. record final artifacts/evidence and confirm Issue #78 closed consistently.
 
-The next action is to audit the complete branch diff against Issue #77, perform author self-review, record independent-review provenance honestly, open the linked PR, and require passing exact-head PR CI because the branch contains Java/YAML. After merge, require a separate successful `master` push workflow on the exact merge commit.
-
-Do not activate P2-T08 while P2-T07 remains unmerged/unverified. Do not use isolated P2-T07 tests to claim the ten-minute Phase 2 exit gate.
-
-## P2-T07 implementation handoff
-
-`FixedStepAccumulator` still owns exact integer/rational 60 Hz progression. P2-T07 adds only:
-
-```java
-public double interpolationAlpha();
-```
-
-The method returns the retained fractional progress normalized to `[0.0, 1.0)` using the existing exact remainder divided by one billion. It is read-only and does not consume progress.
-
-Simulation and rendering remain separate:
-
-1. elapsed time is sampled by `EngineClock`;
-2. `FixedStepCatchUpPolicy` advances the caller-owned accumulator with bounded elapsed/catch-up work;
-3. the caller executes only the returned whole fixed simulation ticks;
-4. rendering may query `interpolationAlpha()` separately.
-
-Examples established by the contract/tests:
-
-- fresh or exact whole-tick state -> alpha `0.0`;
-- 25,000,000 ns -> one whole tick due plus alpha `0.5`;
-- 12,500,000 ns -> alpha `0.75`;
-- 125,000,000 ns through the default catch-up policy -> 5 executable ticks, dropped extra whole ticks, retained alpha `0.5`;
-- elapsed discarded by a frame-gap clamp does not inflate alpha.
-
-Floating point is presentation-only. `advance(long)`, `FixedStepCatchUpPolicy`, `EngineClock`, tick rate, lifecycle APIs, dependencies, module edges, native bindings, protocols, and persisted formats remain unchanged.
-
-## P2-T06 completion evidence
-
-P2-T06 / Issue #76 is complete:
-
-- PR #115 merged to `master` as `36f612259d29829971302c6f3df2e0a8c1d1f2bf`.
-- Final exact-head PR workflow #179 / run `34590118120` passed all five required jobs on head `b4965619daa336b3136ce091c0a1ab127db72d00`.
-- Merged-master workflow #180 / run `34590462161` passed all five required jobs on the exact merge commit.
-- Merged-master `engine-subsystem-tests` artifact: ID `10195447609`, digest `sha256:c65459c32834207a95841ea8e56b7a82ca11b3fe2c3f831e5d3acbd85ebbeae4`.
-- Merged-master `jacoco-reports` artifact: ID `10195430483`, digest `sha256:ce2f23796734528ae5a5532c9cb84cdaaf83b63abf14af6189507632e7f41cab`.
-- Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and self-review were not represented as independent review.
-
-## Repository maintenance policy
-
-Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively paths ending in `.md`. Any Java, YAML, Gradle, lockfile, configuration, script, resource, or other non-Markdown path restores the normal exact-head PR CI and exact merged-master CI requirements.
-
-This P2-T07 task is non-exempt because it changes Java source/tests and workflow YAML.
+Do not activate or implement P2-T09 until P2-T08 is merged and verified.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, and on this task branch renderer-facing interpolation alpha.
-- Shared JUnit 6/AssertJ, Checkstyle, JaCoCo, dependency locking, architecture verification, client/server entry points, and native-smoke tasks remain in place.
-- CI retains five Windows x64 self-hosted jobs and same-PR concurrency cancellation; the focused engine-core evidence suite includes `FixedStepInterpolationTest` on this branch.
+- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, renderer-facing interpolation alpha, and on this branch typed startup configuration validation.
+- No dependency, lockfile, module-edge, native-binding, protocol, persistence-format, or scope change is authorized by P2-T08.
+- CI retains five Windows x64 self-hosted jobs. The focused engine-core evidence suite is extended on this branch with `EngineConfigSchemaTest`.
 
 ## Phase 2 status
 
@@ -92,16 +81,21 @@ Completed and merged:
 - P2-T04 / #74 — monotonic `EngineClock` elapsed-nanosecond sampling.
 - P2-T05 / #75 — exact fixed-step accumulator at 60 Hz.
 - P2-T06 / #76 — bounded frame-gap and catch-up policy.
+- P2-T07 / #77 — renderer-facing interpolation alpha separated from whole simulation ticks.
 
 Active:
 
-- P2-T07 / #77 — expose render interpolation alpha separately from simulation progression.
+- P2-T08 / #78 — typed configuration keys/defaults/bounds/source-aware validation.
 
-Next after P2-T07:
+Next after P2-T08:
 
-- P2-T08 — typed configuration keys with defaults, bounds, source location, and validation errors; remains planning-only.
+- P2-T09 — layered config loading and exact precedence; planning-only until activated.
 
-P2 phase completion is not claimed. The existing exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2-T01 through P2-T07 tests do not satisfy that gate.
+P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2 task tests do not satisfy that integrated gate.
+
+## Repository maintenance policy
+
+Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively `.md` paths. P2-T08 is non-exempt because it changes Java source/tests and workflow YAML.
 
 ## Open gates and blockers
 
@@ -111,17 +105,17 @@ P2 phase completion is not claimed. The existing exit gate remains a determinist
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block the independent Phase 2 timing work, but their evidence limits must not be strengthened by unrelated unit/CI success.
+These gates do not block P2-T08, but unrelated unit/CI success must not strengthen their claims.
 
 ## Live-state reconciliation
 
 Before implementation or handoff, a fresh agent must:
 
 1. read `AGENTS.md` fully and follow its required order;
-2. inspect local `git status --short --branch` and `git rev-parse HEAD` when a local checkout is used;
+2. inspect local status/HEAD when a local checkout exists;
 3. compare remote `master`, open PRs, and active Issues with this checkpoint;
-4. verify Issue #77 remains the one active executable roadmap task;
-5. audit the complete changed-file list against #77's authorized paths;
-6. require exact-head PR CI and exact merged-master CI because P2-T07 contains non-Markdown files;
-7. keep P2-T08 and later tasks planning-only until activated one at a time;
-8. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
+4. verify #78 remains the sole active executable roadmap task;
+5. audit all changed paths against #78;
+6. require exact-head PR CI and exact merged-master CI because this task is non-Markdown;
+7. keep P2-T09 and later tasks planning-only until activated one at a time;
+8. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.

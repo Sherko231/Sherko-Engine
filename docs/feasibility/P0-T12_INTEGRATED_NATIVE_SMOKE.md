@@ -89,3 +89,7 @@ The spike fails if it observes a high-severity OpenGL debug message, insufficien
 ## Acceptance state
 
 **Complete as a smoke test.** The 15-second integrated run passed under JFR with all selected subsystems active together, complete UDP echo traffic, clean process shutdown, and no observed positive Jolt native-allocation growth. It does not claim sustained stability; P0-T13 and P0-T14 must provide that evidence.
+
+## Wiki synchronization
+
+This file remains feasibility evidence and must not be presented as a production API guide. If a future native/platform/render/physics/audio/networking task converts behavior covered here into an implemented public engine API or changes caller-visible usage, update the relevant [`../../wiki/`](../../wiki/README.md) pages in the same PR. Otherwise record `Wiki impact: none — <reason>`.

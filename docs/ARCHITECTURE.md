@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, and explicit native-resource ownership diagnostics; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, and explicit native-resource ownership diagnostics. P2-T11 adds test-only JFR allocation-observability evidence without changing the production `engine-core` API. Concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10); P2-T11 adds test-only allocation evidence; other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -183,6 +183,16 @@ A live identity is `(resourceType, handle)`. Duplicate live identities fail befo
 
 The registry is not thread-safe. Registration, close, and verification remain externally serialized, preserving caller/native thread-affinity. Synthetic Java tests establish bookkeeping and diagnostics only; they are not evidence that GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free, sustained-stable, or restartable. P0-T13/P0-T14 and the P2 ten-minute integrated cleanup gate remain separate.
 
+## Allocation observability evidence — P2-T11 / Issue #81
+
+P2-T11 deliberately adds no runtime allocation-metric service or public engine API. `AllocationMetricBenchmarkTest` lives in `engine-core` test source and uses the Java 25 JFR `jdk.ObjectAllocationSample` event selected by the existing profiling baseline.
+
+The benchmark measures controlled simulation-tick and synthetic/headless render-frame workloads in separate recording windows after warm-up. Each window runs on a uniquely named dedicated platform thread, and only samples attributed to that thread contribute. Positive JFR `weight` values are summed and divided by measured iteration count to report estimated bytes per iteration. The report also records sample count and measurement duration.
+
+An allocating control must produce usable sampled evidence; otherwise the benchmark fails rather than treating absent samples as zero. A nonallocating arithmetic control is also measured, but a zero sampled result is only an observation and not proof of mathematical zero allocation.
+
+This evidence is sampled Java-heap allocation pressure, not an exact per-call counter. It excludes direct/native allocations, GPU/driver memory, retained-heap size, and GC pause cost. The render channel is not evidence from the future OpenGL renderer. No product budget or threshold is established by P2-T11, and no durable architecture decision is added.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -219,4 +229,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Typed startup configuration validation | Implemented by P2-T08 / Issue #78 with JUnit 6 tests |
 | Layered startup configuration precedence | Implemented by P2-T09 / Issue #79 with JUnit 6 tests |
 | Explicit native-resource ownership diagnostics | Implemented by P2-T10 / Issue #80 with JUnit 6 tests |
+| Sampled Java-heap allocation observability evidence | P2-T11 test/evidence path; no production API |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, and bounded startup rollback coordination; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, and monotonic elapsed-time sampling; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -109,6 +109,16 @@ If initialize/start fails, the exact `RuntimeException` or `Error` remains prima
 
 This is intentionally not a general lifecycle manager, dependency injection framework, restart mechanism, or native-lifecycle proof. It adds no state accessor and does not change `EngineSubsystem` or `SubsystemGraph`. Synthetic Java tests establish ordering and failure preservation only; P0-T14 and the ten-minute P2 phase exit remain separate evidence gates.
 
+## Monotonic elapsed-time sampling — P2-T04 / Issue #74
+
+`com.samo.engine.core.api.EngineClock` is the first production timing primitive in `engine-core`. It exposes a default constructor backed by `System.nanoTime()`, an injectable `LongSupplier` constructor for deterministic tests, and `sampleElapsedNanos()`.
+
+Construction performs no source read. The first successful call establishes the baseline and returns `0`. Each later call reads the source once and computes `current - previousAccepted` with ordinary Java `long` arithmetic. Zero elapsed is valid. A negative signed difference fails with `IllegalStateException` and leaves the previous accepted reading intact, so a later valid sample is measured from the last accepted baseline. The source's absolute value may be negative because `System.nanoTime()` has an arbitrary origin.
+
+Ordinary two's-complement subtraction is deliberate: a forward interval smaller than `2^63` nanoseconds remains a positive difference even when the raw source crosses `Long.MAX_VALUE` to `Long.MIN_VALUE`. Source `RuntimeException` or `Error` propagates unchanged before any baseline update. The clock does not expose floating-point seconds and does not impose synchronization; the runtime loop externally serializes calls.
+
+`EngineClock` does not own the fixed-step accumulator, the locked 60 Hz target, frame-gap clamping, catch-up limits, render interpolation, sleeping/pacing, frame identity, wall-clock/calendar time, profiling, or subsystem lifecycle. Those remain separate Phase 2 tasks. P2-T04 tests prove only deterministic elapsed-time semantics; they do not satisfy the P2 ten-minute integrated fixed-tick exit gate.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -138,4 +148,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Single-subsystem lifecycle order | Implemented by P2-T01 / Issue #64 with JUnit 6 tests |
 | Subsystem dependency ordering without lifecycle side effects | Implemented by P2-T02 / Issue #72 with JUnit 6 tests |
 | Coordinated partial-startup rollback | Implemented by P2-T03 / Issue #73 with JUnit 6 tests |
+| Monotonic elapsed-time sampling | Implemented by P2-T04 / Issue #74 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

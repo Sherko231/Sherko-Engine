@@ -6,39 +6,66 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `883e20539a16dc6509e163b22a1b6c744ca6ab1e` — maintenance PR #110 merged; merged-master push CI #176 passed |
+| Verified pre-checkpoint `master` | `46df2af471915e091061f5b9efeb3b00b100a068` — PR #114 repaired the accidental direct-master README edit through the Markdown-only exemption |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05 |
-| Current executable work | Maintenance Issue #111 — skip full CI for Markdown-only changes |
-| Current branch | `maint-markdown-only-ci` |
-| Next planned roadmap implementation | P2-T06 / #76 — frame-gap clamp and catch-up cap; refine and activate only after #111 completes |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T05 |
+| Current executable work | P2-T06 / Issue #76 — bounded frame gaps and catch-up work |
+| Current branch | `p2-t06-catch-up-policy` |
+| Next planned roadmap implementation | P2-T07 — render interpolation alpha; remains planning-only until P2-T06 completes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect the live branch/HEAD, compare with remote `master`, and inspect GitHub for newer activity.
 
 ## Exact next action
 
-Issue #111 is the only active executable change in this checkpoint. It is repository-maintenance work that changes CI policy and workflow path filtering; it does not activate P2-T06.
+Issue #76 is the active executable contract. Its API and durable policy choices were finalized before coding. The task branch now contains:
 
-The authorized file set is:
+- `FixedStepCatchUpPolicy` in `engine-core`;
+- focused `FixedStepCatchUpPolicyTest` coverage;
+- D-023;
+- architecture, build/verification, README, CI-evidence, and status updates.
 
-- `AGENTS.md`
-- `docs/BUILD_AND_VERIFY.md`
-- `.github/workflows/java25.yml`
-- this `docs/DEVELOPMENT_STATUS.md`
+The next action is to audit the complete branch diff against Issue #76, perform self-review and record independent-review provenance honestly, open the linked PR, and require passing exact-head PR CI because this change contains Java/YAML. After merge, require a separate passing `master` push workflow on the exact merge commit.
 
-The task must preserve all existing non-Markdown CI jobs, commands, concurrency, runner labels, artifacts, and manual dispatch. Because this task itself changes workflow YAML, the pre-change CI contract still applies to #111: final exact-head PR CI must pass before merge, followed by merged-`master` CI on the exact merge commit.
+Do not activate P2-T07 while P2-T06 remains unmerged/unverified. Do not use isolated P2-T06 tests to claim the ten-minute Phase 2 exit gate.
 
-After #111 completes, a future change whose complete diff contains only `.md` files will not require automatic PR-head or merged-`master` build/test CI. The complete changed-file list must be audited first; any non-Markdown path makes the normal full CI contract apply.
+## P2-T06 implementation handoff
 
-## Maintenance #109 completion evidence
+`com.samo.engine.core.api.FixedStepCatchUpPolicy` is implemented with the public surface authorized by Issue #76:
 
-Maintenance #109 is complete:
+```java
+public final class FixedStepCatchUpPolicy {
+    public static final long DEFAULT_MAX_FRAME_GAP_NANOS = 250_000_000L;
+    public static final int DEFAULT_MAX_STEPS_PER_UPDATE = 5;
 
-- PR #110 merged to `master` as `883e20539a16dc6509e163b22a1b6c744ca6ab1e`.
-- Final exact-head PR workflow #175 / run `34587556379` passed all five required jobs on head `201047b75043d630421f9db85c366fee4e91f466`.
-- Merged-master workflow #176 / run `34587883984` passed all five required jobs on exact merge commit `883e20539a16dc6509e163b22a1b6c744ca6ab1e`.
-- The diff was exactly `README.md` and `docs/DEVELOPMENT_STATUS.md`.
+    public FixedStepCatchUpPolicy();
+    public FixedStepCatchUpPolicy(long maxFrameGapNanos, int maxStepsPerUpdate);
+
+    public long advance(FixedStepAccumulator accumulator, long elapsedNanos);
+}
+```
+
+The default behavior clamps one elapsed duration to 250 ms and exposes at most 5 whole simulation steps. Elapsed time above the clamp and whole due steps above the cap are deliberately discarded. Fractional sub-tick progress from the accepted elapsed duration remains inside the caller-owned `FixedStepAccumulator`.
+
+A deterministic two-second stall therefore returns exactly 5 steps: the policy clamps 2 seconds to 250 ms, the 60 Hz accumulator makes 15 whole ticks due, and the policy drops 10 instead of carrying them as future backlog.
+
+The explicit constructor accepts strictly positive limits only. Null accumulator and negative elapsed input are rejected before accumulator mutation. Zero elapsed is valid. `FixedStepAccumulator`, `EngineClock`, lifecycle APIs, tick execution, pacing, interpolation, configuration loading, and callback ownership remain unchanged.
+
+`FixedStepCatchUpPolicyTest` covers default constants, frame-gap and step-cap boundaries, the 2-second-stall case, dropped-backlog behavior, clamp discard behavior, fractional remainder preservation, zero input, negative input, null accumulator, and invalid limits using integer-nanosecond expectations only.
+
+D-023 records the durable policy. No dependency, lockfile, module-edge, native binding, protocol, persisted-format, or product-scope change is part of P2-T06.
+
+## Recent maintenance evidence
+
+### Markdown-only CI policy — Issue #111
+
+Issue #111 completed through PR #112 and merged as `3293ad34cbbc6ccade3baa82a350b2af32ea23d2`. PR workflow #177 and merged-master workflow #178 both passed all five jobs because that policy task itself changed workflow YAML. After that merge, future complete diffs containing only `.md` files are exempt from automatic PR-head and merged-master build/test CI after a complete changed-file audit.
+
+### Accidental direct-master README repair — Issue #113
+
+A direct README write accidentally created `baaa675041d2d00b3ace681f8a21c6aacdce2805` on `master`, violating the branch/PR rule. Work stopped immediately. Maintenance #113 restored README exactly through dedicated PR #114. The repair diff contained only `README.md`, so no automatic CI was required under the current Markdown-only policy. The repaired master baseline for P2-T06 is `46df2af471915e091061f5b9efeb3b00b100a068`.
+
+This incident does not authorize direct-master writes; all subsequent P2-T06 work is on the dedicated task branch.
 
 ## P2-T05 completion evidence
 
@@ -50,33 +77,18 @@ P2-T05 / Issue #75 is complete:
 - Merged-master artifacts: `engine-subsystem-tests` ID `10193887501`, digest `sha256:0a7ae9cd28e28e261fb8cd0bd438ddf12aab24da149f6b93e1f20b52716ddece`; `jacoco-reports` ID `10193870940`, digest `sha256:f4cb97c85a282947f2a265a673f0f87ece353b69e9e8b922ddb22d81f96007b6`.
 - Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and self-review were not represented as independent review.
 
-`engine-core` contains the implemented Phase 2 foundation through D-022: `EngineSubsystem`, `SubsystemGraph`, `SubsystemStartup`, `EngineClock`, and `FixedStepAccumulator`.
-
-## Markdown-only CI policy — Issue #111
-
-The task branch changes the repository policy so that a pull request is exempt from automatic build/test CI only when the complete changed-file set is non-empty and every path ends in `.md`.
-
-Expected post-merge behavior:
-
-- automatic `pull_request` and `push` runs targeting `master` are skipped for Markdown-only changes through workflow `paths-ignore`;
-- `workflow_dispatch` remains available regardless of file type;
-- any non-Markdown file anywhere in the complete PR diff makes the normal exact-head PR CI and exact merged-`master` CI requirements apply;
-- a later commit that adds a non-Markdown path makes a previously exempt PR non-exempt;
-- the exemption affects build/runtime execution only and does not waive Issue scope, truth hierarchy, review rules, architecture/decision rules, documentation consistency, branch/PR discipline, or explicit manual verification.
-
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
+- `engine-core` now contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, and the P2-T06 bounded catch-up policy on the task branch.
 - Shared JUnit 6/AssertJ, Checkstyle, JaCoCo, dependency locking, architecture verification, client/server entry points, and native-smoke tasks remain in place.
-- CI has five Windows x64 self-hosted jobs: build/quality, unit tests, architecture tests, JaCoCo, and Windows native smoke.
-- Existing workflow concurrency still cancels superseded same-PR runs.
-- No Java source, test, dependency, lockfile, module-edge, native binding, entry-point, protocol, persisted-format, product-scope, roadmap, backlog, or architecture-decision change is part of maintenance #111.
+- CI retains five Windows x64 self-hosted jobs and same-PR concurrency cancellation; the focused engine-core evidence suite now includes `FixedStepCatchUpPolicyTest` on this task branch.
 
 ## Phase 2 status
 
-Completed:
+Completed and merged:
 
 - P2-T01 / #64 — `EngineSubsystem` lifecycle.
 - P2-T02 / #72 — `SubsystemGraph` dependency ordering.
@@ -84,11 +96,15 @@ Completed:
 - P2-T04 / #74 — monotonic `EngineClock` elapsed-nanosecond sampling.
 - P2-T05 / #75 — exact fixed-step accumulator at 60 Hz.
 
-Next planned roadmap item after maintenance #111:
+Active:
 
-- P2-T06 / #76 — bound frame gaps and catch-up work. Its existing Issue is still a planning contract and must be refined/activated before coding.
+- P2-T06 / #76 — clamp frame gaps and cap catch-up steps.
 
-P2 phase completion is not claimed. The existing exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2-T01 through P2-T05 tests do not satisfy that gate.
+Next after P2-T06:
+
+- P2-T07 — expose render interpolation alpha separately from simulation delta; remains planning-only.
+
+P2 phase completion is not claimed. The existing exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2-T01 through P2-T06 tests do not satisfy that gate.
 
 ## Open gates and blockers
 
@@ -107,13 +123,8 @@ Before implementation or handoff, a fresh agent must:
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local `git status --short --branch` and `git rev-parse HEAD` when a local checkout is used;
 3. compare remote `master`, open PRs, and active Issues with this checkpoint;
-4. confirm maintenance #111 has completed before activating P2-T06 / #76;
-5. audit the complete changed-file list before applying any Markdown-only CI exemption;
-6. for a non-exempt PR, identify the current PR head SHA before interpreting CI and require exact-head PR CI plus exact merged-`master` CI;
-7. if #76 is selected next, refine its unresolved clamp/catch-up API and behavior choices in the Issue before coding;
-8. keep P2-T07 and later tasks planning-only until activated one at a time;
-9. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
-
-## Maintenance rule
-
-Update this file when #111 completes so the next handoff records the merged policy and returns P2-T06 / #76 to the exact-next-action position. Live GitHub workflow state remains authoritative for activity newer than the containing commit.
+4. verify Issue #76 remains the one active executable roadmap task;
+5. audit the complete changed-file list against #76's authorized paths;
+6. because P2-T06 contains non-Markdown files, require exact-head PR CI and exact merged-master CI;
+7. keep P2-T07 and later tasks planning-only until activated one at a time;
+8. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.

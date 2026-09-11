@@ -8,9 +8,6 @@ public record ConfigError(String key, ConfigSource source, String message) {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(message, "message");
-        if (key.isBlank()) {
-            throw new IllegalArgumentException("key must not be blank");
-        }
         if (message.isBlank()) {
             throw new IllegalArgumentException("message must not be blank");
         }

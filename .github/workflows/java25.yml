@@ -122,8 +122,8 @@ jobs:
       - name: Run root and subproject tests
         run: .\gradlew.bat test
 
-      - name: Verify core lifecycle, timing, config, native ownership, and allocation evidence
-        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --rerun-tasks
+      - name: Verify core lifecycle, timing, config, native ownership, allocation, and logging evidence
+        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --rerun-tasks
 
       - name: Upload engine-core acceptance evidence
         if: always()
@@ -142,6 +142,7 @@ jobs:
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigLoaderTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.NativeResourceRegistryTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.AllocationMetricBenchmarkTest.xml
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineLoggerTest.xml
             engine-core/build/reports/allocation/p2-t11-allocation-metric.txt
             engine-core/build/reports/tests/test/**
           if-no-files-found: error

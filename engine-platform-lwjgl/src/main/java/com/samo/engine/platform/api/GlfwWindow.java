@@ -109,9 +109,9 @@ public final class GlfwWindow extends EngineSubsystem {
                         registeredHandle,
                         () -> backend.destroyWindow(registeredHandle));
             } catch (RuntimeException | Error failure) {
+                windowHandle = 0L;
                 try {
                     backend.destroyWindow(registeredHandle);
-                    windowHandle = 0L;
                 } catch (RuntimeException | Error cleanupFailure) {
                     addSuppressedUnlessSame(failure, cleanupFailure);
                 }
@@ -152,12 +152,10 @@ public final class GlfwWindow extends EngineSubsystem {
         requireOwnerThread();
         List<Throwable> failures = new ArrayList<>();
         runCleanup(failures, () -> backend.hideWindow(windowHandle));
-        if (contextCurrent) {
-            runCleanup(failures, () -> backend.makeContextCurrent(0L));
+        if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
             contextCurrent = false;
         }
-        if (capabilitiesCreated) {
-            runCleanup(failures, backend::clearCapabilities);
+        if (capabilitiesCreated && runCleanup(failures, backend::clearCapabilities)) {
             capabilitiesCreated = false;
         }
         throwCleanupFailure(failures);
@@ -171,22 +169,22 @@ public final class GlfwWindow extends EngineSubsystem {
         requireOwnerThread();
 
         List<Throwable> failures = new ArrayList<>();
-        if (contextCurrent) {
-            runCleanup(failures, () -> backend.makeContextCurrent(0L));
+        if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
             contextCurrent = false;
         }
-        if (capabilitiesCreated) {
-            runCleanup(failures, backend::clearCapabilities);
+        if (capabilitiesCreated && runCleanup(failures, backend::clearCapabilities)) {
             capabilitiesCreated = false;
         }
         if (windowRegistration != null) {
-            runCleanup(failures, windowRegistration::close);
-            windowRegistration = null;
-            windowHandle = 0L;
+            NativeResourceRegistry.Registration registration = windowRegistration;
+            if (runCleanup(failures, registration::close)) {
+                windowRegistration = null;
+                windowHandle = 0L;
+            }
         } else if (windowHandle != 0L) {
             long orphanedHandle = windowHandle;
-            runCleanup(failures, () -> backend.destroyWindow(orphanedHandle));
             windowHandle = 0L;
+            runCleanup(failures, () -> backend.destroyWindow(orphanedHandle));
         }
         if (glfwInitialized) {
             runCleanup(failures, backend::terminateGlfw);
@@ -199,13 +197,15 @@ public final class GlfwWindow extends EngineSubsystem {
     private void rollbackInitialization(Throwable primary) {
         List<Throwable> failures = new ArrayList<>();
         if (windowRegistration != null) {
-            runCleanup(failures, windowRegistration::close);
-            windowRegistration = null;
-            windowHandle = 0L;
+            NativeResourceRegistry.Registration registration = windowRegistration;
+            if (runCleanup(failures, registration::close)) {
+                windowRegistration = null;
+                windowHandle = 0L;
+            }
         } else if (windowHandle != 0L) {
             long orphanedHandle = windowHandle;
-            runCleanup(failures, () -> backend.destroyWindow(orphanedHandle));
             windowHandle = 0L;
+            runCleanup(failures, () -> backend.destroyWindow(orphanedHandle));
         }
         if (glfwInitialized) {
             runCleanup(failures, backend::terminateGlfw);
@@ -219,12 +219,10 @@ public final class GlfwWindow extends EngineSubsystem {
 
     private void cleanupStartedContext(Throwable primary) {
         List<Throwable> failures = new ArrayList<>();
-        if (contextCurrent) {
-            runCleanup(failures, () -> backend.makeContextCurrent(0L));
+        if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
             contextCurrent = false;
         }
-        if (capabilitiesCreated) {
-            runCleanup(failures, backend::clearCapabilities);
+        if (capabilitiesCreated && runCleanup(failures, backend::clearCapabilities)) {
             capabilitiesCreated = false;
         }
         for (Throwable failure : failures) {
@@ -243,8 +241,7 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private boolean hasOwnedNativeState() {
-        return ownerThread != null
-                || callbackState != null
+        return callbackState != null
                 || glfwInitialized
                 || windowHandle != 0L
                 || windowRegistration != null
@@ -265,11 +262,13 @@ public final class GlfwWindow extends EngineSubsystem {
         return value;
     }
 
-    private static void runCleanup(List<Throwable> failures, Runnable cleanup) {
+    private static boolean runCleanup(List<Throwable> failures, Runnable cleanup) {
         try {
             cleanup.run();
+            return true;
         } catch (RuntimeException | Error failure) {
             failures.add(failure);
+            return false;
         }
     }
 
@@ -336,8 +335,17 @@ public final class GlfwWindow extends EngineSubsystem {
         @Override
         public CallbackState installErrorCallback() {
             GLFWErrorCallback owned = GLFWErrorCallback.createPrint(System.err);
-            GLFWErrorCallback previous = GLFW.glfwSetErrorCallback(owned);
-            return new CallbackState(owned, previous);
+            try {
+                GLFWErrorCallback previous = GLFW.glfwSetErrorCallback(owned);
+                return new CallbackState(owned, previous);
+            } catch (RuntimeException | Error failure) {
+                try {
+                    owned.free();
+                } catch (RuntimeException | Error cleanupFailure) {
+                    addSuppressedUnlessSame(failure, cleanupFailure);
+                }
+                throw failure;
+            }
         }
 
         @Override

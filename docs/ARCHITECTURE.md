@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, and renderer-facing interpolation alpha; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, and typed startup configuration validation; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -151,6 +151,16 @@ Floating point exists only at the presentation boundary. Fixed-step accumulation
 
 After P2-T06 recovery, alpha reflects only the retained fraction from accepted/clamped elapsed time. Whole due ticks discarded by the step cap and elapsed time discarded by the frame-gap clamp are not represented as alpha and do not become backlog. Calls remain externally serialized; no thread-safety promise is added.
 
+## Typed startup configuration validation — P2-T08 / Issue #78
+
+`EngineConfigSchema` validates one already-resolved `Map<String, ConfigEntry>` before subsystem startup. It does not load files or merge sources. The initial canonical keys are `fullscreen.width`, `fullscreen.height`, and `simulation.tickRate`; each key is represented by a public `ConfigKey<Integer>` with a documented default.
+
+Defaults are 1920x1080 and 60 Hz. Width accepts `320..16384`, height accepts `200..16384`, and the tick-rate key accepts exactly 60. The tick-rate key therefore validates the locked timing contract rather than making simulation cadence configurable.
+
+`ConfigSource` carries opaque caller-owned diagnostic text, while `ConfigEntry` pairs that source with one raw value. Integer parsing trims leading/trailing whitespace. Missing known keys use defaults. Unknown keys, malformed integers, out-of-range dimensions, and non-60 tick rates are user configuration errors. `EngineConfigSchema.validate` examines the complete supplied map, preserves input iteration order for errors, and throws one `ConfigValidationException` with an immutable ordered `ConfigError` list if any user error exists. Null programmer-contract inputs fail before ordinary validation.
+
+Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T09 owns engine/game/user/command-line source layering and precedence; P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -184,4 +194,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Exact 60 Hz fixed-step accumulation | Implemented by P2-T05 / Issue #75 with JUnit 6 tests |
 | Bounded frame-gap/catch-up recovery policy | Implemented by P2-T06 / Issue #76 with JUnit 6 tests |
 | Renderer-facing interpolation alpha | Implemented by P2-T07 / Issue #77 with JUnit 6 tests |
+| Typed startup configuration validation | Implemented by P2-T08 / Issue #78 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

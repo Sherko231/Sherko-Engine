@@ -573,3 +573,18 @@ After an authorized dependency/version or dependency-ownership change:
 ```
 
 Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized.
+
+## Wiki/API-guide verification
+
+The [`../wiki/`](../wiki/README.md) directory is the consumer-facing guide for already implemented public engine APIs. It does not replace runtime verification, tests, accepted decisions, or the active Issue.
+
+Whenever a task changes public engine API or consumer-visible lifecycle, ownership, threading, failure, configuration, or usage behavior, verification/handoff must also confirm that:
+
+1. the relevant wiki page uses the actual production signatures and behavior;
+2. practical examples do not call planned/nonexistent APIs;
+3. `wiki/API_INDEX.md` reflects public surface changes;
+4. `wiki/LIMITATIONS.md` no longer claims newly implemented behavior is unavailable, and does not claim future behavior exists;
+5. relative wiki links resolve by repository path inspection;
+6. the PR records `Wiki impact: updated <pages>` or, when truly unaffected, `Wiki impact: none — <reason>`.
+
+Wiki consistency is documentation verification, not evidence that production code works. For a qualifying Markdown-only wiki/docs task, apply the existing Markdown-only CI exemption only after auditing the complete changed-file set; no Gradle execution is required solely to prove prose/link synchronization.

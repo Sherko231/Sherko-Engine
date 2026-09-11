@@ -6,70 +6,55 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `b9c98ec3bf494122c849fa5a9c670923d7cff191` — P2-T07 / PR #116 merged; merged-master workflow #182 passed |
+| Verified pre-checkpoint `master` | `6f242aab4cd9c031bf1992c8cc46de45f41f41c1` — P2-T08 / PR #117 merged; merged-master workflow #185 passed |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T07 |
-| Current executable work | P2-T08 / Issue #78 — typed startup configuration validation |
-| Current branch | `p2-t08-typed-config` |
-| Next planned roadmap implementation | P2-T09 — layered configuration loading; remains planning-only until P2-T08 completes |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T08 |
+| Current executable work | Maintenance Issue #118 — reconcile post-P2-T08 handoff status |
+| Current branch | `maint-post-p2-t08-handoff` |
+| Next planned roadmap implementation | P2-T09 / Issue #79 — layered configuration loading; planning-only until explicitly refined and activated after #118 completes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
 
-## P2-T07 completion evidence
+## P2-T08 completion evidence
 
-P2-T07 / Issue #77 is complete:
+P2-T08 / Issue #78 is complete:
 
-- PR #116 merged to `master` as `b9c98ec3bf494122c849fa5a9c670923d7cff191`.
-- Final exact-head PR workflow #181 / run `34591718600` passed all five jobs on head `c417a4716ff532bfa9a98486a28a505526bd6d6c`.
-- PR `engine-subsystem-tests` artifact: ID `10195974227`, digest `sha256:84fe900ca2228a7b978c402e916555e9832615e6be6468cc876a76102d97011a`.
-- PR `jacoco-reports` artifact: ID `10195952652`, digest `sha256:f262542e6ddfea5f33efe1102d577c5a9948f1a438b152efe89b5967e53e8cd9`.
-- Merged-master workflow #182 / run `34592107752` passed all five jobs on the exact merge commit.
-- Merged-master `engine-subsystem-tests` artifact: ID `10196104080`, digest `sha256:70b428c85256123d34ec4c2136a0898853e182b5bbf64901a219c364d6ac9e7e`.
-- Merged-master `jacoco-reports` artifact: ID `10196104719`, digest `sha256:e76cfa6566622cca179cb1a4d02d8e71292e02aaeb349caf0b74b1244253720a`.
+- PR #117 merged to `master` as `6f242aab4cd9c031bf1992c8cc46de45f41f41c1`.
+- Initial PR workflow #183 failed because the synthetic `CountingSubsystem` test double omitted required no-op lifecycle hooks; that failure was corrected only in the authorized test file and is obsolete evidence.
+- Final exact-head PR workflow #184 / run `34593760659` passed all five required jobs on head `efd9c56003d6816791d1c02be2bcefdfa7cf061c`.
+- PR `engine-subsystem-tests` artifact: ID `10261530242`, digest `sha256:bb3ee30be572587eb057f0d65579c50204ef54f5000b4d144b0a8123213e26a8`.
+- PR `jacoco-reports` artifact: ID `10261470207`, digest `sha256:a8f3001a2fe5377d9bc0fceb3c7baea680e58304712e6ded6157edb61bfbd10e`.
+- Merged-master workflow #185 / run `34594010089` passed all five required jobs on exact merge commit `6f242aab4cd9c031bf1992c8cc46de45f41f41c1`.
+- Merged-master `engine-subsystem-tests` artifact: ID `10261775449`, digest `sha256:d792274497de7e52b122d36c8ae632321c9bf2e9f8b8abefb90547528f7da6e1`.
+- Merged-master `jacoco-reports` artifact: ID `10261470658`, digest `sha256:d56620d4b0e0c0b2fce11435fe61d361894885ac119a8d08a4d10ef21f18c98d`.
 - Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and self-review were not represented as independent review.
 
-## P2-T08 executable contract
-
-Issue #78 is activated and is the sole executable roadmap task for this branch. It adds a fixed startup schema in `engine-core` for one already-resolved raw configuration map.
-
-Authorized public behavior:
-
-- `ConfigSource` preserves opaque diagnostic source text.
-- `ConfigEntry` pairs one raw value with its source.
-- canonical typed `ConfigKey<Integer>` values define `fullscreen.width`, `fullscreen.height`, and `simulation.tickRate`.
-- defaults are width `1920`, height `1080`, tick rate `60`.
-- width bounds are inclusive `320..16384`.
-- height bounds are inclusive `200..16384`.
-- tick rate accepts exactly `60`; P2-T08 does not make simulation rate configurable.
-- `EngineConfigSchema.validate(...)` aggregates user errors in supplied-map iteration order, rejects unknown keys, preserves sources, returns all typed defaults/values on success, and performs no lifecycle call.
-- `ConfigValidationException` exposes an immutable ordered list of `ConfigError` values.
-
-P2-T09 retains source loading/layering/precedence. P2-T08 does not add file I/O, CLI/environment parsing, hot reload, arbitrary extensible keys, persistence, or a mutable runtime settings service.
+P2-T08 established the typed startup schema in `engine-core`: source-aware raw entries, canonical typed keys for fullscreen width/height and the locked 60 Hz simulation rate, defaults, bounds, aggregated ordered validation errors, unknown-key rejection, immutable validated output, and no lifecycle side effects. P2-T09 retains configuration source layering and precedence.
 
 ## Exact next action
 
-On the active branch:
+Finish maintenance Issue #118 only:
 
-1. finish the authorized implementation/tests/docs only;
-2. audit the complete changed-file list against Issue #78;
-3. perform author self-review and record independent-review provenance honestly;
-4. open one linked PR;
-5. require passing exact-head PR CI because Java/YAML files change;
-6. merge only after the current-head workflow passes;
-7. require separate passing push CI on the exact resulting `master` merge commit;
-8. record final artifacts/evidence and confirm Issue #78 closed consistently.
+1. keep the complete diff restricted to `README.md` and `docs/DEVELOPMENT_STATUS.md`;
+2. verify both documents against live GitHub state;
+3. open one linked PR;
+4. audit the complete PR changed-file list and require exactly those two `.md` paths;
+5. apply the Markdown-only CI exemption — no PR-head or merged-`master` build/test CI is required for this maintenance change;
+6. merge the maintenance PR and confirm #118 closes consistently.
 
-Do not activate or implement P2-T09 until P2-T08 is merged and verified.
+After #118 completes, perform a fresh startup audit and then refine/activate P2-T09 / Issue #79 before any P2-T09 code is written. Do not implement #79 from its current planning body without first finalizing its executable contract.
+
+A future agent must not create another handoff-only maintenance task merely because this document correctly describes its containing maintenance checkpoint. After #118 is merged, reconcile live GitHub state with this checkpoint and proceed to the fresh #79 activation audit unless another real conflict exists.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, renderer-facing interpolation alpha, and on this branch typed startup configuration validation.
-- No dependency, lockfile, module-edge, native-binding, protocol, persistence-format, or scope change is authorized by P2-T08.
-- CI retains five Windows x64 self-hosted jobs. The focused engine-core evidence suite is extended on this branch with `EngineConfigSchemaTest`.
+- `engine-core` contains lifecycle/order/startup rollback, monotonic elapsed sampling, exact 60 Hz accumulation, bounded catch-up policy, renderer-facing interpolation alpha, and typed startup configuration validation.
+- P2-T08 added no dependency, lockfile, module-edge, native-binding, protocol, persistence-format, or scope change.
+- CI retains five Windows x64 self-hosted jobs and the Markdown-only path exemption.
 
 ## Phase 2 status
 
@@ -82,20 +67,21 @@ Completed and merged:
 - P2-T05 / #75 — exact fixed-step accumulator at 60 Hz.
 - P2-T06 / #76 — bounded frame-gap and catch-up policy.
 - P2-T07 / #77 — renderer-facing interpolation alpha separated from whole simulation ticks.
-
-Active:
-
 - P2-T08 / #78 — typed configuration keys/defaults/bounds/source-aware validation.
 
-Next after P2-T08:
+Current maintenance:
 
-- P2-T09 — layered config loading and exact precedence; planning-only until activated.
+- #118 — reconcile post-P2-T08 handoff status; documentation-only.
+
+Next roadmap task after maintenance:
+
+- P2-T09 / #79 — layered config loading and exact precedence; planning-only until explicitly activated.
 
 P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2 task tests do not satisfy that integrated gate.
 
 ## Repository maintenance policy
 
-Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively `.md` paths. P2-T08 is non-exempt because it changes Java source/tests and workflow YAML.
+Markdown-only changes are exempt from automatic PR-head and merged-master build/test CI only when the complete non-empty diff contains exclusively `.md` paths. Issue #118 is intended to qualify because only `README.md` and `docs/DEVELOPMENT_STATUS.md` are authorized; verify the complete PR file list before relying on the exemption.
 
 ## Open gates and blockers
 
@@ -105,7 +91,7 @@ Markdown-only changes are exempt from automatic PR-head and merged-master build/
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block P2-T08, but unrelated unit/CI success must not strengthen their claims.
+These gates do not block the current Phase 2 configuration work, but unrelated unit/CI success must not strengthen their claims.
 
 ## Live-state reconciliation
 
@@ -113,9 +99,8 @@ Before implementation or handoff, a fresh agent must:
 
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
-3. compare remote `master`, open PRs, and active Issues with this checkpoint;
-4. verify #78 remains the sole active executable roadmap task;
-5. audit all changed paths against #78;
-6. require exact-head PR CI and exact merged-master CI because this task is non-Markdown;
-7. keep P2-T09 and later tasks planning-only until activated one at a time;
-8. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.
+3. compare remote `master`, open PRs, active Issues, and workflow state with this checkpoint;
+4. while #118 is open, verify it remains the sole active maintenance task and that its diff is exactly the two authorized Markdown files;
+5. after #118 merges, treat #79 as the next planned roadmap task, not as executable code authorization until it is refined and activated;
+6. preserve P2's still-unproven ten-minute integrated exit gate;
+7. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.

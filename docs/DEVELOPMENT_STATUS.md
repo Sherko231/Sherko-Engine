@@ -42,7 +42,7 @@ concurrency:
 Expected operational semantics:
 
 - commits to the same PR share a PR-number concurrency group, so newer runs supersede older queued/in-progress runs;
-- different PRs use different groups;
+- different PRs use different groups and therefore never cancel each other's runs;
 - pushes to `master` use the `master` ref group and remain independent from PR groups;
 - `workflow_dispatch` uses its ref group;
 - the five existing CI jobs, triggers, runner labels, commands, artifact paths, and pass/fail requirements remain unchanged.

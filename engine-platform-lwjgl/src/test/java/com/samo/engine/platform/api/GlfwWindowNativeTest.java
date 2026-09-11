@@ -47,10 +47,13 @@ class GlfwWindowNativeTest {
         String actualRenderer = null;
         int actualMajor = -1;
         int actualMinor = -1;
-        boolean lifecycleClean = false;
+        boolean started = false;
+        boolean stopAttempted = false;
+        boolean closed = false;
         try {
             window.initialize();
             window.start();
+            started = true;
 
             assertTrue(glfwGetCurrentContext() != 0L, "the production window must own a current context while started");
             actualMajor = glGetInteger(GL_MAJOR_VERSION);
@@ -67,13 +70,21 @@ class GlfwWindowNativeTest {
             assertLog(events.get(0), "OpenGL version: " + actualVersion);
             assertLog(events.get(1), "OpenGL renderer: " + actualRenderer);
 
+            stopAttempted = true;
             window.stop();
             window.close();
+            closed = true;
             assertEquals(0L, glfwGetCurrentContext());
             registry.assertNoOpenResources();
-            lifecycleClean = true;
         } finally {
-            if (!lifecycleClean) {
+            if (!closed) {
+                if (started && !stopAttempted) {
+                    try {
+                        window.stop();
+                    } catch (RuntimeException | Error ignored) {
+                        // Continue to the terminal close attempt below.
+                    }
+                }
                 try {
                     window.close();
                 } catch (RuntimeException | Error ignored) {

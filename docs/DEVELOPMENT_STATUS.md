@@ -6,70 +6,51 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `3dc684ab2b48ab8255d33a5e353cadea59d76979` — post-P2-T10 handoff maintenance PR #127 merged |
+| Verified pre-checkpoint `master` | `a7ef3df4b6b03a10534a600de3e4ca3f945080bb` — P2-T11 / PR #128 merged |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T10 |
-| Current executable work | P2-T11 / Issue #81 — sampled JFR allocation metric evidence |
-| Current branch | `p2-t11-allocation-metric` |
-| Next planned roadmap implementation | P2-T12 / Issue #82 — structured runtime logging; planning-only until P2-T11 completes |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T11 |
+| Current executable work | none; post-P2-T11 documentation maintenance only |
+| Current branch | `maint-reconcile-post-p2-t11` |
+| Next planned roadmap implementation | P2-T12 / Issue #82 — structured runtime logging; planning-only until refined and activated |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
 
-## P2-T10 completion evidence
+## P2-T11 completion evidence
 
-P2-T10 / Issue #80 is complete:
+P2-T11 / Issue #81 is complete:
 
-- PR #125 merged to `master` as `0625bf2dc2531e21e894bf69f7414c7e17f945e2`.
-- Final exact-head PR workflow #188 / run `34598785022` passed all five required jobs on head `9332f963fa21360b501b7b9074ab40c9f3380b8e`.
-- Merged-master workflow #189 / run `34599099291` passed all five required jobs on exact merge commit `0625bf2dc2531e21e894bf69f7414c7e17f945e2`.
-- Merged-master `engine-subsystem-tests` artifact: ID `10263238589`, digest `sha256:d6aa6fdc8dabe3e493f9fbaf33d599faf00b03c623458b188cc2074ec39fa5fd`.
-- Merged-master `jacoco-reports` artifact: ID `10262719107`, digest `sha256:5659587e28729e29a50a95ab0798a879723bcf6cd64e3114af55cb20eaeaeb2a`.
-- Independent review was recorded as `not performed` because no separate reviewer/agent identity was available; CI and author self-review were not represented as independent review.
+- PR #128 merged to `master` as `a7ef3df4b6b03a10534a600de3e4ca3f945080bb`.
+- Final exact-head PR workflow #191 / run `34602466847` passed all five required jobs on head `9b9f73f101955e0e6fa9079478098baf32a634f5`.
+- Merged-master workflow #192 / run `34602702350` passed all five required jobs on exact merge commit `a7ef3df4b6b03a10534a600de3e4ca3f945080bb`.
+- Merged-master `engine-subsystem-tests` artifact: ID `10265810108`, digest `sha256:11e5ef2dfbe04b3710ee26f2e62ac43ba1253620130844c4e89e1333032babd6`.
+- Merged-master `jacoco-reports` artifact: ID `10265375432`, digest `sha256:8f800eeaf57194e4405a4abbf0ff147105f2bfe697bc10efe473d189c2b7a161`.
+- P2-T11 remained benchmark/test-only: no production public API, dependency, module edge, durable decision, or native binding was added.
+- Independent review was not mandatory under the activated #81 contract because the task remained test/evidence-only; CI was not represented as independent review.
 
-Documentation-only Issue #126 / PR #127 then reconciled the post-P2-T10 handoff and merged as `3dc684ab2b48ab8255d33a5e353cadea59d76979`. Its complete diff contained only `README.md` and this file, so the Markdown-only CI exemption applied.
-
-## P2-T11 executable contract
-
-Issue #81 is activated and is the sole executable roadmap task for this branch.
-
-P2-T11 adds no production public API and no dependency. `AllocationMetricBenchmarkTest` uses Java 25 JFR `jdk.ObjectAllocationSample` events and their sampled `weight` field to estimate Java-heap allocation pressure for two controlled channels: `simulation tick` and `render frame`.
-
-Each channel is measured in its own recording window on a uniquely named dedicated platform thread after warm-up. Only samples attributed to that workload thread contribute to the result. The report records iteration count, sample count, sampled weight, measured duration, and estimated bytes per iteration. The render workload is synthetic/headless and must not be presented as OpenGL-renderer evidence.
-
-The benchmark also runs a deliberately allocating control and a nonallocating arithmetic control. The allocating control must produce usable JFR samples; otherwise verification fails instead of fabricating a zero metric. The nonallocating control may legitimately produce zero sampled bytes, which is not proof of mathematical zero allocation.
-
-The retained report path is:
-
-`engine-core/build/reports/allocation/p2-t11-allocation-metric.txt`
-
-The metric is sampled profiling evidence only. It does not measure native/direct/GPU memory, exact allocation per individual frame/tick, retained heap, or GC pause cost, and it establishes no allocation budget.
+P2-T11 established a repeatable Java 25 JFR `jdk.ObjectAllocationSample` evidence path and retained report `engine-core/build/reports/allocation/p2-t11-allocation-metric.txt`. The metric is sampled Java-heap allocation pressure only; it is not exact per-call allocation, native/direct/GPU memory evidence, retained-heap evidence, or a product budget.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` production code remains unchanged by P2-T11; lifecycle, timing, configuration, and native-resource ownership contracts through P2-T10 remain intact.
-- P2-T11 is test/evidence-only and uses JDK Flight Recorder already selected by `ENGINE_SCOPE.md`.
-- No dependency, lockfile, module edge, native binding, protocol, persisted format, or product-scope change is authorized.
-- CI retains five Windows x64 self-hosted jobs; P2-T11 is non-exempt because Java test source and workflow YAML change.
+- `engine-core` production contracts through P2-T10 remain intact; P2-T11 added only test/evidence code and CI/report retention.
+- No dependency, lockfile, module edge, native binding, protocol, persisted format, or product-scope change was introduced by P2-T11.
+- CI retains five Windows x64 self-hosted jobs.
 
 ## Exact next action
 
-On `p2-t11-allocation-metric`:
+After this documentation-only maintenance is merged:
 
-1. keep changes limited to the six paths authorized by Issue #81;
-2. run the focused `AllocationMetricBenchmarkTest` and confirm it writes the required report;
-3. run the existing engine-core regression set plus normal five-job CI on the exact PR head;
-4. retain the allocation report in CI artifacts;
-5. audit the complete changed-file list against #81;
-6. self-review JFR event selection, sampled-weight interpretation, thread attribution, warm-up separation, report labeling, and claim limits;
-7. merge only after exact-head PR CI passes;
-8. require separate passing push CI on the exact resulting `master` merge commit;
-9. record final evidence and close #81 consistently.
-
-Do not activate or implement P2-T12 inside P2-T11.
+1. perform a fresh startup audit from the resulting `master`;
+2. verify no open PR or conflicting active roadmap Issue exists;
+3. read Issue #82 plus the required scope/backlog/architecture/decision/build documents;
+4. refine #82 into one executable P2-T12 contract before any implementation write;
+5. explicitly define the logging API/schema, required/optional fields, missing-field representation, severity model, sink behavior, filtering semantics, flush/error behavior, ownership/threading expectations, authorized files, tests, and dependency policy;
+6. keep P2-T13 / #83 planning-only while P2-T12 is activated;
+7. create a dedicated P2-T12 branch from verified `master` before any repository write;
+8. preserve the still-unproven ten-minute Phase 2 exit gate and independent P0 feasibility gates.
 
 ## Phase 2 status
 
@@ -85,17 +66,14 @@ Completed and merged:
 - P2-T08 / #78 — typed configuration keys/defaults/bounds/source-aware validation.
 - P2-T09 / #79 — fixed-precedence layered configuration loading.
 - P2-T10 / #80 — explicit native-resource registry and shutdown leak diagnostics.
-
-Active:
-
 - P2-T11 / #81 — sampled JFR allocation-observability benchmark/evidence.
 
 Next:
 
-- P2-T12 / #82 — structured runtime logging; planning-only.
-- P2-T13 / #83 — orderly fatal termination; planning-only and depends on P2-T10/P2-T12.
+- P2-T12 / #82 — structured runtime logging; planning-only until activated.
+- P2-T13 / #83 — orderly fatal termination; planning-only and expected to build on P2-T10/P2-T12.
 
-P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated allocation benchmark/test evidence does not satisfy that integrated gate.
+P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated task tests/evidence do not satisfy that integrated gate.
 
 ## Open gates and blockers
 
@@ -105,7 +83,7 @@ P2 phase completion is not claimed. The exit gate remains a deterministic headle
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block P2-T11, but its JFR allocation evidence must not strengthen native-stability or restartability claims.
+These gates do not prevent refining P2-T12, but future logging work must not strengthen unrelated native feasibility claims.
 
 ## Live-state reconciliation
 
@@ -114,9 +92,9 @@ Before implementation or handoff, a fresh agent must:
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
 3. compare remote `master`, open PRs, active Issues, and workflow state with this checkpoint;
-4. verify #81 remains the sole active executable roadmap task;
-5. audit all changed paths against #81;
-6. require exact-head PR CI and exact merged-master push CI because this task is non-Markdown;
-7. keep P2-T12/P2-T13 and later tasks planning-only until activated one at a time;
+4. verify #82 is the next selected roadmap task and no other executable roadmap task conflicts;
+5. activate #82 only after resolving its currently open API/format/failure-policy choices;
+6. require normal exact-head PR CI and exact merged-master push CI for any non-Markdown P2-T12 implementation;
+7. keep P2-T13 and later tasks planning-only until selected one at a time;
 8. preserve P2's still-unproven ten-minute integrated exit gate and independent native feasibility gates;
 9. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.

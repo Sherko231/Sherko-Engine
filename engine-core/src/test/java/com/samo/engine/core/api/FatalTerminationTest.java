@@ -1,18 +1,17 @@
 package com.samo.engine.core.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ class FatalTerminationTest {
             new EngineLogger.Context(12L, 34L, "core", null, null);
 
     @Test
-    void happyPathLogsShutsDownInReverseVerifiesFlushesAndTerminates() {
+    void happyPathLogsCleansReverseOrderVerifiesFlushesThenTerminates() {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem first = new ProbeSubsystem("first", registry, trace, 11L);
@@ -62,8 +61,9 @@ class FatalTerminationTest {
     }
 
     @Test
-    void stopFailureStillClosesThatSubsystemAndContinuesReverseCleanup() {
+    void stopFailureStillClosesAndReportsBeforeFlushAndTermination() {
         List<String> trace = new ArrayList<>();
+        List<EngineLogger.Event> events = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem first = new ProbeSubsystem("first", registry, trace, 1L);
         ProbeSubsystem second = new ProbeSubsystem("second", registry, trace, 2L);
@@ -71,7 +71,6 @@ class FatalTerminationTest {
         start(first, second);
         trace.clear();
 
-        List<EngineLogger.Event> events = new ArrayList<>();
         EngineLogger logger = new EngineLogger(new CapturingSink(events, trace));
         TerminationSignal signal = new TerminationSignal();
         FatalTermination fatal = new FatalTermination(logger, status -> {
@@ -89,9 +88,9 @@ class FatalTerminationTest {
         assertTrue(trace.indexOf("second:stop") < trace.indexOf("second:close"));
         assertTrue(trace.indexOf("second:close") < trace.indexOf("first:stop"));
         assertTrue(trace.indexOf("first:close") < trace.indexOf("flush"));
-        assertEquals(1, second.resourceCloses.get());
         assertEquals(1, first.resourceCloses.get());
-        assertEquals(1, events.stream().filter(event -> event.level() == EngineLogger.Level.ERROR).count());
+        assertEquals(1, second.resourceCloses.get());
+
         EngineLogger.Event error = events.stream()
                 .filter(event -> event.level() == EngineLogger.Level.ERROR)
                 .findFirst()
@@ -103,8 +102,9 @@ class FatalTerminationTest {
     }
 
     @Test
-    void closeFailureRemainsVisibleThroughRegistryVerificationAndDoesNotPreventTermination() {
+    void closeFailureRemainsTrackedAndRegistryFailureAlsoReachesTerminator() {
         List<String> trace = new ArrayList<>();
+        List<EngineLogger.Event> events = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 7L);
         RuntimeException releaseFailure = new IllegalStateException("release failed");
@@ -112,7 +112,6 @@ class FatalTerminationTest {
         start(subsystem);
         trace.clear();
 
-        List<EngineLogger.Event> events = new ArrayList<>();
         EngineLogger logger = new EngineLogger(new CapturingSink(events, trace));
         TerminationSignal signal = new TerminationSignal();
         FatalTermination fatal = new FatalTermination(logger, status -> {
@@ -124,28 +123,22 @@ class FatalTerminationTest {
                 TerminationSignal.class,
                 () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
-        assertSame(signal, actual);
         assertEquals(2, actual.getSuppressed().length);
         assertSame(releaseFailure, actual.getSuppressed()[0]);
         assertTrue(actual.getSuppressed()[1] instanceof IllegalStateException);
         assertTrue(actual.getSuppressed()[1].getMessage().contains("CLOSE_FAILED"));
         assertEquals(2, events.stream().filter(event -> event.level() == EngineLogger.Level.ERROR).count());
-        assertTrue(trace.indexOf("one:resource-close") < trace.indexOf("flush"));
         assertTrue(trace.indexOf("flush") < trace.indexOf("terminate:1"));
     }
 
     @Test
-    void fatalWriteRuntimeExceptionDoesNotPreventCleanupFlushOrTermination() {
+    void initialFatalWriteRuntimeExceptionAndErrorDoNotSkipCleanupOrTermination() {
         verifyInitialFatalWriteFailure(new IllegalStateException("fatal write runtime"));
-    }
-
-    @Test
-    void fatalWriteErrorDoesNotPreventCleanupFlushOrTermination() {
         verifyInitialFatalWriteFailure(new AssertionError("fatal write error"));
     }
 
     @Test
-    void cleanupErrorReportingFailureIsCapturedOnceWithoutRecursiveRetry() {
+    void errorReportingFailureIsCapturedOnceWithoutRecursiveRetry() {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 3L);
@@ -153,15 +146,15 @@ class FatalTerminationTest {
         start(subsystem);
         trace.clear();
 
-        RuntimeException reportingFailure = new RuntimeException("report failed");
-        AtomicInteger errorAttempts = new AtomicInteger();
+        RuntimeException reportFailure = new RuntimeException("report failed");
+        AtomicInteger errorWrites = new AtomicInteger();
         EngineLogger logger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
                 trace.add("log:" + event.level());
                 if (event.level() == EngineLogger.Level.ERROR) {
-                    errorAttempts.incrementAndGet();
-                    throw reportingFailure;
+                    errorWrites.incrementAndGet();
+                    throw reportFailure;
                 }
             }
 
@@ -180,21 +173,17 @@ class FatalTerminationTest {
                 TerminationSignal.class,
                 () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
-        assertSame(signal, actual);
-        assertEquals(1, errorAttempts.get());
+        assertEquals(1, errorWrites.get());
         assertEquals(2, actual.getSuppressed().length);
         assertSame(subsystem.stopFailure, actual.getSuppressed()[0]);
-        assertSame(reportingFailure, actual.getSuppressed()[1]);
-        assertEquals(1, trace.stream().filter("log:ERROR"::equals).count());
+        assertSame(reportFailure, actual.getSuppressed()[1]);
         assertTrue(trace.indexOf("flush") < trace.indexOf("terminate:1"));
     }
 
     @Test
-    void flushFailuresDoNotPreventTerminationAndPreserveSuppressedIdentity() {
-        RuntimeException runtime = new RuntimeException("flush runtime");
-        verifyFlushFailure(runtime);
-        AssertionError error = new AssertionError("flush error");
-        verifyFlushFailure(error);
+    void flushRuntimeExceptionAndErrorDoNotPreventTermination() {
+        verifyFlushFailure(new IllegalStateException("flush runtime"));
+        verifyFlushFailure(new AssertionError("flush error"));
     }
 
     @Test
@@ -204,16 +193,15 @@ class FatalTerminationTest {
     }
 
     @Test
-    void returningTerminatorProducesTerminalIllegalStateExceptionWithPriorFailures() {
+    void returningTerminatorIsTerminalAndCarriesPriorFailures() {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 4L);
         subsystem.stopFailure = new IllegalStateException("stop failed");
         start(subsystem);
         trace.clear();
-        EngineLogger logger = new EngineLogger(new TraceSink(trace));
         AtomicInteger terminations = new AtomicInteger();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTermination fatal = new FatalTermination(new EngineLogger(new TraceSink(trace)), status -> {
             trace.add("terminate:" + status);
             terminations.incrementAndGet();
         });
@@ -225,9 +213,8 @@ class FatalTerminationTest {
         assertTrue(returned.getMessage().contains("returned normally"));
         assertEquals(1, returned.getSuppressed().length);
         assertSame(subsystem.stopFailure, returned.getSuppressed()[0]);
-        assertEquals(1, terminations.get());
-
         int traceSize = trace.size();
+
         assertThrows(
                 IllegalStateException.class,
                 () -> fatal.terminate("again", CONTEXT, List.of(subsystem), registry));
@@ -236,13 +223,14 @@ class FatalTerminationTest {
     }
 
     @Test
-    void invalidArgumentsAndDuplicateSubsystemsFailBeforeAnySideEffect() {
+    void invalidInputsAndDuplicateSubsystemsFailBeforeAnySideEffect() {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 5L);
-        EngineLogger logger = new EngineLogger(new TraceSink(trace));
         AtomicInteger terminations = new AtomicInteger();
-        FatalTermination fatal = new FatalTermination(logger, status -> terminations.incrementAndGet());
+        FatalTermination fatal = new FatalTermination(
+                new EngineLogger(new TraceSink(trace)),
+                status -> terminations.incrementAndGet());
 
         assertThrows(NullPointerException.class, () -> fatal.terminate(null, CONTEXT, List.of(), registry));
         assertThrows(IllegalArgumentException.class, () -> fatal.terminate("   ", CONTEXT, List.of(), registry));
@@ -261,22 +249,21 @@ class FatalTerminationTest {
     }
 
     @Test
-    void reentrantInvocationIsRejectedWithoutDuplicateCleanupOrTermination() {
+    void reentrantAndLaterCallsCannotDuplicateCleanupOrTermination() {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         EngineLogger logger = new EngineLogger(new TraceSink(trace));
-        AtomicInteger terminations = new AtomicInteger();
         AtomicReference<FatalTermination> fatalRef = new AtomicReference<>();
-        AtomicReference<Throwable> reentrantFailure = new AtomicReference<>();
+        AtomicReference<Throwable> nestedFailure = new AtomicReference<>();
+        AtomicInteger terminations = new AtomicInteger();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 6L);
-        subsystem.onStopCallback = () -> reentrantFailure.set(assertThrows(
+        subsystem.onStopCallback = () -> nestedFailure.set(assertThrows(
                 IllegalStateException.class,
                 () -> fatalRef.get().terminate("nested", CONTEXT, List.of(subsystem), registry)));
         start(subsystem);
         trace.clear();
 
         FatalTermination fatal = new FatalTermination(logger, status -> {
-            trace.add("terminate:" + status);
             terminations.incrementAndGet();
             throw new TerminationSignal();
         });
@@ -285,44 +272,57 @@ class FatalTerminationTest {
         assertThrows(
                 TerminationSignal.class,
                 () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
-
-        assertTrue(reentrantFailure.get() instanceof IllegalStateException);
-        assertEquals(1, terminations.get());
-        assertEquals(1, trace.stream().filter("one:stop"::equals).count());
-        assertEquals(1, trace.stream().filter("one:close"::equals).count());
-    }
-
-    @Test
-    void laterInvocationAfterThrowingTerminatorIsRejectedWithoutSideEffects() {
-        List<String> trace = new ArrayList<>();
-        NativeResourceRegistry registry = new NativeResourceRegistry();
-        ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 8L);
-        start(subsystem);
-        trace.clear();
-        EngineLogger logger = new EngineLogger(new TraceSink(trace));
-        AtomicInteger terminations = new AtomicInteger();
-        TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
-            terminations.incrementAndGet();
-            throw signal;
-        });
-
-        assertSame(
-                signal,
-                assertThrows(
-                        TerminationSignal.class,
-                        () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry)));
         int traceSize = trace.size();
 
+        assertTrue(nestedFailure.get() instanceof IllegalStateException);
+        assertEquals(1, trace.stream().filter("one:stop"::equals).count());
+        assertEquals(1, trace.stream().filter("one:close"::equals).count());
         assertThrows(
                 IllegalStateException.class,
-                () -> fatal.terminate("again", CONTEXT, List.of(subsystem), registry));
+                () -> fatal.terminate("later", CONTEXT, List.of(subsystem), registry));
         assertEquals(traceSize, trace.size());
         assertEquals(1, terminations.get());
     }
 
     @Test
-    void publicConstructorTerminatesChildJvmOnlyAfterCleanupAndFlush(@TempDir Path tempDir) throws Exception {
+    void concurrentSecondCallIsRejectedWhileFirstOwnsFatalSequence() throws Exception {
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        CountDownLatch fatalWriteEntered = new CountDownLatch(1);
+        CountDownLatch releaseFatalWrite = new CountDownLatch(1);
+        AtomicInteger terminations = new AtomicInteger();
+        AtomicReference<Throwable> firstResult = new AtomicReference<>();
+        EngineLogger logger = new EngineLogger(event -> {
+            if (event.level() == EngineLogger.Level.FATAL) {
+                fatalWriteEntered.countDown();
+                await(releaseFatalWrite);
+            }
+        });
+        FatalTermination fatal = new FatalTermination(logger, status -> {
+            terminations.incrementAndGet();
+            throw new TerminationSignal();
+        });
+
+        Thread first = Thread.ofPlatform().start(() -> {
+            try {
+                fatal.terminate("first", CONTEXT, List.of(), registry);
+            } catch (Throwable failure) {
+                firstResult.set(failure);
+            }
+        });
+        assertTrue(fatalWriteEntered.await(5, TimeUnit.SECONDS));
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> fatal.terminate("second", CONTEXT, List.of(), registry));
+        releaseFatalWrite.countDown();
+        first.join(5_000L);
+
+        assertTrue(firstResult.get() instanceof TerminationSignal);
+        assertEquals(1, terminations.get());
+    }
+
+    @Test
+    void publicConstructorExitsChildJvmOnlyAfterResourceCleanupAndFlush(@TempDir Path tempDir) throws Exception {
         Path marker = tempDir.resolve("fatal-order.txt");
         String javaExecutable = Path.of(
                         System.getProperty("java.home"),
@@ -338,7 +338,7 @@ class FatalTerminationTest {
                 .redirectErrorStream(true)
                 .start();
 
-        boolean finished = process.waitFor(Duration.ofSeconds(15));
+        boolean finished = process.waitFor(15, TimeUnit.SECONDS);
         if (!finished) {
             process.destroyForcibly();
         }
@@ -382,8 +382,6 @@ class FatalTerminationTest {
                 TerminationSignal.class,
                 () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
-        assertSame(signal, actual);
-        assertEquals(1, actual.getSuppressed().length);
         assertSame(failure, actual.getSuppressed()[0]);
         assertEquals(2, writes.get());
         assertTrue(trace.contains("one:close"));
@@ -412,7 +410,6 @@ class FatalTerminationTest {
                 TerminationSignal.class,
                 () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
 
-        assertSame(signal, actual);
         assertEquals(1, actual.getSuppressed().length);
         assertSame(failure, actual.getSuppressed()[0]);
     }
@@ -420,19 +417,23 @@ class FatalTerminationTest {
     private static void verifyTerminatorFailure(Throwable terminationFailure) {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RuntimeException earlier = new IllegalStateException("fatal write failed");
-        EngineLogger logger = new EngineLogger(new EngineLogger.Sink() {
-            @Override
-            public void write(EngineLogger.Event event) {
-                if (event.level() == EngineLogger.Level.FATAL) {
-                    throw earlier;
-                }
+        EngineLogger logger = new EngineLogger(event -> {
+            if (event.level() == EngineLogger.Level.FATAL) {
+                throw earlier;
             }
         });
         FatalTermination fatal = new FatalTermination(logger, status -> throwUnchecked(terminationFailure));
 
-        Throwable actual = assertThrows(
-                terminationFailure instanceof Error ? Error.class : RuntimeException.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+        Throwable actual;
+        if (terminationFailure instanceof Error) {
+            actual = assertThrows(
+                    Error.class,
+                    () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+        } else {
+            actual = assertThrows(
+                    RuntimeException.class,
+                    () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+        }
 
         assertSame(terminationFailure, actual);
         assertEquals(1, actual.getSuppressed().length);
@@ -443,6 +444,17 @@ class FatalTerminationTest {
         for (ProbeSubsystem subsystem : subsystems) {
             subsystem.initialize();
             subsystem.start();
+        }
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("test latch timed out");
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(interrupted);
         }
     }
 

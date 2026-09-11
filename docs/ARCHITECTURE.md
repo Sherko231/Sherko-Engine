@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, and typed startup configuration validation; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, and deterministic layered startup configuration loading; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -159,7 +159,17 @@ Defaults are 1920x1080 and 60 Hz. Width accepts `320..16384`, height accepts `20
 
 `ConfigSource` carries opaque caller-owned diagnostic text, while `ConfigEntry` pairs that source with one raw value. Integer parsing trims leading/trailing whitespace. Missing known keys use defaults. Unknown keys, malformed integers, out-of-range dimensions, and non-60 tick rates are user configuration errors. `EngineConfigSchema.validate` examines the complete supplied map, preserves input iteration order for errors, and throws one `ConfigValidationException` with an immutable ordered `ConfigError` list if any user error exists. Null programmer-contract inputs fail before ordinary validation.
 
-Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T09 owns engine/game/user/command-line source layering and precedence; P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service.
+Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service; P2-T09 adds only the fixed source layering described below.
+
+## Layered startup configuration — P2-T09 / Issue #79
+
+`EngineConfigLoader` composes one startup configuration using fixed precedence `EngineConfigSchema` defaults < game file < user file < command-line overrides. Engine defaults remain owned by D-025 and are not duplicated into a separate raw layer. The caller supplies both optional file paths plus an already-parsed command-line map; the loader does not discover OS paths or parse raw argv tokens.
+
+Game and user files use a bounded UTF-8 line-oriented `key=value` format. Blank lines and comments whose first non-whitespace character is `#` are ignored. The first `=` separates a trimmed key from the raw value; values may contain later `=` characters. Blank keys, missing separators, and duplicate keys within one physical file fail with an `IllegalArgumentException` naming the normalized file path and 1-based line. Missing files are skipped, while existing unreadable paths propagate `IOException`.
+
+Every file value carries a `ConfigSource` of `<normalized-path>:<line>`. Command-line values use `ConfigSource("command line")`. Higher layers replace lower entries by key. After all layers are merged, the loader calls `EngineConfigSchema.validate(...)` once; therefore an invalid lower value hidden by a valid higher value does not fail, while the winning invalid value retains its source in D-025 diagnostics. Successful output remains the immutable typed map owned by the schema.
+
+The loader invokes no lifecycle method and adds no dependency, environment-variable layer, generic provider framework, Java `Properties` escaping semantics, persistence, hot reload, or mutable settings service.
 
 ## Experimental code boundary
 
@@ -195,4 +205,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Bounded frame-gap/catch-up recovery policy | Implemented by P2-T06 / Issue #76 with JUnit 6 tests |
 | Renderer-facing interpolation alpha | Implemented by P2-T07 / Issue #77 with JUnit 6 tests |
 | Typed startup configuration validation | Implemented by P2-T08 / Issue #78 with JUnit 6 tests |
+| Layered startup configuration precedence | Implemented by P2-T09 / Issue #79 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

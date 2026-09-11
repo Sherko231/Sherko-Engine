@@ -128,3 +128,7 @@ Optional Gradle properties:
 ## Acceptance
 
 **Complete.** All five impairment modes were enabled and observed independently in a successful local runtime suite.
+
+## Wiki synchronization
+
+This file remains feasibility/test-harness evidence, not consumer API documentation. If a future networking task exposes impairment, transport, or related behavior through a production public engine API or changes how consumers use networking, update the relevant [`../../wiki/`](../../wiki/README.md) pages in the same PR. Otherwise record `Wiki impact: none — <reason>`.

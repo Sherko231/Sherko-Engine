@@ -6,21 +6,21 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `f84ca1d87292daf2648c9f6dc9371156facdb945` — P2-T01 PR #65 merged; merged-master CI #149 passed |
+| Verified pre-checkpoint `master` | `cf52a5c4de58bb0ad0f50dbc2a89b81144ca8416` — README reconciliation PR #69 merged under the owner's explicit one-time no-runner CI override; no CI pass is claimed for that docs-only maintenance |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
 | Completed roadmap implementation | P1-T01, P1-T02, P1-T02A, P1-T03, P1-T03A, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P1-T10, P1-T10A, P2-T01 |
 | Phase 1 live state | Epic #2 closed as completed after the exit gate passed |
-| Current maintenance | Issue #66 — task-contract, review-evidence, and phase-integration documentation; see linked PR for final verification/merge state |
-| Next planned implementation | After this documentation maintenance is verified and merged, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
+| Current maintenance | Issue #70 — refresh this handoff after completed documentation maintenance #66/#68 and PRs #67/#69 |
+| Next planned implementation | After Issue #70 is completed, materialize P2-T02 as its own executable Issue, then implement only that Issue on a dedicated branch |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must run `git rev-parse HEAD`, compare with remote `master`, and inspect GitHub for activity newer than this snapshot.
 
 ## Exact next action
 
-Phase 1 and P2-T01 / Issue #64 are complete. Inspect documentation maintenance Issue #66 and its linked PR first; finish its verification/merge handoff if still open. Then materialize P2-T02 (subsystem dependency ordering) as the next executable Issue using the strengthened task contract. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03). P2 phase exit remains unproven; single-subsystem tests do not demonstrate the ten-minute integrated headless loop.
+Phase 1 and P2-T01 / Issue #64 are complete. Documentation maintenance Issues #66 and #68 and their PRs #67 and #69 are complete; those docs-only merges used explicit owner-approved one-time CI overrides because no matching self-hosted Windows x64 runner was available, and no cancelled/queued run is recorded as a pass. Finish Issue #70, then materialize P2-T02 (subsystem dependency ordering) as the next executable Issue using the strengthened task contract. Do not reimplement P2-T01 or combine P2-T02 with rollback (P2-T03). P2 phase exit remains unproven; single-subsystem tests do not demonstrate the ten-minute integrated headless loop.
 
-Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run. At least one matching runner must be online for those jobs to execute; queued jobs are not verification evidence.
+Repository CI currently selects repository-scoped self-hosted Windows x64 runners. At this checkpoint GitHub reports `master` as unprotected with status-check enforcement off, so the platform does not itself block a failing PR merge. The repository agent contract still requires a passing exact-head PR run before merge and a passing merged-`master` push run unless the owner explicitly grants a separate bounded exception. At least one matching runner must be online for those jobs to execute; queued, cancelled, or unstarted jobs are not verification evidence.
 
 ## What is actually implemented
 
@@ -41,11 +41,13 @@ Repository CI currently selects repository-scoped self-hosted Windows x64 runner
 - The architecture job targets `:test-support:test`, and native smoke invokes the preserved root aliases.
 - `game-client` and `game-server` have separate runnable entry points, reproducible `--version` reporting, and server headless runtime-boundary verification.
 
-## Documentation maintenance — Issue #66
+## Completed documentation maintenance — Issues #66 and #68
 
-The agent contract and existing templates now require concrete API/architecture use cases, failure behavior, and current design need; tests must trace to observable requirements and plausible faults. PRs record independent/self-review provenance, reviewed SHA, findings, and unresolved risks honestly. Phase-exit evidence and next-phase planning review use existing backlog gates and existing handoff documents. No runtime API, architecture, dependency, workflow, or phase threshold changes.
+Issue #66 strengthened the agent contract and templates with concrete API/architecture use cases, failure behavior, current design need, observable test intent, honest review provenance, and phase-integration evidence rules. It changed documentation only and did not alter runtime API, architecture, dependencies, workflow definitions, or phase thresholds.
 
-This documentation-only change receives self-review; no independent review is claimed. Final CI/merge results and any remaining handoff blockers are recorded in Issue #66 and its linked PR. P2-T02 remains the next runtime task.
+PR #67 merged as `a28fa6d8c1da7c385da129ab19320c0960091fc6`. Its PR-head run #150 and merged-master run #151 did not execute successfully because no matching self-hosted Windows x64 runner was available; the owner explicitly authorized a one-time bypass for Issue #66 only. Those runs are not recorded as passes.
+
+Issue #68 corrected the stale README Phase 2 next-action pointer. PR #69 merged as `cf52a5c4de58bb0ad0f50dbc2a89b81144ca8416` under a separate explicit one-time owner override for that README-only maintenance. The exception does not modify `AGENTS.md`, `docs/BUILD_AND_VERIFY.md`, or future task requirements. P2-T02 remains the next runtime task.
 
 ## P2-T01 implementation and verification handoff
 
@@ -106,7 +108,7 @@ Before starting the next task, a fresh agent must:
 3. confirm Phase 1 Epic #2 and corrective Issues #60 and #62 are closed and no newer repository activity supersedes this checkpoint;
 4. inspect independent follow-up Issues #42–#44 and preserve their evidence limits;
 5. confirm at least one matching self-hosted Windows x64 runner is online before interpreting queued CI;
-6. confirm Issue #64 and its linked PR completion evidence, then materialize P2-T02 as the next executable Issue;
+6. confirm Issue #64 and its linked PR completion evidence, confirm documentation maintenance #66/#68 is complete, then materialize P2-T02 as the next executable Issue;
 7. stop if code, docs, GitHub state, or the active Issue conflict instead of guessing.
 
 ## Maintenance rule

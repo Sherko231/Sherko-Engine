@@ -279,7 +279,7 @@ class GlfwWindowTest {
     }
 
     @Test
-    void stopContinuesCleanupWhenSizeCallbackReleaseFails() {
+    void stopContinuesCleanupAndDoesNotRetryFailedSizeCallbackRelease() {
         FakeBackend backend = new FakeBackend();
         RuntimeException releaseFailure = new IllegalStateException("callback release failed");
         backend.sizeReleaseFailure = releaseFailure;
@@ -298,7 +298,7 @@ class GlfwWindowTest {
         backend.sizeReleaseFailure = null;
         window.close();
         registry.assertNoOpenResources();
-        assertEquals(2, backend.sizeReleaseCount);
+        assertEquals(1, backend.sizeReleaseCount);
     }
 
     @Test

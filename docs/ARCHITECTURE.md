@@ -13,11 +13,11 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, and deterministic layered startup configuration loading; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the single-subsystem lifecycle contract, graph-only dependency ordering, bounded startup rollback coordination, monotonic elapsed-time sampling, exact 60 Hz fixed-step accumulation, bounded frame-gap/catch-up policy, renderer-facing interpolation alpha, typed startup configuration validation, deterministic layered startup configuration loading, and explicit native-resource ownership diagnostics; concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is now a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
-| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09); other responsibilities planned | None |
+| `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10); other responsibilities planned | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | Skeleton | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
@@ -171,6 +171,18 @@ Every file value carries a `ConfigSource` of `<normalized-path>:<line>`. Command
 
 The loader invokes no lifecycle method and adds no dependency, environment-variable layer, generic provider framework, Java `Properties` escaping semantics, persistence, hot reload, or mutable settings service.
 
+## Explicit native-resource ownership diagnostics — P2-T10 / Issue #80
+
+`NativeResourceRegistry` gives later native wrappers one engine-core ownership diagnostic without depending on any native library. A successful registration normalizes a nonblank resource type, requires an opaque nonzero `long` handle, captures the first allocation call-site frame outside the registry, stores the caller-supplied `Runnable` closer, and returns a nested `Registration` implementing `AutoCloseable`.
+
+A live identity is `(resourceType, handle)`. Duplicate live identities fail before ownership changes. Different resource types may reuse the same numeric handle because native APIs have separate namespaces, and an identity may be registered again after a successful release.
+
+`Registration.close()` runs the closer synchronously on the caller thread. Successful close removes that exact registration and repeated close is a no-op. If the closer throws a `RuntimeException` or `Error`, the original throwable propagates unchanged, the attempt is terminal, and the registration remains tracked as `CLOSE_FAILED`; automatic retry is intentionally forbidden to avoid a possible double-free. Reentrant close while `CLOSING` is rejected.
+
+`assertNoOpenResources()` is a non-cleaning debug-shutdown verifier. Empty registries pass. Otherwise it throws `IllegalStateException` with the tracked count and deterministic registration-order entries containing normalized type, decimal handle, state, and allocation site. Verification never invokes a closer, removes an entry, or changes ownership state. Build-mode detection and composition-root integration are outside P2-T10; a later debug shutdown path decides when to call the verifier.
+
+The registry is not thread-safe. Registration, close, and verification remain externally serialized, preserving caller/native thread-affinity. Synthetic Java tests establish bookkeeping and diagnostics only; they are not evidence that GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free, sustained-stable, or restartable. P0-T13/P0-T14 and the P2 ten-minute integrated cleanup gate remain separate.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -206,4 +218,5 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Renderer-facing interpolation alpha | Implemented by P2-T07 / Issue #77 with JUnit 6 tests |
 | Typed startup configuration validation | Implemented by P2-T08 / Issue #78 with JUnit 6 tests |
 | Layered startup configuration precedence | Implemented by P2-T09 / Issue #79 with JUnit 6 tests |
+| Explicit native-resource ownership diagnostics | Implemented by P2-T10 / Issue #80 with JUnit 6 tests |
 | Concrete production engine subsystems | Planned: later Phase 2+ tasks |

@@ -57,3 +57,7 @@ The old `ISteamNetworking` P2P packet API uses implicit peer sessions keyed by S
 ## Next action
 
 Run **P0-T09**. The next spike must prove that Java 25's Foreign Function & Memory API can load the official Steam redistributable and invoke one harmless Steam flat-API networking function **without authored C/C++ glue**.
+
+## Wiki synchronization
+
+This file remains historical feasibility evidence, not consumer API documentation. If a future Steam/networking task turns this topic into an implemented public engine API or changes caller-visible transport usage, update the relevant [`../../wiki/`](../../wiki/README.md) pages in the same PR. Otherwise record `Wiki impact: none — <reason>` and leave this evidence unchanged.

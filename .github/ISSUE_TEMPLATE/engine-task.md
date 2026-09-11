@@ -47,6 +47,8 @@ assignees: ""
 - [ ] `docs/DECISIONS.md`
 - [ ] `docs/BUILD_AND_VERIFY.md`
 - [ ] Scope/roadmap/backlog/evidence document
+- [ ] `wiki/` API/usage guide — required when public API or consumer-visible usage changes
+- [ ] Wiki impact: none — reason recorded because no consumer/API usage changed
 - [ ] None — no durable repository context changes
 
 <!-- Add the optional sections below only when they materially reduce ambiguity or architectural risk. -->

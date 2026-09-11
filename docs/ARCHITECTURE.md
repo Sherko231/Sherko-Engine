@@ -283,3 +283,7 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | 60-second integrated Phase 2 headless gate | Completed under Issue #135 / D-030; retained exact-head PR and merged-`master` CI evidence passed |
 | Production GLFW/OpenGL window lifecycle | P3-T01 / Issue #84: `GlfwWindow`, deterministic tests, and real Windows native acceptance |
 | Other concrete production engine subsystems | Planned: later phases |
+
+## Wiki synchronization
+
+This file remains the architecture authority for module roles, boundaries, and accepted implementation maturity. The [`../wiki/`](../wiki/README.md) directory is a lower-authority consumer guide. Whenever an architecture task adds/removes/renames a public API or changes lifecycle, ownership, thread-affinity, failure, configuration, or other caller-visible semantics, update the relevant wiki pages and examples in the same PR. When no consumer behavior changes, record `Wiki impact: none — <reason>` rather than editing the wiki unnecessarily.

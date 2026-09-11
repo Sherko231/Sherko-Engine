@@ -395,5 +395,8 @@ Give the coding agent exactly one task ID at a time, on a dedicated task branch 
 5. Explicit non-goals.
 6. Commands used to verify the result.
 7. A requirement to stop if the task needs an undeclared architectural change.
+8. Wiki impact: list the relevant [`../../wiki/`](../../wiki/README.md) pages that must change when the task adds/removes/renames public API or changes consumer-visible usage/lifecycle/ownership/configuration behavior, or explicitly state `Wiki impact: none — <reason>`.
+
+Planned backlog entries do not become usable wiki APIs merely because they are written here. Add/update consumer guidance only when the corresponding production capability is actually implemented and verified.
 
 Do not ask an agent to “implement Phase 8” or “build networking.” A valid task is closer to: “Implement P10-T06 sequence-number wrap comparison in `engine-network-api`; add exhaustive boundary tests; do not change packet layout or socket code.”

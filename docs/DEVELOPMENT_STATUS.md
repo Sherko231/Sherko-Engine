@@ -10,7 +10,7 @@
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
 | Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, Phase 2 exit gate, and P3-T01 |
 | Current executable work | None — no Phase 3 implementation Issue is activated at this checkpoint |
-| Current task branch | None; this file is being reconciled by maintenance only |
+| Current task branch | None for roadmap implementation at this checkpoint |
 | Current pull request | None for roadmap implementation at this checkpoint |
 | Next planned roadmap task | P3-T02 / Issue #85 — planning-only until separately refined and activated |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
@@ -44,6 +44,12 @@ P3-T01 adds the first concrete production platform subsystem in `engine-platform
 
 P3-T01 deliberately does not implement P3-T02+ size/event/fullscreen/input behavior, a renderer loop, buffer swap/polling API, OpenGL debug callbacks, raw handle exposure, multi-window management, or the Phase 3 exit gate.
 
+## Engine API wiki
+
+The repository now maintains an in-repo consumer/API guide under [`../wiki/`](../wiki/README.md). It documents how humans and AI consumers use **implemented** production APIs, with practical examples, lifecycle/ownership rules, and explicit current limitations.
+
+The wiki is deliberately lower authority than scope, accepted decisions, active Issues, code/tests/evidence, this checkpoint, live GitHub state, and the roadmap/backlog. Future tasks that change a public engine API or consumer-visible usage must update the relevant wiki pages in the same PR; tasks with no wiki impact record `Wiki impact: none — <reason>`.
+
 ## Phase 3 status
 
 Phase 3 is in progress but only P3-T01 is complete.
@@ -61,6 +67,7 @@ P3-T03 and later Phase 3 tasks remain planning-only. Completing P3-T01 does not 
 5. Refine and activate #85 only if live code/docs/roadmap remain coherent.
 6. Create a dedicated P3-T02 branch before any implementation write.
 7. Preserve P0-T09A/P0-T13/P0-T14 as independent gates and do not overclaim P3-T01 evidence.
+8. When #85 or any later task changes public API/consumer usage, update the relevant `wiki/` pages before handoff.
 
 ## Open gates and blockers
 
@@ -81,4 +88,5 @@ Before implementation or handoff, a fresh agent must:
 3. compare remote `master`, open PRs, open Issues, and workflow state with this checkpoint;
 4. treat P3-T02 / #85 as planning-only unless live GitHub state explicitly shows it has been refined and activated;
 5. preserve P0-T09A/P0-T13/P0-T14 as independent gates;
-6. stop if code, docs, live GitHub state, or an active Issue conflict instead of guessing.
+6. reconcile relevant `wiki/` pages against current production API whenever a task changes consumer-visible behavior;
+7. stop if code, docs, wiki, live GitHub state, or an active Issue conflict instead of guessing.

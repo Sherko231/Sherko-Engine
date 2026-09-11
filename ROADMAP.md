@@ -14,6 +14,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
 | Code change | Implementation + tests/evidence | Dedicated task branch and pull request linked to one active Issue |
+| Engine consumer usage | How to use implemented public APIs | [`wiki/`](wiki/README.md), synchronized with production API changes |
 
 ### Planning rule
 
@@ -27,6 +28,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - Demonstrate phase exit through the actual integrated runtime/test path and retain scenario, environment, tested SHA, observed results, and evidence using `docs/BUILD_AND_VERIFY.md`. Isolated test success alone does not establish integration.
 - Before materializing the next phase, review its assumptions, dependencies, current use cases, and planned acceptance against the completed phase's evidence. Record the review in the closing Issue/PR. Future task details remain planning baselines; refine them deliberately without changing scope, decisions, or exit thresholds implicitly.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
+- When a task changes how engine consumers use a public API, update the relevant `wiki/` pages in the same pull request; if there is no consumer/wiki impact, record that explicitly.
 
 ## Milestones
 
@@ -68,9 +70,9 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-The post-Phase-2 planning review found no scope or dependency conflict with the existing Phase 3 plan. `engine-platform-lwjgl` already exists as the intended platform adapter skeleton, and the completed Phase 2 contracts provide the lifecycle/timing/resource primitives Phase 3 will build on. P3-T01 remains the first planned bounded task: implement `GlfwWindow` creation with explicit OpenGL version/profile hints and verify the actual GL version and renderer string are logged.
+P3-T01 / Issue #84 is complete. The production `GlfwWindow` lifecycle now exists in `engine-platform-lwjgl`, requests explicit OpenGL 4.6 Core hints, verifies actual OpenGL 4.6 support, logs actual version/renderer, and owns native window/context cleanup under D-031. Exact completion and retained native evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 
-P3-T01 is planning-only until a separate executable Issue refines and activates its exact API, ownership, failure, thread-affinity, and verification contract. Do not materialize or implement later Phase 3 tasks in bulk. Consult [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) and live GitHub state for the exact next action.
+P3-T02 / Issue #85 is the next planned bounded task and remains planning-only until a fresh audit refines and activates its exact contract. P3-T03 and later Phase 3 tasks remain planning-only. Completing P3-T01 does not complete Phase 3.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 
@@ -116,6 +118,7 @@ For work near execution:
 7. Open a pull request linked to the Issue and require CI/verification before merge.
 8. Close the Issue only after merge and acceptance evidence pass.
 9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the merged commit checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
+10. Keep `wiki/` synchronized whenever the public engine API or its consumer-visible use changes.
 
 ## Definition of Ready
 
@@ -141,6 +144,7 @@ A task is done only when:
 - no undeclared scope was implemented;
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
+- relevant `wiki/` usage/API pages are updated when public engine API or consumer-visible behavior changes, or `Wiki impact: none — <reason>` is recorded when no update is applicable;
 - the linked pull request is merged after CI/verification;
 - the linked Issue is closed consistently with the verified result.
 

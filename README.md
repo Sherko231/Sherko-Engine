@@ -6,6 +6,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 - AI coding agents: read [`AGENTS.md`](AGENTS.md) first and follow its required order.
 - Humans: use this page for orientation, then open the scope, status, and active Issue.
+- Engine users: use the in-repository [`wiki/`](wiki/README.md) for public API/library usage and practical examples.
 
 ## Project documents
 
@@ -18,6 +19,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - [Build and verification](docs/BUILD_AND_VERIFY.md) — canonical commands and evidence expectations.
 - [Technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md) — detailed implementation task catalog with stable task IDs; checkboxes are not status.
 - [Engineering references](docs/REFERENCES.md) — source map behind the roadmap.
+- [Engine API wiki](wiki/README.md) — human/AI consumer guide for implemented public APIs, examples, lifecycle/ownership rules, and current limitations.
 
 ## Current state
 
@@ -28,3 +30,5 @@ Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initializatio
 Phase 1 and Phase 2 are complete. P3-T01 / Issue #84 is also complete and merged through PR #141. Its exact merged `master` commit `a781c34a7959e207b29058803a2fb74a9cf0d662` passed merged-master workflow #218, including the real Windows x64 `GlfwWindowNativeTest`; retained evidence observed OpenGL 4.6 on the production path and verified orderly cleanup with an empty native-resource registry. This does not satisfy the separate P0-T09A/P0-T13/P0-T14 feasibility gates. Phase 3 remains in progress. P3-T02 / Issue #85 is the next roadmap task and remains planning-only until separately refined and activated.
 
 All agent-authored changes use one active Issue, a dedicated branch, a pull request, and required verification before merge. Non-exempt pull requests reference their Issue without auto-closing it; the Issue is closed only after exact merged-`master` CI passes. Qualifying Markdown-only changes use the documented CI exemption.
+
+When a task adds or changes public engine API or consumer-visible usage behavior, the same pull request must update the relevant [`wiki/`](wiki/README.md) pages. Tasks with no wiki impact should record that explicitly rather than making meaningless documentation churn.

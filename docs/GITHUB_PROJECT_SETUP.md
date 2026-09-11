@@ -12,6 +12,7 @@ This document defines the stable GitHub planning model for Sherko Engine. It doe
 - `docs/roadmap/TECHNICAL_BACKLOG.md` — detailed task catalog and planning acceptance criteria; its checkboxes do not track completion.
 - `docs/BUILD_AND_VERIFY.md` — canonical commands and evidence expectations.
 - `docs/DEVELOPMENT_STATUS.md` — checkpoint represented by the containing commit.
+- `wiki/` — lower-authority human/AI consumer guide for how to use implemented public engine APIs; it must stay synchronized with public API/usage changes.
 - GitHub Milestones — milestone progress over executable Issues.
 - GitHub Labels — durable task type/subsystem classification.
 - GitHub Issues — executable work and task-level execution contracts.
@@ -40,6 +41,7 @@ Issues represent executable tasks only.
 - The Issue becomes the task's execution contract once work is activated.
 - Do not mirror Ready/In Progress/Done state back into roadmap/backlog documents.
 - Do not use repository Issues as phase epics when a Project draft item is sufficient.
+- For tasks that add/change public engine APIs or consumer-visible usage, include the applicable `wiki/` pages in document impact; otherwise record `Wiki impact: none — <reason>`.
 
 ## Labels
 
@@ -136,10 +138,16 @@ No `XL`: split work that exceeds L.
 3. Create a dedicated branch.
 4. Give the coding agent that task only.
 5. Require the Issue's acceptance criteria and appropriate verification.
-6. Open a PR that closes the Issue.
-7. Merge only after CI/verification passes.
-8. Mark Done only after merge and acceptance verification.
+6. Open a PR linked to the Issue. For non-exempt work use `Refs #...`; do not auto-close the Issue before post-merge evidence. A qualifying Markdown-only PR may use a closing keyword only after the exemption and all other acceptance checks are confirmed.
+7. Merge only after the required exact-head CI/verification passes, except for the documented Markdown-only build/test exemption.
+8. For non-exempt work, require the separate exact merged-`master` push CI and then close the Issue manually only after acceptance evidence passes.
+9. Keep relevant `wiki/` pages synchronized in the same PR when public API or consumer-visible engine usage changes.
+10. Mark Done only after the applicable merge/acceptance/closure sequence is complete.
 
 Direct commits to `master` are reserved for explicit owner-directed emergencies. AI-generated implementation work always uses the branch/PR flow above.
 
 Never ask a coding agent to implement an entire phase at once.
+
+## Wiki synchronization
+
+The wiki is a consumer guide, not a workflow authority. `AGENTS.md` and the active Issue remain authoritative for execution. Future AI agents must update relevant `wiki/` pages/examples when public API or consumer-visible lifecycle/ownership/configuration behavior changes, and must state why no wiki change is needed when impact is none.

@@ -47,3 +47,5 @@ This is the durable, append-only summary of accepted engineering decisions. It r
 ## Adding or changing a decision
 
 An Issue must explicitly authorize a durable architecture change. Add a new row with its evidence/gate, update `docs/ARCHITECTURE.md` where structure changes, and reconcile `ENGINE_SCOPE.md` when the product boundary changes. Never rewrite an old decision to hide history; mark it `Superseded` and add the replacement.
+
+When a new/superseding decision changes a public engine API or caller-visible lifecycle, ownership, threading, failure, configuration, or usage semantics, update the relevant [`../wiki/`](../wiki/README.md) pages in the same PR. The decision log remains authoritative; the wiki explains how to consume the accepted implementation and must not create or supersede decisions by itself. If the decision has no consumer/API impact, record `Wiki impact: none — <reason>`.

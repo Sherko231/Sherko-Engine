@@ -6,68 +6,47 @@
 
 | Field | Value |
 | --- | --- |
-| Verified pre-checkpoint `master` | `e318a4f3bd6392e1b24c883b7e1bd10532edbfda` — post-P2-T11 handoff maintenance PR #130 merged |
+| Verified pre-checkpoint `master` | `9bee2d23efca1f084058864c8db0f707a0ef0c45` — P2-T12 / PR #131 merged |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 is complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T11 |
-| Current executable work | P2-T12 / Issue #82 — structured runtime logging |
-| Current branch | `p2-t12-structured-logging` |
-| Next planned roadmap implementation | P2-T13 / Issue #83 — orderly fatal termination; planning-only until P2-T12 completes |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T12 |
+| Current executable work | None after P2-T12 completion; next task remains planning-only until activated |
+| Current branch | `maint-post-p2-t12-handoff` |
+| Next planned roadmap implementation | P2-T13 / Issue #83 — orderly fatal termination |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect live branch/HEAD, remote `master`, Issues, PRs, and workflow state before continuing.
 
-## P2-T11 completion and handoff evidence
+## P2-T12 completion and handoff evidence
 
-P2-T11 / Issue #81 is complete:
+P2-T12 / Issue #82 is complete:
 
-- PR #128 merged to `master` as `a7ef3df4b6b03a10534a600de3e4ca3f945080bb`.
-- Final exact-head PR workflow #191 / run `34602466847` passed all five required jobs on head `9b9f73f101955e0e6fa9079478098baf32a634f5`.
-- Merged-master workflow #192 / run `34602702350` passed all five required jobs on exact merge commit `a7ef3df4b6b03a10534a600de3e4ca3f945080bb`.
-- Merged-master `engine-subsystem-tests` artifact: ID `10265810108`, digest `sha256:11e5ef2dfbe04b3710ee26f2e62ac43ba1253620130844c4e89e1333032babd6`.
-- Merged-master `jacoco-reports` artifact: ID `10265375432`, digest `sha256:8f800eeaf57194e4405a4abbf0ff147105f2bfe697bc10efe473d189c2b7a161`.
-- P2-T11 remained benchmark/test-only: no production public API, dependency, module edge, durable decision, or native binding was added.
-- Independent review was not mandatory under the activated #81 contract because the task remained test/evidence-only; CI was not represented as independent review.
-
-Documentation-only Issue #129 / PR #130 then reconciled the post-P2-T11 handoff and merged as `e318a4f3bd6392e1b24c883b7e1bd10532edbfda`. Its complete diff contained only `README.md` and this file, so the Markdown-only CI exemption applied and no automatic PR-head or merged-master build/test workflow was required.
-
-## P2-T12 executable contract
-
-Issue #82 is activated and is the sole executable roadmap task for this branch.
-
-P2-T12 adds `EngineLogger` in `engine-core` as one JDK-only synchronous structured logging boundary. Every emitted event carries an automatically captured timestamp and caller thread ID/name plus caller-supplied severity/message and immutable optional context fields for frame, simulation tick, subsystem, connection, and entity.
-
-The logger forwards every valid event to one caller-owned `Sink` without severity thresholding. Sink callbacks are serialized across concurrent callers. `flush()` is explicit and synchronous. Sink `RuntimeException`/`Error` values propagate unchanged; the logger does not swallow, wrap, retry, buffer, queue, or move work to a background thread.
-
-P2-T12 defines no file/console/JSON/logfmt format, rotation policy, persistent sink, global singleton, or runtime composition wiring. `FATAL` is only a severity label here; P2-T13 owns orderly fatal termination behavior.
-
-The acceptance use case is structured filtering: interleaved retained events for two connection IDs must be filterable by `event.context().connection()` without parsing message text.
+- PR #131 merged to `master` as `9bee2d23efca1f084058864c8db0f707a0ef0c45`.
+- Final exact-head PR workflow #193 / run `34605423530` passed all five required jobs on head `ad3d48cf8b22199be643c01130ad1625e3ce8caf`.
+- Merged-master workflow #194 / run `34606052497` passed all five required jobs on exact merge commit `9bee2d23efca1f084058864c8db0f707a0ef0c45`.
+- Merged-master `engine-subsystem-tests` artifact: ID `10266071766`, digest `sha256:e3d63cbc744be6362abfb6fe14986733b53c4748f3de4cc16243bbeec21df7cd`.
+- Merged-master `jacoco-reports` artifact: ID `10266536993`, digest `sha256:e1b4738f157293d6af0d532c04f3a9e53dbaea0cff04be76b09c76c990ae525a`.
+- D-028 is accepted: `EngineLogger` is the JDK-only synchronous structured logging boundary in `engine-core`.
+- P2-T12 added no logging framework, persisted file/JSON format, async queue, background worker, global singleton, or fatal-termination behavior.
+- Independent review was not performed because no separate reviewer/agent identity was available; CI and author self-review were not represented as independent review. Residual risk remains concentrated in the public logging API and serialized-sink concurrency contract.
 
 ## Current repository state
 
 - Java 25 Gradle multi-project foundation remains intact.
 - The repository declares the locked 16 production-target modules plus experimental `feasibility-spikes`.
 - Root remains a build/quality/task aggregator with no Java production source tree.
-- `engine-core` production contracts through P2-T10 remain intact; P2-T11 remains test/evidence-only.
-- P2-T12 adds one public top-level type only: `EngineLogger`, with nested `Level`, `Context`, `Event`, and `Sink`.
-- No dependency, Gradle file, lockfile, module edge, native binding, protocol, persisted format, or product-scope change is authorized.
-- CI retains five Windows x64 self-hosted jobs; P2-T12 is non-exempt because Java source/test and workflow YAML change.
+- `engine-core` production contracts through P2-T12 are merged, including lifecycle, timing, configuration, native-resource diagnostics, and structured logging; P2-T11 remains benchmark/test evidence only.
+- `EngineLogger` provides immutable structured events with automatic timestamp/caller-thread identity, optional validated frame/tick/subsystem/connection/entity fields, synchronous caller-owned sink callbacks, and explicit flush.
+- `FATAL` remains only a logging severity under D-028; orderly fatal shutdown is not implemented yet.
+- No P2-T13 implementation is present in this checkpoint.
 
 ## Exact next action
 
-On `p2-t12-structured-logging`:
-
-1. keep changes limited to the eight paths authorized by Issue #82;
-2. finish `EngineLogger` and `EngineLoggerTest` exactly to the activated contract;
-3. record D-028 in `docs/DECISIONS.md` and describe the logging boundary in `docs/ARCHITECTURE.md`;
-4. add the focused verification command to `docs/BUILD_AND_VERIFY.md` and retain `EngineLoggerTest` XML in CI evidence;
-5. audit the complete changed-file list against #82;
-6. self-review field semantics, caller-thread attribution, null/missing representation, sink ownership, synchronization, filtering, flush, failure propagation, and absence of hidden persistence/async behavior;
-7. seek independent review because P2-T12 adds a public API and durable decision; if unavailable, record `not performed`, reason, and residual risk honestly;
-8. require passing exact-head PR CI on the final PR head;
-9. merge only after exact-head CI passes, then require separate passing push CI on the exact resulting `master` merge commit;
-10. record final evidence and close #82 consistently.
-
-Do not activate or implement P2-T13 inside P2-T12.
+1. Merge this documentation-only handoff maintenance after auditing that only `README.md` and `docs/DEVELOPMENT_STATUS.md` changed.
+2. Apply the Markdown-only CI exemption; do not classify absence of build/test CI as success or failure.
+3. After merge, perform a fresh startup audit from the resulting exact `master` commit.
+4. Re-read Issue #83 and the P2-T13 backlog entry against D-018, D-020, D-027, and D-028 plus the actual current APIs/tests.
+5. Refine and activate #83 into a bounded executable contract before any P2-T13 code is written. The final contract must define the fatal trigger, shutdown ordering, logging/flush ordering, termination seam, cleanup-failure policy, reentrancy/concurrency behavior, safe test harness, authorized files, and exact verification.
+6. Keep the ten-minute Phase 2 integrated exit gate separate from P2-T13 task completion unless an explicitly authorized phase-exit task proves it.
 
 ## Phase 2 status
 
@@ -84,14 +63,11 @@ Completed and merged:
 - P2-T09 / #79 — fixed-precedence layered configuration loading.
 - P2-T10 / #80 — explicit native-resource registry and shutdown leak diagnostics.
 - P2-T11 / #81 — sampled JFR allocation-observability benchmark/evidence.
-
-Active:
-
-- P2-T12 / #82 — structured runtime logging boundary.
+- P2-T12 / #82 — synchronous structured logging boundary.
 
 Next:
 
-- P2-T13 / #83 — orderly fatal termination; planning-only and expected to build on P2-T10/P2-T12.
+- P2-T13 / #83 — orderly fatal termination; planning-only until deliberately refined and activated.
 
 P2 phase completion is not claimed. The exit gate remains a deterministic headless loop running fixed ticks for ten minutes with bounded catch-up and verified cleanup. Isolated P2 task tests do not satisfy that integrated gate.
 
@@ -103,18 +79,16 @@ P2 phase completion is not claimed. The exit gate remains a deterministic headle
 | P0-T13 / #43 | Claims of sustained native stability | At least 15 minutes of combined execution with memory/handle/traffic metrics and JFR. |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported initialize/use/shutdown cycles or explicit process-global limitations. |
 
-These gates do not block P2-T12, and structured logging tests must not strengthen unrelated native feasibility claims.
+These feasibility gates do not block refining P2-T13, and P2-T13 tests must not strengthen unrelated native feasibility claims.
 
 ## Live-state reconciliation
 
-Before implementation or handoff, a fresh agent must:
+Before P2-T13 implementation, a fresh agent must:
 
 1. read `AGENTS.md` fully and follow its required order;
 2. inspect local status/HEAD when a local checkout exists;
-3. compare remote `master`, open PRs, active Issues, and workflow state with this checkpoint;
-4. verify #82 remains the sole active executable roadmap task;
-5. audit all changed paths against #82;
-6. require exact-head PR CI and exact merged-master push CI because this task is non-Markdown;
-7. keep P2-T13 and later tasks planning-only until activated one at a time;
-8. preserve P2's still-unproven ten-minute integrated exit gate and independent native feasibility gates;
-9. stop if code, docs, live GitHub state, or the active Issue conflict instead of guessing.
+3. compare remote `master`, open PRs, Issue #83, and workflow state with this checkpoint;
+4. confirm P2-T12 remains closed/completed and no newer conflicting task is active;
+5. refine and explicitly activate #83 before creating its implementation branch;
+6. preserve P2's still-unproven ten-minute integrated exit gate and independent native feasibility gates;
+7. stop if code, docs, live GitHub state, or the activated Issue conflict instead of guessing.

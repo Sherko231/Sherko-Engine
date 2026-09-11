@@ -9,23 +9,25 @@ Implemented:
 - one production `GlfwWindow` lifecycle;
 - explicit OpenGL 4.6 Core context request;
 - actual OpenGL version/renderer verification and logging;
-- explicit native ownership/cleanup.
+- explicit native ownership/cleanup;
+- bounded owner-thread GLFW event polling through `GlfwWindow.pollEvents()`;
+- separate renderer-neutral logical-window and framebuffer-pixel size delivery through `WindowSizeListener`;
+- independent initial-size queries plus later GLFW size callbacks, with zero-sized framebuffer states preserved for minimized windows.
 
 Not yet exposed as production API:
 
-- event polling abstraction;
-- window-size/framebuffer-size events;
 - fullscreen transitions;
-- focus events;
+- focus events/policy;
 - keyboard state;
 - mouse state;
 - raw mouse capture;
 - controller input;
+- content-scale callbacks as a consumer API;
 - tick-aligned input snapshots/commands.
 
 ## Rendering
 
-A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` does not expose swap/poll methods or an OpenGL debug callback.
+A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes event polling only for the bounded platform event path; it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
 
 ## Assets/world/physics/audio/networking/editor
 
@@ -33,7 +35,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current `GlfwWindow` acceptance evidence proves one production window/context lifecycle on Windows x64 with OpenGL 4.6. It does not replace the separate sustained native-soak or repeated native-lifecycle feasibility gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle and P3-T02's logical/framebuffer size path on Windows x64. It does not establish a production renderer, sustained native stability, or repeated native restartability. P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

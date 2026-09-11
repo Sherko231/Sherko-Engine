@@ -25,6 +25,6 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 
 Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, Java FFM access to the Steam flat API, and a 15-second combined native smoke run. End-to-end SteamNetworkingSockets and sustained/repeated native lifecycle evidence remain explicit follow-up gates.
 
-Phase 1 is complete; M1 continues through Phases 2–4. P2-T01 through P2-T11 are complete and merged. P2-T12 / Issue #82 is the active bounded implementation task. P2-T13 and later P2/P3/P4 Issues remain planning-only until activated one at a time. P2's ten-minute integrated phase exit remains unproven. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
+Phase 1 is complete; M1 continues through Phases 2–4. P2-T01 through P2-T12 are complete and merged. P2-T13 / Issue #83 is the next bounded roadmap task and remains planning-only until explicitly refined and activated. P2's ten-minute integrated phase exit remains unproven. See [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md) for the commit-contained handoff, then verify current GitHub Issues and Pull Requests before starting.
 
 All agent-authored changes use one active Issue, a dedicated branch, a pull request, and required verification before merge. Qualifying Markdown-only changes use the documented CI exemption.

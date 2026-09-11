@@ -44,4 +44,17 @@ public final class FixedStepAccumulator {
         scaledRemainder = scaledProgress % NANOS_PER_SECOND;
         return ticks;
     }
+
+    /**
+     * Returns renderer-facing fractional progress toward the next fixed simulation tick.
+     *
+     * <p>This is a read-only normalized presentation value in {@code [0.0, 1.0)}. Fixed-step
+     * accumulation itself remains exact integer/rational arithmetic; querying alpha neither mutates
+     * nor consumes retained progress.
+     *
+     * @return retained fractional progress normalized to {@code [0.0, 1.0)}
+     */
+    public double interpolationAlpha() {
+        return scaledRemainder / (double) NANOS_PER_SECOND;
+    }
 }

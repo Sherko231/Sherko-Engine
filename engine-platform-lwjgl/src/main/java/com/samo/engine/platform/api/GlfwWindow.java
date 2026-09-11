@@ -371,9 +371,8 @@ public final class GlfwWindow extends EngineSubsystem {
             return;
         }
         SizeCallbackState state = sizeCallbackState;
-        if (runCleanup(failures, () -> backend.releaseSizeCallbacks(windowHandle, state))) {
-            sizeCallbackState = null;
-        }
+        sizeCallbackState = null;
+        runCleanup(failures, () -> backend.releaseSizeCallbacks(windowHandle, state));
     }
 
     private void releaseCallback(List<Throwable> failures) {

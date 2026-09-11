@@ -320,7 +320,7 @@ class AllocationMetricBenchmarkTest {
         for (int index = 0; index < prefixes.size(); index++) {
             assertTrue(
                     lines.get(index).startsWith(prefixes.get(index)),
-                    () -> "Expected report field " + prefixes.get(index) + " at line " + (index + 1));
+                    "Expected report field " + prefixes.get(index) + " at line " + (index + 1));
         }
     }
 

@@ -52,6 +52,7 @@ Run this audit before implementation and again before handoff:
 - Implement exactly one executable Issue on one dedicated branch.
 - Never commit agent-generated work directly to `master`.
 - Open a pull request linked to the Issue and merge only after required verification and CI pass, except that a qualifying Markdown-only change does not require the build/test CI described below.
+- For a non-exempt pull request, use a non-closing Issue reference such as `Refs #123`; close the Issue manually only after the exact merged-`master` push CI passes. A qualifying Markdown-only pull request may use a closing keyword only after its complete-diff exemption and every other acceptance requirement is confirmed.
 - Keep lower engine modules independent of game-specific modules.
 - Do not pull deferred features into v1 unless `ENGINE_SCOPE.md` is deliberately changed.
 - Do not convert feasibility spikes under the root `src/` tree into production architecture by accident.

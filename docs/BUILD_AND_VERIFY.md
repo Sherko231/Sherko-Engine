@@ -226,6 +226,18 @@ During a phase, add a small integration exercise within a task's authorized scop
 
 `.github/workflows/java25.yml` runs on pull requests targeting `master` and pushes to `master`. All five workflow jobs select `[self-hosted, Windows, X64]`. The repository runner must therefore be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging before a passing exact-head run.
 
+The workflow uses a top-level concurrency group keyed by workflow name plus PR number for pull requests, or by Git ref for push/manual runs, with `cancel-in-progress: true`. A newer commit on the same PR therefore supersedes older queued/in-progress runs for that PR without grouping it together with other PRs. A push to `master` uses the `master` ref group and is independent from PR groups.
+
+Before interpreting CI evidence:
+
+1. Read the current PR head SHA.
+2. Match the candidate workflow run to that exact SHA. Runs for older PR-head SHAs are obsolete evidence.
+3. Obsolete queued/in-progress PR runs may be cancelled manually when tooling and permissions allow; automatic concurrency cancellation is also acceptable. Cancellation of stale work is not a pass or failure for the current head.
+4. Never cancel the current-head run merely to save runner time.
+5. Require the exact current PR-head run to finish successfully before merge.
+6. After merge, require a separate successful push workflow on the exact resulting `master` merge commit. Do not classify that merged-master run as an obsolete PR run.
+7. If manual cancellation tooling is unavailable, leave stale runs alone and state that fact rather than claiming cancellation.
+
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
@@ -236,7 +248,7 @@ The five jobs cover:
 
 A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
-Because only one repository runner is currently expected, independent jobs may execute sequentially. This affects wall-clock time only and does not change pass/fail semantics.
+Because independent jobs may execute sequentially when fewer matching runners are available, runner count affects wall-clock time only and does not change pass/fail semantics.
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 

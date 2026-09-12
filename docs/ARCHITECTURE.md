@@ -13,7 +13,7 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2. `engine-platform-lwjgl` contains the P3-T01 production `GlfwWindow` lifecycle boundary, P3-T02's renderer-neutral logical-window/framebuffer-size delivery, P3-T03's in-place windowed/borderless/exclusive primary-monitor mode transitions, and P3-T04's focus-loss-safe cursor capture plus bounded internal held-key/button safety state over the selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. Other concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2. `engine-platform-lwjgl` contains the P3-T01 production `GlfwWindow` lifecycle boundary, P3-T02's renderer-neutral logical-window/framebuffer-size delivery, P3-T03's in-place windowed/borderless/exclusive primary-monitor mode transitions, and P3-T04's focus-loss-safe cursor capture plus bounded internal held-key/button safety state over the selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. Other concrete engine subsystems remain skeletons. `game-sandbox` now also owns the P3-T04A owner-facing scripted engine demo while its future game-rules/vertical-slice responsibilities remain largely skeletal. `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ The repository has a working Java 25 multi-project build with 17 declared Gradle
 | `engine-network-ip` | Direct IP transport adapter | Skeleton | `engine-core`, `engine-network-api` |
 | `engine-steam` | Steam social/session and transport integration | Skeleton | `engine-core`, `engine-network-api` |
 | `engine-editor` | Internal authoring/debug tooling | Skeleton | `engine-core`, `engine-assets`, `engine-world`, `engine-render-opengl` |
-| `game-sandbox` | Game rules and vertical-slice content | Skeleton | `engine-core`, `engine-world`, `engine-physics-jolt`, `engine-network-api`, `engine-ui` |
+| `game-sandbox` | Game rules/vertical-slice content plus owner-facing manual engine demo | P3-T04A scripted demo implemented; future game rules/content remain skeletal | Published/runtime graph remains `engine-core`, `engine-world`, `engine-physics-jolt`, `engine-network-api`, `engine-ui`; P3-T04A additionally uses a non-consumable demo-only `engine-platform-lwjgl` configuration |
 | `game-client` | Client composition root | Minimal executable foundation entry point | `game-sandbox`, platform, render, audio, IP, Steam adapters |
 | `game-server` | Headless/listen-server composition root | Minimal executable headless foundation entry point | `game-sandbox`, IP and Steam adapters |
 | `test-support` | Shared JUnit 6/AssertJ support plus repository architecture verification | Implemented build/test support | None |
@@ -60,6 +60,7 @@ These package roots define boundaries, not future subsystem interfaces. P1-T10A 
 - `engine-ui` exposes renderer-neutral state/draw data; it must not expose OpenGL or imgui-java types.
 - `engine-network-api` contains no socket/Steam implementation details.
 - `game-server` must remain runnable without window, renderer, or audio modules.
+- `game-sandbox` may compile/run owner-facing demos against public engine APIs through dedicated non-consumable demo configurations, but those dependencies must not be published through the sandbox runtime consumed by `game-server`.
 - `engine-editor` may consume runtime modules, but runtime modules must not depend on the editor.
 - Asset authoring/import dependencies belong in offline tooling; shipped gameplay consumes cooked formats.
 - Cross-module Java imports target only the destination module's declared API package root; `.internal` packages are never public contracts.
@@ -69,7 +70,7 @@ These package roots define boundaries, not future subsystem interfaces. P1-T10A 
 
 The client will compose platform/input, OpenGL rendering, runtime UI, audio, world/physics, game rules, and either IP or Steam networking. The server will compose world/physics, game rules, and networking without graphics/audio. Server authority owns gameplay state and dynamic physics; clients predict/present but do not submit authoritative transforms.
 
-P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally do not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, P3-T02 adds its bounded size-event/polling surface, P3-T03 adds bounded display-mode transitions, and P3-T04 adds bounded focus-loss/cursor-capture safety without changing composition ownership. Later composition work decides when the client owns it. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
+P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current client entry point intentionally does not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, P3-T02 adds its bounded size-event/polling surface, P3-T03 adds bounded display-mode transitions, and P3-T04 adds bounded focus-loss/cursor-capture safety without changing client composition ownership. P3-T04A composes those already-public capabilities only in the owner-facing `game-sandbox` demo. Its platform classpath is deliberately non-consumable/non-exported so `game-server` remains headless. Later composition work decides when the real client owns the platform subsystem. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
 
 ## Single-subsystem lifecycle — P2-T01 / Issue #64
 
@@ -275,6 +276,16 @@ Native focus callbacks never invoke game code. If cursor release throws while ha
 
 P3-T04 intentionally adds no raw mouse motion, public focus listener, public key/button polling or snapshot, action transitions, controller mapping, player commands, renderer behavior, or game pause/menu policy. The opt-in Windows x64 `GlfwWindowFocusNativeTest` transfers real focus to a test-only helper GLFW window, verifies disabled cursor before loss, normal cursor after loss and after regain, no automatic recapture, explicit recapture success, and production cleanup with an empty `NativeResourceRegistry`. The report also retains the manual Alt+Tab held-key scenario, but does not claim a public gameplay snapshot result before P3-T06 exists.
 
+## Owner-facing engine sandbox demo — P3-T04A / Issue #149
+
+`game-sandbox` is the canonical owner-facing manual demo surface. `EngineDemoMain` composes only already-public production APIs: `GlfwWindow`, logical/framebuffer size delivery, window-mode transitions, cursor capture/focus-loss behavior, `EngineClock`, `FixedStepAccumulator`, `FixedStepCatchUpPolicy`, structured logging, and `NativeResourceRegistry` verification. The scripted timeline exists so the owner can observe current engine behavior before a public gameplay input layer exists.
+
+The sandbox must not become a second engine architecture. It may not import another module's internal package, call LWJGL/native APIs directly, or expose a new production API merely to make a demo easier. When a future task adds a human-observable capability that can be demonstrated through its already-authorized public API, the same PR updates the sandbox. When that is not possible without pulling later roadmap work forward, the PR records `Sandbox impact: none — <reason>`.
+
+The platform dependency used by the demo is intentionally non-exported. `game-sandbox` compiles the demo against the public `engine-platform-lwjgl` API and resolves a dedicated non-consumable demo runtime for `runEngineDemo`; that platform dependency is not part of the sandbox runtime elements consumed by `game-server`. The existing headless-server runtime gate remains the proof that this owner-facing demo did not contaminate server composition.
+
+The sandbox is not verification authority. Its once-per-second timing line is diagnostic only and is explicitly not FPS or benchmark evidence. The current window remains visually empty until renderer work creates a public production presentation path. Unit/native/integration tests, exact-head CI, merged-master CI, and P0 feasibility gates remain separate acceptance evidence.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -286,7 +297,7 @@ Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` 
 - Steam initialization and FFM flat-API access;
 - combined native smoke/soak executables.
 
-The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible. P3-T01 separately places only the scope-approved LWJGL core/GLFW/OpenGL dependencies needed by the production platform adapter; P3-T02, P3-T03, and P3-T04 add no dependency. None of these tasks promotes the spike executable or its debug/render-loop behavior.
+The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible. P3-T01 separately places only the scope-approved LWJGL core/GLFW/OpenGL dependencies needed by the production platform adapter; P3-T02, P3-T03, and P3-T04 add no dependency. P3-T04A consumes that existing platform stack only through the sandbox's non-consumable demo configuration. None of these tasks promotes the spike executable or its debug/render-loop behavior.
 
 P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independent follow-up gates. Moving or reusing proven dependency choices does not satisfy those gates or strengthen prior feasibility claims.
 
@@ -319,8 +330,11 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Logical/framebuffer size separation | P3-T02 / Issue #85: `WindowSizeListener`, owner-thread polling, deterministic tests, and Windows native acceptance path |
 | Windowed/borderless/exclusive transitions | P3-T03 / Issue #86: `WindowMode`, in-place owner-thread transitions, deterministic tests, and 20-transition Windows native acceptance path |
 | Focus-loss cursor/input safety | P3-T04 / Issue #87: `setCursorCaptured`, owned focus/key/button callbacks, deterministic tests, and real Windows focus-transfer acceptance path |
+| Owner-facing sandbox demo | P3-T04A / Issue #149: scripted public-API demo with non-exported platform runtime; headless-server boundary remains independently verified |
 | Other concrete production engine subsystems | Planned: later phases |
 
 ## Wiki synchronization
 
 This file remains the architecture authority for module roles, boundaries, and accepted implementation maturity. The [`../wiki/`](../wiki/README.md) directory is a lower-authority consumer guide. Whenever an architecture task adds/removes/renames a public API or changes lifecycle, ownership, thread-affinity, failure, configuration, or other caller-visible semantics, update the relevant wiki pages and examples in the same PR. When no consumer behavior changes, record `Wiki impact: none — <reason>` rather than editing the wiki unnecessarily.
+
+`game-sandbox` is also lower-authority than production code/tests and architecture. Its purpose is owner observation, not specification. Future tasks must keep it synchronized when appropriate under the `AGENTS.md` sandbox rule without using it to justify a production API or architecture change.

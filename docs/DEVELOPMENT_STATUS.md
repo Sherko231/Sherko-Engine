@@ -80,18 +80,20 @@ The manual run is owner-observation evidence only. Automated correctness remains
 
 Phase 3 remains in progress. P3-T01 through P3-T04 are complete; P3-T04A is active; P3-T05 / #88 is paused with no implementation started. The Phase 3 exit remains the backlog requirement that an identical recorded input sequence can be replayed into headless simulation; the sandbox does not complete or replace that gate.
 
+Documentation/backlog reconciliation and complete-diff scope review for P3-T04A are complete. No lockfile change has been authored; the exact-head build/lock-resolution gate determines whether the authorized `game-sandbox/gradle.lockfile` update is actually required.
+
 Exact next action for P3-T04A:
 
-1. Finish `BUILD_AND_VERIFY.md` and technical-backlog reconciliation plus any lockfile change actually required by Gradle resolution.
-2. Run/inspect the focused `EngineDemoTimelineTest`, full routine build/test/architecture/coverage/headless/version/lock matrix, and complete PR diff.
-3. Confirm `:game-server:verifyHeadlessServerRuntime` still proves no platform/render/audio/GLFW/OpenGL/OpenAL contamination.
-4. Record `Wiki impact: none — P3-T04A changes no public engine API; game-sandbox/README.md owns demo-specific guidance`.
-5. Record independent review honestly; if unavailable, record `not performed`, reason, and residual risk.
-6. Require all five CI jobs to pass on the exact final PR #150 head; obsolete runs from documentation commits are neither passes nor failures.
-7. Mark PR #150 ready and merge only after the exact-head pass.
-8. Verify remote `master` equals the merge result and require a separate passing five-job push workflow on that exact merged commit.
-9. Only then close Issue #149 as completed.
-10. Freshly audit/reactivate P3-T05 / #88 against the new verified `master`; recreate/rebase its stale no-code branch as appropriate before implementation.
+1. Require the five CI jobs to run on the exact final PR #150 head and inspect any build/lock/headless failure rather than using an obsolete run.
+2. Confirm `EngineDemoTimelineTest`, all-module build/tests, architecture/coverage, client/server runtime/version checks, and `:game-server:verifyHeadlessServerRuntime` pass; if Gradle proves a lock update is required, change only the authorized `game-sandbox/gradle.lockfile`, then restart exact-head verification.
+3. Keep the recorded review provenance: independent review `not performed` because no separate reviewer/person/agent identity is available; CI/self-review are not substitutes.
+4. Keep `Wiki impact: none — P3-T04A changes no public engine API; game-sandbox/README.md owns demo-specific guidance` and the recorded sandbox update.
+5. Merge PR #150 only after all five jobs pass on the exact final head.
+6. Verify remote `master` equals the merge result and require a separate passing five-job push workflow on that exact merged commit.
+7. Only then close Issue #149 as completed.
+8. Freshly audit/reactivate P3-T05 / #88 against the new verified `master`; recreate/rebase its stale no-code branch as appropriate before implementation.
+
+The authoring agent cannot manually observe the interactive demo window in its connected environment. This is recorded as `not manually observed here`; the owner's local `:game-sandbox:runEngineDemo` invocation is the intended human-observation path and does not replace automated acceptance.
 
 ## Open gates and blockers
 

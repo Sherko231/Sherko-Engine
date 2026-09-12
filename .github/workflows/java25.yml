@@ -258,5 +258,20 @@ jobs:
             engine-platform-lwjgl/build/reports/p3/p3-t03-window-modes.txt
           if-no-files-found: error
 
+      - name: Verify P3-T04 focus-loss input safety
+        env:
+          SHERKO_P3_T04_NATIVE: "true"
+        run: .\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowFocusNativeTest" --rerun-tasks
+
+      - name: Upload P3-T04 focus-loss evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-t04-focus-loss
+          path: |
+            engine-platform-lwjgl/build/test-results/test/TEST-com.samo.engine.platform.api.GlfwWindowFocusNativeTest.xml
+            engine-platform-lwjgl/build/reports/p3/p3-t04-focus-loss.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1

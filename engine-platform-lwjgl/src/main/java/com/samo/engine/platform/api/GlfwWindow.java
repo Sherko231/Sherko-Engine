@@ -592,7 +592,7 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private void handleKeyChanged(int key, int action) {
-        if (key < 0 || key >= heldKeys.length) {
+        if (!windowFocused || key < 0 || key >= heldKeys.length) {
             return;
         }
         InputKey inputKey = inputKey(key);
@@ -612,7 +612,7 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private void handleMouseButtonChanged(int button, int action) {
-        if (button < 0 || button >= heldMouseButtons.length) {
+        if (!windowFocused || button < 0 || button >= heldMouseButtons.length) {
             return;
         }
         InputMouseButton inputButton = inputMouseButton(button);

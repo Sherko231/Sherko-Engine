@@ -174,7 +174,6 @@ public final class GlfwWindow extends EngineSubsystem {
         }
 
         TransitionPlan requestedPlan = planTransition(requestedMode, candidateRestoreGeometry);
-        TransitionPlan rollbackPlan = planTransition(previousMode, candidateRestoreGeometry);
 
         try {
             applyTransition(requestedPlan);
@@ -186,7 +185,7 @@ public final class GlfwWindow extends EngineSubsystem {
             }
         } catch (RuntimeException | Error failure) {
             try {
-                applyTransition(rollbackPlan);
+                applyTransition(planTransition(previousMode, candidateRestoreGeometry));
             } catch (RuntimeException | Error rollbackFailure) {
                 addSuppressedUnlessSame(failure, rollbackFailure);
             }

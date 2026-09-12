@@ -12,6 +12,7 @@ This is the mandatory starting point for any AI coding agent working in this rep
 6. The relevant phase/task in `docs/roadmap/TECHNICAL_BACKLOG.md`.
 7. Relevant sections of `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/BUILD_AND_VERIFY.md`, and feasibility evidence.
 8. Relevant pages under `wiki/` when the task adds, removes, renames, behaviorally changes, or changes the intended consumption of a public engine API.
+9. `game-sandbox/README.md` when the task adds or materially changes an engine capability that may be human-observable through production public APIs.
 
 Do not read the entire backlog as permission to implement future work. One active Issue defines one bounded change.
 
@@ -27,8 +28,9 @@ Use the highest applicable source when information conflicts:
 6. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
 7. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
 8. `wiki/` for human/AI consumer guidance and practical usage of already implemented public engine APIs.
+9. `game-sandbox/` for owner-facing demonstration of already implemented public behavior only; it never overrides production code/tests or the sources above.
 
-If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki never overrides scope, decisions, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the wiki instead.
+If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki and sandbox never override scope, decisions, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the lower source instead.
 
 ## Freshness and repository state
 
@@ -48,6 +50,7 @@ Run this audit before implementation and again before handoff:
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
 - When public API or consumer-visible usage changed, compare `wiki/API_INDEX.md`, relevant usage/example pages, and `wiki/LIMITATIONS.md` with the actual production signatures and behavior. Remove stale examples and never document planned APIs as implemented.
+- When the changed capability is or should be observable in `game-sandbox`, compare the sandbox behavior/instructions with the production public API and the active Issue. Do not leave a stale owner-facing demo silently behind the engine.
 
 ## Work rules
 
@@ -62,6 +65,20 @@ Run this audit before implementation and again before handoff:
 - Treat native resources as explicitly owned and closed; garbage collection is not native cleanup.
 - Do not use Java object serialization for disk or network protocols.
 - Keep `wiki/` synchronized with production consumer behavior: when a task adds/removes/renames a public engine API, changes a public signature, or changes lifecycle/ownership/threading/failure/configuration semantics visible to callers, update the relevant wiki pages in the same PR. If there is no wiki impact, record `Wiki impact: none — <reason>` rather than making meaningless wiki churn.
+
+## Owner-facing sandbox demo
+
+`game-sandbox` is the canonical manual demo used by the owner to observe the engine's current behavior. It supplements automated verification; it is not test or benchmark authority.
+
+For every task that adds or materially changes an engine capability, explicitly evaluate sandbox impact before handoff:
+
+- If the capability can be demonstrated through already-authorized **public production APIs** without implementing future roadmap work, update the relevant `game-sandbox` demo in the same PR and keep `game-sandbox/README.md` current.
+- If the capability cannot yet be demonstrated meaningfully because the required public API/presentation layer does not exist, record `Sandbox impact: none — <reason>` in the PR/handoff. Do not expose a public API solely for the demo, import engine implementation/internal packages, call LWJGL/native APIs directly from the sandbox, or implement a later task to make the demo richer.
+- Prefer evolving the existing sandbox experience over creating disconnected throwaway demos. Add a separate subsystem-specific entry point only when combining it into the existing demo would be materially confusing or impractical.
+- Human-observable sandbox output may include clearly labeled diagnostics, but do not call a loop rate `FPS`, a benchmark, soak evidence, leak proof, or performance acceptance unless the active Issue actually establishes that measurement contract.
+- Sandbox execution never replaces unit tests, native acceptance, integration evidence, exact-head CI, merged-master CI, P0 feasibility gates, or any active-Issue acceptance requirement.
+
+The active Issue must authorize any sandbox source/module/dependency changes needed by that task. If sandbox maintenance would require an undeclared module edge or other stop-condition change, refine the Issue before editing.
 
 ## Task contracts and test intent
 
@@ -124,7 +141,7 @@ For a qualifying Markdown-only pull request:
 - exact-head build/test CI is not required before merge;
 - merged-`master` build/test CI is not required after merge;
 - the absence of those workflow runs is expected and is not a skipped failure;
-- this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, wiki synchronization requirements, or any explicit manual verification required by the Issue.
+- this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, wiki synchronization requirements, sandbox-impact evaluation, or any explicit manual verification required by the Issue.
 
 For every non-exempt pull request:
 
@@ -153,6 +170,7 @@ Manual `workflow_dispatch` remains available regardless of file type.
 | Planned task definition or acceptance change | `docs/roadmap/TECHNICAL_BACKLOG.md`; update an existing executable Issue too |
 | Feasibility run/result change | matching file under `docs/feasibility/` plus status if the conclusion is durable |
 | Public engine API or consumer-visible API usage/lifecycle/ownership/configuration behavior change | relevant `wiki/` pages, including `wiki/API_INDEX.md` and `wiki/LIMITATIONS.md` when public surface/availability changes |
+| Human-observable engine capability or sandbox maintenance policy change | relevant `game-sandbox` source plus `game-sandbox/README.md`; if no runnable sandbox update is appropriate, record `Sandbox impact: none — <reason>` |
 
 Update only the rows that apply. Do not copy volatile live status into every document. The wiki is consumer guidance and must not become a competing status/architecture authority.
 
@@ -165,7 +183,8 @@ Before yielding to another agent:
 3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
 4. Update the required documents from the matrix.
 5. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
-6. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
-7. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
-8. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
-9. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.
+6. Evaluate `game-sandbox` impact. Update the demo/README through production public APIs when appropriate; otherwise record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
+7. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
+8. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
+9. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
+10. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.

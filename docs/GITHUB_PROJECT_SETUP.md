@@ -4,7 +4,7 @@ This document defines the stable GitHub planning model for Sherko Engine. It doe
 
 ## Source-of-truth layers
 
-- `AGENTS.md` — mandatory AI read order, truth hierarchy, and handoff rules.
+- `AGENTS.md` — mandatory AI read order, truth hierarchy, execution/CI lifecycle, and handoff rules.
 - `ENGINE_SCOPE.md` — product and architecture boundaries.
 - `docs/DECISIONS.md` — durable architecture decisions.
 - `docs/ARCHITECTURE.md` — current module roles, dependencies, and maturity.
@@ -42,6 +42,7 @@ Issues represent executable tasks only.
 - Do not mirror Ready/In Progress/Done state back into roadmap/backlog documents.
 - Do not use repository Issues as phase epics when a Project draft item is sufficient.
 - For tasks that add/change public engine APIs or consumer-visible usage, include the applicable `wiki/` pages in document impact; otherwise record `Wiki impact: none — <reason>`.
+- For tasks that add materially human-observable behavior, evaluate `game-sandbox` impact under `AGENTS.md`.
 
 ## Labels
 
@@ -133,20 +134,37 @@ No `XL`: split work that exceeds L.
 
 ## Execution rule
 
-1. Pick one executable Issue.
-2. Move it to `In Progress`.
-3. Create a dedicated branch.
-4. Give the coding agent that task only.
-5. Require the Issue's acceptance criteria and appropriate verification.
-6. Open a PR linked to the Issue. For non-exempt work use `Refs #...`; do not auto-close the Issue before post-merge evidence. A qualifying Markdown-only PR may use a closing keyword only after the exemption and all other acceptance checks are confirmed.
-7. Merge only after the required exact-head CI/verification passes, except for the documented Markdown-only build/test exemption.
-8. For non-exempt work, require the separate exact merged-`master` push CI and then close the Issue manually only after acceptance evidence passes.
-9. Keep relevant `wiki/` pages synchronized in the same PR when public API or consumer-visible engine usage changes.
-10. Mark Done only after the applicable merge/acceptance/closure sequence is complete.
+1. Pick one executable Issue and move it to `In Progress`.
+2. Create a dedicated branch from current verified `master` and give the coding agent that task only.
+3. Implement the bounded change **without opening a PR as a development scratchpad**. Complete focused/local verification available in the environment, required docs/wiki/sandbox work, self-review, and consistency audit first.
+4. Open a linked **final non-draft PR** only when the branch is intended to be the merge candidate. Use `Refs #...` for non-exempt work; do not auto-close the Issue before post-merge evidence. A draft PR is optional only when early human/reviewer visibility is genuinely useful; heavy CI is not the purpose of a draft.
+5. For a non-exempt final candidate, require the heavy five-job PR matrix to pass on the exact current PR candidate. A new substantive or required documentation commit invalidates older candidate evidence and requires a new exact-head pass.
+6. Before merging, confirm `master` has not advanced relative to the candidate's tested base. If it has, refresh/rebase/merge-base as appropriate and re-run the heavy candidate CI rather than relying on stale evidence.
+7. Merge only after the required final-candidate CI/verification passes, except for the documented Markdown-only build/test exemption.
+8. For ordinary non-exempt work, require the lightweight exact-merge `master` verifier on the resulting merge SHA, then close the Issue. Do **not** routinely repeat the entire five-job matrix on `master`.
+9. Require a stronger/full post-merge run only when the active Issue explicitly needs exact-merge native/performance/integration evidence that the lightweight verifier cannot establish. `workflow_dispatch` is the explicit escape hatch for such cases and investigations.
+10. Keep relevant `wiki/` pages synchronized when public API/consumer usage changes and keep `game-sandbox` synchronized when appropriate under `AGENTS.md`.
+11. Mark Done only after the applicable merge/acceptance/closure sequence is complete.
+
+Corrections after a failed candidate CI are legitimate new candidate work, not waste. Avoidable cosmetic/status commits after a passing candidate are waste: finalize handoff/status documentation before opening the final PR whenever possible.
 
 Direct commits to `master` are reserved for explicit owner-directed emergencies. AI-generated implementation work always uses the branch/PR flow above.
 
 Never ask a coding agent to implement an entire phase at once.
+
+## CI efficiency model
+
+The default runner budget for an ordinary successful non-Markdown task is intentionally:
+
+```text
+branch development:      0 heavy GitHub Actions runs
+final PR candidate:      1 heavy five-job run
+merged master commit:    1 lightweight verification job
+```
+
+Additional heavy runs are expected only when the candidate actually changes after CI, CI exposes a defect that must be fixed, the tested base becomes stale, or the active Issue explicitly calls for additional evidence. Automatic concurrency cancellation may discard superseded queued/in-progress PR runs; cancelled stale work is not evidence.
+
+The repository workflow still accepts manual dispatch for full CI when needed. Markdown-only changes retain their documented exemption after complete-diff audit.
 
 ## Wiki synchronization
 

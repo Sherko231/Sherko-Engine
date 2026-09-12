@@ -1,6 +1,8 @@
 # Sherko Engine CI Lifecycle
 
-This document defines the current repository CI execution policy. `AGENTS.md` remains the higher-authority agent contract; `docs/BUILD_AND_VERIFY.md` remains the command/evidence catalog. Historical task sections may describe the five-job merged-`master` workflows that were genuinely required when those tasks completed; those historical facts do not redefine the current default policy below.
+This document defines the current repository CI execution policy. `AGENTS.md` remains the higher-authority agent contract; `docs/BUILD_AND_VERIFY.md` remains the command/evidence catalog. For CI lifecycle questions, this document supersedes the legacy generic `## CI gate` wording in `docs/BUILD_AND_VERIFY.md`. Historical task sections in that file may still describe the five-job merged-`master` workflows that were genuinely required when those tasks completed; those historical facts remain valid evidence but do not redefine the current default policy below.
+
+This split is deliberate: the large build/evidence catalog is preserved without rewriting historical acceptance records, while current CI routing and agent behavior have one unambiguous policy source.
 
 ## Goal
 

@@ -1,6 +1,6 @@
 # Sherko Engine Build and Verification
 
-This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when the configured repository self-hosted Windows x64 runner actually executes the jobs.
+This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when the configured repository self-hosted Windows x64 runner actually executes the jobs. The current CI lifecycle is defined by `AGENTS.md`, `docs/CI_LIFECYCLE.md`, and the current `## CI gate` section below; older task-specific sections retain historical evidence language where useful.
 
 ## Environment baseline
 
@@ -44,7 +44,7 @@ The JUnit 6 suite exercises successful phase order, invalid calls before hooks, 
 
 Focused outputs are `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml` and `engine-core/build/reports/tests/test/index.html`. The unit-test CI job uploads these as `engine-subsystem-tests`; the existing coverage job retains JaCoCo output for all configured engine modules. The filtered run replaces that job's engine-core test report after the full aggregate suite has run; the full coverage job remains unfiltered.
 
-The build job additionally runs `resolveAndLockAllDependencies` without `--write-locks` and verifies that tracked lockfiles did not change. No lockfile or dependency change is expected for this task. Record exact-head PR and merged-master workflow results in the linked Issue/PR; an unstarted or queued job is not a pass.
+The build job additionally runs `resolveAndLockAllDependencies` without `--write-locks` and verifies that tracked lockfiles did not change. No lockfile or dependency change is expected for this task. Historical completed-task evidence may reference the CI lifecycle that existed when that task merged; current work follows the CI gate near the end of this document.
 
 ## P2-T02 dependency-order verification
 
@@ -58,7 +58,7 @@ The graph suite tests dependency-first ordering, deterministic declaration-order
 
 Graph XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml`. HTML: `engine-core/build/reports/tests/test/index.html`. The existing `engine-subsystem-tests` artifact now includes both lifecycle and graph XML/HTML, and `jacoco-reports` retains unfiltered coverage. The combined filtered command supersedes the lifecycle-only CI rerun so both focused reports survive together; the lifecycle-only command above remains usable on its own.
 
-No lockfile change is expected. Inspect actual exact-head PR and merged-master push runs; local download/toolchain failures or queued jobs cannot be reported as passes.
+No lockfile change is expected. Use the current CI gate for new work; queued jobs or local toolchain/download failures cannot be represented as passing evidence.
 
 ## P2-T03 startup rollback verification
 
@@ -322,7 +322,7 @@ The enabled run must create:
 
 Require the report to record `result=PASS`, configured/observed duration, fixed tick rate, executed tick count, loop update count, catch-up cap and observed maximum, injected stall observation, lifecycle trace, registry-empty result, exact `GITHUB_SHA` when run in CI, Java/OS environment, and the explicit limitation that this is Java headless integration evidence rather than native soak/stability evidence.
 
-CI enables this test exactly once in the focused `engine-core` evidence step and uploads both its JUnit XML and the report inside `engine-subsystem-tests`. The aggregate `test` and JaCoCo jobs do not enable it, preventing duplicate 60-second runs. Exact-head PR CI must pass on the current PR head, and after merge a separate exact merged-master push CI must pass with a retained report whose `engine.commit` matches that merge SHA before Phase 2 can be marked complete.
+CI enables this test exactly once in the focused `engine-core` evidence step and uploads both its JUnit XML and the report inside `engine-subsystem-tests`. The aggregate `test` and JaCoCo jobs do not enable it, preventing duplicate 60-second runs. Historical Phase 2 closure used the CI lifecycle in force at that time; current tasks follow the final-candidate-heavy plus exact-merge-lightweight lifecycle documented below.
 
 P0-T13 remains the separate 15-minute combined-native sustained-stability gate and P0-T14 remains repeated native lifecycle/restartability evidence. A passing 60-second Java gate must not be represented as satisfying either one.
 
@@ -358,7 +358,7 @@ Require stable fields for `result=PASS`, requested `4.6 Core`, actual major/mino
 
 P3-T01 also changes dependency ownership: after adding the existing LWJGL core/GLFW/OpenGL libraries and Windows natives to `engine-platform-lwjgl`, regenerate locks with `resolveAndLockAllDependencies --write-locks`, inspect `engine-platform-lwjgl/gradle.lockfile`, then run `resolveAndLockAllDependencies` without write mode and require a clean lock diff. The selected LWJGL version and repository project-edge direction must remain unchanged.
 
-CI keeps the deterministic suite in ordinary aggregate `test` with the native test skipped. The existing Windows native job enables `GlfwWindowNativeTest` exactly once, after the historical GLFW/OpenAL smoke, and uploads its JUnit XML plus `p3-t01-glfw-window.txt` as artifact `p3-t01-glfw-window`. The final exact-head PR run and separate exact merged-master push run must both pass; inspect the retained report from each required authority before accepting native evidence.
+CI keeps the deterministic suite in ordinary aggregate `test` with the native test skipped. The existing Windows native job enables `GlfwWindowNativeTest` exactly once, after the historical GLFW/OpenAL smoke, and uploads its JUnit XML plus `p3-t01-glfw-window.txt` as artifact `p3-t01-glfw-window`. This section records the P3-T01 evidence contract; current task merge/closure mechanics are governed by the current CI gate below.
 
 ## P3-T02 logical/framebuffer sizing verification
 
@@ -392,7 +392,7 @@ Require stable fields for `task=P3-T02`, `result=PASS`, logical and framebuffer 
 
 No dependency or lockfile change is expected for P3-T02. Run `resolveAndLockAllDependencies` without write mode and require the tracked lockfiles to remain unchanged. The routine verification matrix still applies.
 
-CI keeps deterministic P3-T02 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowSizeNativeTest` exactly once after the P3-T01 native window test and uploads its JUnit XML plus report as artifact `p3-t02-window-size`. Final acceptance requires all five jobs on the exact PR head and a separate all-five-job push workflow on the exact merged `master` commit.
+CI keeps deterministic P3-T02 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowSizeNativeTest` exactly once after the P3-T01 native window test and uploads its JUnit XML plus report as artifact `p3-t02-window-size`. Current task merge/closure mechanics are governed by the current CI gate below.
 
 ## P3-T03 window mode transition verification
 
@@ -433,7 +433,7 @@ Require stable fields for `task=P3-T03`, `result=PASS`, `transition.count=20`, t
 
 No dependency, dependency-ownership, or lockfile change is expected for P3-T03. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
 
-CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after the P3-T02 native size test and uploads its JUnit XML plus report as artifact `p3-t03-window-modes`. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit; stale/cancelled superseded runs are neither passing nor failing evidence for the final head.
+CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after the P3-T02 native size test and uploads its JUnit XML plus report as artifact `p3-t03-window-modes`. Current task merge/closure mechanics are governed by the current CI gate below; stale/cancelled superseded PR runs are never passing evidence for the final candidate.
 
 ## P3-T04 focus-loss input safety verification
 
@@ -467,7 +467,43 @@ Require stable fields for `task=P3-T04`, `result=PASS`, focus-transfer mechanism
 
 No dependency or lockfile change is expected for P3-T04. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
 
-CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt lifecycle smoke. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit. Superseded/cancelled PR runs remain neither pass nor failure evidence for the final head.
+CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt lifecycle smoke. Current task merge/closure mechanics are governed by the current CI gate below.
+
+## P3-T05 raw/fallback relative mouse verification
+
+Issue #88 extends the D-031 through D-034 `GlfwWindow` boundary with D-035 internal relative mouse acquisition. It adds no public mouse-delta API, `InputSnapshot`, action mapping, controller policy, renderer behavior, dependency, lockfile, or module edge.
+
+Run the deterministic regression/focused suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --tests "com.samo.engine.platform.api.GlfwWindowFocusTest" --tests "com.samo.engine.platform.api.GlfwWindowMouseMotionTest" --rerun-tasks
+```
+
+The focused suite must prove that cursor-position events are ignored before effective capture and while unfocused; the first eligible sample establishes a zero-delta baseline; later signed X/Y deltas accumulate independently of absolute screen position; release/focus loss clear pending motion and invalidate the baseline; focus regain never auto-enables raw/capture; explicit recapture restarts from a zero-delta baseline; raw-supported capture enables raw mode; forced unsupported selection uses the fallback without attempting unsupported enablement; raw-enable failures preserve the original throwable while rolling back best-effort; focus-loss raw/cursor failures are staged and propagated once from `pollEvents()`; and callback/start/stop/close cleanup releases ownership exactly once.
+
+Run the real native acceptance only on target Windows x64 / Java 25:
+
+```powershell
+$env:SHERKO_P3_T05_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowMouseMotionNativeTest" --rerun-tasks
+Remove-Item Env:SHERKO_P3_T05_NATIVE
+```
+
+Without `SHERKO_P3_T05_NATIVE=true`, that JUnit test is skipped by assumption and does not count as P3-T05 native evidence.
+
+The native test uses the public production `GlfwWindow` lifecycle/capture path and direct test-only GLFW observations as the oracle. It records whether the machine supports raw motion, requires raw mode off before capture, requires raw mode on during capture when supported (and off otherwise), requires raw mode off after explicit release and real focus loss, requires focus regain not to auto-recapture/re-enable raw, and requires the expected raw state after explicit recapture. It ends with normal release/stop/close and `NativeResourceRegistry.assertNoOpenResources()` success.
+
+Do **not** use `glfwSetCursorPos()` as proof of physical raw-device motion. GLFW raw mode does not guarantee that a programmatic cursor-position request produces a raw callback equivalent to hardware movement. Exact delta arithmetic, baseline reset, and forced fallback selection are therefore deterministic-test evidence; the native acceptance proves real GLFW raw-mode/focus/lifecycle integration. This evidence split is intentional and must be stated honestly.
+
+The enabled run must create:
+
+`engine-platform-lwjgl/build/reports/p3/p3-t05-mouse-motion.txt`
+
+Require stable fields for `task=P3-T05`, `result=PASS`, raw support, raw mode before/during/after capture/release/focus transitions, no auto-raw enable on focus regain, fallback deterministic-coverage attribution, exact `GITHUB_SHA` in CI, Java/OS/arch, empty-registry cleanup, and limitations. The fallback must not claim OS pointer-acceleration bypass, and no evidence may claim the P3-T06 public `InputSnapshot` exists.
+
+No dependency or lockfile change is expected. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. In the heavy final-candidate CI, the Windows native job enables `GlfwWindowMouseMotionNativeTest` after P3-T04, uploads JUnit XML plus the report as artifact `p3-t05-mouse-motion`, and then continues the preserved Jolt smoke.
+
+Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then after merge one passing lightweight exact-merge `master` verifier. A second routine full five-job master matrix is not required. If the active Issue explicitly requires exact-merge native/performance evidence beyond the lightweight verifier, use deliberate `workflow_dispatch` or the task-specific command rather than silently weakening the requirement.
 
 ## P3-T04A owner-facing sandbox demo verification
 
@@ -506,7 +542,7 @@ P3-T04A uses `compileOnly(project(":engine-platform-lwjgl"))` for demo source co
 
 That command must continue to prove that `game-server` runtime contains no `engine-platform-lwjgl`, renderer/audio modules, GLFW, OpenGL, or OpenAL artifacts. If the custom demo configuration requires a lockfile update, regenerate only through the normal dependency-lock workflow, inspect the exact `game-sandbox/gradle.lockfile` diff, and then require ordinary `resolveAndLockAllDependencies` to be clean.
 
-The manual sandbox run is not required to execute inside unattended CI because it is human-observation tooling. The aggregate `test`, `buildAllModules`, architecture gate, coverage gate, headless-server boundary, and all existing native P3 acceptance remain authoritative automated verification. Final acceptance for P3-T04A still requires all five jobs to pass on the exact final PR head and a separate successful five-job push workflow on the exact merged `master` commit.
+The manual sandbox run is not required to execute inside unattended CI because it is human-observation tooling. The aggregate `test`, `buildAllModules`, architecture gate, coverage gate, headless-server boundary, and all existing native P3 acceptance remain authoritative automated verification. Current merge/closure mechanics follow the current CI gate below.
 
 Future tasks must evaluate sandbox impact under `AGENTS.md`. A human-observable capability that can be demonstrated through already-authorized public production APIs updates `game-sandbox` in the same PR. If the necessary public boundary does not exist, record `Sandbox impact: none — <reason>` instead of exposing internals or implementing later roadmap work.
 
@@ -643,43 +679,50 @@ During a phase, add a small integration exercise within a task's authorized scop
 
 ## CI gate
 
-`.github/workflows/java25.yml` runs automatically on pull requests targeting `master` and pushes to `master` only when the event includes at least one non-Markdown changed path. Markdown-only changes are excluded with `paths-ignore` for `*.md` and `**/*.md`. `workflow_dispatch` remains available regardless of file type. All five workflow jobs select `[self-hosted, Windows, X64]`.
+The normal non-Markdown lifecycle is intentionally split into one heavy final-candidate gate and one lightweight exact-merge verifier. This is the current policy; `docs/CI_LIFECYCLE.md` gives the concise process view and `AGENTS.md` is the higher-authority agent contract.
 
-A pull request is Markdown-only only when the complete PR changed-file set is non-empty and every path ends in `.md`. Audit the complete file list before applying the exemption. If any non-Markdown path is present, or a later commit adds one, the normal full CI contract applies immediately. The exemption changes only build/runtime execution requirements; it does not waive Issue scope, truth hierarchy, review/architecture rules, documentation consistency, branch/PR discipline, sandbox-impact evaluation, or explicit manual verification from the active Issue.
+`.github/workflows/java25.yml` is triggered for pull requests targeting `master`, pushes to `master`, and `workflow_dispatch`, subject to the existing Markdown-only `paths-ignore`. Job conditions determine which path runs:
 
-For qualifying Markdown-only pull requests, no automatic exact-head PR workflow is expected and no merged-`master` workflow is required for the Markdown-only merge. Record the complete-diff audit and policy exemption instead. Do not classify the absence of those runs as success, failure, or a skipped check.
+- a non-draft PR final candidate runs the heavy five-job matrix;
+- `workflow_dispatch` runs the heavy five-job matrix as an explicit escape hatch when a task/release/phase gate needs a deliberate full rerun;
+- an ordinary push to `master` runs `Lightweight master verification` only, while the five heavy jobs are skipped;
+- a draft PR may create a workflow record, but the heavy jobs remain skipped until the PR is ready/non-draft.
 
-For every non-exempt change, the repository runner must be online before the workflow can execute; an offline, queued, or unstarted job is an execution blocker, not a pass. A failure in any required job fails the workflow. Whether GitHub itself blocks a merge is controlled separately by live branch-protection or ruleset settings; regardless of those settings, `AGENTS.md` forbids agents from merging a non-exempt change before a passing exact-head run.
+A pull request is Markdown-only only when the complete PR changed-file set is non-empty and every path ends in `.md`. Audit the complete file list before applying the exemption. If any non-Markdown path is present, or a later commit adds one, the normal CI contract applies immediately. The exemption changes only build/runtime execution requirements; it does not waive Issue scope, truth hierarchy, review/architecture rules, documentation consistency, branch/PR discipline, sandbox-impact evaluation, or explicit manual verification from the active Issue.
 
-The workflow uses a top-level concurrency group keyed by workflow name plus PR number for pull requests, or by Git ref for push/manual runs, with `cancel-in-progress: true`. A newer commit on the same PR therefore supersedes older queued/in-progress runs for that PR without grouping it together with other PRs. A non-exempt push to `master` uses the `master` ref group and is independent from PR groups.
+For qualifying Markdown-only pull requests, no automatic heavy PR workflow or post-merge verifier is required solely for that Markdown-only change. Record the complete-diff audit and policy exemption instead; absence of CI is neither a pass nor a failure.
 
-Before interpreting CI evidence for a non-exempt change:
+For non-exempt work, finish implementation, focused verification available in the authoring environment, required docs/wiki/sandbox evaluation, self-review, and consistency audit on the task branch **before opening the normal final non-draft PR**. Do not use an open PR as a development scratchpad unless early human/reviewer visibility is specifically useful. This avoids spending heavy runner time on intermediate commits.
 
-1. Read the current PR head SHA.
-2. Match the candidate workflow run to that exact SHA. Runs for older PR-head SHAs are obsolete evidence.
-3. Obsolete queued/in-progress PR runs may be cancelled manually when tooling and permissions allow; automatic concurrency cancellation is also acceptable. Cancellation of stale work is not a pass or failure for the current head.
-4. Never cancel the current-head run merely to save runner time.
-5. Require the exact current PR-head run to finish successfully before merge.
-6. After merge, require a separate successful push workflow on the exact resulting `master` merge commit. Do not classify that merged-master run as an obsolete PR run.
-7. If manual cancellation tooling is unavailable, leave stale runs alone and state that fact rather than claiming cancellation.
+Before interpreting or merging a non-exempt final candidate:
 
-The five jobs cover:
+1. Read the current PR head SHA and base `master` SHA.
+2. Match the heavy workflow run to that exact current candidate. Superseded older-head runs are obsolete evidence.
+3. Require all five heavy jobs to complete successfully on the final candidate.
+4. If the candidate changes after a pass, the previous pass is obsolete and the changed candidate must run heavy CI again.
+5. If `master` advances relative to the tested base before merge, refresh/rebase the branch as required by the active contract and reverify the resulting candidate; do not assume stale-base evidence transfers.
+6. Do not add avoidable cosmetic/status/docs commits after the final candidate passes. Required handoff/docs should already be in that candidate.
+7. Merge only the tested current head/base candidate.
+8. After merge, require `Lightweight master verification` to pass on the exact resulting `master` merge SHA before closing the Issue.
+9. Do not rerun the routine heavy matrix after merge. Use `workflow_dispatch` or a task-specific exact-merge command only when the active Issue explicitly requires native/performance/protocol evidence that the lightweight verifier cannot establish.
 
-- build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, including `game-sandbox` tests, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
-- explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
-- JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 `GlfwWindowNativeTest`, P3-T02 `GlfwWindowSizeNativeTest`, P3-T03 `GlfwWindowModeNativeTest`, and P3-T04 `GlfwWindowFocusNativeTest`, with retained task reports/artifacts.
+The heavy five-job PR/manual matrix covers:
 
-A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
+- `Build and quality gates`: Java/toolchain reporting, project inventory, committed dependency-lock resolution, all-module build/quality gates, client/server entry points, headless-server runtime boundary, and client/server version compatibility;
+- `Unit tests`: root/subproject aggregation plus the focused engine-core evidence suites and retained reports;
+- `Architecture tests`: explicit package/module boundary enforcement;
+- `JaCoCo coverage reports`: tests plus XML/HTML coverage generation/upload;
+- `Windows native smoke`: historical GLFW/OpenAL/Jolt smoke plus the current bounded production P3 native acceptance sequence, including P3-T05 raw-motion mode/focus evidence when present.
 
-Because independent jobs may execute sequentially when fewer matching runners are available, runner count affects wall-clock time only and does not change pass/fail semantics.
+The lightweight `master` verifier is deliberately narrower. On the exact pushed `master` SHA it checks out that commit, sets up Java 25/Gradle, resolves committed dependency locks and fails on drift, verifies the headless server runtime boundary, runs client/server `--version`, requires both reported `engineCommit` values to equal the exact workflow SHA, and requires shared compatibility identifiers to match. It proves exact-merge identity and critical runtime-boundary/version wiring without repeating unit, coverage, architecture, and native suites that already passed on the unchanged final candidate.
 
-Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps. P3-T04A additionally relies on this gate to prove the sandbox demo runtime remains non-exported.
+The workflow uses top-level concurrency with `cancel-in-progress: true`, keyed by workflow/PR for pull requests and by ref for push/manual runs. A newer commit on the same PR supersedes older queued/in-progress candidate runs; stale cancelled runs neither pass nor fail the current candidate. Never cancel the current final-candidate run merely to save runner time.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 through P3-T04 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window/focus results must still not be upgraded into P0-T13/P0-T14 evidence. The P3-T04A owner-facing demo is not an additional CI-native acceptance gate. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
+A self-hosted run is not an ephemeral clean VM. `actions/checkout` checks out the requested commit into the runner work directory, but machine-level software and caches can persist. The committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
-This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
+Whether GitHub itself blocks a merge is controlled separately by live branch-protection/ruleset settings. Regardless of platform enforcement, `AGENTS.md` forbids merging non-exempt work without the required exact-candidate heavy pass and forbids closing the Issue until the exact-merge lightweight verifier passes.
+
+This CI contract must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks remain outside unattended CI because they require an authenticated Steam client/account environment.
 
 ## Phase 0 feasibility commands
 
@@ -712,7 +755,7 @@ For every pull request, list each executed command and result, or for a qualifyi
 - cleanup/leak observations;
 - checks skipped because the environment could not support them.
 
-For sandbox/demo work, record automated test/build/headless-boundary results separately from manual human observation. A locally viewed window or console trace is useful owner feedback, not a substitute for exact-head CI or a performance claim.
+For sandbox/demo work, record automated test/build/headless-boundary results separately from manual human observation. A locally viewed window or console trace is useful owner feedback, not a substitute for final-candidate CI or a performance claim.
 
 Configuration review is not runtime evidence. If a command was not run, write `not run` and why; a Markdown-only policy exemption is a reason, not a passing execution result.
 
@@ -725,7 +768,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, and P3-T04 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, and P3-T05 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
 
 ## Wiki/API-guide verification
 

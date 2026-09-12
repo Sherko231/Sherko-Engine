@@ -66,7 +66,7 @@ The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must
 
 Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
 
-P1-T08A / Issue #153 is an active bounded **maintenance** follow-up to the Phase 1 CI foundation, inserted while Phase 3 is in progress. It does not reopen Phase 1 product completion or change engine behavior; it reduces duplicate CI work while keeping the full final-candidate gate.
+P1-T08A / Issue #153 is complete through PR #154 on merged `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. It optimized the repository CI lifecycle without reducing the final-candidate gate: ordinary branch development runs no heavy matrix, the exact final non-draft PR candidate runs the existing five heavy jobs, and ordinary merged `master` commits run one lightweight exact-merge verifier. Full CI remains available deliberately through `workflow_dispatch` when a task requires stronger exact-merge evidence.
 
 Phase 2 is also complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
 
@@ -82,17 +82,11 @@ P3-T04A / Issue #149 is complete through PR #150 on merged `master` `7876b17140f
 
 P3-T04B / Issue #151 is complete through PR #152 on merged `master` `61f576f6e23fb6b5518fdeb075db3871fcc5d76e`. It made the sandbox model correct engine logging usage by routing runtime state transitions and diagnostics through the existing structured `EngineLogger`, while direct console output remains only for the caller-owned sink and explicit owner instructions.
 
-P1-T08A / Issue #153 is the current repository-maintenance task before raw-mouse implementation resumes. Its target is:
+P3-T05 / Issue #88 is the active bounded feature task on top of verified `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. D-035 keeps relative mouse acquisition inside `GlfwWindow`: GLFW raw mouse motion is enabled while effective capture is active when the platform reports support; otherwise the same disabled-cursor position stream supplies relative deltas. Capture/focus/lifecycle transitions clear pending delta and invalidate the baseline so re-entry cannot create discontinuity spikes. Focus regain never auto-recaptures or auto-enables raw motion.
 
-```text
-branch development      -> 0 heavy CI runs
-final non-draft PR      -> 1 heavy five-job CI run
-merged master commit    -> 1 lightweight exact-merge verification job
-```
+P3-T05 intentionally introduces no public mouse-delta or `InputSnapshot` consumer API. P3-T06 owns render-frame snapshot semantics. `Sandbox impact: none` for P3-T05 because exposing its internal delta solely for the demo would prematurely create the P3-T06 public boundary.
 
-The five-job PR matrix itself is not weakened. Full post-merge CI remains available deliberately through `workflow_dispatch` when an active phase/release/native/performance/protocol task needs exact-merge evidence that the lightweight verifier cannot establish.
-
-P3-T05 / Issue #88 remains paused with no implementation started. After P1-T08A merges and its lightweight exact-merge verifier passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P1-T08A or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+Completing P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

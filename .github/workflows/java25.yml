@@ -281,6 +281,21 @@ jobs:
             engine-platform-lwjgl/build/reports/p3/p3-t04-focus-loss.txt
           if-no-files-found: error
 
+      - name: Verify P3-T05 raw mouse motion and fallback
+        env:
+          SHERKO_P3_T05_NATIVE: "true"
+        run: .\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowMouseMotionNativeTest" --rerun-tasks
+
+      - name: Upload P3-T05 mouse motion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-t05-mouse-motion
+          path: |
+            engine-platform-lwjgl/build/test-results/test/TEST-com.samo.engine.platform.api.GlfwWindowMouseMotionNativeTest.xml
+            engine-platform-lwjgl/build/reports/p3/p3-t05-mouse-motion.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

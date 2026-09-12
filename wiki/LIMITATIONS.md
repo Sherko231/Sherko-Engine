@@ -16,8 +16,10 @@ Implemented:
 - owner-thread in-place transitions among windowed, primary-monitor borderless fullscreen, and primary-monitor exclusive fullscreen through `WindowMode` / `GlfwWindow.setWindowMode(...)`, retaining the same GLFW window/OpenGL context and restoring captured windowed geometry;
 - owner-thread cursor capture through `GlfwWindow.setCursorCaptured(boolean)`;
 - internally tracked keyboard/mouse-button held-state safety for focus-loss cleanup;
-- focus loss clears held key/button state and releases effective cursor capture;
-- focus regain never recaptures automatically and requires an explicit later capture request.
+- internal relative mouse-motion acquisition while effective capture is active: GLFW raw mouse mode when supported and a disabled-cursor position-delta fallback otherwise;
+- focus/capture/lifecycle transitions clear pending relative motion and invalidate its baseline to avoid re-entry spikes;
+- focus loss clears held key/button state and releases effective cursor/raw capture;
+- focus regain never recaptures or re-enables raw mouse mode automatically and requires an explicit later capture request.
 
 Not yet exposed as production API:
 
@@ -26,13 +28,13 @@ Not yet exposed as production API:
 - raw GLFW window/monitor handles;
 - public focus events/listeners;
 - public keyboard/mouse held-state polling or snapshots;
-- raw mouse motion/deltas;
+- public mouse-delta access or render-frame mouse-motion consumption;
 - controller input;
 - data-driven input actions/transitions;
 - content-scale callbacks as a consumer API;
 - tick-aligned input snapshots/commands.
 
-The internal pre-snapshot held-state tracking added for P3-T04 is deliberately not a consumer API. P3-T06 remains responsible for the public hardware snapshot boundary.
+P3-T05 deliberately keeps accumulated relative mouse motion internal to `engine-platform-lwjgl`; P3-T06 remains responsible for the public `InputSnapshot` boundary and frame-consumption semantics. On systems where GLFW raw mouse motion is unavailable, the fallback remains independent of cursor screen bounds but does **not** claim to bypass operating-system pointer acceleration.
 
 ## Rendering
 
@@ -44,7 +46,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, and P3-T04's real Windows focus-transfer/cursor-release scenario. P3-T04 does not prove public gameplay input snapshots because `InputSnapshot` is still a later task. These checks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T05 does not prove public gameplay input snapshots because `InputSnapshot` is still a later task. These checks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

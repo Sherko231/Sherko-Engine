@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
@@ -52,6 +53,7 @@ public final class GlfwWindow extends EngineSubsystem {
     private CallbackState callbackState;
     private SizeCallbackState sizeCallbackState;
     private InputCallbackState inputCallbackState;
+    private MotionCallbackState motionCallbackState;
     private boolean glfwInitialized;
     private long windowHandle;
     private NativeResourceRegistry.Registration windowRegistration;
@@ -70,6 +72,12 @@ public final class GlfwWindow extends EngineSubsystem {
     private boolean cursorCaptureRequested;
     private boolean cursorCaptureEffective;
     private boolean cursorCaptureNeedsExplicitRearm;
+    private boolean rawMouseMotionEnabled;
+    private boolean mouseMotionBaselineValid;
+    private double previousMouseX;
+    private double previousMouseY;
+    private double accumulatedMouseDeltaX;
+    private double accumulatedMouseDeltaY;
     private Throwable pendingInputFailure;
 
     public GlfwWindow(
@@ -155,6 +163,7 @@ public final class GlfwWindow extends EngineSubsystem {
 
         if (captured) {
             if (!windowFocused) {
+                clearMouseMotionState();
                 cursorCaptureRequested = true;
                 cursorCaptureEffective = false;
                 cursorCaptureNeedsExplicitRearm = true;
@@ -163,23 +172,17 @@ public final class GlfwWindow extends EngineSubsystem {
             if (cursorCaptureRequested && cursorCaptureEffective && !cursorCaptureNeedsExplicitRearm) {
                 return;
             }
-            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_DISABLED);
-            cursorCaptureRequested = true;
-            cursorCaptureEffective = true;
-            cursorCaptureNeedsExplicitRearm = false;
+            captureCursorWithRawMotion();
             return;
         }
 
         if (!cursorCaptureRequested && !cursorCaptureEffective) {
+            clearMouseMotionState();
             cursorCaptureNeedsExplicitRearm = false;
             return;
         }
-        if (cursorCaptureEffective) {
-            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
-        }
-        cursorCaptureRequested = false;
-        cursorCaptureEffective = false;
-        cursorCaptureNeedsExplicitRearm = false;
+
+        releaseCursorDirect();
     }
 
     public void setWindowMode(WindowMode mode) {
@@ -311,6 +314,9 @@ public final class GlfwWindow extends EngineSubsystem {
                     handleMouseButtonChanged(button, action);
                 }
             });
+            motionCallbackState = backend.installCursorPositionCallback(
+                    windowHandle,
+                    this::handleCursorPositionChanged);
             windowFocused = backend.queryWindowFocused(windowHandle);
 
             Dimensions logicalSize = backend.queryLogicalSize(windowHandle);
@@ -339,10 +345,12 @@ public final class GlfwWindow extends EngineSubsystem {
         clearPendingSizes();
         windowedRestoreGeometry = null;
         clearHeldInput();
+        clearMouseMotionState();
         pendingInputFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
         releaseCursorForCleanup(failures);
+        releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         runCleanup(failures, () -> backend.hideWindow(windowHandle));
@@ -365,10 +373,12 @@ public final class GlfwWindow extends EngineSubsystem {
         clearPendingSizes();
         windowedRestoreGeometry = null;
         clearHeldInput();
+        clearMouseMotionState();
         pendingInputFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
         releaseCursorForCleanup(failures);
+        releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
@@ -412,6 +422,81 @@ public final class GlfwWindow extends EngineSubsystem {
         return cursorCaptureEffective;
     }
 
+    boolean isRawMouseMotionEnabledForTest() {
+        return rawMouseMotionEnabled;
+    }
+
+    boolean isRawMouseMotionSupportedForTest() {
+        return backend.rawMouseMotionSupported();
+    }
+
+    MouseMotion drainMouseMotionForTest() {
+        MouseMotion motion = new MouseMotion(accumulatedMouseDeltaX, accumulatedMouseDeltaY);
+        accumulatedMouseDeltaX = 0.0;
+        accumulatedMouseDeltaY = 0.0;
+        return motion;
+    }
+
+    private void captureCursorWithRawMotion() {
+        boolean previousRequested = cursorCaptureRequested;
+        boolean previousEffective = cursorCaptureEffective;
+        boolean previousRearm = cursorCaptureNeedsExplicitRearm;
+        boolean previousRaw = rawMouseMotionEnabled;
+        boolean cursorDisabled = false;
+        boolean rawEnableAttempted = false;
+        boolean rawEnabledThisAttempt = false;
+
+        try {
+            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_DISABLED);
+            cursorDisabled = true;
+            if (backend.rawMouseMotionSupported()) {
+                rawEnableAttempted = true;
+                backend.setRawMouseMotion(windowHandle, true);
+                rawEnabledThisAttempt = true;
+            }
+            clearMouseMotionState();
+            cursorCaptureRequested = true;
+            cursorCaptureEffective = true;
+            cursorCaptureNeedsExplicitRearm = false;
+            rawMouseMotionEnabled = rawEnabledThisAttempt;
+        } catch (RuntimeException | Error failure) {
+            clearMouseMotionState();
+            if (rawEnableAttempted) {
+                try {
+                    backend.setRawMouseMotion(windowHandle, false);
+                } catch (RuntimeException | Error rollbackFailure) {
+                    addSuppressedUnlessSame(failure, rollbackFailure);
+                }
+            }
+            if (cursorDisabled) {
+                try {
+                    backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
+                } catch (RuntimeException | Error rollbackFailure) {
+                    addSuppressedUnlessSame(failure, rollbackFailure);
+                }
+            }
+            cursorCaptureRequested = previousRequested;
+            cursorCaptureEffective = previousEffective;
+            cursorCaptureNeedsExplicitRearm = previousRearm;
+            rawMouseMotionEnabled = previousRaw;
+            throw failure;
+        }
+    }
+
+    private void releaseCursorDirect() {
+        if (rawMouseMotionEnabled) {
+            backend.setRawMouseMotion(windowHandle, false);
+            rawMouseMotionEnabled = false;
+        }
+        if (cursorCaptureEffective) {
+            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
+        }
+        clearMouseMotionState();
+        cursorCaptureRequested = false;
+        cursorCaptureEffective = false;
+        cursorCaptureNeedsExplicitRearm = false;
+    }
+
     private void handleFocusChanged(boolean focused) {
         windowFocused = focused;
         if (focused) {
@@ -419,14 +504,23 @@ public final class GlfwWindow extends EngineSubsystem {
         }
 
         clearHeldInput();
+        clearMouseMotionState();
         if (cursorCaptureRequested) {
             cursorCaptureNeedsExplicitRearm = true;
         }
-        if (!cursorCaptureEffective) {
+        if (!cursorCaptureEffective && !rawMouseMotionEnabled) {
             return;
         }
 
         cursorCaptureEffective = false;
+        if (rawMouseMotionEnabled) {
+            try {
+                backend.setRawMouseMotion(windowHandle, false);
+                rawMouseMotionEnabled = false;
+            } catch (RuntimeException | Error failure) {
+                stageInputFailure(failure);
+            }
+        }
         try {
             backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
         } catch (RuntimeException | Error failure) {
@@ -456,6 +550,22 @@ public final class GlfwWindow extends EngineSubsystem {
         }
     }
 
+    private void handleCursorPositionChanged(double x, double y) {
+        if (!windowFocused || !cursorCaptureEffective) {
+            return;
+        }
+        if (!mouseMotionBaselineValid) {
+            previousMouseX = x;
+            previousMouseY = y;
+            mouseMotionBaselineValid = true;
+            return;
+        }
+        accumulatedMouseDeltaX += x - previousMouseX;
+        accumulatedMouseDeltaY += y - previousMouseY;
+        previousMouseX = x;
+        previousMouseY = y;
+    }
+
     private void stageInputFailure(Throwable failure) {
         if (pendingInputFailure == null) {
             pendingInputFailure = failure;
@@ -483,9 +593,11 @@ public final class GlfwWindow extends EngineSubsystem {
 
     private void resetInputState() {
         clearHeldInput();
+        clearMouseMotionState();
         cursorCaptureRequested = false;
         cursorCaptureEffective = false;
         cursorCaptureNeedsExplicitRearm = false;
+        rawMouseMotionEnabled = false;
         pendingInputFailure = null;
     }
 
@@ -494,7 +606,21 @@ public final class GlfwWindow extends EngineSubsystem {
         Arrays.fill(heldMouseButtons, false);
     }
 
+    private void clearMouseMotionState() {
+        mouseMotionBaselineValid = false;
+        previousMouseX = 0.0;
+        previousMouseY = 0.0;
+        accumulatedMouseDeltaX = 0.0;
+        accumulatedMouseDeltaY = 0.0;
+    }
+
     private void releaseCursorForCleanup(List<Throwable> failures) {
+        clearMouseMotionState();
+        if (rawMouseMotionEnabled) {
+            if (runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
+                rawMouseMotionEnabled = false;
+            }
+        }
         if (cursorCaptureEffective) {
             if (runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
                 cursorCaptureEffective = false;
@@ -653,9 +779,11 @@ public final class GlfwWindow extends EngineSubsystem {
         clearPendingSizes();
         windowedRestoreGeometry = null;
         clearHeldInput();
+        clearMouseMotionState();
         pendingInputFailure = null;
         List<Throwable> failures = new ArrayList<>();
         releaseCursorForCleanup(failures);
+        releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
@@ -667,6 +795,15 @@ public final class GlfwWindow extends EngineSubsystem {
         for (Throwable failure : failures) {
             addSuppressedUnlessSame(primary, failure);
         }
+    }
+
+    private void releaseMotionCallback(List<Throwable> failures) {
+        if (motionCallbackState == null) {
+            return;
+        }
+        MotionCallbackState state = motionCallbackState;
+        motionCallbackState = null;
+        runCleanup(failures, () -> backend.releaseCursorPositionCallback(windowHandle, state));
     }
 
     private void releaseInputCallbacks(List<Throwable> failures) {
@@ -701,6 +838,7 @@ public final class GlfwWindow extends EngineSubsystem {
         return callbackState != null
                 || sizeCallbackState != null
                 || inputCallbackState != null
+                || motionCallbackState != null
                 || glfwInitialized
                 || windowHandle != 0L
                 || windowRegistration != null
@@ -776,6 +914,12 @@ public final class GlfwWindow extends EngineSubsystem {
     record InputCallbackState(Object focus, Object key, Object mouseButton) {
     }
 
+    record MotionCallbackState(Object cursorPosition) {
+    }
+
+    record MouseMotion(double x, double y) {
+    }
+
     record Dimensions(int width, int height) {
     }
 
@@ -814,6 +958,11 @@ public final class GlfwWindow extends EngineSubsystem {
         void onKey(int key, int action);
 
         void onMouseButton(int button, int action);
+    }
+
+    @FunctionalInterface
+    interface MotionEventSink {
+        void onCursorPosition(double x, double y);
     }
 
     interface Backend {
@@ -858,11 +1007,25 @@ public final class GlfwWindow extends EngineSubsystem {
         default void releaseInputCallbacks(long handle, InputCallbackState state) {
         }
 
+        default MotionCallbackState installCursorPositionCallback(long handle, MotionEventSink sink) {
+            return null;
+        }
+
+        default void releaseCursorPositionCallback(long handle, MotionCallbackState state) {
+        }
+
         default boolean queryWindowFocused(long handle) {
             return true;
         }
 
         default void setCursorMode(long handle, int mode) {
+        }
+
+        default boolean rawMouseMotionSupported() {
+            return false;
+        }
+
+        default void setRawMouseMotion(long handle, boolean enabled) {
         }
 
         Dimensions queryLogicalSize(long handle);
@@ -1094,6 +1257,31 @@ public final class GlfwWindow extends EngineSubsystem {
         }
 
         @Override
+        public MotionCallbackState installCursorPositionCallback(long handle, MotionEventSink sink) {
+            GLFWCursorPosCallback cursorPosition = GLFWCursorPosCallback.create(
+                    (window, x, y) -> sink.onCursorPosition(x, y));
+            try {
+                GLFW.glfwSetCursorPosCallback(handle, cursorPosition);
+                return new MotionCallbackState(cursorPosition);
+            } catch (RuntimeException | Error failure) {
+                try {
+                    cursorPosition.free();
+                } catch (RuntimeException | Error cleanupFailure) {
+                    addSuppressedUnlessSame(failure, cleanupFailure);
+                }
+                throw failure;
+            }
+        }
+
+        @Override
+        public void releaseCursorPositionCallback(long handle, MotionCallbackState state) {
+            List<Throwable> failures = new ArrayList<>();
+            runCleanup(failures, () -> GLFW.glfwSetCursorPosCallback(handle, null));
+            runCleanup(failures, () -> ((GLFWCursorPosCallback) state.cursorPosition()).free());
+            throwCleanupFailure(failures);
+        }
+
+        @Override
         public boolean queryWindowFocused(long handle) {
             return GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE;
         }
@@ -1101,6 +1289,19 @@ public final class GlfwWindow extends EngineSubsystem {
         @Override
         public void setCursorMode(long handle, int mode) {
             GLFW.glfwSetInputMode(handle, GLFW.GLFW_CURSOR, mode);
+        }
+
+        @Override
+        public boolean rawMouseMotionSupported() {
+            return GLFW.glfwRawMouseMotionSupported();
+        }
+
+        @Override
+        public void setRawMouseMotion(long handle, boolean enabled) {
+            GLFW.glfwSetInputMode(
+                    handle,
+                    GLFW.GLFW_RAW_MOUSE_MOTION,
+                    enabled ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
         }
 
         @Override

@@ -10,7 +10,6 @@ import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
 import static org.lwjgl.glfw.GLFW.glfwGetInputMode;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowAttrib;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
 import static org.lwjgl.glfw.GLFW.glfwShowWindow;
 
 import com.samo.engine.core.api.EngineLogger;
@@ -31,7 +30,7 @@ class GlfwWindowMouseMotionNativeTest {
             Path.of("build", "reports", "p3", "p3-t05-mouse-motion.txt");
 
     @Test
-    void productionWindowUsesRawWhenSupportedAndResetsRelativeMotionAcrossFocusTransitions()
+    void productionWindowTogglesRawMotionAcrossCaptureAndRealFocusTransitions()
             throws Exception {
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
                 () -> "Set " + ENABLE_ENV + "=true to run the P3-T05 native acceptance");
@@ -57,8 +56,6 @@ class GlfwWindowMouseMotionNativeTest {
         int rawAfterFocusLoss = -1;
         int rawAfterFocusRegain = -1;
         int rawAfterExplicitRecapture = -1;
-        GlfwWindow.MouseMotion firstAfterRecapture = new GlfwWindow.MouseMotion(Double.NaN, Double.NaN);
-        GlfwWindow.MouseMotion secondAfterRecapture = new GlfwWindow.MouseMotion(Double.NaN, Double.NaN);
         try {
             window.initialize();
             window.start();
@@ -78,23 +75,17 @@ class GlfwWindowMouseMotionNativeTest {
             rawDuringCapture = glfwGetInputMode(production, GLFW.GLFW_RAW_MOUSE_MOTION);
             assertEquals(rawSupported ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE, rawDuringCapture);
             assertEquals(rawSupported, window.isRawMouseMotionEnabledForTest());
+            assertMotionCleared(window);
 
             window.setCursorCaptured(false);
             rawAfterRelease = glfwGetInputMode(production, GLFW.GLFW_RAW_MOUSE_MOTION);
             assertEquals(GLFW.GLFW_FALSE, rawAfterRelease);
             assertFalse(window.isRawMouseMotionEnabledForTest());
+            assertMotionCleared(window);
 
             window.setCursorCaptured(true);
-            assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
-            glfwSetCursorPos(production, 300.0, 250.0);
-            window.pollEvents();
-            firstAfterRecapture = window.drainMouseMotionForTest();
-            assertMotion(firstAfterRecapture, 0.0, 0.0);
-
-            glfwSetCursorPos(production, 312.0, 244.0);
-            window.pollEvents();
-            secondAfterRecapture = window.drainMouseMotionForTest();
-            assertMotion(secondAfterRecapture, 12.0, -6.0);
+            assertEquals(rawSupported, window.isRawMouseMotionEnabledForTest());
+            assertMotionCleared(window);
 
             GLFW.glfwDefaultWindowHints();
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_TRUE);
@@ -106,18 +97,21 @@ class GlfwWindowMouseMotionNativeTest {
             pumpUntil(window, () -> glfwGetWindowAttrib(production, GLFW.GLFW_FOCUSED) == GLFW.GLFW_FALSE);
             rawAfterFocusLoss = glfwGetInputMode(production, GLFW.GLFW_RAW_MOUSE_MOTION);
             assertEquals(GLFW.GLFW_FALSE, rawAfterFocusLoss);
-            assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
+            assertFalse(window.isCursorEffectivelyCapturedForTest());
+            assertFalse(window.isRawMouseMotionEnabledForTest());
+            assertMotionCleared(window);
 
             glfwFocusWindow(production);
             pumpUntil(window, () -> glfwGetWindowAttrib(production, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE);
             rawAfterFocusRegain = glfwGetInputMode(production, GLFW.GLFW_RAW_MOUSE_MOTION);
             assertEquals(GLFW.GLFW_FALSE, rawAfterFocusRegain, "focus regain must not auto-enable raw motion");
             assertFalse(window.isCursorEffectivelyCapturedForTest());
+            assertMotionCleared(window);
 
             window.setCursorCaptured(true);
             rawAfterExplicitRecapture = glfwGetInputMode(production, GLFW.GLFW_RAW_MOUSE_MOTION);
             assertEquals(rawSupported ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE, rawAfterExplicitRecapture);
-            assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
+            assertMotionCleared(window);
 
             window.setCursorCaptured(false);
             glfwDestroyWindow(helper);
@@ -147,9 +141,7 @@ class GlfwWindowMouseMotionNativeTest {
                 rawAfterRelease,
                 rawAfterFocusLoss,
                 rawAfterFocusRegain,
-                rawAfterExplicitRecapture,
-                firstAfterRecapture,
-                secondAfterRecapture);
+                rawAfterExplicitRecapture);
     }
 
     private static void pumpUntil(GlfwWindow window, Condition condition) throws InterruptedException {
@@ -163,9 +155,10 @@ class GlfwWindowMouseMotionNativeTest {
         assertTrue(condition.test(), "focus transition did not complete within bounded polling");
     }
 
-    private static void assertMotion(GlfwWindow.MouseMotion motion, double x, double y) {
-        assertEquals(x, motion.x(), 0.0);
-        assertEquals(y, motion.y(), 0.0);
+    private static void assertMotionCleared(GlfwWindow window) {
+        GlfwWindow.MouseMotion motion = window.drainMouseMotionForTest();
+        assertEquals(0.0, motion.x(), 0.0);
+        assertEquals(0.0, motion.y(), 0.0);
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
@@ -184,9 +177,7 @@ class GlfwWindowMouseMotionNativeTest {
             int rawAfterRelease,
             int rawAfterFocusLoss,
             int rawAfterFocusRegain,
-            int rawAfterExplicitRecapture,
-            GlfwWindow.MouseMotion firstAfterRecapture,
-            GlfwWindow.MouseMotion secondAfterRecapture) throws IOException {
+            int rawAfterExplicitRecapture) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
         List<String> lines = List.of(
                 "task=P3-T05",
@@ -198,18 +189,19 @@ class GlfwWindowMouseMotionNativeTest {
                 "raw.mode.after.focus.loss=" + rawAfterFocusLoss,
                 "raw.mode.after.focus.regain=" + rawAfterFocusRegain,
                 "raw.mode.after.explicit.recapture=" + rawAfterExplicitRecapture,
-                "first.relative.delta.after.recapture=" + firstAfterRecapture.x() + "," + firstAfterRecapture.y(),
-                "second.relative.delta.after.recapture=" + secondAfterRecapture.x() + "," + secondAfterRecapture.y(),
-                "baseline.reset.no.discontinuity=true",
+                "baseline.cleared.across.capture.focus.transitions=true",
                 "focus.regain.auto.raw.enable=false",
+                "relative.delta.deterministic.coverage=GlfwWindowMouseMotionTest",
                 "fallback.forced.unsupported.coverage=GlfwWindowMouseMotionTest",
+                "raw.hardware.motion.synthetic.oracle=not-used",
+                "raw.hardware.motion.note=glfwSetCursorPos is not treated as physical raw mouse input",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
                 "native.resource.registry.empty.after.cleanup=true",
                 "fallback.limit=disabled-cursor position deltas are screen-bound independent but do not claim OS pointer acceleration bypass",
-                "evidence.limit=P3-T05 internal relative acquisition proven; public InputSnapshot remains P3-T06");
+                "evidence.limit=native raw-mode selection/focus lifecycle proven; delta arithmetic/fallback are deterministic-test evidence; public InputSnapshot remains P3-T06");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
     }
 

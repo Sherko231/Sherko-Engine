@@ -1,6 +1,6 @@
 # Example: create a production window
 
-This is the smallest practical example using the current production public API, including separated logical/framebuffer sizing and in-place display-mode changes.
+This is the smallest practical example using the current production public API, including separated logical/framebuffer sizing, in-place display-mode changes, and focus-loss-safe cursor capture.
 
 ```java
 import com.samo.engine.core.api.EngineLogger;
@@ -46,6 +46,9 @@ public final class WindowExample {
             // One owner-thread platform event pass.
             window.pollEvents();
 
+            // Gameplay may explicitly request cursor capture while focused.
+            window.setCursorCaptured(true);
+
             // These transitions reuse the same GLFW window/OpenGL context.
             window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
             window.pollEvents();
@@ -57,6 +60,12 @@ public final class WindowExample {
             window.setWindowMode(WindowMode.WINDOWED);
             window.pollEvents();
 
+            // If the user Alt+Tabs away, GlfwWindow releases effective capture and
+            // clears its internal held key/button safety state. Focus regain never
+            // recaptures automatically; caller policy explicitly re-arms when appropriate.
+            window.setCursorCaptured(true);
+
+            window.setCursorCaptured(false);
             window.stop();
         } finally {
             window.close();
@@ -74,10 +83,16 @@ The first `pollEvents()` also delivers the current logical window dimensions and
 
 A framebuffer size containing a zero axis, including `0x0`, is a valid minimized-window state. It is not a lifecycle failure.
 
-The display-mode calls target the primary monitor's current video mode. Borderless fullscreen uses an undecorated, monitor-detached window at the monitor origin; exclusive fullscreen attaches the same native window to that monitor. Returning to windowed restores the captured windowed geometry. All lifecycle, polling, and mode-change calls stay on the initializing owner thread.
+The display-mode calls target the primary monitor's current video mode. Borderless fullscreen uses an undecorated, monitor-detached window at the monitor origin; exclusive fullscreen attaches the same native window to that monitor. Returning to windowed restores the captured windowed geometry.
 
-## Why the example is still not a renderer loop
+`setCursorCaptured(true)` requests GLFW disabled-cursor mode only while the window is focused. If focus is lost, the platform boundary restores a normal cursor and clears its internal held keyboard/mouse-button state. Returning focus does not automatically recapture. The caller must explicitly request capture again when gameplay should resume.
 
-`GlfwWindow.pollEvents()` and `setWindowMode(...)` are bounded platform operations. The public API still intentionally does not expose buffer swapping, renderer ownership, monitor selection/custom video modes, focus/input state, or raw GLFW handles. Adding direct LWJGL calls around `GlfwWindow` would bypass the engine abstraction boundary and pull later roadmap tasks into caller code.
+All lifecycle, polling, mode-change, and cursor-capture calls stay on the initializing owner thread.
 
-Use this example for the currently implemented lifecycle, size-event, and window-mode API only. Later wiki pages should extend it when the corresponding production APIs actually exist.
+## Why the example is still not a renderer or input loop
+
+`GlfwWindow.pollEvents()`, `setWindowMode(...)`, and `setCursorCaptured(...)` are bounded platform operations. The public API still intentionally does not expose buffer swapping, renderer ownership, monitor selection/custom video modes, raw GLFW handles, raw mouse motion, public key/button snapshots, action mapping, or player commands.
+
+Adding direct LWJGL calls around `GlfwWindow` would bypass the engine abstraction boundary and pull later roadmap tasks into caller code.
+
+Use this example for the currently implemented lifecycle, size-event, window-mode, and cursor-capture API only. Later wiki pages should extend it when the corresponding production APIs actually exist.

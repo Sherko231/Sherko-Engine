@@ -5,13 +5,17 @@ import com.samo.engine.core.api.EngineSubsystem;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.GLFWWindowFocusCallback;
 import org.lwjgl.glfw.GLFWWindowSizeCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -41,10 +45,13 @@ public final class GlfwWindow extends EngineSubsystem {
     private final NativeResourceRegistry nativeResources;
     private final WindowSizeListener sizeListener;
     private final Backend backend;
+    private final boolean[] heldKeys = new boolean[GLFW.GLFW_KEY_LAST + 1];
+    private final boolean[] heldMouseButtons = new boolean[GLFW.GLFW_MOUSE_BUTTON_LAST + 1];
 
     private Thread ownerThread;
     private CallbackState callbackState;
     private SizeCallbackState sizeCallbackState;
+    private InputCallbackState inputCallbackState;
     private boolean glfwInitialized;
     private long windowHandle;
     private NativeResourceRegistry.Registration windowRegistration;
@@ -59,16 +66,12 @@ public final class GlfwWindow extends EngineSubsystem {
     private int pendingFramebufferHeight;
     private WindowMode windowMode = WindowMode.WINDOWED;
     private WindowGeometry windowedRestoreGeometry;
+    private boolean windowFocused;
+    private boolean cursorCaptureRequested;
+    private boolean cursorCaptureEffective;
+    private boolean cursorCaptureNeedsExplicitRearm;
+    private Throwable pendingInputFailure;
 
-    /**
-     * Creates an uninitialized window description without performing native work.
-     *
-     * @param width positive logical window width
-     * @param height positive logical window height
-     * @param title nonblank title, preserved as supplied
-     * @param logger structured runtime logger
-     * @param nativeResources caller-owned native-resource registry
-     */
     public GlfwWindow(
             int width,
             int height,
@@ -78,16 +81,6 @@ public final class GlfwWindow extends EngineSubsystem {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER);
     }
 
-    /**
-     * Creates an uninitialized window description with a renderer-neutral size receiver.
-     *
-     * @param width positive logical window width
-     * @param height positive logical window height
-     * @param title nonblank title, preserved as supplied
-     * @param logger structured runtime logger
-     * @param nativeResources caller-owned native-resource registry
-     * @param sizeListener receiver for logical and framebuffer pixel dimensions
-     */
     public GlfwWindow(
             int width,
             int height,
@@ -135,27 +128,60 @@ public final class GlfwWindow extends EngineSubsystem {
         this.backend = Objects.requireNonNull(backend, "backend");
     }
 
-    /**
-     * Polls one GLFW event batch and then delivers the latest pending size notifications.
-     *
-     * <p>This operation is available only while the subsystem is started and must run on the
-     * initializing thread. Native callbacks only stage values; consumer callbacks run here after
-     * GLFW polling returns.</p>
-     */
     public void pollEvents() {
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW event polling requires a started window");
         }
         requireOwnerThread();
-        backend.pollEvents();
+        try {
+            backend.pollEvents();
+        } catch (RuntimeException | Error failure) {
+            Throwable callbackFailure = takePendingInputFailure();
+            if (callbackFailure != null) {
+                addSuppressedUnlessSame(failure, callbackFailure);
+            }
+            throw failure;
+        }
+        throwPendingInputFailure();
         dispatchPendingSizes();
     }
 
-    /**
-     * Changes display mode in place while preserving this window and its OpenGL context.
-     *
-     * @param mode requested window mode
-     */
+    /** Requests or releases gameplay cursor capture for this started window. */
+    public void setCursorCaptured(boolean captured) {
+        if (!eventPollingEnabled) {
+            throw new IllegalStateException("GLFW cursor capture requires a started window");
+        }
+        requireOwnerThread();
+
+        if (captured) {
+            if (!windowFocused) {
+                cursorCaptureRequested = true;
+                cursorCaptureEffective = false;
+                cursorCaptureNeedsExplicitRearm = true;
+                return;
+            }
+            if (cursorCaptureRequested && cursorCaptureEffective && !cursorCaptureNeedsExplicitRearm) {
+                return;
+            }
+            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_DISABLED);
+            cursorCaptureRequested = true;
+            cursorCaptureEffective = true;
+            cursorCaptureNeedsExplicitRearm = false;
+            return;
+        }
+
+        if (!cursorCaptureRequested && !cursorCaptureEffective) {
+            cursorCaptureNeedsExplicitRearm = false;
+            return;
+        }
+        if (cursorCaptureEffective) {
+            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
+        }
+        cursorCaptureRequested = false;
+        cursorCaptureEffective = false;
+        cursorCaptureNeedsExplicitRearm = false;
+    }
+
     public void setWindowMode(WindowMode mode) {
         WindowMode requestedMode = Objects.requireNonNull(mode, "mode");
         if (!eventPollingEnabled) {
@@ -174,7 +200,6 @@ public final class GlfwWindow extends EngineSubsystem {
         }
 
         TransitionPlan requestedPlan = planTransition(requestedMode, candidateRestoreGeometry);
-
         try {
             applyTransition(requestedPlan);
             windowMode = requestedMode;
@@ -270,6 +295,24 @@ public final class GlfwWindow extends EngineSubsystem {
                 }
             });
 
+            inputCallbackState = backend.installInputCallbacks(windowHandle, new InputEventSink() {
+                @Override
+                public void onFocus(boolean focused) {
+                    handleFocusChanged(focused);
+                }
+
+                @Override
+                public void onKey(int key, int action) {
+                    handleKeyChanged(key, action);
+                }
+
+                @Override
+                public void onMouseButton(int button, int action) {
+                    handleMouseButtonChanged(button, action);
+                }
+            });
+            windowFocused = backend.queryWindowFocused(windowHandle);
+
             Dimensions logicalSize = backend.queryLogicalSize(windowHandle);
             validatePlatformDimensions("logical window", logicalSize);
             stageLogicalSize(logicalSize.width(), logicalSize.height());
@@ -280,6 +323,7 @@ public final class GlfwWindow extends EngineSubsystem {
 
             windowMode = WindowMode.WINDOWED;
             windowedRestoreGeometry = null;
+            resetInputState();
             eventPollingEnabled = true;
             backend.showWindow(windowHandle);
         } catch (RuntimeException | Error failure) {
@@ -294,8 +338,12 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
+        clearHeldInput();
+        pendingInputFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
+        releaseCursorForCleanup(failures);
+        releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         runCleanup(failures, () -> backend.hideWindow(windowHandle));
         if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
@@ -316,8 +364,12 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
+        clearHeldInput();
+        pendingInputFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
+        releaseCursorForCleanup(failures);
+        releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
             contextCurrent = false;
@@ -342,6 +394,114 @@ public final class GlfwWindow extends EngineSubsystem {
         }
         releaseCallback(failures);
         throwCleanupFailure(failures);
+    }
+
+    boolean isKeyHeldForTest(int key) {
+        return key >= 0 && key < heldKeys.length && heldKeys[key];
+    }
+
+    boolean isMouseButtonHeldForTest(int button) {
+        return button >= 0 && button < heldMouseButtons.length && heldMouseButtons[button];
+    }
+
+    boolean isFocusedForTest() {
+        return windowFocused;
+    }
+
+    boolean isCursorEffectivelyCapturedForTest() {
+        return cursorCaptureEffective;
+    }
+
+    private void handleFocusChanged(boolean focused) {
+        windowFocused = focused;
+        if (focused) {
+            return;
+        }
+
+        clearHeldInput();
+        if (cursorCaptureRequested) {
+            cursorCaptureNeedsExplicitRearm = true;
+        }
+        if (!cursorCaptureEffective) {
+            return;
+        }
+
+        cursorCaptureEffective = false;
+        try {
+            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
+        } catch (RuntimeException | Error failure) {
+            stageInputFailure(failure);
+        }
+    }
+
+    private void handleKeyChanged(int key, int action) {
+        if (key < 0 || key >= heldKeys.length) {
+            return;
+        }
+        if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
+            heldKeys[key] = true;
+        } else if (action == GLFW.GLFW_RELEASE) {
+            heldKeys[key] = false;
+        }
+    }
+
+    private void handleMouseButtonChanged(int button, int action) {
+        if (button < 0 || button >= heldMouseButtons.length) {
+            return;
+        }
+        if (action == GLFW.GLFW_PRESS) {
+            heldMouseButtons[button] = true;
+        } else if (action == GLFW.GLFW_RELEASE) {
+            heldMouseButtons[button] = false;
+        }
+    }
+
+    private void stageInputFailure(Throwable failure) {
+        if (pendingInputFailure == null) {
+            pendingInputFailure = failure;
+        } else {
+            addSuppressedUnlessSame(pendingInputFailure, failure);
+        }
+    }
+
+    private void throwPendingInputFailure() {
+        Throwable failure = takePendingInputFailure();
+        if (failure == null) {
+            return;
+        }
+        if (failure instanceof RuntimeException runtimeFailure) {
+            throw runtimeFailure;
+        }
+        throw (Error) failure;
+    }
+
+    private Throwable takePendingInputFailure() {
+        Throwable failure = pendingInputFailure;
+        pendingInputFailure = null;
+        return failure;
+    }
+
+    private void resetInputState() {
+        clearHeldInput();
+        cursorCaptureRequested = false;
+        cursorCaptureEffective = false;
+        cursorCaptureNeedsExplicitRearm = false;
+        pendingInputFailure = null;
+    }
+
+    private void clearHeldInput() {
+        Arrays.fill(heldKeys, false);
+        Arrays.fill(heldMouseButtons, false);
+    }
+
+    private void releaseCursorForCleanup(List<Throwable> failures) {
+        if (cursorCaptureEffective) {
+            if (runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
+                cursorCaptureEffective = false;
+            }
+        }
+        cursorCaptureRequested = false;
+        cursorCaptureNeedsExplicitRearm = false;
     }
 
     private WindowGeometry captureWindowedGeometry() {
@@ -492,7 +652,11 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
+        clearHeldInput();
+        pendingInputFailure = null;
         List<Throwable> failures = new ArrayList<>();
+        releaseCursorForCleanup(failures);
+        releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
         if (contextCurrent && runCleanup(failures, () -> backend.makeContextCurrent(0L))) {
             contextCurrent = false;
@@ -503,6 +667,15 @@ public final class GlfwWindow extends EngineSubsystem {
         for (Throwable failure : failures) {
             addSuppressedUnlessSame(primary, failure);
         }
+    }
+
+    private void releaseInputCallbacks(List<Throwable> failures) {
+        if (inputCallbackState == null) {
+            return;
+        }
+        InputCallbackState state = inputCallbackState;
+        inputCallbackState = null;
+        runCleanup(failures, () -> backend.releaseInputCallbacks(windowHandle, state));
     }
 
     private void releaseSizeCallbacks(List<Throwable> failures) {
@@ -527,6 +700,7 @@ public final class GlfwWindow extends EngineSubsystem {
     private boolean hasOwnedNativeState() {
         return callbackState != null
                 || sizeCallbackState != null
+                || inputCallbackState != null
                 || glfwInitialized
                 || windowHandle != 0L
                 || windowRegistration != null
@@ -599,6 +773,9 @@ public final class GlfwWindow extends EngineSubsystem {
     record SizeCallbackState(Object logical, Object framebuffer) {
     }
 
+    record InputCallbackState(Object focus, Object key, Object mouseButton) {
+    }
+
     record Dimensions(int width, int height) {
     }
 
@@ -629,6 +806,14 @@ public final class GlfwWindow extends EngineSubsystem {
         void onLogicalSize(int width, int height);
 
         void onFramebufferSize(int width, int height);
+    }
+
+    interface InputEventSink {
+        void onFocus(boolean focused);
+
+        void onKey(int key, int action);
+
+        void onMouseButton(int button, int action);
     }
 
     interface Backend {
@@ -665,6 +850,20 @@ public final class GlfwWindow extends EngineSubsystem {
         SizeCallbackState installSizeCallbacks(long handle, SizeEventSink sink);
 
         void releaseSizeCallbacks(long handle, SizeCallbackState state);
+
+        default InputCallbackState installInputCallbacks(long handle, InputEventSink sink) {
+            return null;
+        }
+
+        default void releaseInputCallbacks(long handle, InputCallbackState state) {
+        }
+
+        default boolean queryWindowFocused(long handle) {
+            return true;
+        }
+
+        default void setCursorMode(long handle, int mode) {
+        }
 
         Dimensions queryLogicalSize(long handle);
 
@@ -829,6 +1028,79 @@ public final class GlfwWindow extends EngineSubsystem {
             runCleanup(failures, () -> ((GLFWWindowSizeCallback) state.logical()).free());
             runCleanup(failures, () -> ((GLFWFramebufferSizeCallback) state.framebuffer()).free());
             throwCleanupFailure(failures);
+        }
+
+        @Override
+        public InputCallbackState installInputCallbacks(long handle, InputEventSink sink) {
+            GLFWWindowFocusCallback focus = GLFWWindowFocusCallback.create(
+                    (window, focused) -> sink.onFocus(focused));
+            GLFWKeyCallback key = GLFWKeyCallback.create(
+                    (window, callbackKey, scancode, action, mods) -> sink.onKey(callbackKey, action));
+            GLFWMouseButtonCallback mouseButton = GLFWMouseButtonCallback.create(
+                    (window, button, action, mods) -> sink.onMouseButton(button, action));
+            boolean focusInstalled = false;
+            boolean keyInstalled = false;
+            try {
+                GLFW.glfwSetWindowFocusCallback(handle, focus);
+                focusInstalled = true;
+                GLFW.glfwSetKeyCallback(handle, key);
+                keyInstalled = true;
+                GLFW.glfwSetMouseButtonCallback(handle, mouseButton);
+                return new InputCallbackState(focus, key, mouseButton);
+            } catch (RuntimeException | Error failure) {
+                if (keyInstalled) {
+                    try {
+                        GLFW.glfwSetKeyCallback(handle, null);
+                    } catch (RuntimeException | Error cleanupFailure) {
+                        addSuppressedUnlessSame(failure, cleanupFailure);
+                    }
+                }
+                if (focusInstalled) {
+                    try {
+                        GLFW.glfwSetWindowFocusCallback(handle, null);
+                    } catch (RuntimeException | Error cleanupFailure) {
+                        addSuppressedUnlessSame(failure, cleanupFailure);
+                    }
+                }
+                try {
+                    focus.free();
+                } catch (RuntimeException | Error cleanupFailure) {
+                    addSuppressedUnlessSame(failure, cleanupFailure);
+                }
+                try {
+                    key.free();
+                } catch (RuntimeException | Error cleanupFailure) {
+                    addSuppressedUnlessSame(failure, cleanupFailure);
+                }
+                try {
+                    mouseButton.free();
+                } catch (RuntimeException | Error cleanupFailure) {
+                    addSuppressedUnlessSame(failure, cleanupFailure);
+                }
+                throw failure;
+            }
+        }
+
+        @Override
+        public void releaseInputCallbacks(long handle, InputCallbackState state) {
+            List<Throwable> failures = new ArrayList<>();
+            runCleanup(failures, () -> GLFW.glfwSetWindowFocusCallback(handle, null));
+            runCleanup(failures, () -> GLFW.glfwSetKeyCallback(handle, null));
+            runCleanup(failures, () -> GLFW.glfwSetMouseButtonCallback(handle, null));
+            runCleanup(failures, () -> ((GLFWWindowFocusCallback) state.focus()).free());
+            runCleanup(failures, () -> ((GLFWKeyCallback) state.key()).free());
+            runCleanup(failures, () -> ((GLFWMouseButtonCallback) state.mouseButton()).free());
+            throwCleanupFailure(failures);
+        }
+
+        @Override
+        public boolean queryWindowFocused(long handle) {
+            return GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE;
+        }
+
+        @Override
+        public void setCursorMode(long handle, int mode) {
+            GLFW.glfwSetInputMode(handle, GLFW.GLFW_CURSOR, mode);
         }
 
         @Override

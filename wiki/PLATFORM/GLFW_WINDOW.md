@@ -1,8 +1,8 @@
 # GLFW/OpenGL window
 
-`com.samo.engine.platform.api.GlfwWindow` is the current production window/context boundary.
+`com.samo.engine.platform.api.GlfwWindow` is the current production window/context and hardware-input producer boundary.
 
-It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It exposes bounded owner-thread event polling, keeps logical window dimensions separate from framebuffer pixel dimensions, can switch the same native window/context among windowed, borderless-fullscreen, and exclusive-fullscreen modes, and owns focus-loss-safe cursor capture.
+It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It exposes bounded owner-thread event polling, keeps logical window dimensions separate from framebuffer pixel dimensions, can switch the same native window/context among windowed, borderless-fullscreen, and exclusive-fullscreen modes, owns focus-loss-safe cursor capture, and can produce one immutable hardware `InputSnapshot` for a caller-defined renderer frame.
 
 ## Constructors
 
@@ -109,19 +109,49 @@ window.setCursorCaptured(false);
 
 `setCursorCaptured(...)` is legal only while STARTED and on the same owner thread that initialized the window.
 
-Current P3-T04 policy:
+Current policy:
 
 - capture uses GLFW's disabled-cursor mode while the window is focused;
-- releasing capture restores the normal cursor;
-- focus loss immediately clears the platform boundary's internally tracked held keyboard/mouse-button state;
-- focus loss releases effective cursor capture;
+- if GLFW raw mouse motion is supported, capture enables it; otherwise relative movement uses the documented disabled-cursor position-delta fallback;
+- releasing capture restores the normal cursor and clears pending relative motion;
+- focus loss clears held keyboard/mouse-button state and records release edges for supported inputs that were held;
+- stale pending press edges and pending mouse motion are cleared on focus loss;
+- focus loss releases effective cursor/raw capture;
 - focus regain does **not** automatically capture the cursor again;
-- the caller must explicitly invoke `setCursorCaptured(true)` after focus regain when gameplay should resume;
-- no public key/button snapshot or action API exists yet, so the tracked hardware state is intentionally internal until P3-T06.
+- the caller must explicitly invoke `setCursorCaptured(true)` after focus regain when gameplay should resume.
 
 The explicit-recapture rule prevents the pointer from unexpectedly locking when a user returns from Alt+Tab. Game/UI composition remains responsible for deciding when gameplay should resume.
 
-If native cursor release fails inside a focus callback, that failure is not thrown through the native callback boundary. The window clears held input state first, stages the original failure, and throws it once from the owning `pollEvents()` call after GLFW polling returns.
+If native cursor/raw release fails inside a focus callback, that failure is not thrown through the native callback boundary. The window clears safety/input state first, stages the original failure, and throws it once from the owning `pollEvents()` call after GLFW polling returns.
+
+## Renderer-frame input snapshot
+
+P3-T06 adds:
+
+```java
+public InputSnapshot captureInputSnapshot(long frameId)
+```
+
+The method is legal only while STARTED and on the owner thread. `frameId` is caller-owned and must be non-negative.
+
+`captureInputSnapshot(...)` does **not** call GLFW polling. A renderer-frame loop should call `pollEvents()` first, then capture exactly the frame view it wants consumers to share:
+
+```java
+window.pollEvents();
+InputSnapshot input = window.captureInputSnapshot(frameId++);
+```
+
+A successful snapshot contains:
+
+- the supplied frame ID;
+- current focus/effective cursor-capture state;
+- held supported keys/buttons;
+- supported key/button press and release edges retained since the prior successful snapshot;
+- accumulated relative mouse X/Y movement since the prior successful snapshot.
+
+A successful snapshot consumes pending press/release edges and mouse delta for the next interval. Held levels remain unchanged, and snapshot capture does not reset the relative-motion baseline. A press and release that both occur between two snapshots can therefore appear as `pressed=true`, `released=true`, `held=false` in the next snapshot instead of being lost.
+
+The snapshot and its `InputKey` / `InputMouseButton` vocabulary expose no GLFW/LWJGL types or integer constants. See [Renderer-frame input snapshots](INPUT.md) for the complete consumer contract.
 
 ## Normal lifetime
 
@@ -148,11 +178,15 @@ GlfwWindow window = new GlfwWindow(
 
 window.initialize();
 window.start();
+
+long frameId = 0L;
 window.pollEvents();
+InputSnapshot input = window.captureInputSnapshot(frameId++);
 
 window.setCursorCaptured(true);
 window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
 window.pollEvents();
+input = window.captureInputSnapshot(frameId++);
 
 // If focus is lost, capture is released automatically.
 // After focus returns, recapture is explicit:
@@ -164,7 +198,7 @@ window.stop();
 window.close();
 ```
 
-All native-bearing lifecycle calls, `pollEvents()`, `setWindowMode(...)`, and `setCursorCaptured(...)` must remain on the thread that initialized this `GlfwWindow`.
+All native-bearing lifecycle calls, `pollEvents()`, `captureInputSnapshot(...)`, `setWindowMode(...)`, and `setCursorCaptured(...)` must remain on the thread that initialized this `GlfwWindow`.
 
 ## What `initialize()` does
 
@@ -187,12 +221,12 @@ The current production contract:
 - queries nonblank `GL_VERSION` and `GL_RENDERER`;
 - logs both through `EngineLogger` at INFO with `subsystem=platform`;
 - installs owned logical-window and framebuffer-size callbacks;
-- installs owned window-focus, key, and mouse-button callbacks;
+- installs owned window-focus, key, mouse-button, and cursor-position callbacks;
 - queries initial native focus state;
 - queries the actual initial logical size and framebuffer size independently and stages them for delivery;
 - establishes `WINDOWED` as the initial public window mode;
-- establishes uncaptured cursor/input state;
-- enables owner-thread event polling/window-mode/cursor-capture operations;
+- establishes uncaptured/empty hardware input state;
+- enables owner-thread event polling/window-mode/cursor-capture/snapshot operations;
 - shows the window only after setup succeeds.
 
 Expected log message forms:
@@ -212,19 +246,19 @@ public void pollEvents()
 
 1. verifies the initializing/owner thread;
 2. calls GLFW event polling once;
-3. propagates any staged focus/cursor failure once;
+3. propagates any staged focus/cursor/raw failure once;
 4. delivers the latest pending logical size first;
 5. delivers the latest pending framebuffer size second.
 
-Native size callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same P3-T02 delivery path for resulting logical/framebuffer notifications.
+Native size callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same delivery path for resulting logical/framebuffer notifications.
 
-Focus/key/mouse-button callbacks update platform-owned safety state only; there is still no public input snapshot/action callback surface.
+Focus/key/mouse-button/cursor-position callbacks update platform-owned hardware state only. Consumers read that state through the immutable `InputSnapshot` boundary rather than receiving native callbacks or querying GLFW directly.
 
 Listener `RuntimeException` or `Error` failures propagate to the caller unchanged. There is no asynchronous worker and no thread-safety guarantee; callers externally serialize access under the existing platform ownership contract.
 
 ## What `stop()` / `close()` do
 
-`stop()` disables event polling/window-mode/cursor-capture operations, clears undelivered staged sizes and saved windowed restore geometry, clears held input state, restores a normal cursor when capture is effectively active, releases owned focus/key/mouse-button callbacks and size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
+`stop()` disables event polling/window-mode/cursor-capture/snapshot operations, clears undelivered staged sizes and saved windowed restore geometry, clears held/pending input and relative-motion state, restores a normal cursor when capture is effectively active, releases owned focus/key/mouse-button/cursor-position and size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
 
 `close()` performs terminal cleanup, including any remaining input/size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
 
@@ -236,10 +270,11 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 - buffer swapping;
 - choosing a non-primary monitor;
 - custom fullscreen resolution or refresh-rate selection;
-- public keyboard/mouse/controller state snapshots;
-- raw mouse motion;
-- action bindings/transitions;
-- controller curves/dead zones;
+- arbitrary GLFW key/button codes;
+- a public raw-mouse-mode toggle;
+- data-driven action bindings/transitions;
+- controller input/curves/dead zones;
+- tick-aligned `PlayerInputCommand` / replay input;
 - content-scale callbacks as a production API;
 - OpenGL debug callback;
 - multi-window/shared-context management;
@@ -247,4 +282,4 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 
 Those belong to later bounded tasks and must not be inferred from the underlying LWJGL library.
 
-See [Create a window example](../EXAMPLES/CREATE_A_WINDOW.md).
+See [Renderer-frame input snapshots](INPUT.md) and [Create a window example](../EXAMPLES/CREATE_A_WINDOW.md).

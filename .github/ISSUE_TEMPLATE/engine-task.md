@@ -38,6 +38,8 @@ assignees: ""
 ./gradlew ...
 ```
 
+For ordinary non-Markdown tasks, follow the CI lifecycle in `AGENTS.md` / `docs/BUILD_AND_VERIFY.md`: implement, verify, document, and self-review on the dedicated branch before opening the final non-draft PR; require the heavy five-job CI on that exact final candidate; after merge require the lightweight exact-merge master verifier. Request a second full post-merge matrix only when this Issue explicitly needs exact-merge native/performance/integration evidence that the lightweight verifier cannot establish.
+
 ## Handoff/document impact
 
 <!-- Select every applicable document using the matrix in AGENTS.md; write None only after checking. -->
@@ -49,6 +51,8 @@ assignees: ""
 - [ ] Scope/roadmap/backlog/evidence document
 - [ ] `wiki/` API/usage guide — required when public API or consumer-visible usage changes
 - [ ] Wiki impact: none — reason recorded because no consumer/API usage changed
+- [ ] `game-sandbox` owner-facing demo/README — update when the capability is meaningfully observable through authorized public production APIs
+- [ ] Sandbox impact: none — reason recorded when a demo would require internals or future roadmap work
 - [ ] None — no durable repository context changes
 
 <!-- Add the optional sections below only when they materially reduce ambiguity or architectural risk. -->

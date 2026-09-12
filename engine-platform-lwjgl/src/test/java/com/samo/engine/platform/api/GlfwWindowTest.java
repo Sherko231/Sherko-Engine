@@ -260,6 +260,170 @@ class GlfwWindowTest {
     }
 
     @Test
+    void windowModeRejectsIllegalCallsBeforeTransitionActivity() throws Exception {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+
+        assertThrows(NullPointerException.class, () -> window.setWindowMode(null));
+        assertThrows(IllegalStateException.class,
+                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        assertEquals(0, backend.modeTransitionCount);
+
+        window.initialize();
+        window.start();
+
+        AtomicReference<Throwable> result = new AtomicReference<>();
+        Thread thread = Thread.ofPlatform().start(() -> {
+            try {
+                window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+            } catch (Throwable failure) {
+                result.set(failure);
+            }
+        });
+        thread.join(5_000L);
+        assertTrue(result.get() instanceof IllegalStateException);
+        assertEquals(0, backend.modeTransitionCount);
+
+        int traceSize = backend.trace.size();
+        window.setWindowMode(WindowMode.WINDOWED);
+        assertEquals(traceSize, backend.trace.size());
+
+        window.stop();
+        assertThrows(IllegalStateException.class,
+                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        assertEquals(0, backend.modeTransitionCount);
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void windowModeCycleCapturesAndRestoresOriginalGeometry() {
+        FakeBackend backend = new FakeBackend();
+        backend.windowPosition = new GlfwWindow.Position(-120, 75);
+        backend.logicalSize = new GlfwWindow.Dimensions(1111, 777);
+        backend.monitorPosition = new GlfwWindow.Position(1920, 0);
+        backend.videoMode = new GlfwWindow.VideoMode(2560, 1440, 165);
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+        assertEquals(0L, backend.attachedMonitor);
+        assertEquals(new GlfwWindow.Position(1920, 0), backend.windowPosition);
+        assertEquals(new GlfwWindow.Dimensions(2560, 1440), backend.logicalSize);
+        assertTrue(backend.trace.contains("decorated:false"));
+
+        window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN);
+        assertEquals(202L, backend.attachedMonitor);
+        assertEquals(new GlfwWindow.Dimensions(2560, 1440), backend.logicalSize);
+
+        window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+        assertEquals(0L, backend.attachedMonitor);
+
+        window.setWindowMode(WindowMode.WINDOWED);
+        assertEquals(0L, backend.attachedMonitor);
+        assertEquals(new GlfwWindow.Position(-120, 75), backend.windowPosition);
+        assertEquals(new GlfwWindow.Dimensions(1111, 777), backend.logicalSize);
+        assertTrue(backend.trace.contains("decorated:true"));
+
+        backend.windowPosition = new GlfwWindow.Position(300, 200);
+        backend.logicalSize = new GlfwWindow.Dimensions(900, 700);
+        window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN);
+        window.setWindowMode(WindowMode.WINDOWED);
+        assertEquals(new GlfwWindow.Position(300, 200), backend.windowPosition);
+        assertEquals(new GlfwWindow.Dimensions(900, 700), backend.logicalSize);
+
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void borderlessAndExclusiveUsePrimaryMonitorCurrentMode() {
+        FakeBackend backend = new FakeBackend();
+        backend.monitorPosition = new GlfwWindow.Position(-2560, 40);
+        backend.videoMode = new GlfwWindow.VideoMode(2560, 1440, 144);
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+        assertTrue(backend.trace.contains("window-monitor:101:0:-2560,40:2560x1440@-1"));
+
+        window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN);
+        assertTrue(backend.trace.contains("window-monitor:101:202:0,0:2560x1440@144"));
+
+        window.setWindowMode(WindowMode.WINDOWED);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void invalidMonitorStateFailsBeforeModeTransition() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        backend.primaryMonitor = 0L;
+        IllegalStateException missing = assertThrows(
+                IllegalStateException.class,
+                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        assertTrue(missing.getMessage().contains("primary monitor"));
+        assertEquals(0, backend.modeTransitionCount);
+
+        backend.primaryMonitor = 202L;
+        backend.videoMode = new GlfwWindow.VideoMode(0, 1080, 60);
+        IllegalStateException invalid = assertThrows(
+                IllegalStateException.class,
+                () -> window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN));
+        assertTrue(invalid.getMessage().contains("invalid primary monitor video mode"));
+        assertEquals(0, backend.modeTransitionCount);
+
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void transitionFailurePropagatesAndAttemptsRollbackWithSuppressedFailure() {
+        FakeBackend backend = new FakeBackend();
+        RuntimeException transitionFailure = new IllegalStateException("transition failed");
+        RuntimeException rollbackFailure = new IllegalArgumentException("rollback failed");
+        backend.transitionFailures.add(transitionFailure);
+        backend.transitionFailures.add(rollbackFailure);
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        RuntimeException actual = assertThrows(
+                RuntimeException.class,
+                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+
+        assertSame(transitionFailure, actual);
+        assertEquals(1, actual.getSuppressed().length);
+        assertSame(rollbackFailure, actual.getSuppressed()[0]);
+        assertEquals(2, backend.modeTransitionCount);
+
+        backend.transitionFailures.clear();
+        window.setWindowMode(WindowMode.WINDOWED);
+        assertEquals(2, backend.modeTransitionCount);
+        window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN);
+        assertEquals(3, backend.modeTransitionCount);
+
+        window.setWindowMode(WindowMode.WINDOWED);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
     void sizeSetupFailureCleansContextAndLaterCloseDestroysOnce() {
         FakeBackend backend = new FakeBackend();
         RuntimeException sizeFailure = new IllegalStateException("size setup failed");
@@ -505,6 +669,7 @@ class GlfwWindowTest {
     private static final class FakeBackend implements GlfwWindow.Backend {
         private final List<String> trace = new ArrayList<>();
         private final List<Runnable> queuedEvents = new ArrayList<>();
+        private final List<RuntimeException> transitionFailures = new ArrayList<>();
         private boolean initResult = true;
         private long windowHandle = 101L;
         private boolean openGl46 = true;
@@ -512,12 +677,18 @@ class GlfwWindowTest {
         private String renderer = "fixture renderer";
         private GlfwWindow.Dimensions logicalSize = new GlfwWindow.Dimensions(1280, 720);
         private GlfwWindow.Dimensions framebufferSize = new GlfwWindow.Dimensions(1280, 720);
+        private GlfwWindow.Position windowPosition = new GlfwWindow.Position(100, 80);
+        private long primaryMonitor = 202L;
+        private GlfwWindow.VideoMode videoMode = new GlfwWindow.VideoMode(1920, 1080, 120);
+        private GlfwWindow.Position monitorPosition = new GlfwWindow.Position(0, 0);
+        private long attachedMonitor;
         private RuntimeException sizeInstallFailure;
         private RuntimeException sizeReleaseFailure;
         private RuntimeException hideFailure;
         private GlfwWindow.SizeEventSink sizeEventSink;
         private int pollCount;
         private int sizeReleaseCount;
+        private int modeTransitionCount;
         private int destroyCount;
         private int terminateCount;
 
@@ -639,6 +810,55 @@ class GlfwWindowTest {
         public GlfwWindow.Dimensions queryFramebufferSize(long handle) {
             trace.add("framebuffer-query:" + handle);
             return framebufferSize;
+        }
+
+        @Override
+        public GlfwWindow.Position queryWindowPosition(long handle) {
+            trace.add("position-query:" + handle);
+            return windowPosition;
+        }
+
+        @Override
+        public long primaryMonitor() {
+            trace.add("primary-monitor");
+            return primaryMonitor;
+        }
+
+        @Override
+        public GlfwWindow.VideoMode queryVideoMode(long monitor) {
+            trace.add("video-mode:" + monitor);
+            return videoMode;
+        }
+
+        @Override
+        public GlfwWindow.Position queryMonitorPosition(long monitor) {
+            trace.add("monitor-position:" + monitor);
+            return monitorPosition;
+        }
+
+        @Override
+        public void setDecorated(long handle, boolean decorated) {
+            trace.add("decorated:" + decorated);
+        }
+
+        @Override
+        public void setWindowMonitor(
+                long handle,
+                long monitor,
+                int x,
+                int y,
+                int width,
+                int height,
+                int refreshRate) {
+            trace.add("window-monitor:" + handle + ":" + monitor + ":"
+                    + x + "," + y + ":" + width + "x" + height + "@" + refreshRate);
+            modeTransitionCount++;
+            if (!transitionFailures.isEmpty()) {
+                throw transitionFailures.removeFirst();
+            }
+            attachedMonitor = monitor;
+            windowPosition = new GlfwWindow.Position(x, y);
+            logicalSize = new GlfwWindow.Dimensions(width, height);
         }
 
         @Override

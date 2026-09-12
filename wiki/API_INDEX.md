@@ -53,15 +53,20 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 | Type | Purpose |
 | --- | --- |
-| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, separated logical/framebuffer size delivery, in-place primary-monitor display-mode transitions, and focus-loss-safe cursor capture. |
+| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, size delivery, display-mode transitions, focus-safe cursor capture, and renderer-frame hardware snapshot production. |
 | `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
 | `WindowMode` | Selects `WINDOWED`, `BORDERLESS_FULLSCREEN`, or `EXCLUSIVE_FULLSCREEN` for a started `GlfwWindow`. |
+| `InputSnapshot` | Immutable renderer-frame keyboard/mouse/focus/capture/relative-motion state captured from one started `GlfwWindow`. |
+| `InputKey` | Device-neutral bounded keyboard vocabulary used by `InputSnapshot`. |
+| `InputMouseButton` | Device-neutral bounded mouse-button vocabulary used by `InputSnapshot`. |
 
-`GlfwWindow.setCursorCaptured(boolean)` is the current public cursor-lock control. Focus loss clears the platform boundary's tracked held keyboard/mouse-button state and restores a normal cursor; focus regain never recaptures automatically, so a caller must explicitly request capture again.
+`GlfwWindow.setCursorCaptured(boolean)` controls cursor lock. Focus loss clears held hardware state and releases effective capture; focus regain never recaptures automatically.
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public hardware-state polling/snapshot API, raw-mouse API, action mapping, or content-scale callback API.
+`GlfwWindow.captureInputSnapshot(long frameId)` captures the current held levels plus pending hardware press/release edges and accumulated relative mouse delta without polling GLFW itself. A successful snapshot consumes pending edges and mouse delta while leaving held levels intact.
 
-Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md) and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, action mapping, controller API, or content-scale callback API.
+
+Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Renderer-frame input snapshots](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
 ## Not an engine-consumer API
 
@@ -77,4 +82,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
+- [Renderer-frame input snapshots](PLATFORM/INPUT.md)
 - [Current limitations](LIMITATIONS.md)

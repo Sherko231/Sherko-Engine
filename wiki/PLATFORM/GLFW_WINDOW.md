@@ -2,7 +2,7 @@
 
 `com.samo.engine.platform.api.GlfwWindow` is the current production window/context boundary.
 
-It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It exposes bounded owner-thread event polling, keeps logical window dimensions separate from framebuffer pixel dimensions, and can switch the same native window/context among windowed, borderless-fullscreen, and exclusive-fullscreen modes.
+It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It exposes bounded owner-thread event polling, keeps logical window dimensions separate from framebuffer pixel dimensions, can switch the same native window/context among windowed, borderless-fullscreen, and exclusive-fullscreen modes, and owns focus-loss-safe cursor capture.
 
 ## Constructors
 
@@ -93,6 +93,36 @@ The native window and OpenGL context are not recreated during a successful trans
 
 Monitor selection, custom resolution/refresh-rate selection, and raw monitor/window handles are not public APIs.
 
+## Cursor capture and focus loss
+
+A started window can request gameplay-style cursor capture:
+
+```java
+window.setCursorCaptured(true);
+```
+
+and release it with:
+
+```java
+window.setCursorCaptured(false);
+```
+
+`setCursorCaptured(...)` is legal only while STARTED and on the same owner thread that initialized the window.
+
+Current P3-T04 policy:
+
+- capture uses GLFW's disabled-cursor mode while the window is focused;
+- releasing capture restores the normal cursor;
+- focus loss immediately clears the platform boundary's internally tracked held keyboard/mouse-button state;
+- focus loss releases effective cursor capture;
+- focus regain does **not** automatically capture the cursor again;
+- the caller must explicitly invoke `setCursorCaptured(true)` after focus regain when gameplay should resume;
+- no public key/button snapshot or action API exists yet, so the tracked hardware state is intentionally internal until P3-T06.
+
+The explicit-recapture rule prevents the pointer from unexpectedly locking when a user returns from Alt+Tab. Game/UI composition remains responsible for deciding when gameplay should resume.
+
+If native cursor release fails inside a focus callback, that failure is not thrown through the native callback boundary. The window clears held input state first, stages the original failure, and throws it once from the owning `pollEvents()` call after GLFW polling returns.
+
 ## Normal lifetime
 
 ```java
@@ -118,17 +148,23 @@ GlfwWindow window = new GlfwWindow(
 
 window.initialize();
 window.start();
-
 window.pollEvents();
+
+window.setCursorCaptured(true);
 window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
 window.pollEvents();
-window.setWindowMode(WindowMode.WINDOWED);
 
+// If focus is lost, capture is released automatically.
+// After focus returns, recapture is explicit:
+window.setCursorCaptured(true);
+
+window.setWindowMode(WindowMode.WINDOWED);
+window.setCursorCaptured(false);
 window.stop();
 window.close();
 ```
 
-All native-bearing lifecycle calls, `pollEvents()`, and `setWindowMode(...)` must remain on the thread that initialized this `GlfwWindow`.
+All native-bearing lifecycle calls, `pollEvents()`, `setWindowMode(...)`, and `setCursorCaptured(...)` must remain on the thread that initialized this `GlfwWindow`.
 
 ## What `initialize()` does
 
@@ -151,9 +187,12 @@ The current production contract:
 - queries nonblank `GL_VERSION` and `GL_RENDERER`;
 - logs both through `EngineLogger` at INFO with `subsystem=platform`;
 - installs owned logical-window and framebuffer-size callbacks;
+- installs owned window-focus, key, and mouse-button callbacks;
+- queries initial native focus state;
 - queries the actual initial logical size and framebuffer size independently and stages them for delivery;
 - establishes `WINDOWED` as the initial public window mode;
-- enables owner-thread event polling/window-mode changes;
+- establishes uncaptured cursor/input state;
+- enables owner-thread event polling/window-mode/cursor-capture operations;
 - shows the window only after setup succeeds.
 
 Expected log message forms:
@@ -173,18 +212,21 @@ public void pollEvents()
 
 1. verifies the initializing/owner thread;
 2. calls GLFW event polling once;
-3. delivers the latest pending logical size first;
-4. delivers the latest pending framebuffer size second.
+3. propagates any staged focus/cursor failure once;
+4. delivers the latest pending logical size first;
+5. delivers the latest pending framebuffer size second.
 
-Native GLFW callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same P3-T02 delivery path for resulting logical/framebuffer notifications.
+Native size callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same P3-T02 delivery path for resulting logical/framebuffer notifications.
+
+Focus/key/mouse-button callbacks update platform-owned safety state only; there is still no public input snapshot/action callback surface.
 
 Listener `RuntimeException` or `Error` failures propagate to the caller unchanged. There is no asynchronous worker and no thread-safety guarantee; callers externally serialize access under the existing platform ownership contract.
 
 ## What `stop()` / `close()` do
 
-`stop()` disables event polling/window-mode changes, clears undelivered staged sizes and saved windowed restore geometry, releases the owned size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
+`stop()` disables event polling/window-mode/cursor-capture operations, clears undelivered staged sizes and saved windowed restore geometry, clears held input state, restores a normal cursor when capture is effectively active, releases owned focus/key/mouse-button callbacks and size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
 
-`close()` performs terminal cleanup, including any remaining size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
+`close()` performs terminal cleanup, including any remaining input/size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
 
 ## What is intentionally not exposed yet
 
@@ -194,9 +236,10 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 - buffer swapping;
 - choosing a non-primary monitor;
 - custom fullscreen resolution or refresh-rate selection;
-- focus policy;
-- keyboard/mouse/controller input;
-- raw mouse capture;
+- public keyboard/mouse/controller state snapshots;
+- raw mouse motion;
+- action bindings/transitions;
+- controller curves/dead zones;
 - content-scale callbacks as a production API;
 - OpenGL debug callback;
 - multi-window/shared-context management;

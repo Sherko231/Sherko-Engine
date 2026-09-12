@@ -434,6 +434,40 @@ No dependency, dependency-ownership, or lockfile change is expected for P3-T03. 
 
 CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after the P3-T02 native size test and uploads its JUnit XML plus report as artifact `p3-t03-window-modes`. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit; stale/cancelled superseded runs are neither passing nor failing evidence for the final head.
 
+## P3-T04 focus-loss input safety verification
+
+Issue #87 extends the D-031/D-032/D-033 `GlfwWindow` boundary with owner-thread `setCursorCaptured(boolean)` and internally owned focus/key/mouse-button safety state. It adds no dependency, lockfile/module-edge change, raw mouse, public `InputSnapshot`, action mapping, controller policy, renderer behavior, or P3-T05+ implementation.
+
+Run the deterministic regression and focused suites together:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --tests "com.samo.engine.platform.api.GlfwWindowFocusTest" --rerun-tasks
+```
+
+The focused suite must prove started/owner-thread capture rules, idempotent capture/release, key press/repeat/release, mouse-button press/release, safe invalid indices, focus-loss clearing of all tracked held state before cursor release, no cursor mutation when capture is inactive, no automatic recapture after focus regain, explicit recapture, one-shot staged propagation of a cursor-release failure from `pollEvents()`, partial start cleanup, and one-time input-callback release. Existing P3-T01/P3-T02/P3-T03 behavior remains covered by `GlfwWindowTest` and aggregate tests.
+
+Run the real native acceptance only on target Windows x64 / Java 25:
+
+```powershell
+$env:SHERKO_P3_T04_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowFocusNativeTest" --rerun-tasks
+Remove-Item Env:SHERKO_P3_T04_NATIVE
+```
+
+Without `SHERKO_P3_T04_NATIVE=true`, that JUnit test is skipped by assumption and does not count as P3-T04 native evidence.
+
+The enabled native test starts the public production `GlfwWindow`, requests cursor capture, independently verifies GLFW disabled-cursor mode, transfers real window focus to a test-only second GLFW helper window, polls the production API until focus loss is observed, verifies the production cursor is normal, restores focus, verifies no automatic recapture, explicitly requests capture again, and verifies disabled-cursor mode returns. The helper is test-only and does not justify a production raw-handle API.
+
+The enabled run must create:
+
+`engine-platform-lwjgl/build/reports/p3/p3-t04-focus-loss.txt`
+
+Require stable fields for `task=P3-T04`, `result=PASS`, focus-transfer mechanism, cursor mode before loss/after loss/after regain/after explicit recapture, `no.auto.recapture=true`, exact `GITHUB_SHA` in CI, Java/OS/arch, empty-registry cleanup, the retained manual Alt+Tab held-key scenario, and the evidence limitation that P3-T04 does not yet expose public `InputSnapshot` gameplay state.
+
+No dependency or lockfile change is expected for P3-T04. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
+
+CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt lifecycle smoke. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit. Superseded/cancelled PR runs remain neither pass nor failure evidence for the final head.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -593,7 +627,7 @@ The five jobs cover:
 - root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest`, the P3-T02 production `GlfwWindowSizeNativeTest`, and the P3-T03 production `GlfwWindowModeNativeTest` with their retained reports.
+- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 `GlfwWindowNativeTest`, P3-T02 `GlfwWindowSizeNativeTest`, P3-T03 `GlfwWindowModeNativeTest`, and P3-T04 `GlfwWindowFocusNativeTest`, with retained task reports/artifacts.
 
 A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
@@ -601,7 +635,7 @@ Because independent jobs may execute sequentially when fewer matching runners ar
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01, P3-T02, and P3-T03 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 through P3-T04 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window/focus results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
 
 This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
@@ -647,7 +681,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02 and P3-T03 add no dependency or dependency-ownership change and therefore expect no lockfile change.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, and P3-T04 add no dependency or dependency-ownership change and therefore expect no lockfile change.
 
 ## Wiki/API-guide verification
 

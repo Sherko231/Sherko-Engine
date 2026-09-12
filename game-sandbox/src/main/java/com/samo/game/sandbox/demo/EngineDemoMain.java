@@ -13,6 +13,7 @@ import java.util.List;
 /** Runs the owner-facing scripted engine sandbox through production public APIs only. */
 public final class EngineDemoMain {
     private static final long DIAGNOSTIC_INTERVAL_NANOS = EngineDemoTimeline.SECOND_NANOS;
+    private static final String SANDBOX_SUBSYSTEM = "game-sandbox";
 
     private EngineDemoMain() {
     }
@@ -20,21 +21,33 @@ public final class EngineDemoMain {
     public static void main(String[] args) throws InterruptedException {
         printTimeline();
 
-        EngineLogger logger = new EngineLogger(event -> System.out.printf(
-                "[%s] [%s] %s%n",
-                event.level(),
-                event.context().subsystem(),
-                event.message()));
+        EngineLogger logger = new EngineLogger(event -> {
+            Long simulationTick = event.context().simulationTick();
+            if (simulationTick == null) {
+                System.out.printf(
+                        "[%s] [%s] %s%n",
+                        event.level(),
+                        event.context().subsystem(),
+                        event.message());
+            } else {
+                System.out.printf(
+                        "[%s] [%s] [tick=%d] %s%n",
+                        event.level(),
+                        event.context().subsystem(),
+                        simulationTick,
+                        event.message());
+            }
+        });
         NativeResourceRegistry nativeResources = new NativeResourceRegistry();
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
-                System.out.printf("[sandbox] logical window = %dx%d%n", width, height);
+                log(logger, EngineLogger.Level.INFO, "Logical window size changed to %dx%d".formatted(width, height));
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
-                System.out.printf("[sandbox] framebuffer = %dx%d%n", width, height);
+                log(logger, EngineLogger.Level.INFO, "Framebuffer size changed to %dx%d".formatted(width, height));
             }
         };
 
@@ -52,7 +65,7 @@ public final class EngineDemoMain {
             window.initialize();
             window.start();
             started = true;
-            runDemo(window);
+            runDemo(window, logger);
         } catch (InterruptedException failure) {
             primaryFailure = failure;
             Thread.currentThread().interrupt();
@@ -61,11 +74,11 @@ public final class EngineDemoMain {
             primaryFailure = failure;
             throw failure;
         } finally {
-            cleanup(window, nativeResources, started, primaryFailure);
+            cleanup(window, nativeResources, logger, started, primaryFailure);
         }
     }
 
-    private static void runDemo(GlfwWindow window) throws InterruptedException {
+    private static void runDemo(GlfwWindow window, EngineLogger logger) throws InterruptedException {
         EngineClock clock = new EngineClock();
         FixedStepAccumulator accumulator = new FixedStepAccumulator();
         FixedStepCatchUpPolicy catchUpPolicy = new FixedStepCatchUpPolicy();
@@ -85,16 +98,19 @@ public final class EngineDemoMain {
             window.pollEvents();
 
             while (nextStep < steps.size() && elapsedDemoNanos >= steps.get(nextStep).atNanos()) {
-                execute(window, steps.get(nextStep).action());
+                execute(window, logger, steps.get(nextStep).action(), cumulativeTicks);
                 nextStep++;
             }
 
             if (elapsedDemoNanos >= nextDiagnosticNanos) {
-                System.out.printf(
-                        "[sandbox diagnostics] t=%.1fs, simulationTicks=%d, interpolationAlpha=%.3f (not FPS/benchmark evidence)%n",
-                        elapsedDemoNanos / 1_000_000_000.0,
-                        cumulativeTicks,
-                        accumulator.interpolationAlpha());
+                log(
+                        logger,
+                        EngineLogger.Level.DEBUG,
+                        "t=%.1fs, interpolationAlpha=%.3f (sandbox diagnostic; not FPS/benchmark evidence)"
+                                .formatted(
+                                        elapsedDemoNanos / 1_000_000_000.0,
+                                        accumulator.interpolationAlpha()),
+                        cumulativeTicks);
                 do {
                     nextDiagnosticNanos += DIAGNOSTIC_INTERVAL_NANOS;
                 } while (nextDiagnosticNanos <= elapsedDemoNanos);
@@ -104,37 +120,42 @@ public final class EngineDemoMain {
         }
     }
 
-    private static void execute(GlfwWindow window, EngineDemoTimeline.Action action) {
+    private static void execute(
+            GlfwWindow window,
+            EngineLogger logger,
+            EngineDemoTimeline.Action action,
+            long simulationTick) {
         switch (action) {
             case BORDERLESS_FULLSCREEN -> {
-                System.out.println("[sandbox] -> BORDERLESS_FULLSCREEN");
                 window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+                log(logger, EngineLogger.Level.INFO, "Window mode changed to BORDERLESS_FULLSCREEN", simulationTick);
             }
             case WINDOWED -> {
-                System.out.println("[sandbox] -> WINDOWED");
                 window.setWindowMode(WindowMode.WINDOWED);
+                log(logger, EngineLogger.Level.INFO, "Window mode changed to WINDOWED", simulationTick);
             }
             case EXCLUSIVE_FULLSCREEN -> {
-                System.out.println("[sandbox] -> EXCLUSIVE_FULLSCREEN");
                 window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN);
+                log(logger, EngineLogger.Level.INFO, "Window mode changed to EXCLUSIVE_FULLSCREEN", simulationTick);
             }
             case CAPTURE_CURSOR -> {
-                System.out.println("[sandbox] -> cursor capture ON");
-                System.out.println(
-                        "[sandbox] Alt+Tab away and back now: capture should release on focus loss and must not auto-recapture.");
                 window.setCursorCaptured(true);
+                log(logger, EngineLogger.Level.INFO, "Cursor capture enabled", simulationTick);
+                System.out.println(
+                        "[sandbox instruction] Alt+Tab away and back now: capture should release on focus loss and must not auto-recapture.");
             }
             case RELEASE_CURSOR -> {
-                System.out.println("[sandbox] -> cursor capture OFF");
                 window.setCursorCaptured(false);
+                log(logger, EngineLogger.Level.INFO, "Cursor capture disabled", simulationTick);
             }
-            case SHUTDOWN -> System.out.println("[sandbox] -> orderly shutdown");
+            case SHUTDOWN -> log(logger, EngineLogger.Level.INFO, "Scripted orderly shutdown requested", simulationTick);
         }
     }
 
     private static void cleanup(
             GlfwWindow window,
             NativeResourceRegistry nativeResources,
+            EngineLogger logger,
             boolean started,
             Throwable primaryFailure) {
         Throwable cleanupFailure = null;
@@ -148,6 +169,7 @@ public final class EngineDemoMain {
         cleanupFailure = attempt(cleanupFailure, nativeResources::assertNoOpenResources);
 
         if (cleanupFailure == null) {
+            log(logger, EngineLogger.Level.INFO, "Sandbox shutdown completed; native resource registry is empty");
             return;
         }
         if (primaryFailure != null) {
@@ -179,6 +201,18 @@ public final class EngineDemoMain {
             throw runtimeFailure;
         }
         throw (Error) failure;
+    }
+
+    private static void log(EngineLogger logger, EngineLogger.Level level, String message) {
+        logger.log(level, message, sandboxContext(null));
+    }
+
+    private static void log(EngineLogger logger, EngineLogger.Level level, String message, long simulationTick) {
+        logger.log(level, message, sandboxContext(simulationTick));
+    }
+
+    private static EngineLogger.Context sandboxContext(Long simulationTick) {
+        return new EngineLogger.Context(null, simulationTick, SANDBOX_SUBSYSTEM, null, null);
     }
 
     private static long saturatingAdd(long left, long right) {

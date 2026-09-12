@@ -7,6 +7,7 @@ Use it when you want to answer questions such as:
 - How do I create and shut down an engine subsystem?
 - How do I order and start multiple dependent subsystems?
 - How do I create a production GLFW/OpenGL window?
+- How do I read one stable renderer-frame keyboard/mouse snapshot without calling GLFW?
 - How do I log structured engine events?
 - How do I track native resources safely?
 - How does the fixed-step timing foundation work?
@@ -25,9 +26,10 @@ Use it when you want to answer questions such as:
 8. [Native resource ownership](CORE/NATIVE_RESOURCES.md)
 9. [Fatal termination](CORE/FATAL_TERMINATION.md)
 10. [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-11. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
-12. [Current limitations](LIMITATIONS.md)
-13. [How this wiki must be maintained](MAINTENANCE.md)
+11. [Renderer-frame input snapshots](PLATFORM/INPUT.md)
+12. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
+13. [Current limitations](LIMITATIONS.md)
+14. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

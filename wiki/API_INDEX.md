@@ -53,11 +53,13 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 | Type | Purpose |
 | --- | --- |
-| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, separated logical/framebuffer size delivery, and in-place primary-monitor display-mode transitions. |
+| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, separated logical/framebuffer size delivery, in-place primary-monitor display-mode transitions, and focus-loss-safe cursor capture. |
 | `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
 | `WindowMode` | Selects `WINDOWED`, `BORDERLESS_FULLSCREEN`, or `EXCLUSIVE_FULLSCREEN` for a started `GlfwWindow`. |
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, focus/input API, or content-scale callback API.
+`GlfwWindow.setCursorCaptured(boolean)` is the current public cursor-lock control. Focus loss clears the platform boundary's tracked held keyboard/mouse-button state and restores a normal cursor; focus regain never recaptures automatically, so a caller must explicitly request capture again.
+
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public hardware-state polling/snapshot API, raw-mouse API, action mapping, or content-scale callback API.
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md) and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 

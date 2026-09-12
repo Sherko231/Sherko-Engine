@@ -13,12 +13,12 @@ This document describes intended module responsibilities and the architecture ac
 
 ## Current repository architecture
 
-The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2. `engine-platform-lwjgl` contains the P3-T01 production `GlfwWindow` lifecycle boundary and P3-T02's renderer-neutral logical-window/framebuffer-size delivery over the selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. Other concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
+The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2. `engine-platform-lwjgl` contains the P3-T01 production `GlfwWindow` lifecycle boundary, P3-T02's renderer-neutral logical-window/framebuffer-size delivery, and P3-T03's in-place windowed/borderless/exclusive primary-monitor mode transitions over the selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. Other concrete engine subsystems and `game-sandbox` remain skeletons, while `game-client` and `game-server` provide minimal executable composition roots for the foundation state. The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |
 | `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13); P2-T11 and #135 add test/evidence paths only; other responsibilities planned | None |
-| `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; P3-T02 logical/framebuffer size separation and owner-thread polling; later fullscreen/input responsibilities planned | `engine-core` |
+| `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; P3-T02 logical/framebuffer size separation and owner-thread polling; P3-T03 in-place primary-monitor windowed/borderless/exclusive transitions; later focus/input responsibilities planned | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Skeleton | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
@@ -69,7 +69,7 @@ These package roots define boundaries, not future subsystem interfaces. P1-T10A 
 
 The client will compose platform/input, OpenGL rendering, runtime UI, audio, world/physics, game rules, and either IP or Steam networking. The server will compose world/physics, game rules, and networking without graphics/audio. Server authority owns gameplay state and dynamic physics; clients predict/present but do not submit authoritative transforms.
 
-P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally do not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, P3-T02 adds only its bounded size-event/polling surface, and later composition work decides when the client owns it. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
+P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current entry points intentionally do not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, P3-T02 adds its bounded size-event/polling surface, and P3-T03 adds bounded display-mode transitions without changing composition ownership. Later composition work decides when the client owns it. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
 
 ## Single-subsystem lifecycle — P2-T01 / Issue #64
 
@@ -253,6 +253,18 @@ Zero dimensions are valid platform states, especially framebuffer `0x0` while mi
 
 The size path is renderer-neutral. Renderer-facing code may consume framebuffer pixels later, while logical dimensions remain available for window/layout semantics, but P3-T02 introduces no renderer dependency, viewport mutation, buffer swapping, fullscreen mode, focus/input state, content-scale callback API, raw handle, multi-window management, or native restartability claim. Deterministic tests deliberately use unequal logical/framebuffer pairs; the Windows native acceptance compares production listener delivery against direct GLFW logical/framebuffer queries and records content scale without requiring the machine to have non-100% DPI scaling.
 
+## Windowed and fullscreen mode transitions — P3-T03 / Issue #86
+
+D-033 extends the same D-031/D-032 `GlfwWindow` boundary with public `WindowMode` and owner-thread `setWindowMode(WindowMode)`. Calls are legal only while STARTED; null is rejected before native work and requesting the already-active mode is a no-op. Successful transitions mutate the existing GLFW window in place and do not recreate its OpenGL context.
+
+When leaving `WINDOWED`, the platform captures the current GLFW window position plus positive logical width/height as the restore geometry. `BORDERLESS_FULLSCREEN` disables decoration and uses a monitor-detached window at the primary monitor origin/current video-mode dimensions with no forced refresh. `EXCLUSIVE_FULLSCREEN` attaches the same window to the primary monitor through `glfwSetWindowMonitor` using that monitor's current video-mode dimensions and refresh. Returning to `WINDOWED` re-enables decoration, detaches from a monitor, restores the captured geometry, then clears it so a later fullscreen entry captures the then-current windowed state. Direct borderless/exclusive transitions preserve the same original restore geometry.
+
+The primary monitor is deliberately the only production target in this task. Missing monitor/video-mode data or non-positive current-mode dimensions/refresh fail before committing the corresponding transition. Desktop X/Y coordinates may be negative and are preserved. No raw monitor/window handle, monitor-selection API, custom resolution/refresh selector, renderer presentation API, multi-window policy, focus/input behavior, or later Phase 3 API is exposed.
+
+If a backend transition throws `RuntimeException` or `Error`, the original throwable remains primary and Java-visible mode state remains the previous mode. The platform makes one best-effort rollback attempt to the previous mode/geometry and suppresses any distinct rollback failure on the original throwable. P3-T02 size callbacks remain the only public logical/framebuffer notification path for dimensions caused by mode changes.
+
+Deterministic tests use the existing package-private backend seam to prove capture/restore, direct fullscreen-mode transitions, fresh recapture after returning windowed, invalid monitor state, owner-thread/lifecycle rejection, same-mode no-op, and failure/rollback semantics without a display. The opt-in Windows x64 `GlfwWindowModeNativeTest` runs the production API through exactly 20 successful mode changes (five `BORDERLESS_FULLSCREEN -> WINDOWED -> EXCLUSIVE_FULLSCREEN -> WINDOWED` cycles), verifies after every step that the original context remains current and OpenGL remains usable, checks native monitor/window state and geometry, and requires final cleanup with an empty `NativeResourceRegistry`. This bounded run is not P0-T13 soak or P0-T14 repeated-lifecycle evidence.
+
 ## Experimental code boundary
 
 Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` and proves isolated capabilities:
@@ -264,7 +276,7 @@ Phase 0 code now lives under `feasibility-spikes/src/main/java/com/samo/spike/` 
 - Steam initialization and FFM flat-API access;
 - combined native smoke/soak executables.
 
-The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible. P3-T01 separately places only the scope-approved LWJGL core/GLFW/OpenGL dependencies needed by the production platform adapter; P3-T02 adds no dependency. Neither task promotes the spike executable or its debug/render-loop behavior.
+The source was relocated without changing its experimental classification or promoting its behavior into reusable engine layers. Spike-only LWJGL/Jolt/Snaploader/OSHI/Steamworks dependencies are owned by `feasibility-spikes`, while root tasks with the historical names delegate to the matching subproject tasks so existing verification commands remain reproducible. P3-T01 separately places only the scope-approved LWJGL core/GLFW/OpenGL dependencies needed by the production platform adapter; P3-T02 and P3-T03 add no dependency. None of these tasks promotes the spike executable or its debug/render-loop behavior.
 
 P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independent follow-up gates. Moving or reusing proven dependency choices does not satisfy those gates or strengthen prior feasibility claims.
 
@@ -295,6 +307,7 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | 60-second integrated Phase 2 headless gate | Completed under Issue #135 / D-030; retained exact-head PR and merged-`master` CI evidence passed |
 | Production GLFW/OpenGL window lifecycle | P3-T01 / Issue #84: `GlfwWindow`, deterministic tests, and real Windows native acceptance |
 | Logical/framebuffer size separation | P3-T02 / Issue #85: `WindowSizeListener`, owner-thread polling, deterministic tests, and Windows native acceptance path |
+| Windowed/borderless/exclusive transitions | P3-T03 / Issue #86: `WindowMode`, in-place owner-thread transitions, deterministic tests, and 20-transition Windows native acceptance path |
 | Other concrete production engine subsystems | Planned: later phases |
 
 ## Wiki synchronization

@@ -12,11 +12,14 @@ Implemented:
 - explicit native ownership/cleanup;
 - bounded owner-thread GLFW event polling through `GlfwWindow.pollEvents()`;
 - separate renderer-neutral logical-window and framebuffer-pixel size delivery through `WindowSizeListener`;
-- independent initial-size queries plus later GLFW size callbacks, with zero-sized framebuffer states preserved for minimized windows.
+- independent initial-size queries plus later GLFW size callbacks, with zero-sized framebuffer states preserved for minimized windows;
+- owner-thread in-place transitions among windowed, primary-monitor borderless fullscreen, and primary-monitor exclusive fullscreen through `WindowMode` / `GlfwWindow.setWindowMode(...)`, retaining the same GLFW window/OpenGL context and restoring captured windowed geometry.
 
 Not yet exposed as production API:
 
-- fullscreen transitions;
+- choosing a non-primary monitor;
+- custom fullscreen resolution or refresh-rate selection;
+- raw GLFW window/monitor handles;
 - focus events/policy;
 - keyboard state;
 - mouse state;
@@ -27,7 +30,7 @@ Not yet exposed as production API:
 
 ## Rendering
 
-A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes event polling only for the bounded platform event path; it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
+A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes platform event polling and display-mode changes only; it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
 
 ## Assets/world/physics/audio/networking/editor
 
@@ -35,7 +38,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle and P3-T02's logical/framebuffer size path on Windows x64. It does not establish a production renderer, sustained native stability, or repeated native restartability. P0-T13 and P0-T14 remain separate evidence gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, and P3-T03's single 20-transition display-mode scenario on Windows x64. It does not establish a production renderer, sustained native stability, or repeated native restartability. P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

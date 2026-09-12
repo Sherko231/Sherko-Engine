@@ -2,7 +2,7 @@
 
 `com.samo.engine.platform.api.GlfwWindow` is the current production window/context boundary.
 
-It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It also exposes bounded owner-thread event polling and keeps logical window dimensions separate from framebuffer pixel dimensions.
+It extends `EngineSubsystem` and owns one GLFW window plus one OpenGL 4.6 Core context for one subsystem lifetime. It exposes bounded owner-thread event polling, keeps logical window dimensions separate from framebuffer pixel dimensions, and can switch the same native window/context among windowed, borderless-fullscreen, and exclusive-fullscreen modes.
 
 ## Constructors
 
@@ -60,6 +60,39 @@ The channels are deliberately separate:
 
 Do not infer framebuffer pixels from logical dimensions or vice versa. They may be equal on a 100% scaling environment and different under DPI scaling.
 
+## Window modes
+
+The public display-mode enum is:
+
+```java
+public enum WindowMode {
+    WINDOWED,
+    BORDERLESS_FULLSCREEN,
+    EXCLUSIVE_FULLSCREEN
+}
+```
+
+A successfully started window changes mode with:
+
+```java
+window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+```
+
+`setWindowMode` must run on the same owner thread that initialized the window. Calls before successful `start()` or after `stop()` fail. Passing `null` fails before native work, and requesting the already-active mode is a no-op.
+
+P3-T03 intentionally targets the primary monitor only:
+
+- leaving `WINDOWED` captures the current window position and logical size for later restoration;
+- `BORDERLESS_FULLSCREEN` keeps the window detached from a monitor, disables decoration, and sizes/positions it to the primary monitor's current video mode and origin;
+- `EXCLUSIVE_FULLSCREEN` attaches the same GLFW window to the primary monitor using that monitor's current video-mode dimensions and refresh rate;
+- returning to `WINDOWED` detaches the window, re-enables decoration, and restores the captured windowed position/size;
+- direct borderless ↔ exclusive changes preserve the same captured windowed restore geometry;
+- after a successful return to windowed, a later fullscreen entry captures the then-current windowed geometry again.
+
+The native window and OpenGL context are not recreated during a successful transition. If a backend transition throws a `RuntimeException` or `Error`, the original failure remains primary and one best-effort rollback to the previous mode is attempted; a rollback failure is attached as suppressed.
+
+Monitor selection, custom resolution/refresh-rate selection, and raw monitor/window handles are not public APIs.
+
 ## Normal lifetime
 
 ```java
@@ -87,12 +120,15 @@ window.initialize();
 window.start();
 
 window.pollEvents();
+window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN);
+window.pollEvents();
+window.setWindowMode(WindowMode.WINDOWED);
 
 window.stop();
 window.close();
 ```
 
-All native-bearing lifecycle calls and `pollEvents()` must remain on the thread that initialized this `GlfwWindow`.
+All native-bearing lifecycle calls, `pollEvents()`, and `setWindowMode(...)` must remain on the thread that initialized this `GlfwWindow`.
 
 ## What `initialize()` does
 
@@ -116,7 +152,8 @@ The current production contract:
 - logs both through `EngineLogger` at INFO with `subsystem=platform`;
 - installs owned logical-window and framebuffer-size callbacks;
 - queries the actual initial logical size and framebuffer size independently and stages them for delivery;
-- enables owner-thread event polling;
+- establishes `WINDOWED` as the initial public window mode;
+- enables owner-thread event polling/window-mode changes;
 - shows the window only after setup succeeds.
 
 Expected log message forms:
@@ -139,13 +176,13 @@ public void pollEvents()
 3. delivers the latest pending logical size first;
 4. delivers the latest pending framebuffer size second.
 
-Native GLFW callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel.
+Native GLFW callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same P3-T02 delivery path for resulting logical/framebuffer notifications.
 
 Listener `RuntimeException` or `Error` failures propagate to the caller unchanged. There is no asynchronous worker and no thread-safety guarantee; callers externally serialize access under the existing platform ownership contract.
 
 ## What `stop()` / `close()` do
 
-`stop()` disables event polling, clears undelivered staged sizes, releases the owned size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
+`stop()` disables event polling/window-mode changes, clears undelivered staged sizes and saved windowed restore geometry, releases the owned size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
 
 `close()` performs terminal cleanup, including any remaining size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
 
@@ -153,9 +190,10 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 
 `GlfwWindow` still has no public API for:
 
-- raw GLFW handle access;
+- raw GLFW window/monitor handle access;
 - buffer swapping;
-- fullscreen transitions;
+- choosing a non-primary monitor;
+- custom fullscreen resolution or refresh-rate selection;
 - focus policy;
 - keyboard/mouse/controller input;
 - raw mouse capture;

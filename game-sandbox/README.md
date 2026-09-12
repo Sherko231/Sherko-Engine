@@ -24,7 +24,9 @@ The current scripted demo runs for about 38 seconds and prints its timeline befo
 - interpolation alpha as a timing diagnostic;
 - orderly stop/close plus `NativeResourceRegistry.assertNoOpenResources()`.
 
-The once-per-second line is deliberately labeled `sandbox diagnostics`. It is not FPS, a renderer benchmark, a soak test, or performance acceptance evidence.
+Runtime state changes and diagnostics are emitted through the production `EngineLogger` boundary. Direct console output is reserved for owner-facing instructions such as the startup timeline and the Alt+Tab prompt; the logger's caller-owned console sink is the component that formats structured log events onto `System.out`.
+
+The once-per-second line is deliberately a sandbox diagnostic. It is not FPS, a renderer benchmark, a soak test, or performance acceptance evidence.
 
 ## Current limitations
 

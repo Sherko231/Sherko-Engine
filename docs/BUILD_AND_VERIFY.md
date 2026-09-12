@@ -505,6 +505,40 @@ No dependency or lockfile change is expected. Run `resolveAndLockAllDependencies
 
 Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then after merge one passing lightweight exact-merge `master` verifier. A second routine full five-job master matrix is not required. If the active Issue explicitly requires exact-merge native/performance evidence beyond the lightweight verifier, use deliberate `workflow_dispatch` or the task-specific command rather than silently weakening the requirement.
 
+## P3-T06 renderer-frame InputSnapshot verification
+
+Issue #89 extends the D-031 through D-035 `GlfwWindow` boundary with D-036 public immutable `InputSnapshot`, `InputKey`, `InputMouseButton`, and `GlfwWindow.captureInputSnapshot(long)`. It adds no dependency, lockfile/module edge, data-driven action mapping, controller policy, player-command/replay format, renderer behavior, or P3-T07+ implementation.
+
+Run the deterministic snapshot/focus/motion regression suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.InputSnapshotTest" --tests "com.samo.engine.platform.api.GlfwWindowInputSnapshotTest" --tests "com.samo.engine.platform.api.GlfwWindowFocusTest" --tests "com.samo.engine.platform.api.GlfwWindowMouseMotionTest" --rerun-tasks
+```
+
+The suite must prove immutable snapshot stability, exact non-negative caller frame identity, engine-defined key/button queries without public GLFW codes, retained press/release edges, a complete press+release between snapshots, key-repeat without an extra press edge, mouse-button edge equivalents, one-shot relative mouse-delta consumption while preserving the D-035 baseline, focus-loss release synthesis plus stale-press/motion clearing, validation failures before consumption, stable shared reads from one snapshot, and that `captureInputSnapshot(...)` never polls GLFW itself.
+
+Also run the public-demo/headless/dependency checks:
+
+```powershell
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+No dependency/version/lockfile/module-edge change is expected. The headless check must continue to prove that the sandbox's existing demo-only platform dependency is non-exported and that `game-server` contains no platform/render/audio/GLFW/OpenGL/OpenAL runtime dependency.
+
+P3-T06 adds no new native call, so it does not add a new native-only acceptance test solely for snapshot construction. The exact final PR candidate must still pass the existing `Windows native smoke` job, thereby regressing the real P3-T01 through P3-T05 GLFW/focus/raw ingestion paths on the same candidate. If a future implementation change introduces behavior that cannot truthfully be established by deterministic backend tests plus those existing native paths, refine the active Issue before adding a new native oracle.
+
+The owner-facing manual demo remains:
+
+```powershell
+.\gradlew.bat :game-sandbox:runEngineDemo
+```
+
+P3-T06 extends that demo to capture one public `InputSnapshot` after each demo-frame `pollEvents()` call and emit bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence.
+
+Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then one passing lightweight exact-merge `master` verifier after merge. Do not repeat the routine heavy matrix after merge unless the active Issue explicitly requires stronger exact-merge evidence.
+
 ## P3-T04A owner-facing sandbox demo verification
 
 Issue #149 turns the existing `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. The demo consumes only already-public production APIs and deliberately does not replace tests, native acceptance, phase gates, or CI.
@@ -532,9 +566,9 @@ On an interactive Windows x64 desktop, the owner-facing manual run is:
 
 The default run is roughly 38 seconds. It prints the timeline before startup, opens the public production `GlfwWindow`, polls events, reports logical/framebuffer dimensions, exercises the already-implemented window modes, enables cursor capture during an explicit Alt+Tab observation window, releases capture, returns to windowed mode, and performs orderly stop/close plus `NativeResourceRegistry.assertNoOpenResources()`.
 
-The once-per-second `sandbox diagnostics` line reports elapsed demo time, cumulative fixed 60 Hz simulation ticks, and interpolation alpha. These values are **not** FPS, a rendering benchmark, performance acceptance, soak evidence, or proof of leak freedom. The current window is intentionally visually empty until renderer work provides a public production presentation path; do not add direct OpenGL/LWJGL calls merely to make the demo look richer.
+The current once-per-second sandbox diagnostic also includes the P3-T06 public snapshot frame ID, focus/capture state, W/A/S/D held state, and accumulated public snapshot mouse delta since the prior diagnostic. These values remain **diagnostics**, not FPS, rendering benchmark, performance acceptance, soak evidence, or proof of leak freedom. The current window is intentionally visually empty until renderer work provides a public production presentation path; do not add direct OpenGL/LWJGL calls merely to make the demo look richer.
 
-P3-T04A uses `compileOnly(project(":engine-platform-lwjgl"))` for demo source compilation plus a dedicated resolvable/non-consumable `engineDemoRuntime` used only by `runEngineDemo`. The platform dependency must not be published through `game-sandbox` runtime elements because `game-server` consumes `game-sandbox`. Therefore every P3-T04A verification must include:
+P3-T04A uses `compileOnly(project(":engine-platform-lwjgl"))` for demo source compilation plus a dedicated resolvable/non-consumable `engineDemoRuntime` used only by `runEngineDemo`. The platform dependency must not be published through `game-sandbox` runtime elements because `game-server` consumes `game-sandbox`. Therefore every sandbox verification must include:
 
 ```powershell
 .\gradlew.bat :game-server:verifyHeadlessServerRuntime
@@ -768,7 +802,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, and P3-T05 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, P3-T05, and P3-T06 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
 
 ## Wiki/API-guide verification
 

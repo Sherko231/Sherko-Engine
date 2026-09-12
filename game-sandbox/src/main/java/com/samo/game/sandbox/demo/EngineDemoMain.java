@@ -6,6 +6,8 @@ import com.samo.engine.core.api.FixedStepAccumulator;
 import com.samo.engine.core.api.FixedStepCatchUpPolicy;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
+import com.samo.engine.platform.api.InputKey;
+import com.samo.engine.platform.api.InputSnapshot;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
 import java.util.List;
@@ -87,6 +89,10 @@ public final class EngineDemoMain {
         long elapsedDemoNanos = 0L;
         long cumulativeTicks = 0L;
         long nextDiagnosticNanos = DIAGNOSTIC_INTERVAL_NANOS;
+        long inputFrameId = 0L;
+        double diagnosticMouseDeltaX = 0.0;
+        double diagnosticMouseDeltaY = 0.0;
+        InputSnapshot latestInput = null;
         int nextStep = 0;
 
         clock.sampleElapsedNanos();
@@ -96,6 +102,9 @@ public final class EngineDemoMain {
             cumulativeTicks += catchUpPolicy.advance(accumulator, elapsedNanos);
 
             window.pollEvents();
+            latestInput = window.captureInputSnapshot(inputFrameId++);
+            diagnosticMouseDeltaX += latestInput.mouseDeltaX();
+            diagnosticMouseDeltaY += latestInput.mouseDeltaY();
 
             while (nextStep < steps.size() && elapsedDemoNanos >= steps.get(nextStep).atNanos()) {
                 execute(window, logger, steps.get(nextStep).action(), cumulativeTicks);
@@ -106,11 +115,24 @@ public final class EngineDemoMain {
                 log(
                         logger,
                         EngineLogger.Level.DEBUG,
-                        "t=%.1fs, interpolationAlpha=%.3f (sandbox diagnostic; not FPS/benchmark evidence)"
+                        "t=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
+                                + "WASD=[%s,%s,%s,%s], mouseDeltaSinceLastDiagnostic=(%.2f,%.2f) "
+                                + "(sandbox diagnostic; not FPS/benchmark evidence)"
                                 .formatted(
                                         elapsedDemoNanos / 1_000_000_000.0,
-                                        accumulator.interpolationAlpha()),
+                                        accumulator.interpolationAlpha(),
+                                        latestInput.frameId(),
+                                        latestInput.focused(),
+                                        latestInput.cursorCaptured(),
+                                        latestInput.keyHeld(InputKey.W),
+                                        latestInput.keyHeld(InputKey.A),
+                                        latestInput.keyHeld(InputKey.S),
+                                        latestInput.keyHeld(InputKey.D),
+                                        diagnosticMouseDeltaX,
+                                        diagnosticMouseDeltaY),
                         cumulativeTicks);
+                diagnosticMouseDeltaX = 0.0;
+                diagnosticMouseDeltaY = 0.0;
                 do {
                     nextDiagnosticNanos += DIAGNOSTIC_INTERVAL_NANOS;
                 } while (nextDiagnosticNanos <= elapsedDemoNanos);
@@ -142,7 +164,7 @@ public final class EngineDemoMain {
                 window.setCursorCaptured(true);
                 log(logger, EngineLogger.Level.INFO, "Cursor capture enabled", simulationTick);
                 System.out.println(
-                        "[sandbox instruction] Alt+Tab away and back now: capture should release on focus loss and must not auto-recapture.");
+                        "[sandbox instruction] Move the mouse / hold W-A-S-D, then Alt+Tab away and back: snapshot diagnostics should show input and capture should not auto-return.");
             }
             case RELEASE_CURSOR -> {
                 window.setCursorCaptured(false);
@@ -226,13 +248,14 @@ public final class EngineDemoMain {
         System.out.println("Sherko Engine owner-facing sandbox demo");
         System.out.println(
                 "Uses production public APIs only. Current window is intentionally visually empty until renderer work exists.");
+        System.out.println("InputSnapshot is captured once per demo frame; bounded diagnostics print once per second.");
         System.out.println("Timeline:");
         System.out.println("  0-5s   WINDOWED: resize/DPI observation");
         System.out.println("  5s     BORDERLESS_FULLSCREEN");
         System.out.println(" 10s     WINDOWED");
         System.out.println(" 15s     EXCLUSIVE_FULLSCREEN");
         System.out.println(" 20s     WINDOWED");
-        System.out.println(" 25s     cursor capture ON; manually Alt+Tab away/back");
+        System.out.println(" 25s     cursor capture ON; move mouse / hold W-A-S-D / manually Alt+Tab away/back");
         System.out.println(" 34s     cursor capture OFF");
         System.out.println(" 38s     shutdown + native-resource leak assertion");
         System.out.println();

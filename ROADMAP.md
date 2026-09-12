@@ -23,7 +23,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - **NEXT:** keep detailed tasks in the technical backlog; create Issues only when the phase is close to execution.
 - **LATER:** detailed tasks may remain in the technical backlog, but they are planning baselines rather than frozen implementation contracts. Do not pre-create hundreds of Issues.
 - Task IDs such as `P10-T06` are permanent identifiers. Issue numbers are not.
-- Additive task IDs such as `P3-T04A` may be inserted when newly discovered bounded work is needed without renumbering established tasks.
+- Additive task IDs such as `P3-T04A` and `P3-T04B` may be inserted when newly discovered bounded work is needed without renumbering established tasks.
 - Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
 - Live workflow status belongs in GitHub Issues/Project. The commit-contained completed/next-work checkpoint belongs in `docs/DEVELOPMENT_STATUS.md`; roadmap and backlog documents do not track board state.
 - A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
@@ -75,9 +75,11 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 P3-T01 / Issue #84 through P3-T04 / Issue #87 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, in-place primary-monitor windowed/borderless/exclusive transitions, and focus-loss-safe cursor capture/input cleanup are merged and verified. P3-T04 completed through PR #148 on merge commit `eb82814b9f545dcf04be004912f69694942d604b`, with merged-master workflow #257 passing all five jobs including the real Windows focus-loss acceptance.
 
-P3-T04A / Issue #149 is the current additive bounded task. It makes the existing `game-sandbox` module the canonical owner-facing manual demo so the owner can observe currently implemented public engine behavior before P3-T05 continues. The demo must remain lower-authority than tests/production contracts and must preserve the headless server boundary through a non-exported demo-only platform runtime. Future human-observable capabilities update the sandbox in the same task PR when that can be done through already-authorized public APIs; otherwise the task records an explicit sandbox non-impact reason.
+P3-T04A / Issue #149 is complete through PR #150 on merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`, with merged-master workflow #271 passing all five jobs. It established `game-sandbox` as the canonical owner-facing manual demo, preserved the headless server boundary through a non-exported demo-only platform runtime, and established the durable sandbox-maintenance rule for future human-observable capabilities.
 
-P3-T05 / Issue #88 is paused with no implementation started. After P3-T04A merges and exact merged-master CI passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P3-T04A or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+P3-T04B / Issue #151 is the current small bounded follow-up before P3-T05. It makes the sandbox model correct engine logging usage by routing runtime state transitions and diagnostics through the existing structured `EngineLogger`, while direct console output remains only for the caller-owned sink and explicit owner instructions. It changes no engine API, dependency, module edge, renderer behavior, or input behavior.
+
+P3-T05 / Issue #88 remains paused with no implementation started. After P3-T04B merges and exact merged-master CI passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P3-T04B or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

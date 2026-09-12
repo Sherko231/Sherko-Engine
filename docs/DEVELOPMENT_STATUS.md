@@ -6,11 +6,11 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` | `eb82814b9f545dcf04be004912f69694942d604b` — P3-T04 merged through PR #148 and verified by merged-master workflow #257 |
+| Verified starting `master` | `7876b17140fc5a124dc943642f205c9be73859d6` — P3-T04A merged through PR #150 and verified by merged-master workflow #271 |
 | Milestone / completed phase | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
-| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, Phase 2 exit gate, P3-T01 through P3-T04 |
-| Active implementation | P3-T04A / Issue #149 / branch `p3-t04a-engine-sandbox-demo` / PR #150 |
-| Paused next task | P3-T05 / Issue #88 — executable contract retained but implementation not started; resume only after P3-T04A formal completion and fresh audit against new `master` |
+| Completed roadmap implementation | P1-T01 through P1-T10A, P2-T01 through P2-T13, Phase 2 exit gate, P3-T01 through P3-T04, P3-T04A |
+| Active implementation | P3-T04B / Issue #151 / branch `p3-t04b-sandbox-engine-logger` / PR #152 |
+| Paused next task | P3-T05 / Issue #88 — executable contract retained but implementation not started; resume only after P3-T04B formal completion and fresh audit against new `master` |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 The containing commit is the exact checkpoint. A Markdown file cannot embed the hash of the commit that creates itself; a fresh agent must inspect local status/HEAD when available plus live remote `master`, Issues, PRs, and workflow state before continuing.
@@ -41,32 +41,24 @@ P3-T04 / Issue #87 is formally complete through PR #148 / merged `master` `eb828
 
 - Final exact-head CI passed before merge.
 - Merged-master workflow #257 / run `34706106972` passed all five jobs on exact merge commit `eb82814b9f545dcf04be004912f69694942d604b`.
-- Merged-master artifact `p3-t04-focus-loss` ID `10301895821`, digest `sha256:4f0a306752cefdd53b6caab51320cfc4c69f8a873f87c5be1af2efd4efba750c`.
 - Public owner-thread `GlfwWindow.setCursorCaptured(boolean)` plus explicitly owned focus/key/button callbacks are implemented.
 - Focus loss clears internal held state, releases effective cursor capture, and focus regain does not auto-recapture; explicit later capture is required.
 - D-034 records the focus-loss/cursor-capture boundary.
 - Issue #87 is closed as completed.
-- Independent review was not performed because no separate reviewer/person/agent identity was available; CI and self-review were not treated as substitutes.
 
-P3-T04 does not implement raw mouse, public `InputSnapshot`, actions/commands, controller mappings, renderer behavior, or later Phase 3 work.
+### P3-T04A — owner-facing sandbox demo
 
-## P3-T04A active implementation — owner-facing sandbox demo
+P3-T04A / Issue #149 is formally complete through PR #150 / merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`.
 
-Issue #149 was added at the owner's explicit request before P3-T05 implementation so the owner has one canonical place to observe the engine as it grows. It is the only active implementation task. P3-T05 / #88 is paused and its previously prepared branch contains no implementation.
-
-PR #150 currently builds the owner-facing `game-sandbox` demo around already-public production APIs only:
-
-- `EngineDemoMain` runs a roughly 38-second scripted scenario through `GlfwWindow` plus Phase 2 timing primitives;
-- `EngineDemoTimeline` defines deterministic window-mode/cursor-capture timing and `EngineDemoTimelineTest` verifies that script without native GLFW;
-- the demo reports logical and framebuffer dimensions, cumulative fixed 60 Hz simulation ticks, and interpolation alpha;
-- diagnostics are explicitly not labeled FPS or benchmark evidence;
-- the demo exercises `WINDOWED -> BORDERLESS_FULLSCREEN -> WINDOWED -> EXCLUSIVE_FULLSCREEN -> WINDOWED`, then cursor capture with an Alt+Tab observation window, explicit release, orderly stop/close, and `NativeResourceRegistry.assertNoOpenResources()`;
-- the current demo is intentionally visually empty until the renderer has a public production presentation path; it does not call OpenGL/LWJGL directly to fake later functionality;
-- `AGENTS.md` now requires future agents to update the sandbox in the same PR when a new capability is human-observable through already-authorized public APIs, or record `Sandbox impact: none — <reason>` when it cannot be demonstrated without exposing internals or pulling future work forward;
-- `game-sandbox/README.md` is the owner-facing run/limitations/current-capabilities guide;
-- no public engine API is added by P3-T04A.
-
-An initial ordinary `game-sandbox -> engine-platform-lwjgl` runtime dependency was rejected during self-review because `game-server` consumes `game-sandbox` and the edge would transitively contaminate the headless server with GLFW/OpenGL. The active Issue was deliberately refined before finalizing the implementation. The current design uses `compileOnly` for sandbox source plus a dedicated resolvable/non-consumable `engineDemoRuntime` used only by `runEngineDemo`. The platform dependency must not be published through `game-sandbox` runtime elements, and `:game-server:verifyHeadlessServerRuntime` remains required acceptance evidence.
+- Final exact-head PR CI passed all five jobs.
+- Merged-master workflow #271 / run `34709719815` passed all five jobs on exact merge commit `7876b17140fc5a124dc943642f205c9be73859d6`.
+- `game-sandbox` is now the canonical owner-facing manual engine demo.
+- `EngineDemoMain` runs a roughly 38-second scripted scenario through already-public production APIs only.
+- `EngineDemoTimeline` / `EngineDemoTimelineTest` keep the scripted window-mode/cursor-capture sequence deterministic without native GLFW.
+- The demo-only `engine-platform-lwjgl` runtime is non-consumable and does not contaminate `game-server`; `:game-server:verifyHeadlessServerRuntime` passed.
+- `AGENTS.md` requires future tasks to update the sandbox when a capability is meaningfully observable through authorized public APIs, or record `Sandbox impact: none — <reason>`.
+- The current demo remains intentionally visually empty until the renderer has a public production presentation path.
+- Issue #149 is closed as completed.
 
 Run locally on Windows x64 with:
 
@@ -76,24 +68,39 @@ Run locally on Windows x64 with:
 
 The manual run is owner-observation evidence only. Automated correctness remains owned by tests, native acceptance, CI, and phase gates.
 
+## P3-T04B active implementation — sandbox structured logging cleanup
+
+Issue #151 is a bounded owner-facing sandbox cleanup inserted before P3-T05. PR #152 changes only the sandbox consumer surface and its README.
+
+The implementation:
+
+- routes logical-window and framebuffer-size notifications through the existing public `EngineLogger`;
+- routes scripted window-mode/cursor-capture transitions and orderly-shutdown status through `EngineLogger`;
+- routes once-per-second timing diagnostics through `EngineLogger` with `subsystem=game-sandbox` and the current simulation tick when available;
+- keeps direct `System.out` only in the caller-owned console sink and for explicit owner-facing timeline/instruction text;
+- does not change `EngineLogger`, any public engine API, dependencies, lockfiles, module edges, workflow behavior, renderer code, or P3-T05+ input behavior;
+- preserves the existing ~38-second script and cleanup semantics.
+
+PR-head workflow #272 / run `34710794783` passed all five jobs on pre-documentation head `3357aa85b2a56b8cdbc30b87cae661dc1dbf4ed8`. Because documentation reconciliation changes the PR head afterward, that run becomes obsolete and the final PR head still requires its own exact-head passing workflow before merge.
+
+`Wiki impact: none — no public engine API or consumer lifecycle/configuration semantics changed.`
+
+`Sandbox impact: EngineDemoMain and game-sandbox/README.md are the changed owner-facing surface.`
+
 ## Phase 3 status and exact next action
 
-Phase 3 remains in progress. P3-T01 through P3-T04 are complete; P3-T04A is active; P3-T05 / #88 is paused with no implementation started. The Phase 3 exit remains the backlog requirement that an identical recorded input sequence can be replayed into headless simulation; the sandbox does not complete or replace that gate.
+Phase 3 remains in progress. P3-T01 through P3-T04 and P3-T04A are complete. P3-T04B / #151 is active. P3-T05 / #88 remains paused with no implementation started. The Phase 3 exit remains the backlog requirement that an identical recorded input sequence can be replayed into headless simulation; the sandbox does not complete or replace that gate.
 
-Documentation/backlog reconciliation and complete-diff scope review for P3-T04A are complete. No lockfile change has been authored; the exact-head build/lock-resolution gate determines whether the authorized `game-sandbox/gradle.lockfile` update is actually required.
+Exact next action for P3-T04B:
 
-Exact next action for P3-T04A:
+1. Complete the documentation/status reconciliation required by Issue #151.
+2. Require all five CI jobs to pass on the exact final PR #152 head; older passing runs are obsolete after any commit.
+3. Merge PR #152 only after exact-head CI passes.
+4. Require a separate five-job push workflow on the exact resulting `master` merge commit.
+5. Only then close Issue #151 as completed.
+6. Freshly audit/reactivate P3-T05 / #88 against the resulting verified `master`, recreating/rebasing its stale no-code branch as appropriate before implementation.
 
-1. Require the five CI jobs to run on the exact final PR #150 head and inspect any build/lock/headless failure rather than using an obsolete run.
-2. Confirm `EngineDemoTimelineTest`, all-module build/tests, architecture/coverage, client/server runtime/version checks, and `:game-server:verifyHeadlessServerRuntime` pass; if Gradle proves a lock update is required, change only the authorized `game-sandbox/gradle.lockfile`, then restart exact-head verification.
-3. Keep the recorded review provenance: independent review `not performed` because no separate reviewer/person/agent identity is available; CI/self-review are not substitutes.
-4. Keep `Wiki impact: none — P3-T04A changes no public engine API; game-sandbox/README.md owns demo-specific guidance` and the recorded sandbox update.
-5. Merge PR #150 only after all five jobs pass on the exact final head.
-6. Verify remote `master` equals the merge result and require a separate passing five-job push workflow on that exact merged commit.
-7. Only then close Issue #149 as completed.
-8. Freshly audit/reactivate P3-T05 / #88 against the new verified `master`; recreate/rebase its stale no-code branch as appropriate before implementation.
-
-The authoring agent cannot manually observe the interactive demo window in its connected environment. This is recorded as `not manually observed here`; the owner's local `:game-sandbox:runEngineDemo` invocation is the intended human-observation path and does not replace automated acceptance.
+The authoring agent cannot manually observe the interactive demo window in its connected environment. The owner's local `:game-sandbox:runEngineDemo` invocation remains the intended human-observation path and does not replace automated acceptance.
 
 ## Open gates and blockers
 
@@ -107,4 +114,4 @@ None of these gates blocks ordinary P3 platform/input or owner-facing sandbox wo
 
 ## Live-state reconciliation
 
-A fresh agent must read `AGENTS.md` first, inspect local status/HEAD when a checkout exists, inspect live remote `master`, Issue #149, PR #150, exact-head workflow state, and compare those facts with this checkpoint. P3-T05 / #88 is intentionally paused while #149 is active. If live GitHub state has moved beyond this document, live GitHub controls workflow status. Stop rather than guess if code, docs, the active Issue, PR, or verification evidence conflict.
+A fresh agent must read `AGENTS.md` first, inspect local status/HEAD when a checkout exists, inspect live remote `master`, Issue #151, PR #152, exact-head workflow state, and compare those facts with this checkpoint. P3-T05 / #88 is intentionally paused while #151 is active. If live GitHub state has moved beyond this document, live GitHub controls workflow status. Stop rather than guess if code, docs, the active Issue, PR, or verification evidence conflict.

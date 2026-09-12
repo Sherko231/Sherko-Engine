@@ -7,7 +7,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - AI coding agents: read [`AGENTS.md`](AGENTS.md) first and follow its required order.
 - Humans: use this page for orientation, then open the scope, status, and active Issue.
 - Engine users: use the in-repository [`wiki/`](wiki/README.md) for public API/library usage and practical examples.
-- Owner-facing manual demo: see [`game-sandbox/README.md`](game-sandbox/README.md) and run `\.\gradlew.bat :game-sandbox:runEngineDemo` on Windows x64.
+- Owner-facing manual demo: see [`game-sandbox/README.md`](game-sandbox/README.md) and run `.\gradlew.bat :game-sandbox:runEngineDemo` on Windows x64.
 
 ## Project documents
 
@@ -31,7 +31,7 @@ Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initializatio
 
 Phase 1 and Phase 2 are complete. P3-T01 / Issue #84 through P3-T04 / Issue #87 are formally complete. P3-T04 merged through PR #148 as `eb82814b9f545dcf04be004912f69694942d604b`; merged-master workflow #257 passed all five jobs on that exact commit, including the real Windows x64 focus-loss acceptance and retained P3-T04 evidence. These results do not satisfy the separate P0-T09A/P0-T13/P0-T14 feasibility gates.
 
-Phase 3 remains in progress. P3-T04A / Issue #149 is the active bounded task on branch `p3-t04a-engine-sandbox-demo` / PR #150. It turns the existing `game-sandbox` skeleton into the canonical owner-facing manual demo while keeping automated tests/CI authoritative and preserving the headless server boundary through a non-exported demo-only platform runtime. P3-T05 / Issue #88 is paused until #149 is merged, exact merged-`master` CI passes, and the task is freshly audited against the new master.
+Phase 3 remains in progress. P3-T04A / Issue #149 is complete through PR #150 on verified merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`; it established `game-sandbox` as the canonical owner-facing manual demo while preserving the headless server boundary through a non-exported demo-only platform runtime. P3-T04B / Issue #151 / PR #152 is the current bounded follow-up: it routes sandbox runtime state and diagnostics through the existing structured `EngineLogger` boundary while keeping direct console output only for the logger sink and explicit owner instructions. P3-T05 / Issue #88 remains paused until this follow-up completes and is freshly audited against the resulting verified `master`.
 
 The sandbox is expected to evolve with future human-observable engine capabilities when they can be demonstrated through already-authorized public production APIs. If a task cannot update the sandbox without exposing internals or pulling future roadmap work forward, its PR/handoff must record `Sandbox impact: none — <reason>`.
 

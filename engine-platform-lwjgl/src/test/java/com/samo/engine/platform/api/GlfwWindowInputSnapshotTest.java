@@ -141,6 +141,38 @@ class GlfwWindowInputSnapshotTest {
     }
 
     @Test
+    void latePressAndRepeatEventsWhileUnfocusedCannotRestoreHeldState() {
+        SnapshotBackend backend = new SnapshotBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry);
+        start(window);
+
+        backend.queueFocus(false);
+        backend.queueKey(GLFW.GLFW_KEY_A, GLFW.GLFW_PRESS);
+        backend.queueKey(GLFW.GLFW_KEY_W, GLFW.GLFW_REPEAT);
+        backend.queueMouseButton(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_PRESS);
+        window.pollEvents();
+
+        InputSnapshot unfocused = window.captureInputSnapshot(22L);
+        assertFalse(unfocused.focused());
+        assertFalse(unfocused.keyHeld(InputKey.A));
+        assertFalse(unfocused.keyHeld(InputKey.W));
+        assertFalse(unfocused.keyPressed(InputKey.A));
+        assertFalse(unfocused.mouseButtonHeld(InputMouseButton.LEFT));
+        assertFalse(unfocused.mouseButtonPressed(InputMouseButton.LEFT));
+
+        backend.queueFocus(true);
+        window.pollEvents();
+        InputSnapshot regained = window.captureInputSnapshot(23L);
+        assertTrue(regained.focused());
+        assertFalse(regained.keyHeld(InputKey.A));
+        assertFalse(regained.keyHeld(InputKey.W));
+        assertFalse(regained.mouseButtonHeld(InputMouseButton.LEFT));
+
+        cleanup(window, registry);
+    }
+
+    @Test
     void failedCaptureValidationConsumesNothing() throws Exception {
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();

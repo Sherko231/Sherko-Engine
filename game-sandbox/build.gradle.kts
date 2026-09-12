@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":engine-physics-jolt"))
     implementation(project(":engine-network-api"))
     implementation(project(":engine-ui"))
+    testImplementation(project(":test-support"))
 }
 
 tasks.register<JavaExec>("runEngineDemo") {

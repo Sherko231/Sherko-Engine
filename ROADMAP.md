@@ -70,9 +70,9 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84 is complete. The production `GlfwWindow` lifecycle now exists in `engine-platform-lwjgl`, requests explicit OpenGL 4.6 Core hints, verifies actual OpenGL 4.6 support, logs actual version/renderer, and owns native window/context cleanup under D-031. Exact completion and retained native evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
+P3-T01 / Issue #84, P3-T02 / Issue #85, and P3-T03 / Issue #86 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, and in-place primary-monitor windowed/borderless/exclusive transitions are merged and verified. P3-T03 completed through PR #147 on merge commit `497034e21fd988a2d5dcab5d035a5dacf0d635a7`, with merged-master workflow #245 passing all five jobs including the real Windows 20-transition acceptance.
 
-P3-T02 / Issue #85 is the next planned bounded task and remains planning-only until a fresh audit refines and activates its exact contract. P3-T03 and later Phase 3 tasks remain planning-only. Completing P3-T01 does not complete Phase 3.
+P3-T04 / Issue #87 is the active bounded task. It adds focus-loss safety and explicit cursor-capture control without pulling P3-T05 raw mouse or P3-T06 public input snapshots forward. P3-T05 / Issue #88 and later Phase 3 tasks remain planning-only until P3-T04 is formally completed. Completing P3-T04 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

@@ -23,7 +23,7 @@ Use the highest applicable source when information conflicts:
 1. `ENGINE_SCOPE.md` for product boundaries and locked technology choices.
 2. `docs/DECISIONS.md` for durable architecture decisions within that scope.
 3. The active GitHub Issue for the exact task contract and allowed change.
-4. Code, tests, Gradle files, and generated verification evidence for implemented behavior.
+4. Code, tests, Gradle files, workflow configuration, and generated verification evidence for implemented behavior.
 5. `docs/DEVELOPMENT_STATUS.md` for the repository-commit checkpoint and handoff summary.
 6. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
 7. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
@@ -42,23 +42,29 @@ If a lower source conflicts with a higher source, stop and report the conflict. 
 
 ## Consistency audit
 
-Run this audit before implementation and again before handoff:
+Run this audit before implementation and again before opening the final pull request:
 
 - Verify every documented dependency or tool major version against the version catalog, relevant Gradle build files, and committed dependency lockfiles. When they disagree, stop and reconcile the active Issue before editing.
 - Treat `README.md` as repository orientation, not an independent status authority. If it names the current phase, completed milestone, module count, or next task, reconcile it with `docs/DEVELOPMENT_STATUS.md`, the roadmap, and live GitHub state.
-- Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before a passing exact-head run unless the complete diff qualifies for the Markdown-only exemption below.
+- Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before the required final-candidate verification unless the complete diff qualifies for the Markdown-only exemption below.
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
 - When public API or consumer-visible usage changed, compare `wiki/API_INDEX.md`, relevant usage/example pages, and `wiki/LIMITATIONS.md` with the actual production signatures and behavior. Remove stale examples and never document planned APIs as implemented.
 - When the changed capability is or should be observable in `game-sandbox`, compare the sandbox behavior/instructions with the production public API and the active Issue. Do not leave a stale owner-facing demo silently behind the engine.
+- Before opening the final PR, make all expected documentation, wiki, sandbox, review-record, and handoff edits. Do not intentionally leave cosmetic/status cleanup until after a passing heavy PR run, because any later commit invalidates that candidate's CI evidence.
 
 ## Work rules
 
 - Use Java 25 for authored engine/game runtime source. Gradle Kotlin DSL is allowed only for build configuration.
 - Implement exactly one executable Issue on one dedicated branch.
 - Never commit agent-generated work directly to `master`.
-- Open a pull request linked to the Issue and merge only after required verification and CI pass, except that a qualifying Markdown-only change does not require the build/test CI described below.
-- For a non-exempt pull request, use a non-closing Issue reference such as `Refs #123`; close the Issue manually only after the exact merged-`master` push CI passes. A qualifying Markdown-only pull request may use a closing keyword only after its complete-diff exemption and every other acceptance requirement is confirmed.
+- Treat the task branch as the development workspace. Finish implementation, focused verification where available, tests, required documentation, self-review, sandbox/wiki impact, and the consistency audit **before opening the normal non-draft PR**.
+- Do not open a non-draft PR as a scratchpad while implementation is still expected to change. A draft PR is allowed only when early human/reviewer visibility is specifically useful; draft state is not the normal heavy-CI trigger and does not replace final-candidate verification.
+- Open the final PR linked to the Issue only when the candidate is ready for the expensive repository CI matrix. For non-exempt work use a non-closing reference such as `Refs #123`.
+- Merge only after the required final PR-candidate verification passes and the candidate/base are still current. If the candidate changes after a pass, the old run is obsolete. If `master` advances relative to the tested candidate base, refresh the branch/candidate and reverify before merge.
+- For ordinary non-exempt work, close the Issue manually only after the lightweight exact-merge `master` verifier passes on the resulting merge commit. A second routine five-job heavy matrix on `master` is intentionally not required.
+- A task may require stronger post-merge evidence only when its active Issue explicitly needs exact-merge native, performance, soak, protocol, release, or phase-gate evidence that the lightweight verifier cannot establish. Use `workflow_dispatch` or the task-specific command for that explicit need rather than making every task pay that cost.
+- A qualifying Markdown-only pull request may use a closing keyword only after its complete-diff exemption and every other acceptance requirement is confirmed.
 - Keep lower engine modules independent of game-specific modules.
 - Do not pull deferred features into v1 unless `ENGINE_SCOPE.md` is deliberately changed.
 - Do not convert feasibility spikes under the root `src/` tree into production architecture by accident.
@@ -76,7 +82,7 @@ For every task that adds or materially changes an engine capability, explicitly 
 - If the capability cannot yet be demonstrated meaningfully because the required public API/presentation layer does not exist, record `Sandbox impact: none — <reason>` in the PR/handoff. Do not expose a public API solely for the demo, import engine implementation/internal packages, call LWJGL/native APIs directly from the sandbox, or implement a later task to make the demo richer.
 - Prefer evolving the existing sandbox experience over creating disconnected throwaway demos. Add a separate subsystem-specific entry point only when combining it into the existing demo would be materially confusing or impractical.
 - Human-observable sandbox output may include clearly labeled diagnostics, but do not call a loop rate `FPS`, a benchmark, soak evidence, leak proof, or performance acceptance unless the active Issue actually establishes that measurement contract.
-- Sandbox execution never replaces unit tests, native acceptance, integration evidence, exact-head CI, merged-master CI, P0 feasibility gates, or any active-Issue acceptance requirement.
+- Sandbox execution never replaces unit tests, native acceptance, integration evidence, final-candidate PR CI, the lightweight exact-merge verifier, P0 feasibility gates, or any stronger task-specific acceptance requirement.
 
 The active Issue must authorize any sandbox source/module/dependency changes needed by that task. If sandbox maintenance would require an undeclared module edge or other stop-condition change, refine the Issue before editing.
 
@@ -104,6 +110,8 @@ The author's second pass is self-review, not independent review. If independent 
 
 Task completion does not establish phase completion. Follow the phase verification procedure in `docs/BUILD_AND_VERIFY.md`: demonstrate the existing backlog exit gate through the relevant integrated runtime/test path, record evidence, and review the next phase before materializing its executable Issues. Use a small integration scenario within an authorized task when its behavior becomes testable; do not add future systems merely to create a demo. Keep the backlog's numeric thresholds, scope, and native evidence limits unchanged unless a separate Issue explicitly authorizes changing them.
 
+A phase exit, release gate, native soak, protocol evidence task, or other Issue may explicitly require stronger exact-merge verification than the ordinary lightweight `master` verifier. That stronger requirement remains authoritative for that specific task and should be invoked deliberately, usually through the task-specific command or `workflow_dispatch` full CI.
+
 ## Stop conditions
 
 Stop implementation and report the conflict when the task would require any of the following without explicit authorization in the Issue:
@@ -130,31 +138,49 @@ Use `docs/BUILD_AND_VERIFY.md` to choose the required commands. A handoff must s
 
 Never claim a check passed because configuration appears correct. Record actual execution or say it was not run. For a qualifying Markdown-only change, explicitly record the complete-diff audit and that build/test CI was not required by policy; do not describe the absence of a run as a pass.
 
-## CI run authority and obsolete-run handling
+## CI lifecycle and obsolete-run handling
 
-Before interpreting pull-request CI, determine the pull request's current head SHA and compare each workflow run against it.
+The normal non-exempt CI lifecycle is intentionally optimized to avoid duplicate runner work while preserving a strong final candidate gate.
 
-A pull request qualifies for the **Markdown-only CI exemption** only when its complete changed-file set is non-empty and every changed path ends in `.md`. The agent must inspect the complete PR diff/file list before relying on this exemption. If any changed path has any other extension or file type — including `.java`, `.gradle.kts`, `.yml`, `.yaml`, `.properties`, lockfiles, configuration, scripts, resources, or binaries — the exemption does not apply and the normal CI rules below apply in full. If a later commit adds any non-Markdown path, the PR immediately becomes non-exempt and exact-head CI is required.
+### Development before the PR
+
+- Perform ordinary implementation work on the dedicated branch before opening the normal non-draft PR.
+- The standard workflow does not run heavy CI for ordinary feature-branch pushes by themselves. Use focused local/task verification during development when available.
+- Complete expected code, tests, docs, wiki/sandbox updates, self-review, and consistency reconciliation before opening the final PR.
+- A draft PR may be used for early visibility, but the heavy five-job matrix is not the normal draft-development loop. Mark/open the PR non-draft only when the candidate is ready to be judged.
+
+### Final PR candidate
+
+A pull request qualifies for the **Markdown-only CI exemption** only when its complete changed-file set is non-empty and every changed path ends in `.md`. The agent must inspect the complete PR diff/file list before relying on this exemption. If any changed path has any other extension or file type — including `.java`, `.gradle.kts`, `.yml`, `.yaml`, `.properties`, lockfiles, configuration, scripts, resources, or binaries — the exemption does not apply and the normal CI rules below apply in full. If a later commit adds any non-Markdown path, the PR immediately becomes non-exempt and final-candidate CI is required.
 
 For a qualifying Markdown-only pull request:
 
-- exact-head build/test CI is not required before merge;
-- merged-`master` build/test CI is not required after merge;
+- heavy PR build/test CI is not required before merge;
+- the lightweight `master` build/runtime verifier is not required after merge because Markdown paths are ignored by that workflow;
 - the absence of those workflow runs is expected and is not a skipped failure;
 - this exemption affects build/runtime execution verification only. It does not waive the active Issue, truth hierarchy, branch/PR discipline, documentation consistency, review requirements, architecture/decision rules, wiki synchronization requirements, sandbox-impact evaluation, or any explicit manual verification required by the Issue.
 
-For every non-exempt pull request:
+For every non-exempt final PR candidate:
 
-- A pull-request workflow run whose head SHA is older than the current PR head is obsolete verification evidence for that PR.
-- Obsolete queued or in-progress PR runs may be cancelled when the available tooling and permissions support cancellation. Cancelling stale work is an efficiency measure, not a verification result.
-- Never cancel the workflow run for the current PR head merely to reduce runner usage.
-- A cancelled obsolete run is neither a pass nor a failure of the current PR head. Do not use it to satisfy or defeat acceptance.
-- Only a completed passing workflow for the exact current PR head satisfies the pre-merge CI requirement.
-- After merge, the push workflow on the resulting `master` merge commit is separate required evidence. Do not cancel or ignore it as though it were an obsolete PR run.
-- If cancellation tooling is unavailable, leave obsolete runs alone and state that they remain stale; never claim that they were cancelled.
-- Repository workflow concurrency may cancel superseded runs automatically. Still inspect the exact current PR head and the final `master` merge commit before recording verification.
+- Require the configured heavy five-job matrix: `Build and quality gates`, `Unit tests`, `Architecture tests`, `JaCoCo coverage reports`, and `Windows native smoke`.
+- Determine the PR's current head SHA and ensure the accepted workflow run belongs to that current candidate. A run for an older candidate is obsolete evidence.
+- Repository workflow concurrency may cancel superseded PR runs automatically. An obsolete cancelled run is neither a pass nor a failure of the current candidate.
+- Never cancel the current final-candidate run merely to reduce runner usage.
+- A correction after a failed CI run is legitimate new candidate work; rerunning CI is required because the code changed.
+- Do not append cosmetic or status commits after a successful final-candidate run. If any commit changes the candidate, require a new heavy run.
+- Immediately before merge, confirm the PR head is still the tested head and `master`/the PR base has not advanced relative to the candidate that was verified. If it advanced, refresh the branch/candidate and run heavy CI again. Do not assume an old green run proves a new base combination.
 
-Manual `workflow_dispatch` remains available regardless of file type.
+### After merge
+
+For ordinary non-exempt tasks:
+
+- The `push` workflow on `master` runs one **Lightweight master verification** job on the exact merge SHA rather than repeating the five heavy jobs.
+- That verifier must resolve committed dependency locks without drift, verify the headless server runtime boundary, run client/server version reporting, require shared compatibility identifiers to match, and require reported `engineCommit == github.sha`.
+- Require that lightweight job to pass on the exact merge commit before closing the Issue.
+- Do not rerun unit/coverage/architecture/native smoke automatically on `master`; those were already required on the final candidate.
+- If the active Issue explicitly requires exact-merge native/performance/soak/protocol/release/phase-gate evidence, run that stronger evidence separately. `workflow_dispatch` remains available to run the full five-job matrix intentionally when it is genuinely required.
+
+Manual `workflow_dispatch` remains available regardless of file type and runs the heavy matrix by design.
 
 ## Documentation update matrix
 
@@ -176,15 +202,16 @@ Update only the rows that apply. Do not copy volatile live status into every doc
 
 ## Handoff checklist
 
-Before yielding to another agent:
+Before yielding to another agent or opening the final PR:
 
 1. Confirm `git status`, branch, and HEAD.
-2. Confirm the active Issue and pull request state.
-3. Run applicable verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
-4. Update the required documents from the matrix.
+2. Confirm the active Issue and pull request state; normally no non-draft PR exists until the candidate is final.
+3. Run applicable focused verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
+4. Update the required documents from the matrix before final-candidate CI.
 5. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
 6. Evaluate `game-sandbox` impact. Update the demo/README through production public APIs when appropriate; otherwise record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
 7. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
 8. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
 9. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
-10. Ensure all changes are committed and pushed. Uncommitted local state is not transferable through Markdown.
+10. Ensure all intended changes are committed and pushed **before** opening/marking the final PR ready for heavy CI. Uncommitted local state is not transferable through Markdown.
+11. After the final PR run passes, avoid unnecessary candidate changes; merge only while the tested head/base remain current, then require the lightweight exact-merge verifier before task closure unless the Issue explicitly requires stronger post-merge evidence.

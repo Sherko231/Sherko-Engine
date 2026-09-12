@@ -15,6 +15,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
 | Code change | Implementation + tests/evidence | Dedicated task branch and pull request linked to one active Issue |
 | Engine consumer usage | How to use implemented public APIs | [`wiki/`](wiki/README.md), synchronized with production API changes |
+| Owner observation | Human-observable demonstration of implemented public behavior | [`game-sandbox/`](game-sandbox/README.md), synchronized when a task can be demonstrated without pulling future work forward |
 
 ### Planning rule
 
@@ -22,6 +23,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - **NEXT:** keep detailed tasks in the technical backlog; create Issues only when the phase is close to execution.
 - **LATER:** detailed tasks may remain in the technical backlog, but they are planning baselines rather than frozen implementation contracts. Do not pre-create hundreds of Issues.
 - Task IDs such as `P10-T06` are permanent identifiers. Issue numbers are not.
+- Additive task IDs such as `P3-T04A` may be inserted when newly discovered bounded work is needed without renumbering established tasks.
 - Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
 - Live workflow status belongs in GitHub Issues/Project. The commit-contained completed/next-work checkpoint belongs in `docs/DEVELOPMENT_STATUS.md`; roadmap and backlog documents do not track board state.
 - A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
@@ -29,6 +31,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - Before materializing the next phase, review its assumptions, dependencies, current use cases, and planned acceptance against the completed phase's evidence. Record the review in the closing Issue/PR. Future task details remain planning baselines; refine them deliberately without changing scope, decisions, or exit thresholds implicitly.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
 - When a task changes how engine consumers use a public API, update the relevant `wiki/` pages in the same pull request; if there is no consumer/wiki impact, record that explicitly.
+- When a task adds or materially changes a human-observable engine capability, evaluate `game-sandbox` impact under `AGENTS.md`. Update the sandbox through public production APIs when appropriate, otherwise record `Sandbox impact: none — <reason>` instead of pulling future work forward.
 
 ## Milestones
 
@@ -70,9 +73,11 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84, P3-T02 / Issue #85, and P3-T03 / Issue #86 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, and in-place primary-monitor windowed/borderless/exclusive transitions are merged and verified. P3-T03 completed through PR #147 on merge commit `497034e21fd988a2d5dcab5d035a5dacf0d635a7`, with merged-master workflow #245 passing all five jobs including the real Windows 20-transition acceptance.
+P3-T01 / Issue #84 through P3-T04 / Issue #87 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, in-place primary-monitor windowed/borderless/exclusive transitions, and focus-loss-safe cursor capture/input cleanup are merged and verified. P3-T04 completed through PR #148 on merge commit `eb82814b9f545dcf04be004912f69694942d604b`, with merged-master workflow #257 passing all five jobs including the real Windows focus-loss acceptance.
 
-P3-T04 / Issue #87 is the active bounded task. It adds focus-loss safety and explicit cursor-capture control without pulling P3-T05 raw mouse or P3-T06 public input snapshots forward. P3-T05 / Issue #88 and later Phase 3 tasks remain planning-only until P3-T04 is formally completed. Completing P3-T04 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+P3-T04A / Issue #149 is the current additive bounded task. It makes the existing `game-sandbox` module the canonical owner-facing manual demo so the owner can observe currently implemented public engine behavior before P3-T05 continues. The demo must remain lower-authority than tests/production contracts and must preserve the headless server boundary through a non-exported demo-only platform runtime. Future human-observable capabilities update the sandbox in the same task PR when that can be done through already-authorized public APIs; otherwise the task records an explicit sandbox non-impact reason.
+
+P3-T05 / Issue #88 is paused with no implementation started. After P3-T04A merges and exact merged-master CI passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P3-T04A or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 
@@ -119,6 +124,7 @@ For work near execution:
 8. Close the Issue only after merge and acceptance evidence pass.
 9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the merged commit checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
 10. Keep `wiki/` synchronized whenever the public engine API or its consumer-visible use changes.
+11. Evaluate and update `game-sandbox` whenever a newly implemented capability is appropriately human-observable through the public engine boundary.
 
 ## Definition of Ready
 
@@ -145,6 +151,7 @@ A task is done only when:
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
 - relevant `wiki/` usage/API pages are updated when public engine API or consumer-visible behavior changes, or `Wiki impact: none — <reason>` is recorded when no update is applicable;
+- sandbox impact is handled under `AGENTS.md`: update the owner-facing demo when appropriate or record `Sandbox impact: none — <reason>`;
 - the linked pull request is merged after CI/verification;
 - the linked Issue is closed consistently with the verified result.
 

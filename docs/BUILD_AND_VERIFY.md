@@ -19,14 +19,15 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Show declared projects | `.\gradlew.bat projects` | 17 Gradle subprojects appear: the 16 production-target modules plus experimental `feasibility-spikes`. |
 | Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
 | Run the root quality gate | `.\gradlew.bat check` | Checkstyle, architecture-boundary verification through `test-support`, and the Phase 0 source-exclusion boundary pass. |
-| Run root and subproject tests | `.\gradlew.bat test` | Aggregate JUnit Platform test tasks pass, including `test-support` architecture tests. |
+| Run root and subproject tests | `.\gradlew.bat test` | Aggregate JUnit Platform test tasks pass, including `test-support` architecture tests and the `game-sandbox` scripted-demo timeline test when present. |
 | Run only the architecture boundary suite | `.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks` | The Gradle-derived subproject registry, production package ownership, main/test imports, fully qualified references, and boundary regressions pass. |
-| Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all 12 current test-bearing engine modules and each produces XML plus HTML coverage reports. |
+| Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all configured test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Run client foundation entry point | `.\gradlew.bat :game-client:runClient` | Client foundation process starts and exits cleanly. |
 | Run headless server foundation entry point | `.\gradlew.bat :game-server:runServer` | Server foundation process starts in headless mode and exits cleanly. |
 | Report client version metadata | `.\gradlew.bat :game-client:runClient --args="--version"` | Client reports executable, engine commit, protocol version, asset version, Java version, and native libraries available on its runtime classpath. |
 | Report server version metadata | `.\gradlew.bat :game-server:runServer --args="--version"` | Server reports the same shared identifiers plus its executable-specific native-library list. |
-| Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts. |
+| Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts, including after owner-facing sandbox demo dependencies are resolved. |
+| Run owner-facing sandbox demo | `.\gradlew.bat :game-sandbox:runEngineDemo` | Human-observation path opens the scripted production window demo on an interactive Windows desktop; this is not FPS, benchmark, soak, leak-proof, or CI acceptance evidence. |
 | Run CI-native lifecycle smoke locally | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | Historical root task aliases delegate to `feasibility-spikes`; GLFW/OpenAL/Jolt lifecycle smoke completes. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
@@ -41,7 +42,7 @@ Issue #64 adds the production `EngineSubsystem` contract in `engine-core`. Run t
 
 The JUnit 6 suite exercises successful phase order, invalid calls before hooks, early cleanup, runtime-exception/error propagation, cleanup after failed setup/activation/stopping, repeated or failed close, and reentrant calls. Test counters represent synthetic owned resources, not native leak evidence.
 
-Focused outputs are `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml` and `engine-core/build/reports/tests/test/index.html`. The unit-test CI job uploads these as `engine-subsystem-tests`; the existing coverage job retains JaCoCo output for all 12 engine modules. The filtered run replaces that job's engine-core test report after the full aggregate suite has run; the full coverage job remains unfiltered.
+Focused outputs are `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml` and `engine-core/build/reports/tests/test/index.html`. The unit-test CI job uploads these as `engine-subsystem-tests`; the existing coverage job retains JaCoCo output for all configured engine modules. The filtered run replaces that job's engine-core test report after the full aggregate suite has run; the full coverage job remains unfiltered.
 
 The build job additionally runs `resolveAndLockAllDependencies` without `--write-locks` and verifies that tracked lockfiles did not change. No lockfile or dependency change is expected for this task. Record exact-head PR and merged-master workflow results in the linked Issue/PR; an unstarted or queued job is not a pass.
 
@@ -115,7 +116,7 @@ P2-T05 proves cadence-independent 60 Hz accumulation only. It does not clamp inc
 
 ## P2-T06 bounded catch-up verification
 
-Issue #76 adds `FixedStepCatchUpPolicy` above the existing accumulator. The default policy clamps a single elapsed duration to 250,000,000 ns and returns at most 5 whole simulation steps from that update; elapsed time above the clamp and whole due ticks above the step cap are discarded, while accepted fractional sub-tick progress remains in `FixedStepAccumulator`.
+Issue #76 adds `FixedStepCatchUpPolicy` above the existing accumulator. The default policy clamps a single elapsed duration to 250,000,000 ns and returns at most 5 whole simulation steps from one update; elapsed time above the clamp and whole due ticks above the step cap are discarded, while accepted fractional sub-tick progress remains in `FixedStepAccumulator`.
 
 Run the focused acceptance suite:
 
@@ -468,6 +469,47 @@ No dependency or lockfile change is expected for P3-T04. Run `resolveAndLockAllD
 
 CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt lifecycle smoke. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit. Superseded/cancelled PR runs remain neither pass nor failure evidence for the final head.
 
+## P3-T04A owner-facing sandbox demo verification
+
+Issue #149 turns the existing `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. The demo consumes only already-public production APIs and deliberately does not replace tests, native acceptance, phase gates, or CI.
+
+Run the focused deterministic timeline suite:
+
+```powershell
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.demo.EngineDemoTimelineTest" --rerun-tasks
+```
+
+The suite must independently verify the scripted order and boundaries for `WINDOWED -> BORDERLESS_FULLSCREEN -> WINDOWED -> EXCLUSIVE_FULLSCREEN -> WINDOWED -> cursor capture -> cursor release -> shutdown`. It is a pure timeline test and does not claim native window behavior.
+
+Verify the demo classes and application task are available:
+
+```powershell
+.\gradlew.bat :game-sandbox:classes
+.\gradlew.bat :game-sandbox:tasks --group application
+```
+
+On an interactive Windows x64 desktop, the owner-facing manual run is:
+
+```powershell
+.\gradlew.bat :game-sandbox:runEngineDemo
+```
+
+The default run is roughly 38 seconds. It prints the timeline before startup, opens the public production `GlfwWindow`, polls events, reports logical/framebuffer dimensions, exercises the already-implemented window modes, enables cursor capture during an explicit Alt+Tab observation window, releases capture, returns to windowed mode, and performs orderly stop/close plus `NativeResourceRegistry.assertNoOpenResources()`.
+
+The once-per-second `sandbox diagnostics` line reports elapsed demo time, cumulative fixed 60 Hz simulation ticks, and interpolation alpha. These values are **not** FPS, a rendering benchmark, performance acceptance, soak evidence, or proof of leak freedom. The current window is intentionally visually empty until renderer work provides a public production presentation path; do not add direct OpenGL/LWJGL calls merely to make the demo look richer.
+
+P3-T04A uses `compileOnly(project(":engine-platform-lwjgl"))` for demo source compilation plus a dedicated resolvable/non-consumable `engineDemoRuntime` used only by `runEngineDemo`. The platform dependency must not be published through `game-sandbox` runtime elements because `game-server` consumes `game-sandbox`. Therefore every P3-T04A verification must include:
+
+```powershell
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+```
+
+That command must continue to prove that `game-server` runtime contains no `engine-platform-lwjgl`, renderer/audio modules, GLFW, OpenGL, or OpenAL artifacts. If the custom demo configuration requires a lockfile update, regenerate only through the normal dependency-lock workflow, inspect the exact `game-sandbox/gradle.lockfile` diff, and then require ordinary `resolveAndLockAllDependencies` to be clean.
+
+The manual sandbox run is not required to execute inside unattended CI because it is human-observation tooling. The aggregate `test`, `buildAllModules`, architecture gate, coverage gate, headless-server boundary, and all existing native P3 acceptance remain authoritative automated verification. Final acceptance for P3-T04A still requires all five jobs to pass on the exact final PR head and a separate successful five-job push workflow on the exact merged `master` commit.
+
+Future tasks must evaluate sandbox impact under `AGENTS.md`. A human-observable capability that can be demonstrated through already-authorized public production APIs updates `game-sandbox` in the same PR. If the necessary public boundary does not exist, record `Sandbox impact: none — <reason>` instead of exposing internals or implementing later roadmap work.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -492,12 +534,12 @@ For P1-T06 / Issue #36, run:
 .\gradlew.bat verifyJacocoReports
 ```
 
-JaCoCo is configured only for the 12 engine modules that currently contain the shared smoke tests. Each module writes:
+JaCoCo is configured for the engine modules selected by the root coverage task. Each configured module writes:
 
 - XML: `<module>/build/reports/jacoco/test/jacocoTestReport.xml`
 - HTML: `<module>/build/reports/jacoco/test/html/index.html`
 
-`verifyJacocoReports` fails when either format is missing for any configured test-bearing module. Coverage is reported for visibility only; no global or per-module minimum percentage is defined yet.
+`verifyJacocoReports` fails when either format is missing for any configured module. Coverage is reported for visibility only; no global or per-module minimum percentage is defined yet.
 
 ## Architecture boundaries
 
@@ -533,7 +575,7 @@ For P1-T09 / Issue #39:
 .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 ```
 
-The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears.
+The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears. P3-T04A's sandbox demo-only platform configuration must remain non-consumable/non-exported so this command continues to pass.
 
 For P1-T10 / Issue #40, run both reports from the same checkout/build:
 
@@ -603,7 +645,7 @@ During a phase, add a small integration exercise within a task's authorized scop
 
 `.github/workflows/java25.yml` runs automatically on pull requests targeting `master` and pushes to `master` only when the event includes at least one non-Markdown changed path. Markdown-only changes are excluded with `paths-ignore` for `*.md` and `**/*.md`. `workflow_dispatch` remains available regardless of file type. All five workflow jobs select `[self-hosted, Windows, X64]`.
 
-A pull request is Markdown-only only when the complete PR changed-file set is non-empty and every path ends in `.md`. Audit the complete file list before applying the exemption. If any non-Markdown path is present, or a later commit adds one, the normal full CI contract applies immediately. The exemption changes only build/runtime execution requirements; it does not waive Issue scope, truth hierarchy, review/architecture rules, documentation consistency, branch/PR discipline, or explicit manual verification from the active Issue.
+A pull request is Markdown-only only when the complete PR changed-file set is non-empty and every path ends in `.md`. Audit the complete file list before applying the exemption. If any non-Markdown path is present, or a later commit adds one, the normal full CI contract applies immediately. The exemption changes only build/runtime execution requirements; it does not waive Issue scope, truth hierarchy, review/architecture rules, documentation consistency, branch/PR discipline, sandbox-impact evaluation, or explicit manual verification from the active Issue.
 
 For qualifying Markdown-only pull requests, no automatic exact-head PR workflow is expected and no merged-`master` workflow is required for the Markdown-only merge. Record the complete-diff audit and policy exemption instead. Do not classify the absence of those runs as success, failure, or a skipped check.
 
@@ -624,7 +666,7 @@ Before interpreting CI evidence for a non-exempt change:
 The five jobs cover:
 
 - build and root quality gates via `buildAllModules`, followed by client/server foundation runs, server headless verification, and client/server version-report compatibility;
-- root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
+- root/subproject test aggregation via `test`, including `game-sandbox` tests, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
 - Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 `GlfwWindowNativeTest`, P3-T02 `GlfwWindowSizeNativeTest`, P3-T03 `GlfwWindowModeNativeTest`, and P3-T04 `GlfwWindowFocusNativeTest`, with retained task reports/artifacts.
@@ -633,9 +675,9 @@ A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks 
 
 Because independent jobs may execute sequentially when fewer matching runners are available, runner count affects wall-clock time only and does not change pass/fail semantics.
 
-Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
+Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps. P3-T04A additionally relies on this gate to prove the sandbox demo runtime remains non-exported.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 through P3-T04 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window/focus results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 through P3-T04 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window/focus results must still not be upgraded into P0-T13/P0-T14 evidence. The P3-T04A owner-facing demo is not an additional CI-native acceptance gate. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
 
 This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
@@ -670,6 +712,8 @@ For every pull request, list each executed command and result, or for a qualifyi
 - cleanup/leak observations;
 - checks skipped because the environment could not support them.
 
+For sandbox/demo work, record automated test/build/headless-boundary results separately from manual human observation. A locally viewed window or console trace is useful owner feedback, not a substitute for exact-head CI or a performance claim.
+
 Configuration review is not runtime evidence. If a command was not run, write `not run` and why; a Markdown-only policy exemption is a reason, not a passing execution result.
 
 ## Dependency changes
@@ -681,7 +725,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, and P3-T04 add no dependency or dependency-ownership change and therefore expect no lockfile change.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, and P3-T04 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
 
 ## Wiki/API-guide verification
 
@@ -697,3 +741,12 @@ Whenever a task changes public engine API or consumer-visible lifecycle, ownersh
 6. the PR records `Wiki impact: updated <pages>` or, when truly unaffected, `Wiki impact: none — <reason>`.
 
 Wiki consistency is documentation verification, not evidence that production code works. For a qualifying Markdown-only wiki/docs task, apply the existing Markdown-only CI exemption only after auditing the complete changed-file set; no Gradle execution is required solely to prove prose/link synchronization.
+
+## Sandbox/demo verification
+
+`game-sandbox` is the owner-facing observation path for already implemented engine behavior, not a specification or acceptance authority. For every implementation task, handoff must record either:
+
+- `Sandbox impact: updated <demo/files>` when the new capability is demonstrable through already-authorized public production APIs; or
+- `Sandbox impact: none — <reason>` when a meaningful demo would require exposing internals, calling native libraries directly, or implementing a future roadmap task.
+
+Never weaken a production boundary or add a public API solely to satisfy the demo. `game-sandbox/README.md` owns the current manual run instructions and limitations; this file owns the distinction between manual observation and verification evidence.

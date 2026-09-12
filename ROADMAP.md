@@ -76,17 +76,19 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84 through P3-T04 / Issue #87 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, in-place primary-monitor windowed/borderless/exclusive transitions, and focus-loss-safe cursor capture/input cleanup are merged and verified.
+P3-T01 / Issue #84 through P3-T05 / Issue #88 are complete. The production `GlfwWindow` lifecycle now owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, and raw/fallback relative mouse acquisition.
 
-P3-T04A / Issue #149 is complete through PR #150 on merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`. It established `game-sandbox` as the canonical owner-facing manual demo, preserved the headless server boundary through a non-exported demo-only platform runtime, and established the durable sandbox-maintenance rule for future human-observable capabilities.
+P3-T04A / Issue #149 established `game-sandbox` as the canonical owner-facing manual demo and preserved the headless server boundary through a non-exported demo-only platform runtime. P3-T04B / Issue #151 made the demo model the existing structured `EngineLogger` boundary.
 
-P3-T04B / Issue #151 is complete through PR #152 on merged `master` `61f576f6e23fb6b5518fdeb075db3871fcc5d76e`. It made the sandbox model correct engine logging usage by routing runtime state transitions and diagnostics through the existing structured `EngineLogger`, while direct console output remains only for the caller-owned sink and explicit owner instructions.
+P3-T05 / Issue #88 completed through PR #155 on merged `master` `2f3dcd3d9117db28b994115f0c420b884e5a59b0`. Its exact final head passed heavy workflow #282 and the exact merge passed lightweight workflow #283. D-035 keeps relative mouse acquisition inside `GlfwWindow`: raw mode when supported, disabled-cursor relative fallback otherwise, and explicit focus/capture/lifecycle baseline clearing.
 
-P3-T05 / Issue #88 is the active bounded feature task on top of verified `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. D-035 keeps relative mouse acquisition inside `GlfwWindow`: GLFW raw mouse motion is enabled while effective capture is active when the platform reports support; otherwise the same disabled-cursor position stream supplies relative deltas. Capture/focus/lifecycle transitions clear pending delta and invalidate the baseline so re-entry cannot create discontinuity spikes. Focus regain never auto-recaptures or auto-enables raw motion.
+P3-T06 / Issue #89 is the active bounded feature task. D-036 introduces immutable renderer-frame `InputSnapshot` values plus engine-defined `InputKey` and `InputMouseButton` vocabulary. `GlfwWindow.captureInputSnapshot(long)` is STARTED/owner-thread-only, performs no GLFW poll, consumes retained hardware press/release edges and accumulated relative mouse movement, and preserves held levels plus the D-035 baseline. Public signatures expose no GLFW/LWJGL type or constant.
 
-P3-T05 intentionally introduces no public mouse-delta or `InputSnapshot` consumer API. P3-T06 owns render-frame snapshot semantics. `Sandbox impact: none` for P3-T05 because exposing its internal delta solely for the demo would prematurely create the P3-T06 public boundary.
+The P3-T06 snapshot is deliberately a client/platform hardware view, not a headless simulation/replay format. P3-T07/P3-T08 retain data-driven action and action-transition work; P3-T09 retains tick-aligned `PlayerInputCommand` and replay portability. No platform dependency is added to `game-server`.
 
-Completing P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+Because P3-T06 creates a usable public observation boundary, the existing sandbox now captures one snapshot per demo frame and emits bounded frame/focus/capture/WASD/mouse-delta diagnostics through public APIs only.
+
+Completing P3-T06 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

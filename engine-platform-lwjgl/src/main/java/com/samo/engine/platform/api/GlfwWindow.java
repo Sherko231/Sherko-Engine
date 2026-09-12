@@ -443,12 +443,14 @@ public final class GlfwWindow extends EngineSubsystem {
         boolean previousRearm = cursorCaptureNeedsExplicitRearm;
         boolean previousRaw = rawMouseMotionEnabled;
         boolean cursorDisabled = false;
+        boolean rawEnableAttempted = false;
         boolean rawEnabledThisAttempt = false;
 
         try {
             backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_DISABLED);
             cursorDisabled = true;
             if (backend.rawMouseMotionSupported()) {
+                rawEnableAttempted = true;
                 backend.setRawMouseMotion(windowHandle, true);
                 rawEnabledThisAttempt = true;
             }
@@ -459,7 +461,7 @@ public final class GlfwWindow extends EngineSubsystem {
             rawMouseMotionEnabled = rawEnabledThisAttempt;
         } catch (RuntimeException | Error failure) {
             clearMouseMotionState();
-            if (rawEnabledThisAttempt) {
+            if (rawEnableAttempted) {
                 try {
                     backend.setRawMouseMotion(windowHandle, false);
                 } catch (RuntimeException | Error rollbackFailure) {

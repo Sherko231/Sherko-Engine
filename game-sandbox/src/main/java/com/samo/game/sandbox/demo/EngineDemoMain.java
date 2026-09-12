@@ -47,27 +47,21 @@ public final class EngineDemoMain {
                 sizeListener);
 
         boolean started = false;
+        Throwable primaryFailure = null;
         try {
             window.initialize();
             window.start();
             started = true;
             runDemo(window);
+        } catch (InterruptedException failure) {
+            primaryFailure = failure;
+            Thread.currentThread().interrupt();
+            throw failure;
+        } catch (RuntimeException | Error failure) {
+            primaryFailure = failure;
+            throw failure;
         } finally {
-            if (started) {
-                try {
-                    window.setCursorCaptured(false);
-                } catch (RuntimeException | Error cleanupFailure) {
-                    System.err.println("[sandbox] cursor-release cleanup failed: " + cleanupFailure);
-                }
-                try {
-                    window.setWindowMode(WindowMode.WINDOWED);
-                } catch (RuntimeException | Error cleanupFailure) {
-                    System.err.println("[sandbox] window-mode cleanup failed: " + cleanupFailure);
-                }
-                window.stop();
-            }
-            window.close();
-            nativeResources.assertNoOpenResources();
+            cleanup(window, nativeResources, started, primaryFailure);
         }
     }
 
@@ -126,7 +120,8 @@ public final class EngineDemoMain {
             }
             case CAPTURE_CURSOR -> {
                 System.out.println("[sandbox] -> cursor capture ON");
-                System.out.println("[sandbox] Alt+Tab away and back now: capture should release on focus loss and must not auto-recapture.");
+                System.out.println(
+                        "[sandbox] Alt+Tab away and back now: capture should release on focus loss and must not auto-recapture.");
                 window.setCursorCaptured(true);
             }
             case RELEASE_CURSOR -> {
@@ -135,6 +130,55 @@ public final class EngineDemoMain {
             }
             case SHUTDOWN -> System.out.println("[sandbox] -> orderly shutdown");
         }
+    }
+
+    private static void cleanup(
+            GlfwWindow window,
+            NativeResourceRegistry nativeResources,
+            boolean started,
+            Throwable primaryFailure) {
+        Throwable cleanupFailure = null;
+
+        if (started) {
+            cleanupFailure = attempt(cleanupFailure, () -> window.setCursorCaptured(false));
+            cleanupFailure = attempt(cleanupFailure, () -> window.setWindowMode(WindowMode.WINDOWED));
+            cleanupFailure = attempt(cleanupFailure, window::stop);
+        }
+        cleanupFailure = attempt(cleanupFailure, window::close);
+        cleanupFailure = attempt(cleanupFailure, nativeResources::assertNoOpenResources);
+
+        if (cleanupFailure == null) {
+            return;
+        }
+        if (primaryFailure != null) {
+            if (cleanupFailure != primaryFailure) {
+                primaryFailure.addSuppressed(cleanupFailure);
+            }
+            return;
+        }
+        rethrow(cleanupFailure);
+    }
+
+    private static Throwable attempt(Throwable accumulated, Runnable action) {
+        try {
+            action.run();
+            return accumulated;
+        } catch (RuntimeException | Error failure) {
+            if (accumulated == null) {
+                return failure;
+            }
+            if (failure != accumulated) {
+                accumulated.addSuppressed(failure);
+            }
+            return accumulated;
+        }
+    }
+
+    private static void rethrow(Throwable failure) {
+        if (failure instanceof RuntimeException runtimeFailure) {
+            throw runtimeFailure;
+        }
+        throw (Error) failure;
     }
 
     private static long saturatingAdd(long left, long right) {
@@ -146,7 +190,8 @@ public final class EngineDemoMain {
 
     private static void printTimeline() {
         System.out.println("Sherko Engine owner-facing sandbox demo");
-        System.out.println("Uses production public APIs only. Current window is intentionally visually empty until renderer work exists.");
+        System.out.println(
+                "Uses production public APIs only. Current window is intentionally visually empty until renderer work exists.");
         System.out.println("Timeline:");
         System.out.println("  0-5s   WINDOWED: resize/DPI observation");
         System.out.println("  5s     BORDERLESS_FULLSCREEN");

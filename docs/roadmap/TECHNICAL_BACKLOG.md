@@ -78,6 +78,7 @@ Goal: produce stable platform events and tick-aligned player commands.
 - [ ] P3-T02 Handle framebuffer-size events separately from logical window-size events. Acceptance: renderer receives pixel dimensions after DPI scaling.
 - [ ] P3-T03 Implement windowed, borderless, and exclusive fullscreen transitions. Acceptance: switch modes 20 times without losing the context.
 - [ ] P3-T04 Implement focus-loss handling that releases captured cursor and clears stuck input states. Acceptance: holding a key while alt-tabbing does not leave it pressed.
+- [ ] P3-T04A Turn `game-sandbox` into the canonical owner-facing manual engine demo and establish the sandbox-maintenance rule for future tasks. Acceptance: `:game-sandbox:runEngineDemo` exercises already-public Phase 2 timing and P3-T01 through P3-T04 platform behavior without raw native/internal shortcuts, the scripted timeline is unit-tested, the demo-only platform runtime does not contaminate `game-server`, and future tasks must update the sandbox when a capability is meaningfully observable through authorized public APIs or explicitly record `Sandbox impact: none — <reason>`.
 - [ ] P3-T05 Implement raw mouse motion when supported and a documented fallback when unavailable. Acceptance: mouse delta is independent of cursor screen position.
 - [ ] P3-T06 Store hardware state in `InputSnapshot` once per render frame. Acceptance: gameplay code cannot call GLFW directly.
 - [ ] P3-T07 Define data-driven input actions for move, look, jump, crouch, sprint, interact, grab, throw, primary use, pause, and push-to-talk. Acceptance: bindings load from JSON.
@@ -396,7 +397,6 @@ Give the coding agent exactly one task ID at a time, on a dedicated task branch 
 6. Commands used to verify the result.
 7. A requirement to stop if the task needs an undeclared architectural change.
 8. Wiki impact: list the relevant [`../../wiki/`](../../wiki/README.md) pages that must change when the task adds/removes/renames public API or changes consumer-visible usage/lifecycle/ownership/configuration behavior, or explicitly state `Wiki impact: none — <reason>`.
+9. Sandbox impact: update the canonical `game-sandbox` demo when the task's new behavior is meaningfully observable through already-authorized public production APIs, or explicitly state `Sandbox impact: none — <reason>` when demonstrating it would require exposing internals, calling native APIs directly, or pulling future roadmap work forward.
 
-Planned backlog entries do not become usable wiki APIs merely because they are written here. Add/update consumer guidance only when the corresponding production capability is actually implemented and verified.
-
-Do not ask an agent to “implement Phase 8” or “build networking.” A valid task is closer to: “Implement P10-T06 sequence-number wrap comparison in `engine-network-api`; add exhaustive boundary tests; do not change packet layout or socket code.”
+Planned backlog entries do not become usable wiki APIs or sandbox behavior merely because they are written here. Add/update consumer guidance and the owner-facing demo only when the corresponding production capability is actually implemented and verified.

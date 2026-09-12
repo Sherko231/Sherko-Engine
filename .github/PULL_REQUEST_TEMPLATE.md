@@ -2,7 +2,19 @@
 
 **Task ID / maintenance Issue:** P?-T?? / #
 **Issue link:** Refs #
-**Closure:** For a non-Markdown PR, keep `Refs #` and close the Issue manually only after exact merged-`master` push CI passes. A qualifying Markdown-only PR may use `Closes #` only after its complete-diff exemption and all other acceptance checks are confirmed.
+**Closure:** For a non-Markdown PR, keep `Refs #` and close the Issue manually only after the exact final PR candidate passes the required heavy CI and the exact merged `master` commit passes the lightweight master verifier. A qualifying Markdown-only PR may use `Closes #` only after its complete-diff exemption and all other acceptance checks are confirmed.
+
+## Final-candidate readiness
+
+Before opening or marking this PR ready for review, confirm the branch is intended to be the final candidate rather than a development scratchpad:
+
+- [ ] Implementation is complete for the bounded Issue.
+- [ ] Focused/local verification that is available in the authoring environment has been run or explicitly recorded as unavailable.
+- [ ] Required documentation, wiki, and sandbox-impact updates are already included.
+- [ ] Self-review and repository consistency audit are complete.
+- [ ] The branch is based on current `master`; if `master` advanced, the candidate was refreshed before relying on CI.
+
+Do not add avoidable cosmetic/status commits after a passing final-candidate run. Any substantive or required documentation change after that run creates a new candidate and requires exact-head heavy CI again.
 
 ## What changed
 
@@ -16,6 +28,8 @@
 
 List the environment, result, skipped checks/reason, and evidence path where applicable. Configuration review is not execution evidence.
 
+For ordinary non-Markdown work, the expensive five-job matrix belongs to the exact final PR candidate. After merge, ordinary acceptance uses the lightweight exact-merge master verifier defined by `AGENTS.md` and `docs/BUILD_AND_VERIFY.md`; do not request a second full matrix unless the active Issue explicitly needs exact-merge native/performance/integration evidence that the lightweight verifier cannot establish.
+
 ## Acceptance evidence
 
 - [ ] Required tests/checks actually ran and passed.
@@ -23,7 +37,8 @@ List the environment, result, skipped checks/reason, and evidence path where app
 - [ ] No undeclared modules/interfaces were changed.
 - [ ] No unrelated future-roadmap work was implemented.
 - [ ] Resource/native cleanup was verified where applicable.
-- [ ] Branch is based on current `master`; no unrelated user work was overwritten.
+- [ ] Exact final PR-candidate heavy CI passed for non-exempt work.
+- [ ] Exact merged-`master` lightweight verification passed after merge, unless the PR is Markdown-only exempt or the active Issue explicitly requires a stronger post-merge gate.
 
 ## Wiki impact
 
@@ -32,6 +47,11 @@ List the environment, result, skipped checks/reason, and evidence path where app
 - [ ] `wiki/API_INDEX.md` and `wiki/LIMITATIONS.md` were checked when public surface area or feature availability changed.
 
 The wiki is a consumer guide, not an architecture/status authority; it must follow the higher-authority contracts in `AGENTS.md`.
+
+## Sandbox impact
+
+- [ ] Owner-facing `game-sandbox` behavior/README was updated through already-authorized public production APIs where appropriate.
+- [ ] OR `Sandbox impact: none — <reason>` is recorded when a meaningful demo would require internals or future roadmap work.
 
 ## Review record
 

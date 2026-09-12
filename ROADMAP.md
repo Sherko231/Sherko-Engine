@@ -13,7 +13,8 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Milestones | Major outcomes and ordering | this file |
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
-| Code change | Implementation + tests/evidence | Dedicated task branch and pull request linked to one active Issue |
+| Code change | Implementation + tests/evidence | Dedicated task branch and final pull request linked to one active Issue |
+| CI lifecycle | Efficient final-candidate and exact-merge verification | [`docs/CI_LIFECYCLE.md`](docs/CI_LIFECYCLE.md) + `AGENTS.md` |
 | Engine consumer usage | How to use implemented public APIs | [`wiki/`](wiki/README.md), synchronized with production API changes |
 | Owner observation | Human-observable demonstration of implemented public behavior | [`game-sandbox/`](game-sandbox/README.md), synchronized when a task can be demonstrated without pulling future work forward |
 
@@ -23,7 +24,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - **NEXT:** keep detailed tasks in the technical backlog; create Issues only when the phase is close to execution.
 - **LATER:** detailed tasks may remain in the technical backlog, but they are planning baselines rather than frozen implementation contracts. Do not pre-create hundreds of Issues.
 - Task IDs such as `P10-T06` are permanent identifiers. Issue numbers are not.
-- Additive task IDs such as `P3-T04A` and `P3-T04B` may be inserted when newly discovered bounded work is needed without renumbering established tasks.
+- Additive task IDs such as `P3-T04A`, `P3-T04B`, and maintenance IDs such as `P1-T08A` may be inserted when newly discovered bounded work is needed without renumbering established tasks.
 - Task wording and acceptance criteria may be refined before a task becomes an executable Issue. Once an Issue is created for execution, that Issue is the implementation contract unless it is deliberately updated.
 - Live workflow status belongs in GitHub Issues/Project. The commit-contained completed/next-work checkpoint belongs in `docs/DEVELOPMENT_STATUS.md`; roadmap and backlog documents do not track board state.
 - A phase is complete only when its **exit gate** passes; completing every individual task is necessary but not sufficient.
@@ -65,6 +66,8 @@ The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must
 
 Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
 
+P1-T08A / Issue #153 is an active bounded **maintenance** follow-up to the Phase 1 CI foundation, inserted while Phase 3 is in progress. It does not reopen Phase 1 product completion or change engine behavior; it reduces duplicate CI work while keeping the full final-candidate gate.
+
 Phase 2 is also complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
 
 The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
@@ -73,13 +76,23 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84 through P3-T04 / Issue #87 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, in-place primary-monitor windowed/borderless/exclusive transitions, and focus-loss-safe cursor capture/input cleanup are merged and verified. P3-T04 completed through PR #148 on merge commit `eb82814b9f545dcf04be004912f69694942d604b`, with merged-master workflow #257 passing all five jobs including the real Windows focus-loss acceptance.
+P3-T01 / Issue #84 through P3-T04 / Issue #87 are complete. The production `GlfwWindow` lifecycle, separate logical/framebuffer size delivery, in-place primary-monitor windowed/borderless/exclusive transitions, and focus-loss-safe cursor capture/input cleanup are merged and verified.
 
-P3-T04A / Issue #149 is complete through PR #150 on merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`, with merged-master workflow #271 passing all five jobs. It established `game-sandbox` as the canonical owner-facing manual demo, preserved the headless server boundary through a non-exported demo-only platform runtime, and established the durable sandbox-maintenance rule for future human-observable capabilities.
+P3-T04A / Issue #149 is complete through PR #150 on merged `master` `7876b17140fc5a124dc943642f205c9be73859d6`. It established `game-sandbox` as the canonical owner-facing manual demo, preserved the headless server boundary through a non-exported demo-only platform runtime, and established the durable sandbox-maintenance rule for future human-observable capabilities.
 
-P3-T04B / Issue #151 is the current small bounded follow-up before P3-T05. It makes the sandbox model correct engine logging usage by routing runtime state transitions and diagnostics through the existing structured `EngineLogger`, while direct console output remains only for the caller-owned sink and explicit owner instructions. It changes no engine API, dependency, module edge, renderer behavior, or input behavior.
+P3-T04B / Issue #151 is complete through PR #152 on merged `master` `61f576f6e23fb6b5518fdeb075db3871fcc5d76e`. It made the sandbox model correct engine logging usage by routing runtime state transitions and diagnostics through the existing structured `EngineLogger`, while direct console output remains only for the caller-owned sink and explicit owner instructions.
 
-P3-T05 / Issue #88 remains paused with no implementation started. After P3-T04B merges and exact merged-master CI passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P3-T04B or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+P1-T08A / Issue #153 is the current repository-maintenance task before raw-mouse implementation resumes. Its target is:
+
+```text
+branch development      -> 0 heavy CI runs
+final non-draft PR      -> 1 heavy five-job CI run
+merged master commit    -> 1 lightweight exact-merge verification job
+```
+
+The five-job PR matrix itself is not weakened. Full post-merge CI remains available deliberately through `workflow_dispatch` when an active phase/release/native/performance/protocol task needs exact-merge evidence that the lightweight verifier cannot establish.
+
+P3-T05 / Issue #88 remains paused with no implementation started. After P1-T08A merges and its lightweight exact-merge verifier passes, P3-T05 must be freshly audited against that new verified master before raw-mouse work resumes. Completing P1-T08A or P3-T05 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 
@@ -122,11 +135,17 @@ For work near execution:
 4. Link real dependencies/blockers explicitly.
 5. Keep only a bounded active queue; do not convert the entire technical backlog into Issues.
 6. Create a dedicated task branch from current `master`; never implement agent-generated work directly on `master`.
-7. Open a pull request linked to the Issue and require CI/verification before merge.
-8. Close the Issue only after merge and acceptance evidence pass.
-9. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the merged commit checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
-10. Keep `wiki/` synchronized whenever the public engine API or its consumer-visible use changes.
-11. Evaluate and update `game-sandbox` whenever a newly implemented capability is appropriately human-observable through the public engine boundary.
+7. Finish implementation, focused verification where available, required docs/wiki/sandbox updates, self-review, and consistency audit **before** opening the normal non-draft PR. Do not use the PR as a development scratchpad.
+8. Open one final PR linked to the Issue only when the branch is intended to be the merge candidate. For non-exempt work use `Refs #...`; draft PRs are optional only for early human/reviewer visibility.
+9. Require the heavy five-job CI matrix on the exact final non-exempt PR candidate. If the candidate changes or its tested base becomes stale, refresh it and require another exact-candidate pass.
+10. Merge only after required final-candidate verification passes.
+11. For ordinary non-exempt work, require the lightweight exact-merge `master` verifier and then close the Issue. Do not routinely repeat the complete heavy matrix after merge.
+12. Use `workflow_dispatch` or a task-specific command for stronger post-merge evidence only when the active Issue explicitly requires it.
+13. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the durable checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
+14. Keep `wiki/` synchronized whenever the public engine API or its consumer-visible use changes.
+15. Evaluate and update `game-sandbox` whenever a newly implemented capability is appropriately human-observable through the public engine boundary.
+
+See [`docs/CI_LIFECYCLE.md`](docs/CI_LIFECYCLE.md) for the exact runner-efficiency model and exception rules.
 
 ## Definition of Ready
 
@@ -154,7 +173,9 @@ A task is done only when:
 - docs/contracts changed by the task are updated;
 - relevant `wiki/` usage/API pages are updated when public engine API or consumer-visible behavior changes, or `Wiki impact: none — <reason>` is recorded when no update is applicable;
 - sandbox impact is handled under `AGENTS.md`: update the owner-facing demo when appropriate or record `Sandbox impact: none — <reason>`;
-- the linked pull request is merged after CI/verification;
+- the exact final PR candidate passes its required verification;
+- the linked pull request is merged;
+- the exact merged commit passes the applicable lightweight or explicitly stronger post-merge verification;
 - the linked Issue is closed consistently with the verified result.
 
 ## Status convention

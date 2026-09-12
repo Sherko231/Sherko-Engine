@@ -393,6 +393,47 @@ No dependency or lockfile change is expected for P3-T02. Run `resolveAndLockAllD
 
 CI keeps deterministic P3-T02 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowSizeNativeTest` exactly once after the P3-T01 native window test and uploads its JUnit XML plus report as artifact `p3-t02-window-size`. Final acceptance requires all five jobs on the exact PR head and a separate all-five-job push workflow on the exact merged `master` commit.
 
+## P3-T03 window mode transition verification
+
+Issue #86 extends the D-031/D-032 production `GlfwWindow` boundary with `WindowMode` and owner-thread `setWindowMode(...)`. It adds no dependency, renderer, monitor-selection/custom-resolution API, input/focus behavior, raw handle, or later Phase 3 implementation.
+
+Run the deterministic acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+```
+
+The suite must cover lifecycle/thread/null rejection before native transition work, same-mode no-op, windowed-geometry capture/restore, primary-monitor borderless and exclusive target values, direct borderless/exclusive transitions without losing the original windowed restore geometry, fresh geometry capture after a completed return to windowed, invalid monitor/video-mode data, original failure identity plus one rollback attempt/suppressed rollback failure, and the preserved P3-T01/P3-T02 lifecycle/size behavior.
+
+Run the real native acceptance only on target Windows x64 / Java 25:
+
+```powershell
+$env:SHERKO_P3_T03_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowModeNativeTest" --rerun-tasks
+Remove-Item Env:SHERKO_P3_T03_NATIVE
+```
+
+Without `SHERKO_P3_T03_NATIVE=true`, that JUnit test is skipped by assumption and does not count as P3-T03 native evidence.
+
+The enabled test starts from the production windowed `GlfwWindow` and executes exactly 20 successful transitions as five repetitions of:
+
+1. `BORDERLESS_FULLSCREEN`
+2. `WINDOWED`
+3. `EXCLUSIVE_FULLSCREEN`
+4. `WINDOWED`
+
+After every transition the test independently requires `glfwGetCurrentContext()` to remain the original nonzero window/context handle, requires `GL_VERSION` to remain nonblank, checks direct GLFW monitor/window state against the requested mode, and checks positive expected logical dimensions. Every return to windowed must restore the originally captured window position and size. The final stop/close path requires no current context and `NativeResourceRegistry.assertNoOpenResources()` success.
+
+The enabled run must create:
+
+`engine-platform-lwjgl/build/reports/p3/p3-t03-window-modes.txt`
+
+Require stable fields for `task=P3-T03`, `result=PASS`, `transition.count=20`, the exact repeated transition sequence, primary-monitor/current-video-mode observations, initial/restored window geometry, all-transition context preservation, GL version, exact `GITHUB_SHA` in CI, Java/OS environment, and empty-registry cleanup. This is one bounded production 20-transition acceptance run; it is not renderer evidence, P0-T13 soak evidence, or P0-T14 repeated-lifecycle evidence.
+
+No dependency, dependency-ownership, or lockfile change is expected for P3-T03. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
+
+CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after the P3-T02 native size test and uploads its JUnit XML plus report as artifact `p3-t03-window-modes`. Final acceptance requires all five jobs on the exact final PR head and a separate all-five-job push workflow on the exact merged `master` commit; stale/cancelled superseded runs are neither passing nor failing evidence for the final head.
+
 ## Checkstyle boundary
 
 For P1-T05 / Issue #35, the deliberate negative fixture is opt-in and must fail the root check task:
@@ -552,7 +593,7 @@ The five jobs cover:
 - root/subproject test aggregation via `test`, followed by the focused `EngineSubsystemTest`, `SubsystemGraphTest`, `SubsystemStartupTest`, `EngineClockTest`, `FixedStepAccumulatorTest`, `FixedStepCatchUpPolicyTest`, `FixedStepInterpolationTest`, `EngineConfigSchemaTest`, `EngineConfigLoaderTest`, `NativeResourceRegistryTest`, `AllocationMetricBenchmarkTest`, `EngineLoggerTest`, `FatalTerminationTest`, and explicitly enabled `Phase2IntegratedGateTest` suites plus XML/HTML/allocation/Phase-2-gate evidence upload;
 - explicit architecture boundaries via `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`;
 - JaCoCo XML/HTML generation and artifact upload via `verifyJacocoReports`;
-- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest` and the P3-T02 production `GlfwWindowSizeNativeTest` with their retained reports.
+- Windows native lifecycle coverage via the preserved root aliases `runWindowsNativeCiSmoke` and `runJoltLifecycleSpike`, plus the P3-T01 production `GlfwWindowNativeTest`, the P3-T02 production `GlfwWindowSizeNativeTest`, and the P3-T03 production `GlfwWindowModeNativeTest` with their retained reports.
 
 A self-hosted run is not an ephemeral clean VM. `actions/checkout` still checks out the requested commit into the runner work directory, but machine-level installed software and caches can persist across jobs. For this reason the committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
 
@@ -560,7 +601,7 @@ Because independent jobs may execute sequentially when fewer matching runners ar
 
 Because `game-server:check` also depends on `verifyHeadlessServerRuntime`, the ordinary all-module build enforces the server headless dependency boundary before the explicit runtime smoke steps.
 
-The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01 and P3-T02 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
+The self-hosted Windows runner may have graphics capabilities that GitHub-hosted runners did not. P3-T01, P3-T02, and P3-T03 deliberately use real production GLFW/OpenGL acceptance paths there; those bounded window results must still not be upgraded into P0-T13/P0-T14 evidence. The historical native smoke remains feasibility regression coverage rather than production ownership evidence.
 
 This native CI gate must not be interpreted as P0-T13 sustained-stability evidence, P0-T14 repeated-lifecycle evidence, or P0-T09A end-to-end Steam transport evidence. Steam-dependent checks are not part of unattended CI because they require an authenticated Steam client/account environment.
 
@@ -606,7 +647,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02 adds no dependency or dependency-ownership change and therefore expects no lockfile change.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02 and P3-T03 add no dependency or dependency-ownership change and therefore expect no lockfile change.
 
 ## Wiki/API-guide verification
 

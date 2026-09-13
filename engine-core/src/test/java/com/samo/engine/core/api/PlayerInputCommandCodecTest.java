@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.EnumMap;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class PlayerInputCommandCodecTest {
@@ -33,6 +32,13 @@ class PlayerInputCommandCodecTest {
         assertThat(layout.getDouble()).isEqualTo(-0.5d);
         assertThat(layout.getDouble()).isEqualTo(3.0d);
         assertThat(layout.getDouble()).isEqualTo(-4.0d);
+        for (int ordinal = 0; ordinal < PlayerInputCommand.DigitalAction.values().length; ordinal++) {
+            assertThat(layout.getDouble()).isEqualTo(ordinal + 1.0d);
+        }
+        assertThat(Short.toUnsignedInt(layout.getShort())).isEqualTo(1);
+        assertThat(Short.toUnsignedInt(layout.getShort())).isEqualTo(1 << 1);
+        assertThat(Short.toUnsignedInt(layout.getShort())).isEqualTo(1);
+        assertThat(layout.position()).isEqualTo(start + PlayerInputCommandCodec.ENCODED_SIZE);
 
         buffer.position(start);
         PlayerInputCommand decoded = PlayerInputCommandCodec.decode(buffer);
@@ -42,26 +48,45 @@ class PlayerInputCommandCodecTest {
     }
 
     @Test
-    void commandDefensivelyOwnsCompleteDigitalState() {
+    void commandDefensivelyOwnsCompleteDigitalStateAndRejectsInvalidConstruction() {
         EnumMap<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = states();
         PlayerInputCommand command = new PlayerInputCommand(1L, 0.0d, 0.0d, 0.0d, 0.0d, states);
-        states.put(PlayerInputCommand.DigitalAction.JUMP, new PlayerInputCommand.DigitalState(9.0d, false, false, false));
+        states.put(
+                PlayerInputCommand.DigitalAction.JUMP,
+                new PlayerInputCommand.DigitalState(9.0d, false, false, false));
 
-        assertThat(command.digitalStates()).hasSize(9);
+        assertThat(command.digitalStates()).hasSize(PlayerInputCommand.DigitalAction.values().length);
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).value()).isEqualTo(1.0d);
-        assertThatThrownBy(() -> command.digitalStates().clear()).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> command.digitalStates().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> new PlayerInputCommand(-1L, 0, 0, 0, 0, states()))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new PlayerInputCommand(1L, Double.NaN, 0, 0, 0, states()))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new PlayerInputCommand.DigitalState(
+                        Double.POSITIVE_INFINITY,
+                        false,
+                        false,
+                        false))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        EnumMap<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> incomplete = states();
+        incomplete.remove(PlayerInputCommand.DigitalAction.PAUSE);
+        assertThatThrownBy(() -> new PlayerInputCommand(1L, 0, 0, 0, 0, incomplete))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void decodeRejectsMalformedValuesWithoutAdvancingSource() {
-        assertMalformed(0, view -> view.putInt(0, 0));
-        assertMalformed(4, view -> view.putShort(4, (short) 2));
-        assertMalformed(6, view -> view.putShort(6, (short) 1));
-        assertMalformed(8, view -> view.putLong(8, -1L));
-        assertMalformed(16, view -> view.putLong(16, Double.doubleToRawLongBits(Double.NaN)));
-        assertMalformed(120, view -> view.putShort(120, (short) (1 << 9)));
+        assertMalformed(view -> view.putInt(0, 0));
+        assertMalformed(view -> view.putShort(4, (short) 2));
+        assertMalformed(view -> view.putShort(6, (short) 1));
+        assertMalformed(view -> view.putLong(8, -1L));
+        assertMalformed(view -> view.putLong(16, Double.doubleToRawLongBits(Double.NaN)));
+        assertMalformed(view -> view.putLong(48, Double.doubleToRawLongBits(Double.NaN)));
+        assertMalformed(view -> view.putShort(120, (short) (1 << 9)));
+        assertMalformed(view -> view.putShort(122, (short) (1 << 9)));
+        assertMalformed(view -> view.putShort(124, (short) (1 << 9)));
 
         ByteBuffer shortBuffer = ByteBuffer.allocate(PlayerInputCommandCodec.ENCODED_SIZE - 1);
         assertThatThrownBy(() -> PlayerInputCommandCodec.decode(shortBuffer))
@@ -77,7 +102,7 @@ class PlayerInputCommandCodecTest {
         assertThat(destination.position()).isZero();
     }
 
-    private static void assertMalformed(int expectedPosition, java.util.function.Consumer<ByteBuffer> mutation) {
+    private static void assertMalformed(java.util.function.Consumer<ByteBuffer> mutation) {
         ByteBuffer buffer = ByteBuffer.allocate(PlayerInputCommandCodec.ENCODED_SIZE);
         PlayerInputCommandCodec.encode(fixture(42L), buffer);
         buffer.flip();
@@ -87,7 +112,6 @@ class PlayerInputCommandCodecTest {
         assertThatThrownBy(() -> PlayerInputCommandCodec.decode(buffer))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(buffer.position()).isZero();
-        assertThat(expectedPosition).isGreaterThanOrEqualTo(0);
     }
 
     private static PlayerInputCommand fixture(long tickId) {

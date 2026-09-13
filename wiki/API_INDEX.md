@@ -65,6 +65,9 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 | `InputBinding` | Immutable device-neutral descriptor mapping one key/button/mouse-delta control to an action component with signed scale. |
 | `InputActionBindings` | Immutable complete action-binding set with strict versioned JSON loading. |
 | `InputBindingLoadException` | Reports binding-file read/schema/validation failures without exposing Jackson. |
+| `InputActionEvaluator` | Caller-owned stateful renderer-frame evaluator from one `InputSnapshot` + binding set to action state. |
+| `InputActionSnapshot` | Immutable complete evaluated action view for one source hardware frame ID. |
+| `InputActionState` | Immutable per-action pressed/held/released state plus scalar or X/Y analog value. |
 
 `GlfwWindow.setCursorCaptured(boolean)` controls cursor lock. Focus loss clears held hardware state and releases effective capture; focus regain never recaptures automatically.
 
@@ -72,9 +75,11 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 `InputActionBindings.load(Path)` loads strict schema version 1. All eleven actions must appear exactly once with at least one binding. Public descriptors reuse `InputKey` / `InputMouseButton` plus relative mouse X/Y controls; Jackson remains an implementation detail.
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T07 binding metadata also does not evaluate actions or implement transitions.
+`InputActionEvaluator.evaluate(InputSnapshot)` adds binding contributions by target component without clamping or normalization. DIGITAL activity is `value != 0`; VECTOR2 activity is `x != 0 || y != 0`. The evaluator emits action-level pressed/held/released transitions relative to its previous successful frame and preserves a complete one-frame key/button tap only when the same bound control reports both press and release. Later successful frame IDs must be strictly increasing; failed evaluations do not advance evaluator state.
 
-Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and action bindings](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T08 remains renderer-frame action evaluation; tick-aligned `PlayerInputCommand`/replay/network input belongs to P3-T09 and controller/settings/response curves belong to P3-T10.
+
+Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and action evaluation](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
 ## Not an engine-consumer API
 
@@ -90,5 +95,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-- [Platform input and action bindings](PLATFORM/INPUT.md)
+- [Platform input and action evaluation](PLATFORM/INPUT.md)
 - [Current limitations](LIMITATIONS.md)

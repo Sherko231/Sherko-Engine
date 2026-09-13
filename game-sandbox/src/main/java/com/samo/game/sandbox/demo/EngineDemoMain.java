@@ -5,6 +5,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.FixedStepAccumulator;
 import com.samo.engine.core.api.FixedStepCatchUpPolicy;
 import com.samo.engine.core.api.NativeResourceRegistry;
+import com.samo.engine.core.api.PlayerInputCommand;
 import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.InputAction;
 import com.samo.engine.platform.api.InputActionBindings;
@@ -13,6 +14,7 @@ import com.samo.engine.platform.api.InputActionSnapshot;
 import com.samo.engine.platform.api.InputActionState;
 import com.samo.engine.platform.api.InputKey;
 import com.samo.engine.platform.api.InputSnapshot;
+import com.samo.engine.platform.api.PlayerInputCommandSampler;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
 import java.io.IOException;
@@ -53,6 +55,7 @@ public final class EngineDemoMain {
         });
         NativeResourceRegistry nativeResources = new NativeResourceRegistry();
         InputActionEvaluator actionEvaluator = new InputActionEvaluator(loadDemoBindings());
+        PlayerInputCommandSampler commandSampler = new PlayerInputCommandSampler();
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
@@ -79,7 +82,7 @@ public final class EngineDemoMain {
             window.initialize();
             window.start();
             started = true;
-            runDemo(window, logger, actionEvaluator);
+            runDemo(window, logger, actionEvaluator, commandSampler);
         } catch (InterruptedException failure) {
             primaryFailure = failure;
             Thread.currentThread().interrupt();
@@ -95,7 +98,8 @@ public final class EngineDemoMain {
     private static void runDemo(
             GlfwWindow window,
             EngineLogger logger,
-            InputActionEvaluator actionEvaluator) throws InterruptedException {
+            InputActionEvaluator actionEvaluator,
+            PlayerInputCommandSampler commandSampler) throws InterruptedException {
         EngineClock clock = new EngineClock();
         FixedStepAccumulator accumulator = new FixedStepAccumulator();
         FixedStepCatchUpPolicy catchUpPolicy = new FixedStepCatchUpPolicy();
@@ -109,19 +113,26 @@ public final class EngineDemoMain {
         double diagnosticMouseDeltaY = 0.0;
         InputSnapshot latestInput = null;
         InputActionSnapshot latestActions = null;
+        PlayerInputCommand latestCommand = null;
         int nextStep = 0;
 
         clock.sampleElapsedNanos();
         while (elapsedDemoNanos < EngineDemoTimeline.DEMO_DURATION_NANOS) {
             long elapsedNanos = clock.sampleElapsedNanos();
             elapsedDemoNanos = saturatingAdd(elapsedDemoNanos, elapsedNanos);
-            cumulativeTicks += catchUpPolicy.advance(accumulator, elapsedNanos);
+            long dueTicks = catchUpPolicy.advance(accumulator, elapsedNanos);
 
             window.pollEvents();
             latestInput = window.captureInputSnapshot(inputFrameId++);
             latestActions = actionEvaluator.evaluate(latestInput);
+            commandSampler.submit(latestActions);
             diagnosticMouseDeltaX += latestInput.mouseDeltaX();
             diagnosticMouseDeltaY += latestInput.mouseDeltaY();
+
+            for (long offset = 1L; offset <= dueTicks; offset++) {
+                latestCommand = commandSampler.nextCommand(cumulativeTicks + offset);
+            }
+            cumulativeTicks += dueTicks;
 
             while (nextStep < steps.size() && elapsedDemoNanos >= steps.get(nextStep).atNanos()) {
                 execute(window, logger, steps.get(nextStep).action(), cumulativeTicks);
@@ -132,14 +143,23 @@ public final class EngineDemoMain {
                 InputActionState move = latestActions.state(InputAction.MOVE);
                 InputActionState jump = latestActions.state(InputAction.JUMP);
                 InputActionState interact = latestActions.state(InputAction.INTERACT);
+                String commandDiagnostic = latestCommand == null
+                        ? "tickCommand=none"
+                        : "tickCommand=%d MOVE=(%.1f,%.1f) LOOK=(%.2f,%.2f)"
+                                .formatted(
+                                        latestCommand.tickId(),
+                                        latestCommand.moveX(),
+                                        latestCommand.moveY(),
+                                        latestCommand.lookX(),
+                                        latestCommand.lookY());
                 log(
                         logger,
                         EngineLogger.Level.DEBUG,
                         "t=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
-                                + "WASD=[%s,%s,%s,%s], MOVE=(%.1f,%.1f), "
+                                + "WASD=[%s,%s,%s,%s], frameMOVE=(%.1f,%.1f), "
                                 + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], "
-                                + "mouseDeltaSinceLastDiagnostic=(%.2f,%.2f) "
-                                + "(sandbox diagnostic; not FPS/benchmark evidence)"
+                                + "%s, mouseDeltaSinceLastDiagnostic=(%.2f,%.2f) "
+                                + "(sandbox diagnostic; not FPS/benchmark/replay acceptance evidence)"
                                 .formatted(
                                         elapsedDemoNanos / 1_000_000_000.0,
                                         accumulator.interpolationAlpha(),
@@ -158,6 +178,7 @@ public final class EngineDemoMain {
                                         interact.pressed(),
                                         interact.held(),
                                         interact.released(),
+                                        commandDiagnostic,
                                         diagnosticMouseDeltaX,
                                         diagnosticMouseDeltaY),
                         cumulativeTicks);
@@ -218,7 +239,7 @@ public final class EngineDemoMain {
                 window.setCursorCaptured(true);
                 log(logger, EngineLogger.Level.INFO, "Cursor capture enabled", simulationTick);
                 System.out.println(
-                        "[sandbox instruction] Move mouse / hold W-A-S-D / tap SPACE or E, then Alt+Tab away and back: hardware + action diagnostics should update and capture should not auto-return.");
+                        "[sandbox instruction] Move mouse / hold W-A-S-D / tap SPACE or E, then Alt+Tab away and back: hardware + action + tick-command diagnostics should update and capture should not auto-return.");
             }
             case RELEASE_CURSOR -> {
                 window.setCursorCaptured(false);
@@ -303,7 +324,7 @@ public final class EngineDemoMain {
         System.out.println(
                 "Uses production public APIs only. Current window is intentionally visually empty until renderer work exists.");
         System.out.println(
-                "InputSnapshot and InputActionSnapshot are captured/evaluated once per demo frame; bounded diagnostics print once per second.");
+                "InputSnapshot/InputActionSnapshot are renderer-frame values; PlayerInputCommand is emitted only for due fixed simulation ticks.");
         System.out.println("Timeline:");
         System.out.println("  0-5s   WINDOWED: resize/DPI observation");
         System.out.println("  5s     BORDERLESS_FULLSCREEN");

@@ -181,10 +181,18 @@ public final class EngineDemoMain {
                 Files.copy(source, tempFile, StandardCopyOption.REPLACE_EXISTING);
                 return InputActionBindings.load(tempFile);
             } finally {
-                Files.deleteIfExists(tempFile);
+                deleteDemoBindingsTempFile(tempFile);
             }
         } catch (IOException failure) {
             throw new IllegalStateException("Failed to materialize sandbox action bindings", failure);
+        }
+    }
+
+    private static void deleteDemoBindingsTempFile(Path tempFile) {
+        try {
+            Files.deleteIfExists(tempFile);
+        } catch (IOException cleanupFailure) {
+            tempFile.toFile().deleteOnExit();
         }
     }
 

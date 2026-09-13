@@ -20,29 +20,26 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - [Build and verification](docs/BUILD_AND_VERIFY.md) — canonical verification commands and evidence expectations.
 - [GitHub execution model](docs/GITHUB_PROJECT_SETUP.md) — Issue/branch/PR lifecycle and CI-efficiency policy.
 - [Technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md) — detailed implementation task catalog with stable task IDs; checkboxes are not status.
-- [Engineering references](docs/REFERENCES.md) — source map behind the roadmap.
-- [Engine API wiki](wiki/README.md) — human/AI consumer guide for implemented public APIs, examples, lifecycle/ownership rules, and current limitations.
-- [Engine sandbox](game-sandbox/README.md) — owner-facing manual observation path for currently demonstrable engine behavior.
+- [Engine API wiki](wiki/README.md) — consumer guide for implemented public APIs and current limitations.
+- [Engine sandbox](game-sandbox/README.md) — owner-facing manual observation path for implemented behavior.
 
 ## Current state
 
-The Java 25 multi-project foundation declares all 16 production-target modules plus the experimental `feasibility-spikes` subproject. It centralizes the toolchain, dependency locking, JUnit 6/AssertJ test support, quality gates, and repeatable client/server entry points. `engine-core` provides the lifecycle, dependency/startup rollback, deterministic timing, configuration, native-resource diagnostics, structured logging, and fatal-termination foundation completed in Phase 2.
+The Java 25 multi-project foundation declares all 16 production-target modules plus experimental `feasibility-spikes`. Phase 1 and Phase 2 are complete. `engine-core` provides lifecycle, dependency/startup rollback, deterministic fixed-step timing, typed configuration, native-resource diagnostics, structured logging, and fatal-termination foundations.
 
-`engine-platform-lwjgl` contains the production Phase 3 platform/input boundary: OpenGL 4.6 window ownership, separate logical/framebuffer sizing, in-place window-mode transitions, focus-loss-safe cursor capture/input cleanup, raw/fallback relative mouse acquisition, immutable renderer-frame `InputSnapshot`, strict immutable data-driven `InputActionBindings`, and the active P3-T08 renderer-frame action evaluator/transition layer.
+P3-T01 through P3-T08 are formally complete. The `engine-platform-lwjgl` boundary now owns production GLFW/OpenGL window lifecycle, logical/framebuffer sizing, display-mode transitions, focus-safe cursor capture and relative mouse acquisition, immutable renderer-frame `InputSnapshot`, strict immutable `InputActionBindings`, and renderer-frame `InputActionEvaluator` action state.
 
-Phase 0 proved GLFW/OpenGL, Jolt JNI, OpenAL, localhost UDP, Steam initialization, deterministic network impairment, Java FFM access to the Steam flat API, and a 15-second combined native smoke run. End-to-end SteamNetworkingSockets and sustained/repeated native lifecycle evidence remain explicit follow-up gates.
+P3-T08 / Issue #91 completed through PR #158. Its exact final PR candidate passed the heavy five-job matrix, and merged feature commit `ab42c30d4b186e0ecb1aab1f53a5819ac8d0e097` passed exact-merge workflow #293 / run `34769991670` on attempt 2. The first attempt failed at runner setup before repository execution and the identical merge commit passed on rerun.
 
-Phase 1 and Phase 2 are complete. P3-T01 / Issue #84 through P3-T07 / Issue #90 are formally complete. P3-T04A / #149 established `game-sandbox` as the canonical owner-facing manual demo while preserving the headless server boundary, and P3-T04B / #151 completed the sandbox logging cleanup.
+P3-T09 / Issue #92 is the active Phase 3 task on branch `p3-t09-player-input-commands`. It adds the device-neutral simulation-tick `PlayerInputCommand` contract in `engine-core`, an explicit fixed-size ByteBuffer replay codec v1, and a caller-owned `PlayerInputCommandSampler` in `engine-platform-lwjgl` that bridges renderer-frame action snapshots to fixed simulation ticks without creating a server-to-platform dependency.
 
-P1-T08A / Issue #153 is complete through PR #154 / merged `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. The normal CI lifecycle keeps development work on the task branch without heavy Actions runs, runs the complete five-job matrix on the exact final non-draft PR candidate, and runs one lightweight verifier on the exact merged `master` commit instead of routinely repeating the heavy matrix. `workflow_dispatch` remains available when a task explicitly needs stronger exact-merge evidence.
+P3-T09 preserves one-shot input correctly across mismatched render/simulation cadence: LOOK delta and digital pressed/released edges accumulate across zero-tick frames and are consumed exactly once by the next emitted command; latest MOVE and digital scalar/held state repeat when multiple ticks occur without a new renderer snapshot. The codec uses magic `SPIC`, version 1, big-endian fields, exactly nine digital actions, and an exact 126-byte layout. It is a replay/storage command format, not a production network packet layout.
 
-P3-T06 / Issue #89 completed through PR #156 / merged `master` `92ad157adb696bd5a9d21933f6d9af60be3634a7`; final heavy workflow #285 and exact-merge lightweight workflow #286 passed. The public platform boundary exposes `InputSnapshot`, `InputKey`, `InputMouseButton`, and `GlfwWindow.captureInputSnapshot(long)` without exposing GLFW/LWJGL types.
+A deterministic headless replay test records commands, encodes/decodes them, and replays the decoded sequence into a platform-independent test consumer against an independently calculated final result. This makes the Phase 3 replay exit behavior testable at the input-command boundary, but Phase 3 remains incomplete until P3-T10 finishes.
 
-P3-T07 / Issue #90 completed through PR #157 / merged `master` `5012235cc0fcc2fc702919cf2e7bf185bf3c3595`; final heavy workflow #290 and exact-merge lightweight workflow #291 passed. The public platform API now includes exactly eleven typed gameplay actions, immutable binding descriptors, complete immutable `InputActionBindings`, and strict JSON schema-v1 loading through implementation-only Jackson 2.21.2.
+The owner-facing sandbox now emits tick commands only when fixed-step timing reports due simulation ticks and displays bounded tick-command diagnostics alongside renderer-frame action diagnostics. Its platform dependency remains non-exported so `game-server` stays headless.
 
-P3-T08 / Issue #91 is the active Phase 3 task on branch `p3-t08-action-transitions`. It adds caller-owned stateful `InputActionEvaluator` plus immutable per-frame `InputActionSnapshot` / `InputActionState`, deterministic additive analog aggregation, action-level pressed/held/released semantics, preserved same-binding one-frame taps, strict increasing frame identity, and atomic failure behavior. It intentionally does not implement P3-T09 tick-aligned `PlayerInputCommand`/replay/network codecs or P3-T10 controller/settings/response curves.
-
-The owner-facing sandbox now evaluates the committed demo binding set through public production APIs and shows MOVE X/Y plus representative JUMP/INTERACT transitions alongside existing raw hardware diagnostics. Its platform dependency remains non-exported so `game-server` stays headless.
+Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence.
 
 ## Default contribution / CI lifecycle
 
@@ -62,8 +59,8 @@ implement + focused verification + docs + self-review on task branch
                          close Issue
 ```
 
-Do not open a PR as a development scratchpad. Corrections after failed CI legitimately create a new candidate and therefore a new heavy run; avoidable cosmetic/status edits after a passing candidate should be completed before the PR is opened. If `master` advances relative to the tested candidate, refresh the candidate and reverify it before merge.
+Do not open a PR as a development scratchpad. Corrections after failed CI create a new candidate and require a fresh heavy run. If `master` advances relative to the tested candidate, refresh and reverify before merge.
 
-Qualifying Markdown-only changes retain the documented complete-diff CI exemption. Tasks that explicitly require exact-merge native/performance/integration evidence may request a stronger post-merge run through `workflow_dispatch`; ordinary tasks do not repeat the complete five-job matrix on `master`.
+Qualifying Markdown-only changes retain the documented complete-diff CI exemption. Tasks that explicitly require stronger exact-merge native/performance/integration evidence may use `workflow_dispatch`; ordinary tasks do not repeat the complete heavy matrix on `master`.
 
-When a task adds or changes public engine API or consumer-visible usage behavior, the same pull request must update the relevant [`wiki/`](wiki/README.md) pages. Tasks with no wiki impact should record that explicitly rather than making meaningless documentation churn.
+When a task changes public engine API or consumer-visible usage, update the relevant [`wiki/`](wiki/README.md) pages in the same pull request.

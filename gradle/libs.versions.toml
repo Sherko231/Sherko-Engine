@@ -4,6 +4,7 @@ jolt-jni = "6.0.0"
 snaploader = "1.1.1-stable"
 oshi = "7.4.2"
 steamworks4j = "1.10.0"
+jackson = "2.21.2"
 junit = "6.0.0"
 assertj = "3.27.7"
 checkstyle = "14.1.0"
@@ -18,6 +19,7 @@ jolt-jni-windows64 = { module = "com.github.stephengold:jolt-jni-Windows64", ver
 snaploader = { module = "io.github.electrostat-lab:snaploader", version.ref = "snaploader" }
 oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
 steamworks4j-lwjgl3 = { module = "com.code-disaster.steamworks4j:steamworks4j-lwjgl3", version.ref = "steamworks4j" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

@@ -30,7 +30,7 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Run owner-facing sandbox demo | `.\gradlew.bat :game-sandbox:runEngineDemo` | Human-observation path opens the scripted production window demo on an interactive Windows desktop; this is not FPS, benchmark, soak, leak-proof, or CI acceptance evidence. |
 | Run CI-native lifecycle smoke locally | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | Historical root task aliases delegate to `feasibility-spikes`; GLFW/OpenAL/Jolt lifecycle smoke completes. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
-| Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks in an unchanged dependency graph. |
+| Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks after any authorized lock update has been committed. |
 
 ## P2-T01 lifecycle verification
 
@@ -539,6 +539,47 @@ P3-T06 extends that demo to capture one public `InputSnapshot` after each demo-f
 
 Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then one passing lightweight exact-merge `master` verifier after merge. Do not repeat the routine heavy matrix after merge unless the active Issue explicitly requires stronger exact-merge evidence.
 
+## P3-T07 data-driven action-binding verification
+
+Issue #90 adds D-037 public immutable gameplay-action binding metadata plus strict JSON schema-v1 loading in `engine-platform-lwjgl`. It intentionally adds no action evaluation/transitions, controller input, sensitivity/dead-zone curves, tick-aligned `PlayerInputCommand`, replay/network codec, renderer/camera behavior, or project/module dependency edge.
+
+Run the focused deterministic acceptance suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.InputActionBindingsTest" --rerun-tasks
+```
+
+The suite must cover the committed complete v1 fixture, all eleven required action names, MOVE/LOOK `VECTOR2` classification and all other `DIGITAL` classifications, key/mouse-button/mouse-delta descriptors, defensive ownership/immutable collections, missing/duplicate/unknown/empty actions, malformed JSON, missing/unreadable/null paths, unknown root/action/binding properties, unsupported schema version, unknown binding/control enums, invalid action components, zero/non-finite scale, exact duplicate bindings, and duplicate JSON object fields. Expected descriptors remain handwritten independently of the parser.
+
+Run the architecture/headless checks:
+
+```powershell
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+```
+
+P3-T07 intentionally adds the first production Jackson dependency under the existing scope-approved Jackson JSON technology selection. Regenerate locks once with:
+
+```powershell
+.\gradlew.bat resolveAndLockAllDependencies --write-locks
+```
+
+Then inspect the complete dependency/lock diff. The expected platform-module additions are `jackson-databind:2.21.2`, `jackson-core:2.21.2`, and the matching `jackson-annotations:2.21`. No other selected dependency version, project dependency edge, or unrelated lockfile should change. After committing the authorized lock update, rerun:
+
+```powershell
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+and require no further lock drift.
+
+Public source/API inspection plus the architecture suite must confirm that Jackson, GLFW, and LWJGL classes do not appear in the new binding API signatures. `game-server` must remain independent of `engine-platform-lwjgl` and therefore does not load action binding files directly at this stage.
+
+Sandbox impact is intentionally none: configuration metadata/loading is not meaningfully human-observable until P3-T08 evaluates bindings into action values. Do not add fake action diagnostics or implement T08 semantics solely for a demo.
+
+Before the final PR, run every applicable routine command from the matrix when the authoring environment supports the repository checkout/toolchain. If the current authoring environment cannot execute Gradle, record those commands as not run rather than as passing; final acceptance still requires the exact non-draft PR candidate to pass all five heavy CI jobs on the configured Windows x64 runner.
+
+P3-T07 itself adds no native operation. The existing `Windows native smoke` final-candidate job must still regress P3-T01 through P3-T05 native behavior on the same candidate. After merge, one lightweight exact-merge `master` verifier is required before Issue #90 may close. P3-T08 remains planning-only until then.
+
 ## P3-T04A owner-facing sandbox demo verification
 
 Issue #149 turns the existing `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. The demo consumes only already-public production APIs and deliberately does not replace tests, native acceptance, phase gates, or CI.
@@ -743,7 +784,7 @@ Before interpreting or merging a non-exempt final candidate:
 The heavy five-job PR/manual matrix covers:
 
 - `Build and quality gates`: Java/toolchain reporting, project inventory, committed dependency-lock resolution, all-module build/quality gates, client/server entry points, headless-server runtime boundary, and client/server version compatibility;
-- `Unit tests`: root/subproject aggregation plus the focused engine-core evidence suites and retained reports;
+- `Unit tests`: root/subproject aggregation plus the focused engine-core evidence suites and retained reports; P3-T07's `InputActionBindingsTest` is also included by the ordinary platform-module test task;
 - `Architecture tests`: explicit package/module boundary enforcement;
 - `JaCoCo coverage reports`: tests plus XML/HTML coverage generation/upload;
 - `Windows native smoke`: historical GLFW/OpenAL/Jolt smoke plus the current bounded production P3 native acceptance sequence, including P3-T05 raw-motion mode/focus evidence when present.
@@ -802,7 +843,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, P3-T05, and P3-T06 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for that dedicated configuration actually requires it, and inspect that diff explicitly.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, P3-T05, and P3-T06 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. P3-T07 adds the first production Jackson JSON parser dependency authorized by D-037: `jackson-databind:2.21.2` as `implementation` of `engine-platform-lwjgl`, resolving `jackson-core:2.21.2` and `jackson-annotations:2.21`; inspect the version-catalog and platform lock changes explicitly and require no unrelated lock drift. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for its dedicated configuration actually requires it, and inspect that diff explicitly.
 
 ## Wiki/API-guide verification
 

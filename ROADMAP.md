@@ -76,19 +76,21 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84 through P3-T05 / Issue #88 are complete. The production `GlfwWindow` lifecycle now owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, and raw/fallback relative mouse acquisition.
+P3-T01 / Issue #84 through P3-T06 / Issue #89 are complete. The production `GlfwWindow` lifecycle now owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, raw/fallback relative mouse acquisition, and immutable renderer-frame hardware `InputSnapshot` delivery.
 
 P3-T04A / Issue #149 established `game-sandbox` as the canonical owner-facing manual demo and preserved the headless server boundary through a non-exported demo-only platform runtime. P3-T04B / Issue #151 made the demo model the existing structured `EngineLogger` boundary.
 
 P3-T05 / Issue #88 completed through PR #155 on merged `master` `2f3dcd3d9117db28b994115f0c420b884e5a59b0`. Its exact final head passed heavy workflow #282 and the exact merge passed lightweight workflow #283. D-035 keeps relative mouse acquisition inside `GlfwWindow`: raw mode when supported, disabled-cursor relative fallback otherwise, and explicit focus/capture/lifecycle baseline clearing.
 
-P3-T06 / Issue #89 is the active bounded feature task. D-036 introduces immutable renderer-frame `InputSnapshot` values plus engine-defined `InputKey` and `InputMouseButton` vocabulary. `GlfwWindow.captureInputSnapshot(long)` is STARTED/owner-thread-only, performs no GLFW poll, consumes retained hardware press/release edges and accumulated relative mouse movement, and preserves held levels plus the D-035 baseline. Public signatures expose no GLFW/LWJGL type or constant.
+P3-T06 / Issue #89 completed through PR #156 on merged `master` `92ad157adb696bd5a9d21933f6d9af60be3634a7`. Its exact final head passed heavy workflow #285 and the exact merge passed lightweight workflow #286. D-036 exposes immutable renderer-frame `InputSnapshot` values plus engine-defined `InputKey` and `InputMouseButton` vocabulary without exposing GLFW/LWJGL types or adding a server dependency on the platform module.
 
-The P3-T06 snapshot is deliberately a client/platform hardware view, not a headless simulation/replay format. P3-T07/P3-T08 retain data-driven action and action-transition work; P3-T09 retains tick-aligned `PlayerInputCommand` and replay portability. No platform dependency is added to `game-server`.
+P3-T07 / Issue #90 is the active bounded feature task. D-037 introduces immutable data-driven action-binding metadata for exactly eleven Phase 3 actions and strict JSON schema-v1 loading. MOVE/LOOK are `VECTOR2`; the remaining actions are `DIGITAL`. Public descriptors reuse P3-T06 key/button vocabulary plus relative mouse X/Y controls, while Jackson 2.21.2 remains an implementation-only parser dependency inside `engine-platform-lwjgl`.
 
-Because P3-T06 creates a usable public observation boundary, the existing sandbox now captures one snapshot per demo frame and emits bounded frame/focus/capture/WASD/mouse-delta diagnostics through public APIs only.
+P3-T07 intentionally stores and validates configuration only. P3-T08 retains action evaluation and pressed/held/released/analog aggregation; P3-T09 retains tick-aligned `PlayerInputCommand` and replay portability; P3-T10 retains response settings/controller curves. No platform dependency is added to `game-server`.
 
-Completing P3-T06 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+The owner-facing sandbox remains unchanged in P3-T07 because configuration metadata is not meaningfully observable until P3-T08 evaluates bindings into action values. Existing P3-T06 snapshot diagnostics remain the current public input observation path.
+
+Completing P3-T07 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

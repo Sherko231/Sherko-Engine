@@ -24,6 +24,19 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 
 The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
+### Tick-aligned player input
+
+| Type | Purpose |
+| --- | --- |
+| `PlayerInputCommand` | Immutable device-neutral input state/edges for one simulation tick. |
+| `PlayerInputCommand.DigitalAction` | Fixed nine-action digital command vocabulary independent of platform input types. |
+| `PlayerInputCommand.DigitalState` | Immutable scalar plus pressed/held/released state for one digital action. |
+| `PlayerInputCommandCodec` | Explicit fixed-size version-1 ByteBuffer codec for replay/storage round trips. |
+
+The command carries MOVE X/Y, LOOK X/Y, and the nine digital actions without any GLFW/LWJGL type. `PlayerInputCommandCodec` encodes exactly 126 bytes in fixed big-endian field order and preserves the caller buffer's configured byte order. This is a replay/storage command format, not a frozen production network packet layout.
+
+Usage: [Platform input](PLATFORM/INPUT.md).
+
 ### Configuration
 
 | Type | Purpose |
@@ -68,6 +81,7 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 | `InputActionEvaluator` | Caller-owned stateful renderer-frame evaluator from one `InputSnapshot` + binding set to action state. |
 | `InputActionSnapshot` | Immutable complete evaluated action view for one source hardware frame ID. |
 | `InputActionState` | Immutable per-action pressed/held/released state plus scalar or X/Y analog value. |
+| `PlayerInputCommandSampler` | Caller-owned bridge that retains renderer-frame edges/LOOK until the next due simulation tick and emits `engine-core` `PlayerInputCommand` values. |
 
 `GlfwWindow.setCursorCaptured(boolean)` controls cursor lock. Focus loss clears held hardware state and releases effective capture; focus regain never recaptures automatically.
 
@@ -77,9 +91,11 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 `InputActionEvaluator.evaluate(InputSnapshot)` adds binding contributions by target component without clamping or normalization. DIGITAL activity is `value != 0`; VECTOR2 activity is `x != 0 || y != 0`. The evaluator emits action-level pressed/held/released transitions relative to its previous successful frame and preserves a complete one-frame key/button tap only when the same bound control reports both press and release. Later successful frame IDs must be strictly increasing; failed evaluations do not advance evaluator state.
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T08 remains renderer-frame action evaluation; tick-aligned `PlayerInputCommand`/replay/network input belongs to P3-T09 and controller/settings/response curves belong to P3-T10.
+`PlayerInputCommandSampler.submit(InputActionSnapshot)` retains latest MOVE/digital level state, accumulates LOOK deltas, and OR-retains pending digital pressed/released edges until `nextCommand(long tickId)` emits them. When multiple ticks occur without another submitted renderer frame, later commands repeat latest level state but emit zero LOOK and no repeated edges.
 
-Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and action evaluation](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T09 adds the tick-aligned replay/storage command boundary; controller/settings/response curves remain P3-T10.
+
+Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick commands](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
 ## Not an engine-consumer API
 
@@ -95,5 +111,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-- [Platform input and action evaluation](PLATFORM/INPUT.md)
+- [Platform input and tick commands](PLATFORM/INPUT.md)
 - [Current limitations](LIMITATIONS.md)

@@ -57,16 +57,24 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 | `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
 | `WindowMode` | Selects `WINDOWED`, `BORDERLESS_FULLSCREEN`, or `EXCLUSIVE_FULLSCREEN` for a started `GlfwWindow`. |
 | `InputSnapshot` | Immutable renderer-frame keyboard/mouse/focus/capture/relative-motion state captured from one started `GlfwWindow`. |
-| `InputKey` | Device-neutral bounded keyboard vocabulary used by `InputSnapshot`. |
-| `InputMouseButton` | Device-neutral bounded mouse-button vocabulary used by `InputSnapshot`. |
+| `InputKey` | Device-neutral bounded keyboard vocabulary used by `InputSnapshot` and input bindings. |
+| `InputMouseButton` | Device-neutral bounded mouse-button vocabulary used by `InputSnapshot` and input bindings. |
+| `InputAction` | The eleven named Phase 3 gameplay actions; each declares its `DIGITAL` or `VECTOR2` value type. |
+| `InputActionValueType` | Distinguishes `DIGITAL` and `VECTOR2` action shapes. |
+| `InputActionComponent` | Selects `VALUE`, `X`, or `Y` as the target component of one binding. |
+| `InputBinding` | Immutable device-neutral descriptor mapping one key/button/mouse-delta control to an action component with signed scale. |
+| `InputActionBindings` | Immutable complete action-binding set with strict versioned JSON loading. |
+| `InputBindingLoadException` | Reports binding-file read/schema/validation failures without exposing Jackson. |
 
 `GlfwWindow.setCursorCaptured(boolean)` controls cursor lock. Focus loss clears held hardware state and releases effective capture; focus regain never recaptures automatically.
 
 `GlfwWindow.captureInputSnapshot(long frameId)` captures the current held levels plus pending hardware press/release edges and accumulated relative mouse delta without polling GLFW itself. A successful snapshot consumes pending edges and mouse delta while leaving held levels intact.
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, action mapping, controller API, or content-scale callback API.
+`InputActionBindings.load(Path)` loads strict schema version 1. All eleven actions must appear exactly once with at least one binding. Public descriptors reuse `InputKey` / `InputMouseButton` plus relative mouse X/Y controls; Jackson remains an implementation detail.
 
-Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Renderer-frame input snapshots](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T07 binding metadata also does not evaluate actions or implement transitions.
+
+Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and action bindings](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
 ## Not an engine-consumer API
 
@@ -82,5 +90,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-- [Renderer-frame input snapshots](PLATFORM/INPUT.md)
+- [Platform input and action bindings](PLATFORM/INPUT.md)
 - [Current limitations](LIMITATIONS.md)

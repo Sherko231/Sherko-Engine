@@ -37,7 +37,7 @@ public final class InputActionEvaluator {
             boolean pressed = !previous && evaluation.active;
             boolean released = previous && !evaluation.active;
 
-            if (!previous && !evaluation.active && evaluation.sawPressEdge && evaluation.sawReleaseEdge) {
+            if (!previous && !evaluation.active && evaluation.sawCompleteTap) {
                 pressed = true;
                 released = true;
             }
@@ -63,13 +63,11 @@ public final class InputActionEvaluator {
         double value = 0.0d;
         double x = 0.0d;
         double y = 0.0d;
-        boolean sawPressEdge = false;
-        boolean sawReleaseEdge = false;
+        boolean sawCompleteTap = false;
 
         for (InputBinding binding : actionBindings) {
             BindingSample sample = sample(binding, snapshot);
-            sawPressEdge |= sample.pressed;
-            sawReleaseEdge |= sample.released;
+            sawCompleteTap |= sample.pressed && sample.released;
 
             double contribution = multiplyFinite(sample.amount, binding.scale());
             switch (binding.component()) {
@@ -82,7 +80,7 @@ public final class InputActionEvaluator {
         boolean active = action.valueType() == InputActionValueType.DIGITAL
                 ? value != 0.0d
                 : x != 0.0d || y != 0.0d;
-        return new Evaluation(value, x, y, active, sawPressEdge, sawReleaseEdge);
+        return new Evaluation(value, x, y, active, sawCompleteTap);
     }
 
     private static BindingSample sample(InputBinding binding, InputSnapshot snapshot) {
@@ -132,7 +130,6 @@ public final class InputActionEvaluator {
             double x,
             double y,
             boolean active,
-            boolean sawPressEdge,
-            boolean sawReleaseEdge) {
+            boolean sawCompleteTap) {
     }
 }

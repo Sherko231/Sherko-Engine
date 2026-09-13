@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "actions": [
+    {
+      "action": "MOVE",
+      "bindings": [
+        {"type": "KEY", "key": "W", "component": "Y", "scale": 1.0},
+        {"type": "KEY", "key": "S", "component": "Y", "scale": -1.0},
+        {"type": "KEY", "key": "D", "component": "X", "scale": 1.0},
+        {"type": "KEY", "key": "A", "component": "X", "scale": -1.0}
+      ]
+    },
+    {
+      "action": "LOOK",
+      "bindings": [
+        {"type": "MOUSE_DELTA", "axis": "X", "component": "X", "scale": 1.0},
+        {"type": "MOUSE_DELTA", "axis": "Y", "component": "Y", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "JUMP",
+      "bindings": [
+        {"type": "KEY", "key": "SPACE", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "CROUCH",
+      "bindings": [
+        {"type": "KEY", "key": "LEFT_CONTROL", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "SPRINT",
+      "bindings": [
+        {"type": "KEY", "key": "LEFT_SHIFT", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "INTERACT",
+      "bindings": [
+        {"type": "KEY", "key": "E", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "GRAB",
+      "bindings": [
+        {"type": "MOUSE_BUTTON", "button": "LEFT", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "THROW",
+      "bindings": [
+        {"type": "MOUSE_BUTTON", "button": "RIGHT", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "PRIMARY_USE",
+      "bindings": [
+        {"type": "MOUSE_BUTTON", "button": "MIDDLE", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "PAUSE",
+      "bindings": [
+        {"type": "KEY", "key": "ESCAPE", "component": "VALUE", "scale": 1.0}
+      ]
+    },
+    {
+      "action": "PUSH_TO_TALK",
+      "bindings": [
+        {"type": "KEY", "key": "Q", "component": "VALUE", "scale": 1.0}
+      ]
+    }
+  ]
+}

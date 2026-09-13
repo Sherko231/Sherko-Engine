@@ -76,7 +76,7 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
 
-P3-T01 / Issue #84 through P3-T06 / Issue #89 are complete. The production `GlfwWindow` lifecycle now owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, raw/fallback relative mouse acquisition, and immutable renderer-frame hardware `InputSnapshot` delivery.
+P3-T01 / Issue #84 through P3-T07 / Issue #90 are complete. The production platform/input boundary owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, raw/fallback relative mouse acquisition, immutable renderer-frame hardware `InputSnapshot` delivery, and strict immutable data-driven action-binding metadata/loading.
 
 P3-T04A / Issue #149 established `game-sandbox` as the canonical owner-facing manual demo and preserved the headless server boundary through a non-exported demo-only platform runtime. P3-T04B / Issue #151 made the demo model the existing structured `EngineLogger` boundary.
 
@@ -84,13 +84,15 @@ P3-T05 / Issue #88 completed through PR #155 on merged `master` `2f3dcd3d9117db2
 
 P3-T06 / Issue #89 completed through PR #156 on merged `master` `92ad157adb696bd5a9d21933f6d9af60be3634a7`. Its exact final head passed heavy workflow #285 and the exact merge passed lightweight workflow #286. D-036 exposes immutable renderer-frame `InputSnapshot` values plus engine-defined `InputKey` and `InputMouseButton` vocabulary without exposing GLFW/LWJGL types or adding a server dependency on the platform module.
 
-P3-T07 / Issue #90 is the active bounded feature task. D-037 introduces immutable data-driven action-binding metadata for exactly eleven Phase 3 actions and strict JSON schema-v1 loading. MOVE/LOOK are `VECTOR2`; the remaining actions are `DIGITAL`. Public descriptors reuse P3-T06 key/button vocabulary plus relative mouse X/Y controls, while Jackson 2.21.2 remains an implementation-only parser dependency inside `engine-platform-lwjgl`.
+P3-T07 / Issue #90 completed through PR #157 on merged `master` `5012235cc0fcc2fc702919cf2e7bf185bf3c3595`. Its exact final head passed heavy workflow #290 and the exact merge passed lightweight workflow #291. D-037 defines immutable data-driven action-binding metadata for exactly eleven Phase 3 actions and strict JSON schema-v1 loading. MOVE/LOOK are `VECTOR2`; the remaining actions are `DIGITAL`. Jackson 2.21.2 remains an implementation-only parser dependency inside `engine-platform-lwjgl`.
 
-P3-T07 intentionally stores and validates configuration only. P3-T08 retains action evaluation and pressed/held/released/analog aggregation; P3-T09 retains tick-aligned `PlayerInputCommand` and replay portability; P3-T10 retains response settings/controller curves. No platform dependency is added to `game-server`.
+P3-T08 / Issue #91 is the active bounded feature task. D-038 adds renderer-frame action evaluation over P3-T06 hardware snapshots and P3-T07 bindings through one caller-owned stateful `InputActionEvaluator`. It produces immutable `InputActionSnapshot` / `InputActionState`, deterministic additive component values, pressed/held/released transitions, preservation of a complete same-binding one-frame key/button tap, strict increasing source frame identity, and atomic failure without adding a module edge or dependency.
 
-The owner-facing sandbox remains unchanged in P3-T07 because configuration metadata is not meaningfully observable until P3-T08 evaluates bindings into action values. Existing P3-T06 snapshot diagnostics remain the current public input observation path.
+P3-T08 remains renderer-frame/client-platform input. P3-T09 retains tick-aligned device-neutral `PlayerInputCommand` and replay/network portability; P3-T10 retains response settings/controller curves. No platform dependency is added to `game-server`.
 
-Completing P3-T07 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+The owner-facing sandbox now demonstrates P3-T08 through production public APIs: the committed demo binding set is evaluated each frame and bounded diagnostics expose MOVE X/Y plus representative JUMP/INTERACT transitions alongside the existing raw hardware state. This is observation only, not P3-T09 tick/replay evidence.
+
+Completing P3-T08 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

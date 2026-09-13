@@ -23,7 +23,12 @@ Implemented:
 - exactly eleven named Phase 3 `InputAction` values, with MOVE/LOOK as `VECTOR2` and the remaining actions as `DIGITAL`;
 - immutable `InputBinding` descriptors over engine key/button vocabulary and relative mouse X/Y controls;
 - immutable complete `InputActionBindings` loaded atomically from strict JSON schema version 1;
-- explicit `InputBindingLoadException` for file/schema/validation failures while Jackson remains absent from public signatures.
+- explicit `InputBindingLoadException` for file/schema/validation failures while Jackson remains absent from public signatures;
+- caller-owned stateful `InputActionEvaluator` producing immutable `InputActionSnapshot` / `InputActionState` for one renderer-frame hardware snapshot;
+- deterministic additive scalar/vector action aggregation with exact signed cancellation, no implicit clamp/normalization, and action-level pressed/held/released transitions;
+- preservation of a complete same-binding key/button press+release between hardware snapshots as one-frame `pressed=true`, `held=false`, `released=true` action state;
+- overlapping bindings keep transitions action-level: an extra binding does not duplicate press and releasing one binding does not release while the aggregate remains active;
+- strictly increasing evaluator frame identity after the first successful frame plus atomic failure on invalid frame order or non-finite input/aggregate values.
 
 Not yet exposed as production API:
 
@@ -33,22 +38,25 @@ Not yet exposed as production API:
 - public focus event listeners (focus is available as snapshot state only);
 - arbitrary keyboard keys or mouse buttons outside the current `InputKey` / `InputMouseButton` vocabulary;
 - controller input;
-- action-level pressed/held/released transitions;
-- action-value evaluation or simultaneous-binding aggregation/conflict policy;
 - sensitivity/Y inversion/dead-zone/controller-curve settings;
+- configurable action clamping/normalization/response processing;
+- live remapping UI or binding hot reload;
 - content-scale callbacks as a consumer API;
 - tick-aligned `PlayerInputCommand` records;
-- input replay/network codecs.
+- input replay/network codecs;
+- gameplay/UI input-consumption or focus-routing policy.
 
-`InputSnapshot` is a client/platform renderer-frame hardware view. P3-T07 binding metadata describes how hardware controls target gameplay action components but does not evaluate a snapshot. P3-T08 owns action-level transition/aggregation semantics and P3-T09 owns tick-aligned `PlayerInputCommand` / replay-friendly device-neutral commands. `game-server` therefore remains independent of `engine-platform-lwjgl`.
+`InputSnapshot`, `InputActionBindings`, and P3-T08 action evaluation are client/platform renderer-frame APIs. P3-T09 owns tick-aligned `PlayerInputCommand` / replay-friendly device-neutral commands, so `game-server` remains independent of `engine-platform-lwjgl`.
 
-The current JSON binding schema is intentionally strict and versioned at `schemaVersion: 1`. Every required action must appear exactly once. Unknown/duplicate fields, invalid enum/control names, empty action binding lists, duplicate binding descriptors, invalid action components, unsupported schema versions, malformed JSON, and unreadable paths fail rather than being ignored or partially applied. This task does not yet define runtime remapping UI, config hot reload, controller bindings, or migration between future schema versions.
+The current JSON binding schema is intentionally strict and versioned at `schemaVersion: 1`. Every required action must appear exactly once. Unknown/duplicate fields, invalid enum/control names, empty action binding lists, duplicate binding descriptors, invalid action components, unsupported schema versions, malformed JSON, and unreadable paths fail rather than being ignored or partially applied. P3-T08 does not change that schema or define migration between future schema versions.
+
+Action evaluation adds binding contributions in declared binding order using ordinary finite Java `double` arithmetic. Exact cancellation is inactive. Mouse-delta controls have renderer-frame activity semantics: a non-zero delta may press/hold LOOK for that frame and a later zero-delta frame may release it. The evaluator does not infer event order across different physical bindings; only one bound key/button carrying both hardware edges qualifies for the retained one-frame-tap exception.
 
 On systems where GLFW raw mouse motion is unavailable, the relative-motion fallback remains independent of cursor screen bounds but does **not** claim to bypass operating-system pointer acceleration.
 
 ## Rendering
 
-A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, and input-binding metadata/loading, but it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
+A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, binding metadata/loading, and renderer-frame action evaluation, but it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
 
 ## Assets/world/physics/audio/networking/editor
 
@@ -56,7 +64,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, and P3-T07 adds pure-Java binding metadata/JSON loading over the existing engine input vocabulary. Neither task by itself adds a new native evidence claim. These checks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, P3-T07 adds pure-Java binding metadata/JSON loading, and P3-T08 adds pure-Java action evaluation over those existing boundaries. These tasks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

@@ -1,22 +1,32 @@
 # Platform input
 
-`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 additionally provides immutable, data-driven gameplay binding metadata loaded from strict versioned JSON.
+`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 adds immutable data-driven action-binding metadata, and P3-T08 evaluates those two inputs into immutable renderer-frame gameplay action state.
 
-The hardware snapshot and binding configuration are deliberately separate from action evaluation. Consumers can describe gameplay actions without importing GLFW/LWJGL or Jackson, but P3-T08 still owns action-level pressed/held/released and analog aggregation.
+The layers remain deliberately separate:
 
-## Capture hardware once per renderer frame
+1. `GlfwWindow` / `InputSnapshot` own hardware observation;
+2. `InputActionBindings` owns configuration metadata;
+3. caller-owned `InputActionEvaluator` owns renderer-frame action aggregation/transitions;
+4. P3-T09 will own the separate tick-aligned `PlayerInputCommand` / replay boundary.
+
+No public input API exposes GLFW/LWJGL or Jackson types.
+
+## Capture and evaluate once per renderer frame
 
 The intended client pattern is:
 
 ```java
+InputActionBindings bindings = InputActionBindings.load(bindingPath);
+InputActionEvaluator evaluator = new InputActionEvaluator(bindings);
 long frameId = 0L;
 
 while (running) {
     window.pollEvents();
-    InputSnapshot input = window.captureInputSnapshot(frameId++);
+    InputSnapshot hardware = window.captureInputSnapshot(frameId++);
+    InputActionSnapshot actions = evaluator.evaluate(hardware);
 
-    updateUi(input);
-    updateGameplayInput(input);
+    updateUi(actions);
+    updateGameplayInput(actions);
 }
 ```
 
@@ -28,11 +38,19 @@ while (running) {
 - does **not** call GLFW event polling itself;
 - returns an immutable snapshot that remains stable after later polls or snapshots.
 
-Multiple systems may therefore read the same `InputSnapshot` object during one renderer frame and observe identical values.
+`InputActionEvaluator.evaluate(...)`:
+
+- accepts one immutable hardware snapshot;
+- evaluates every required `InputAction` using its immutable binding set;
+- requires strictly increasing frame IDs after the first successful evaluation; gaps are allowed;
+- returns a complete immutable `InputActionSnapshot` using the same source frame ID;
+- does not mutate its previous-frame baseline if evaluation fails.
+
+One evaluator is stateful and caller-owned. Calls must be externally serialized; the evaluator is not a shared thread-safe service.
 
 ## Snapshot state
 
-Available frame metadata:
+Available hardware-frame metadata:
 
 ```java
 input.frameId();
@@ -98,7 +116,7 @@ input.keyReleased(InputKey.W);  // true
 
 A following snapshot with no new events reports both edges as false. GLFW key-repeat keeps the key held but does not create another pressed edge.
 
-These remain raw hardware edges. Action-level transition semantics are not implemented by P3-T07.
+These are hardware edges. `InputActionEvaluator` converts them into action-level state using aggregate action activity plus the one-frame-tap rule described below.
 
 ## Relative mouse movement
 
@@ -119,11 +137,11 @@ Focus loss follows the existing platform safety rules:
 - effective cursor capture/raw mode is released;
 - focus regain does not synthesize input or automatically recapture.
 
-A caller must explicitly call `window.setCursorCaptured(true)` when gameplay should resume.
+A caller must explicitly call `window.setCursorCaptured(true)` when gameplay should resume. Evaluating the focus-loss snapshot therefore releases any action whose aggregate becomes inactive; the evaluator adds no second native/focus policy.
 
 ## Gameplay actions
 
-P3-T07 defines exactly these `InputAction` values:
+The platform API defines exactly these `InputAction` values:
 
 - `MOVE`
 - `LOOK`
@@ -138,8 +156,6 @@ P3-T07 defines exactly these `InputAction` values:
 - `PUSH_TO_TALK`
 
 `MOVE` and `LOOK` report `InputActionValueType.VECTOR2`. The remaining nine actions report `InputActionValueType.DIGITAL`.
-
-The type is part of the action itself:
 
 ```java
 InputAction.MOVE.valueType(); // VECTOR2
@@ -171,8 +187,6 @@ InputBinding forward = new InputBinding(
         InputActionComponent.Y,
         1.0);
 ```
-
-P3-T07 stores this metadata only. It does not evaluate an `InputSnapshot`, combine simultaneous bindings, or derive action transitions.
 
 ## Loading bindings from JSON
 
@@ -234,23 +248,98 @@ bindings.asMap();
 bindings.bindingsFor(InputAction.JUMP);
 ```
 
+## Action values and aggregation
+
+Every binding contributes independently to its configured component:
+
+- a key binding contributes its signed scale while that key is held;
+- a mouse-button binding contributes its signed scale while that button is held;
+- a mouse-delta binding contributes `snapshot mouse delta * signed scale` on the configured axis.
+
+Contributions targeting the same component are added in binding order using ordinary Java `double` arithmetic. P3-T08 applies no clamp, normalization, sensitivity, inversion, dead zone, or response curve.
+
+For a digital action:
+
+```text
+held/currently active <=> value != 0.0
+```
+
+For a vector action:
+
+```text
+held/currently active <=> x != 0.0 || y != 0.0
+```
+
+Exact signed cancellation is therefore inactive. For example, MOVE bindings W=`+Y` and S=`-Y` cancel to Y=0 when both are held.
+
+`InputActionState` exposes:
+
+```java
+state.action();
+state.pressed();
+state.held();
+state.released();
+state.value();
+state.x();
+state.y();
+```
+
+For DIGITAL actions, `x()` and `y()` are zero. For VECTOR2 actions, `value()` is zero.
+
+Non-finite hardware mouse delta, multiplication overflow, or non-finite aggregate values are rejected before the evaluator advances its previous-frame state.
+
+## Action transitions
+
+For ordinary sampled transitions:
+
+- `held` equals current aggregate activity;
+- `pressed` is true when the action was inactive after the previous successful evaluation and is active now;
+- `released` is true when the action was active after the previous successful evaluation and is inactive now.
+
+The transition belongs to the **action aggregate**, not to each physical binding. Therefore:
+
+- pressing a second positive binding while the action is already active does not produce another action press;
+- releasing one binding while another keeps the action aggregate active does not produce an action release;
+- if opposite signed contributions cancel exactly, the action is inactive.
+
+P3-T06 may retain a complete press+release between two hardware snapshots. P3-T08 preserves that tap only when the **same bound key or mouse button** reports both hardware edges in the current snapshot while the action was previously inactive and ends inactive. The result for that frame is:
+
+```text
+pressed=true, held=false, released=true
+```
+
+Press evidence from one binding plus release evidence from a different binding does not synthesize a tap because the hardware snapshot does not encode ordering between those controls.
+
+Mouse-delta bindings have no discrete hardware edge. A non-zero LOOK delta can therefore produce `pressed=true, held=true`; the first later zero-delta evaluation produces `released=true` if no other LOOK contribution remains active.
+
+## Frame ordering and failure atomicity
+
+The first successful evaluation may use any non-negative hardware `frameId`. Every later successful call on that evaluator must use a strictly greater frame ID. Duplicate or decreasing IDs are programmer errors; gaps are allowed.
+
+A failed evaluation does not update:
+
+- the evaluator's previous action-active flags;
+- its last successful frame ID.
+
+Already returned `InputActionSnapshot` and `InputActionState` objects remain immutable and stable after later evaluations.
+
 ## Headless and replay boundary
 
-`InputSnapshot` and P3-T07 binding metadata currently belong to the client/platform input module. The headless server does not depend on `engine-platform-lwjgl`.
+`InputSnapshot`, action bindings, and P3-T08 evaluation belong to the client/platform input module. The headless server does not depend on `engine-platform-lwjgl`.
 
-The later P3-T09 `PlayerInputCommand` task owns the device-neutral, tick-aligned replay/network-friendly command boundary. Do not make headless gameplay call GLFW or add a platform dependency to the server merely to construct snapshots or load bindings.
+P3-T09 owns the device-neutral, tick-aligned replay/network-friendly `PlayerInputCommand` boundary. Do not make headless gameplay call GLFW or add a platform dependency to the server merely to construct/evaluate renderer-frame snapshots.
 
 ## Not implemented yet
 
 The current input APIs do not provide:
 
-- action-level pressed/held/released or analog aggregation;
-- simultaneous-binding conflict/aggregation semantics;
+- tick-aligned `PlayerInputCommand` records;
+- replay or network serialization;
 - controller input;
 - sensitivity or Y inversion;
 - controller dead zones/curves;
-- tick-aligned `PlayerInputCommand` records;
-- replay or network serialization;
-- camera/gameplay behavior.
+- live remapping UI/hot reload;
+- camera/gameplay behavior;
+- UI input-consumption/focus policy.
 
 See [GLFW/OpenGL window](GLFW_WINDOW.md) for lifecycle, polling, focus, cursor-capture, and display-mode ownership.

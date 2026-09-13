@@ -6,11 +6,22 @@ import com.samo.engine.core.api.FixedStepAccumulator;
 import com.samo.engine.core.api.FixedStepCatchUpPolicy;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
+import com.samo.engine.platform.api.InputAction;
+import com.samo.engine.platform.api.InputActionBindings;
+import com.samo.engine.platform.api.InputActionEvaluator;
+import com.samo.engine.platform.api.InputActionSnapshot;
+import com.samo.engine.platform.api.InputActionState;
 import com.samo.engine.platform.api.InputKey;
 import com.samo.engine.platform.api.InputSnapshot;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 
 /** Runs the owner-facing scripted engine sandbox through production public APIs only. */
 public final class EngineDemoMain {
@@ -41,6 +52,7 @@ public final class EngineDemoMain {
             }
         });
         NativeResourceRegistry nativeResources = new NativeResourceRegistry();
+        InputActionEvaluator actionEvaluator = new InputActionEvaluator(loadDemoBindings());
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
@@ -67,7 +79,7 @@ public final class EngineDemoMain {
             window.initialize();
             window.start();
             started = true;
-            runDemo(window, logger);
+            runDemo(window, logger, actionEvaluator);
         } catch (InterruptedException failure) {
             primaryFailure = failure;
             Thread.currentThread().interrupt();
@@ -80,7 +92,10 @@ public final class EngineDemoMain {
         }
     }
 
-    private static void runDemo(GlfwWindow window, EngineLogger logger) throws InterruptedException {
+    private static void runDemo(
+            GlfwWindow window,
+            EngineLogger logger,
+            InputActionEvaluator actionEvaluator) throws InterruptedException {
         EngineClock clock = new EngineClock();
         FixedStepAccumulator accumulator = new FixedStepAccumulator();
         FixedStepCatchUpPolicy catchUpPolicy = new FixedStepCatchUpPolicy();
@@ -93,6 +108,7 @@ public final class EngineDemoMain {
         double diagnosticMouseDeltaX = 0.0;
         double diagnosticMouseDeltaY = 0.0;
         InputSnapshot latestInput = null;
+        InputActionSnapshot latestActions = null;
         int nextStep = 0;
 
         clock.sampleElapsedNanos();
@@ -103,6 +119,7 @@ public final class EngineDemoMain {
 
             window.pollEvents();
             latestInput = window.captureInputSnapshot(inputFrameId++);
+            latestActions = actionEvaluator.evaluate(latestInput);
             diagnosticMouseDeltaX += latestInput.mouseDeltaX();
             diagnosticMouseDeltaY += latestInput.mouseDeltaY();
 
@@ -112,11 +129,16 @@ public final class EngineDemoMain {
             }
 
             if (elapsedDemoNanos >= nextDiagnosticNanos) {
+                InputActionState move = latestActions.state(InputAction.MOVE);
+                InputActionState jump = latestActions.state(InputAction.JUMP);
+                InputActionState interact = latestActions.state(InputAction.INTERACT);
                 log(
                         logger,
                         EngineLogger.Level.DEBUG,
                         "t=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
-                                + "WASD=[%s,%s,%s,%s], mouseDeltaSinceLastDiagnostic=(%.2f,%.2f) "
+                                + "WASD=[%s,%s,%s,%s], MOVE=(%.1f,%.1f), "
+                                + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], "
+                                + "mouseDeltaSinceLastDiagnostic=(%.2f,%.2f) "
                                 + "(sandbox diagnostic; not FPS/benchmark evidence)"
                                 .formatted(
                                         elapsedDemoNanos / 1_000_000_000.0,
@@ -128,6 +150,14 @@ public final class EngineDemoMain {
                                         latestInput.keyHeld(InputKey.A),
                                         latestInput.keyHeld(InputKey.S),
                                         latestInput.keyHeld(InputKey.D),
+                                        move.x(),
+                                        move.y(),
+                                        jump.pressed(),
+                                        jump.held(),
+                                        jump.released(),
+                                        interact.pressed(),
+                                        interact.held(),
+                                        interact.released(),
                                         diagnosticMouseDeltaX,
                                         diagnosticMouseDeltaY),
                         cumulativeTicks);
@@ -139,6 +169,30 @@ public final class EngineDemoMain {
             }
 
             Thread.sleep(5L);
+        }
+    }
+
+    private static InputActionBindings loadDemoBindings() {
+        try (InputStream source = Objects.requireNonNull(
+                EngineDemoMain.class.getResourceAsStream("/input/action-bindings-v1.json"),
+                "sandbox action bindings resource")) {
+            Path tempFile = Files.createTempFile("sherko-engine-sandbox-bindings-", ".json");
+            try {
+                Files.copy(source, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                return InputActionBindings.load(tempFile);
+            } finally {
+                deleteDemoBindingsTempFile(tempFile);
+            }
+        } catch (IOException failure) {
+            throw new IllegalStateException("Failed to materialize sandbox action bindings", failure);
+        }
+    }
+
+    private static void deleteDemoBindingsTempFile(Path tempFile) {
+        try {
+            Files.deleteIfExists(tempFile);
+        } catch (IOException cleanupFailure) {
+            tempFile.toFile().deleteOnExit();
         }
     }
 
@@ -164,7 +218,7 @@ public final class EngineDemoMain {
                 window.setCursorCaptured(true);
                 log(logger, EngineLogger.Level.INFO, "Cursor capture enabled", simulationTick);
                 System.out.println(
-                        "[sandbox instruction] Move the mouse / hold W-A-S-D, then Alt+Tab away and back: snapshot diagnostics should show input and capture should not auto-return.");
+                        "[sandbox instruction] Move mouse / hold W-A-S-D / tap SPACE or E, then Alt+Tab away and back: hardware + action diagnostics should update and capture should not auto-return.");
             }
             case RELEASE_CURSOR -> {
                 window.setCursorCaptured(false);
@@ -248,14 +302,15 @@ public final class EngineDemoMain {
         System.out.println("Sherko Engine owner-facing sandbox demo");
         System.out.println(
                 "Uses production public APIs only. Current window is intentionally visually empty until renderer work exists.");
-        System.out.println("InputSnapshot is captured once per demo frame; bounded diagnostics print once per second.");
+        System.out.println(
+                "InputSnapshot and InputActionSnapshot are captured/evaluated once per demo frame; bounded diagnostics print once per second.");
         System.out.println("Timeline:");
         System.out.println("  0-5s   WINDOWED: resize/DPI observation");
         System.out.println("  5s     BORDERLESS_FULLSCREEN");
         System.out.println(" 10s     WINDOWED");
         System.out.println(" 15s     EXCLUSIVE_FULLSCREEN");
         System.out.println(" 20s     WINDOWED");
-        System.out.println(" 25s     cursor capture ON; move mouse / hold W-A-S-D / manually Alt+Tab away/back");
+        System.out.println(" 25s     cursor capture ON; move mouse / hold W-A-S-D / tap SPACE or E / manually Alt+Tab away/back");
         System.out.println(" 34s     cursor capture OFF");
         System.out.println(" 38s     shutdown + native-resource leak assertion");
         System.out.println();

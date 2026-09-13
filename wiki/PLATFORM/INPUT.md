@@ -1,32 +1,41 @@
 # Platform input
 
-`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 adds immutable data-driven action-binding metadata, and P3-T08 evaluates those two inputs into immutable renderer-frame gameplay action state.
+`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 adds immutable data-driven action-binding metadata, P3-T08 evaluates those inputs into immutable renderer-frame gameplay action state, and P3-T09 bridges that state into device-neutral simulation-tick commands.
 
 The layers remain deliberately separate:
 
 1. `GlfwWindow` / `InputSnapshot` own hardware observation;
 2. `InputActionBindings` owns configuration metadata;
 3. caller-owned `InputActionEvaluator` owns renderer-frame action aggregation/transitions;
-4. P3-T09 will own the separate tick-aligned `PlayerInputCommand` / replay boundary.
+4. caller-owned `PlayerInputCommandSampler` bridges renderer-frame action state to simulation ticks;
+5. `engine-core` `PlayerInputCommand` + `PlayerInputCommandCodec` own the headless/replay-friendly tick command and explicit binary replay/storage encoding.
 
-No public input API exposes GLFW/LWJGL or Jackson types.
+No public input API exposes GLFW/LWJGL or Jackson types. `PlayerInputCommand` is intentionally in `engine-core`, so headless/server code can consume it without depending on `engine-platform-lwjgl`.
 
-## Capture and evaluate once per renderer frame
+## Capture, evaluate, and sample
 
 The intended client pattern is:
 
 ```java
 InputActionBindings bindings = InputActionBindings.load(bindingPath);
 InputActionEvaluator evaluator = new InputActionEvaluator(bindings);
+PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
 long frameId = 0L;
+long tickId = 0L;
 
 while (running) {
+    long elapsedNanos = clock.sampleElapsedNanos();
+    long dueTicks = catchUpPolicy.advance(accumulator, elapsedNanos);
+
     window.pollEvents();
     InputSnapshot hardware = window.captureInputSnapshot(frameId++);
     InputActionSnapshot actions = evaluator.evaluate(hardware);
+    sampler.submit(actions);
 
-    updateUi(actions);
-    updateGameplayInput(actions);
+    for (long i = 0; i < dueTicks; i++) {
+        PlayerInputCommand command = sampler.nextCommand(tickId++);
+        simulate(command);
+    }
 }
 ```
 
@@ -46,7 +55,14 @@ while (running) {
 - returns a complete immutable `InputActionSnapshot` using the same source frame ID;
 - does not mutate its previous-frame baseline if evaluation fails.
 
-One evaluator is stateful and caller-owned. Calls must be externally serialized; the evaluator is not a shared thread-safe service.
+`PlayerInputCommandSampler`:
+
+- accepts successful `InputActionSnapshot` values through `submit(...)`;
+- requires strictly increasing submitted frame IDs after the first successful submit;
+- requires at least one successful submit before the first `nextCommand(...)`;
+- requires non-negative, strictly increasing tick IDs after the first successful command;
+- is caller-owned and externally serialized, not a shared thread-safe service;
+- does not own the clock, fixed-step accumulator, catch-up policy, or simulation execution.
 
 ## Snapshot state
 
@@ -161,6 +177,8 @@ The platform API defines exactly these `InputAction` values:
 InputAction.MOVE.valueType(); // VECTOR2
 InputAction.JUMP.valueType(); // DIGITAL
 ```
+
+The tick-command layer mirrors only the nine digital action names in `PlayerInputCommand.DigitalAction`; MOVE and LOOK have dedicated vector fields.
 
 ## Binding descriptors
 
@@ -312,33 +330,90 @@ Press evidence from one binding plus release evidence from a different binding d
 
 Mouse-delta bindings have no discrete hardware edge. A non-zero LOOK delta can therefore produce `pressed=true, held=true`; the first later zero-delta evaluation produces `released=true` if no other LOOK contribution remains active.
 
-## Frame ordering and failure atomicity
+## From renderer frames to simulation ticks
 
-The first successful evaluation may use any non-negative hardware `frameId`. Every later successful call on that evaluator must use a strictly greater frame ID. Duplicate or decreasing IDs are programmer errors; gaps are allowed.
+Renderer frames and simulation ticks are intentionally not one-to-one. A render frame may produce zero, one, or multiple fixed simulation ticks.
 
-A failed evaluation does not update:
+`PlayerInputCommandSampler` handles the mismatch with these rules:
 
-- the evaluator's previous action-active flags;
-- its last successful frame ID.
+- MOVE X/Y: latest successfully submitted renderer-frame values are copied into every emitted tick command until replaced by a newer frame;
+- digital scalar + held: latest successfully submitted values repeat across emitted ticks;
+- digital pressed/released: pending edges are OR-retained across submitted frames until the next command, then cleared;
+- LOOK X/Y: deltas add across submitted frames until the next command, then reset to zero;
+- a second tick without a newer submitted frame receives the same MOVE/digital level state but zero LOOK and no repeated edges.
 
-Already returned `InputActionSnapshot` and `InputActionState` objects remain immutable and stable after later evaluations.
+This preserves a P3-T08 one-frame tap even when no simulation tick occurs in that renderer frame. For example, two renderer frames with LOOK X values `2.0` and `1.5` plus a complete JUMP tap followed by one simulation tick produce one command with LOOK X=`3.5` and JUMP `pressed=true, held=false, released=true`.
+
+A duplicate/decreasing submitted frame ID or duplicate/decreasing tick ID fails without consuming pending state. Non-finite submitted values or LOOK accumulation overflow are also rejected before sampler state advances.
+
+## `PlayerInputCommand`
+
+`PlayerInputCommand` is the device-neutral simulation-tick value in `engine-core`:
+
+```java
+command.tickId();
+command.moveX();
+command.moveY();
+command.lookX();
+command.lookY();
+command.digitalState(PlayerInputCommand.DigitalAction.JUMP);
+```
+
+Each digital state contains:
+
+```java
+state.value();
+state.pressed();
+state.held();
+state.released();
+```
+
+The command requires a non-negative tick ID and finite analog/scalar values. Its complete nine-action digital state is defensively owned and immutable.
+
+## Replay/storage codec
+
+`PlayerInputCommandCodec` uses caller-supplied `ByteBuffer` and explicit field encoding. It does not use Java object serialization.
+
+Version 1 is exactly 126 bytes:
+
+```text
+4 bytes  magic "SPIC"
+2 bytes  version = 1
+2 bytes  reserved = 0
+8 bytes  tickId
+32 bytes MOVE/LOOK doubles
+72 bytes nine digital scalar doubles
+6 bytes  pressed/held/released 16-bit masks
+```
+
+The encoded field order is always big-endian regardless of the caller buffer's configured order. Successful encode/decode advances the caller buffer position by exactly 126 bytes while preserving its configured byte order.
+
+Decode rejects truncated input, bad magic/version/reserved bits, unsupported mask bits, negative tick IDs, or non-finite values without accepting a partial command. The format is a replay/storage contract, not the final production network packet format.
+
+## Frame/tick ordering and failure atomicity
+
+The first successful action evaluation may use any non-negative hardware frame ID. Every later successful call on that evaluator must use a strictly greater frame ID. Duplicate or decreasing IDs are programmer errors; gaps are allowed.
+
+The sampler separately tracks submitted action-frame IDs and emitted simulation tick IDs. Its first emitted command requires a previously submitted frame. Later frame/tick IDs must each increase strictly within their own sequence.
+
+A failed evaluator/sampler operation does not advance its corresponding previous-state/identity baseline. Already returned snapshots, states, and commands remain immutable and stable.
 
 ## Headless and replay boundary
 
-`InputSnapshot`, action bindings, and P3-T08 evaluation belong to the client/platform input module. The headless server does not depend on `engine-platform-lwjgl`.
+`InputSnapshot`, action bindings, evaluator, and `PlayerInputCommandSampler` belong to the client/platform module. `PlayerInputCommand` and `PlayerInputCommandCodec` belong to `engine-core`.
 
-P3-T09 owns the device-neutral, tick-aligned replay/network-friendly `PlayerInputCommand` boundary. Do not make headless gameplay call GLFW or add a platform dependency to the server merely to construct/evaluate renderer-frame snapshots.
+The headless server does not depend on `engine-platform-lwjgl`. Replay/headless code consumes core commands only; it must not call GLFW or construct renderer-frame snapshots just to drive simulation.
 
 ## Not implemented yet
 
 The current input APIs do not provide:
 
-- tick-aligned `PlayerInputCommand` records;
-- replay or network serialization;
 - controller input;
 - sensitivity or Y inversion;
 - controller dead zones/curves;
 - live remapping UI/hot reload;
+- production networking integration of `PlayerInputCommand`;
+- a production packet layout for tick input commands;
 - camera/gameplay behavior;
 - UI input-consumption/focus policy.
 

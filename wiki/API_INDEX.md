@@ -9,8 +9,8 @@ This page is an orientation index for production public APIs implemented today. 
 | Type | Purpose |
 | --- | --- |
 | `EngineSubsystem` | Final lifecycle sequencing around `initialize`, `start`, `stop`, and `close`. |
-| `SubsystemGraph` | Declares subsystem dependencies and produces dependency-safe ordering. |
-| `SubsystemStartup` | Coordinates ordered startup and bounded rollback/cleanup. |
+| `SubsystemGraph` | Declares subsystem dependency relationships and produces dependency-safe ordering. |
+| `SubsystemStartup` | Coordinates ordered subsystem startup and bounded rollback/cleanup when startup fails. |
 
 Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/SUBSYSTEM_COMPOSITION.md).
 
@@ -22,24 +22,26 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 | `FixedStepAccumulator` | Converts elapsed nanoseconds into exact fixed-rate simulation ticks and interpolation progress. |
 | `FixedStepCatchUpPolicy` | Bounds large elapsed-time gaps and per-update catch-up work. |
 
-The engine foundation is currently locked to 60 Hz simulation. Usage: [Timing](CORE/TIMING.md).
+The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
 ### Spatial transforms and geometry
 
 | Type | Purpose |
 | --- | --- |
-| `Transform` | Mutable local position/rotation/scale plus optional parent and cached world composition. |
+| `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
 | `Ray3f` | Immutable normalized world-space ray with plane/sphere/AABB intersections. |
 | `Plane3f` | Immutable normalized plane using `normal dot point + offset = 0`. |
 | `Sphere3f` | Immutable world-space sphere with inclusive containment/intersection queries. |
 | `Aabb3f` | Immutable axis-aligned box with inclusive containment/intersection queries. |
 | `Frustum3f` | Immutable six-inward-plane frustum with point/sphere/AABB classification. |
 
-D-041 defines the engine world as right-handed with +X right, +Y up, -Z forward, meters, radians, and dimensionless scale. D-042 makes JOML the public math type family for `engine-core` spatial APIs.
+`Transform` follows D-041: right-handed world, +X right, +Y up, -Z forward, meters, radians, and dimensionless scale. Local composition is `T * R * S`; world composition is `parentWorld * local`.
 
-`Transform` composes local matrices as `T * R * S` and world matrices as `parentWorld * local`. Parent cycles are rejected atomically, and successful local/reparent changes invalidate only the affected transform subtree.
+D-042 makes JOML the public math type family for `engine-core` spatial APIs. `Transform` setters accept JOML read-only value interfaces and copy them; getters/world-matrix reads copy into caller-owned mutable JOML destinations. No internal mutable vector/quaternion/matrix is exposed.
 
-The P4-T06 geometry primitives are immutable and copy JOML inputs. Ray directions and plane equations are normalized. Contact is boundary-inclusive and production queries use exact comparisons without a hidden epsilon. Ray misses return `Float.NaN`. `Frustum3f` consumes six inward-facing planes directly; it does not select projection/NDC/depth conventions or extract planes from matrices.
+Transform parent cycles are rejected atomically, and successful local/reparent changes explicitly invalidate only the affected transform subtree while unrelated branches remain cached.
+
+D-044 defines the P4-T06 geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly without selecting projection/NDC/depth conventions.
 
 Usage: [Transforms](CORE/TRANSFORMS.md), [Spatial primitives](CORE/SPATIAL_PRIMITIVES.md), and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
 
@@ -49,11 +51,13 @@ Usage: [Transforms](CORE/TRANSFORMS.md), [Spatial primitives](CORE/SPATIAL_PRIMI
 | --- | --- |
 | `InputResponseSettings` | Immutable deterministic mouse sensitivity/Y-inversion and controller-axis dead-zone/curve response math. |
 | `PlayerInputCommand` | Immutable device-neutral input state/edges for one simulation tick. |
-| `PlayerInputCommand.DigitalAction` | Fixed nine-action digital command vocabulary. |
-| `PlayerInputCommand.DigitalState` | Immutable scalar plus pressed/held/released state. |
-| `PlayerInputCommandCodec` | Explicit fixed-size version-1 ByteBuffer replay/storage codec. |
+| `PlayerInputCommand.DigitalAction` | Fixed nine-action digital command vocabulary independent of platform input types. |
+| `PlayerInputCommand.DigitalState` | Immutable scalar plus pressed/held/released state for one digital action. |
+| `PlayerInputCommandCodec` | Explicit fixed-size version-1 ByteBuffer codec for replay/storage round trips. |
 
-`PlayerInputCommandCodec` encodes exactly 126 bytes in fixed big-endian field order. It is a replay/storage command format, not a frozen production network packet layout.
+`InputResponseSettings.defaults()` preserves raw mouse/controller scalar values. Mouse response multiplies by sensitivity before optional Y inversion. `applyControllerAxis(...)` is an axis-local pure mapping: values inside the configured dead zone map to zero, values outside are renormalized and raised to the configured positive exponent, with sign restored. This does not add a production controller capture/binding API.
+
+The tick command carries MOVE X/Y, LOOK X/Y, and the nine digital actions without any GLFW/LWJGL type. `PlayerInputCommandCodec` encodes exactly 126 bytes in fixed big-endian field order and preserves the caller buffer's configured byte order. This is a replay/storage command format, not a frozen production network packet layout.
 
 Usage: [Platform input](PLATFORM/INPUT.md).
 
@@ -69,16 +73,16 @@ Usage: [Platform input](PLATFORM/INPUT.md).
 | `ConfigError` | One source-aware validation error. |
 | `ConfigValidationException` | Aggregates configuration validation failures. |
 
-Usage: [Configuration](CORE/CONFIGURATION.md).
+Current schema keys include `fullscreen.width`, `fullscreen.height`, and the locked `simulation.tickRate`. Usage: [Configuration](CORE/CONFIGURATION.md).
 
 ### Diagnostics, ownership, shutdown
 
 | Type | Purpose |
 | --- | --- |
 | `EngineLogger` | Synchronous structured logging with caller-owned sink semantics. |
-| `NativeResourceRegistry` | Tracks explicit native-handle ownership and verifies terminal state. |
+| `NativeResourceRegistry` | Tracks explicit native-handle ownership and verifies leak-free terminal state. |
 | `NativeResourceRegistry.Registration` | One close capability for one registered native handle. |
-| `FatalTermination` | One-shot fatal termination orchestration that attempts cleanup/reporting before termination. |
+| `FatalTermination` | Bounded one-shot fatal termination orchestration that attempts cleanup/reporting before termination. |
 
 Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md), and [Fatal termination](CORE/FATAL_TERMINATION.md).
 
@@ -86,32 +90,47 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 | Type | Purpose |
 | --- | --- |
-| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime plus polling, sizing, display modes, focus-safe cursor capture, and renderer-frame input snapshots. |
-| `WindowSizeListener` | Keeps logical window dimensions separate from framebuffer pixels. |
-| `WindowMode` | Selects windowed, borderless fullscreen, or exclusive fullscreen. |
-| `InputSnapshot` | Immutable renderer-frame keyboard/mouse/focus/capture/relative-motion state. |
-| `InputKey` | Device-neutral bounded keyboard vocabulary. |
-| `InputMouseButton` | Device-neutral bounded mouse-button vocabulary. |
-| `InputAction` | Eleven named Phase 3 gameplay actions. |
-| `InputActionValueType` | Distinguishes digital and vector action shapes. |
-| `InputActionComponent` | Selects value/X/Y binding targets. |
-| `InputBinding` | Immutable device-neutral action binding descriptor. |
-| `InputActionBindings` | Immutable complete binding set with strict JSON schema v1 loading. |
-| `InputBindingLoadException` | Reports binding-file/schema/validation failures. |
-| `InputActionEvaluator` | Stateful renderer-frame evaluator from hardware snapshot to action state. |
-| `InputActionSnapshot` | Immutable evaluated action view for one hardware frame. |
-| `InputActionState` | Immutable per-action values and pressed/held/released transitions. |
-| `PlayerInputCommandSampler` | Bridges renderer-frame action snapshots to core simulation-tick commands. |
+| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, owner-thread event polling, size delivery, display-mode transitions, focus-safe cursor capture, and renderer-frame hardware snapshot production. |
+| `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
+| `WindowMode` | Selects `WINDOWED`, `BORDERLESS_FULLSCREEN`, or `EXCLUSIVE_FULLSCREEN` for a started `GlfwWindow`. |
+| `InputSnapshot` | Immutable renderer-frame keyboard/mouse/focus/capture/relative-motion state captured from one started `GlfwWindow`. |
+| `InputKey` | Device-neutral bounded keyboard vocabulary used by `InputSnapshot` and input bindings. |
+| `InputMouseButton` | Device-neutral bounded mouse-button vocabulary used by `InputSnapshot` and input bindings. |
+| `InputAction` | The eleven named Phase 3 gameplay actions; each declares its `DIGITAL` or `VECTOR2` value type. |
+| `InputActionValueType` | Distinguishes `DIGITAL` and `VECTOR2` action shapes. |
+| `InputActionComponent` | Selects `VALUE`, `X`, or `Y` as the target component of one binding. |
+| `InputBinding` | Immutable device-neutral descriptor mapping one key/button/mouse-delta control to an action component with signed scale. |
+| `InputActionBindings` | Immutable complete action-binding set with strict versioned JSON loading. |
+| `InputBindingLoadException` | Reports binding-file read/schema/validation failures without exposing Jackson. |
+| `InputActionEvaluator` | Caller-owned stateful renderer-frame evaluator from one `InputSnapshot` + binding set to action state; applies configured mouse response before binding scale/aggregation. |
+| `InputActionSnapshot` | Immutable complete evaluated action view for one source hardware frame ID. |
+| `InputActionState` | Immutable per-action pressed/held/released state plus scalar or X/Y analog value. |
+| `PlayerInputCommandSampler` | Caller-owned bridge that retains renderer-frame edges/LOOK until the next due simulation tick and emits `engine-core` `PlayerInputCommand` values. |
+
+`GlfwWindow.setCursorCaptured(boolean)` controls cursor lock. Focus loss clears held hardware state and releases effective capture; focus regain never recaptures automatically.
+
+`GlfwWindow.captureInputSnapshot(long frameId)` captures the current held levels plus pending hardware press/release edges and accumulated relative mouse delta without polling GLFW itself. A successful snapshot consumes pending edges and mouse delta while leaving held levels intact.
+
+`InputActionBindings.load(Path)` loads strict schema version 1. All eleven actions must appear exactly once with at least one binding. Public descriptors reuse `InputKey` / `InputMouseButton` plus relative mouse X/Y controls; Jackson remains an implementation detail.
+
+`InputActionEvaluator(InputActionBindings)` uses neutral `InputResponseSettings.defaults()`. The overload accepting `InputResponseSettings` and `setResponseSettings(...)` allow explicit caller-owned response policy. Settings replacement affects future evaluations only and does not reset the prior frame/activity baseline. For mouse-delta controls the evaluator applies sensitivity/Y inversion first, then existing binding scale and additive aggregation. Key/mouse-button behavior is unchanged.
+
+`InputActionEvaluator.evaluate(InputSnapshot)` adds binding contributions by target component without general clamping or normalization. DIGITAL activity is `value != 0`; VECTOR2 activity is `x != 0 || y != 0`. The evaluator emits action-level pressed/held/released transitions relative to its previous successful frame and preserves a complete one-frame key/button tap only when the same bound control reports both press and release. Later successful frame IDs must be strictly increasing; failed evaluations do not advance evaluator state.
+
+`PlayerInputCommandSampler.submit(InputActionSnapshot)` retains latest MOVE/digital level state, accumulates LOOK deltas, and OR-retains pending digital pressed/released edges until `nextCommand(long tickId)` emits them. When multiple ticks occur without another submitted renderer frame, later commands repeat latest level state but emit zero LOOK and no repeated edges.
+
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller capture API, or content-scale callback API. P3-T10 defines controller response math only; controller discovery/polling/vocabulary/bindings remain unimplemented.
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick commands](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
 ## Not an engine-consumer API
 
-Game composition entry points, build/test utilities, and `feasibility-spikes` are not automatically reusable engine-library APIs.
+The repository also contains game composition entry points, build/test utilities, and experimental feasibility spikes. Those are not automatically reusable engine-library APIs. In particular, code under `feasibility-spikes` proves isolated feasibility and must not be treated as production usage guidance.
 
 ## Where to go next
 
 - [Lifecycle](CORE/LIFECYCLE.md)
+- [Subsystem composition/startup](CORE/SUBSYSTEM_COMPOSITION.md)
 - [Timing](CORE/TIMING.md)
 - [Configuration](CORE/CONFIGURATION.md)
 - [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md)

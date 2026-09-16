@@ -1,16 +1,17 @@
 # Platform input
 
-`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 adds immutable data-driven action-binding metadata, P3-T08 evaluates those inputs into immutable renderer-frame gameplay action state, and P3-T09 bridges that state into device-neutral simulation-tick commands.
+`com.samo.engine.platform.api.InputSnapshot` is the public renderer-frame hardware-state view produced by a started `GlfwWindow`. P3-T07 adds immutable data-driven action-binding metadata, P3-T08 evaluates those inputs into immutable renderer-frame gameplay action state, P3-T09 bridges that state into device-neutral simulation-tick commands, and P3-T10 adds deterministic input-response settings without changing the tick-command contract.
 
 The layers remain deliberately separate:
 
 1. `GlfwWindow` / `InputSnapshot` own hardware observation;
 2. `InputActionBindings` owns configuration metadata;
-3. caller-owned `InputActionEvaluator` owns renderer-frame action aggregation/transitions;
-4. caller-owned `PlayerInputCommandSampler` bridges renderer-frame action state to simulation ticks;
-5. `engine-core` `PlayerInputCommand` + `PlayerInputCommandCodec` own the headless/replay-friendly tick command and explicit binary replay/storage encoding.
+3. `engine-core` `InputResponseSettings` owns deterministic response math;
+4. caller-owned `InputActionEvaluator` owns renderer-frame response application, action aggregation, and transitions;
+5. caller-owned `PlayerInputCommandSampler` bridges renderer-frame action state to simulation ticks;
+6. `engine-core` `PlayerInputCommand` + `PlayerInputCommandCodec` own the headless/replay-friendly tick command and explicit binary replay/storage encoding.
 
-No public input API exposes GLFW/LWJGL or Jackson types. `PlayerInputCommand` is intentionally in `engine-core`, so headless/server code can consume it without depending on `engine-platform-lwjgl`.
+No public input API exposes GLFW/LWJGL or Jackson types. `InputResponseSettings`, `PlayerInputCommand`, and its codec are intentionally in `engine-core`, so shared/headless code can use those contracts without depending on `engine-platform-lwjgl`.
 
 ## Capture, evaluate, and sample
 
@@ -18,7 +19,8 @@ The intended client pattern is:
 
 ```java
 InputActionBindings bindings = InputActionBindings.load(bindingPath);
-InputActionEvaluator evaluator = new InputActionEvaluator(bindings);
+InputResponseSettings response = new InputResponseSettings(1.5, true, 0.2, 2.0);
+InputActionEvaluator evaluator = new InputActionEvaluator(bindings, response);
 PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
 long frameId = 0L;
 long tickId = 0L;
@@ -51,6 +53,7 @@ while (running) {
 
 - accepts one immutable hardware snapshot;
 - evaluates every required `InputAction` using its immutable binding set;
+- applies the current `InputResponseSettings` to mouse-delta controls before binding scale/aggregation;
 - requires strictly increasing frame IDs after the first successful evaluation; gaps are allowed;
 - returns a complete immutable `InputActionSnapshot` using the same source frame ID;
 - does not mutate its previous-frame baseline if evaluation fails.
@@ -114,7 +117,7 @@ Passing `null` to a key/button query is a programmer error and fails immediately
 - `BUTTON_4`
 - `BUTTON_5`
 
-No GLFW integer code is part of the public API.
+No GLFW integer code is part of the public API. Controller hardware vocabulary is not implemented yet.
 
 ## Held versus pressed/released hardware edges
 
@@ -141,6 +144,65 @@ P3-T05 collects relative cursor movement internally while effective cursor captu
 A successful snapshot consumes the accumulated X/Y delta. A second snapshot without new eligible movement reports zero. Snapshot capture does **not** reset the D-035 movement baseline, so motion remains continuous across ordinary frame boundaries.
 
 When GLFW raw mouse motion is supported, captured motion uses raw mode. Otherwise the platform uses the documented disabled-cursor position-delta fallback; the fallback does not claim to bypass operating-system pointer acceleration.
+
+## Input response settings
+
+`com.samo.engine.core.api.InputResponseSettings` is an immutable device-response value:
+
+```java
+InputResponseSettings response = new InputResponseSettings(
+        2.0,   // mouseSensitivity
+        true,  // invertMouseY
+        0.2,   // controllerDeadZone
+        2.0);  // controllerCurveExponent
+```
+
+Neutral defaults are available through:
+
+```java
+InputResponseSettings.defaults(); // 1.0, false, 0.0, 1.0
+```
+
+Mouse response is deterministic and ordered:
+
+1. validate the raw delta is finite;
+2. multiply by `mouseSensitivity`;
+3. for Y only, negate when `invertMouseY` is true;
+4. reject non-finite output.
+
+The evaluator applies that response **before** the binding's signed scale and before additive action aggregation. Example: sensitivity `2.0`, Y inversion enabled, raw LOOK `(3,-4)`, X scale `1.5`, Y scale `0.5` produces `(9,4)`.
+
+The existing constructor remains source-compatible:
+
+```java
+InputActionEvaluator evaluator = new InputActionEvaluator(bindings);
+```
+
+It uses neutral defaults. An explicit response may be provided at construction or replaced later:
+
+```java
+InputActionEvaluator evaluator = new InputActionEvaluator(bindings, response);
+evaluator.setResponseSettings(otherResponse);
+```
+
+Replacement affects only future `evaluate(...)` calls. Already-returned snapshots remain immutable, and the evaluator's previous frame identity/action activity is not reset.
+
+Controller response is currently a pure axis-local scalar helper only:
+
+```java
+double shaped = response.applyControllerAxis(rawAxis);
+```
+
+The raw axis must be finite and in `[-1,1]`. For magnitude `a` and dead zone `d`:
+
+```text
+if a <= d: 0
+else: sign(raw) * pow((a - d) / (1 - d), controllerCurveExponent)
+```
+
+For dead zone `0.2`, exponent `2.0`, raw `0.6` maps to `0.25`; `-0.6` maps to `-0.25`. This API does **not** mean controller discovery, polling, buttons/axes, callbacks, or action bindings are implemented.
+
+Validation requires finite non-negative mouse sensitivity, dead zone in `[0,1)`, and a finite positive controller exponent.
 
 ## Focus loss
 
@@ -272,9 +334,9 @@ Every binding contributes independently to its configured component:
 
 - a key binding contributes its signed scale while that key is held;
 - a mouse-button binding contributes its signed scale while that button is held;
-- a mouse-delta binding contributes `snapshot mouse delta * signed scale` on the configured axis.
+- a mouse-delta binding contributes `response-shaped mouse delta * signed scale` on the configured axis.
 
-Contributions targeting the same component are added in binding order using ordinary Java `double` arithmetic. P3-T08 applies no clamp, normalization, sensitivity, inversion, dead zone, or response curve.
+Contributions targeting the same component are added in binding order using ordinary finite Java `double` arithmetic. P3-T10 changes only mouse-delta response before scale/aggregation; there is still no general action clamp or normalization.
 
 For a digital action:
 
@@ -304,7 +366,7 @@ state.y();
 
 For DIGITAL actions, `x()` and `y()` are zero. For VECTOR2 actions, `value()` is zero.
 
-Non-finite hardware mouse delta, multiplication overflow, or non-finite aggregate values are rejected before the evaluator advances its previous-frame state.
+Non-finite hardware mouse delta, response overflow, binding multiplication overflow, or non-finite aggregate values are rejected before the evaluator advances its previous-frame state.
 
 ## Action transitions
 
@@ -328,7 +390,7 @@ pressed=true, held=false, released=true
 
 Press evidence from one binding plus release evidence from a different binding does not synthesize a tap because the hardware snapshot does not encode ordering between those controls.
 
-Mouse-delta bindings have no discrete hardware edge. A non-zero LOOK delta can therefore produce `pressed=true, held=true`; the first later zero-delta evaluation produces `released=true` if no other LOOK contribution remains active.
+Mouse-delta bindings have no discrete hardware edge. A non-zero response-shaped LOOK delta can therefore produce `pressed=true, held=true`; the first later zero result produces `released=true` if no other LOOK contribution remains active.
 
 ## From renderer frames to simulation ticks
 
@@ -339,10 +401,10 @@ Renderer frames and simulation ticks are intentionally not one-to-one. A render 
 - MOVE X/Y: latest successfully submitted renderer-frame values are copied into every emitted tick command until replaced by a newer frame;
 - digital scalar + held: latest successfully submitted values repeat across emitted ticks;
 - digital pressed/released: pending edges are OR-retained across submitted frames until the next command, then cleared;
-- LOOK X/Y: deltas add across submitted frames until the next command, then reset to zero;
+- LOOK X/Y: already response-shaped deltas add across submitted frames until the next command, then reset to zero;
 - a second tick without a newer submitted frame receives the same MOVE/digital level state but zero LOOK and no repeated edges.
 
-This preserves a P3-T08 one-frame tap even when no simulation tick occurs in that renderer frame. For example, two renderer frames with LOOK X values `2.0` and `1.5` plus a complete JUMP tap followed by one simulation tick produce one command with LOOK X=`3.5` and JUMP `pressed=true, held=false, released=true`.
+This preserves a P3-T08 one-frame tap even when no simulation tick occurs in that renderer frame. For example, two renderer frames with evaluated LOOK X values `2.0` and `1.5` plus a complete JUMP tap followed by one simulation tick produce one command with LOOK X=`3.5` and JUMP `pressed=true, held=false, released=true`.
 
 A duplicate/decreasing submitted frame ID or duplicate/decreasing tick ID fails without consuming pending state. Non-finite submitted values or LOOK accumulation overflow are also rejected before sampler state advances.
 
@@ -396,11 +458,11 @@ The first successful action evaluation may use any non-negative hardware frame I
 
 The sampler separately tracks submitted action-frame IDs and emitted simulation tick IDs. Its first emitted command requires a previously submitted frame. Later frame/tick IDs must each increase strictly within their own sequence.
 
-A failed evaluator/sampler operation does not advance its corresponding previous-state/identity baseline. Already returned snapshots, states, and commands remain immutable and stable.
+A failed evaluator/sampler operation does not advance its corresponding previous-state/identity baseline. Changing evaluator response settings alone also does not change frame identity/history. Already returned snapshots, states, and commands remain immutable and stable.
 
 ## Headless and replay boundary
 
-`InputSnapshot`, action bindings, evaluator, and `PlayerInputCommandSampler` belong to the client/platform module. `PlayerInputCommand` and `PlayerInputCommandCodec` belong to `engine-core`.
+`InputSnapshot`, action bindings, evaluator, and `PlayerInputCommandSampler` belong to the client/platform module. `InputResponseSettings`, `PlayerInputCommand`, and `PlayerInputCommandCodec` belong to `engine-core`.
 
 The headless server does not depend on `engine-platform-lwjgl`. Replay/headless code consumes core commands only; it must not call GLFW or construct renderer-frame snapshots just to drive simulation.
 
@@ -408,9 +470,11 @@ The headless server does not depend on `engine-platform-lwjgl`. Replay/headless 
 
 The current input APIs do not provide:
 
-- controller input;
-- sensitivity or Y inversion;
-- controller dead zones/curves;
+- controller discovery/polling/buttons/axes/callbacks/action bindings;
+- radial controller-stick response;
+- mouse acceleration or smoothing;
+- per-axis mouse sensitivity;
+- settings persistence or runtime settings UI;
 - live remapping UI/hot reload;
 - production networking integration of `PlayerInputCommand`;
 - a production packet layout for tick input commands;

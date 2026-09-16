@@ -25,10 +25,12 @@ Implemented:
 - immutable complete `InputActionBindings` loaded atomically from strict JSON schema version 1;
 - explicit `InputBindingLoadException` for file/schema/validation failures while Jackson remains absent from public signatures;
 - caller-owned stateful `InputActionEvaluator` producing immutable `InputActionSnapshot` / `InputActionState` for one renderer-frame hardware snapshot;
-- deterministic additive scalar/vector action aggregation with exact signed cancellation, no implicit clamp/normalization, and action-level pressed/held/released transitions;
+- deterministic additive scalar/vector action aggregation with exact signed cancellation, no general implicit clamp/normalization, and action-level pressed/held/released transitions;
 - preservation of a complete same-binding key/button press+release between hardware snapshots as one-frame `pressed=true`, `held=false`, `released=true` action state;
 - overlapping bindings keep transitions action-level: an extra binding does not duplicate press and releasing one binding does not release while the aggregate remains active;
 - strictly increasing evaluator frame identity after the first successful frame plus atomic failure on invalid frame order or non-finite input/aggregate values;
+- immutable `engine-core` `InputResponseSettings` with deterministic mouse sensitivity/Y inversion and axis-local controller dead-zone/curve response math;
+- `InputActionEvaluator` applies mouse response before binding scale/aggregation, while the legacy constructor uses neutral response defaults and runtime settings replacement affects future frames only;
 - immutable `engine-core` `PlayerInputCommand` values containing one simulation tick's MOVE/LOOK plus nine digital scalar/pressed/held/released states without platform/native types;
 - explicit fixed-size version-1 `PlayerInputCommandCodec` using caller-supplied `ByteBuffer` for replay/storage round trips without Java serialization;
 - caller-owned `PlayerInputCommandSampler` bridging renderer-frame action snapshots to simulation ticks while retaining pending edges and LOOK across zero-tick frames and consuming them exactly once on the next emitted tick command;
@@ -41,20 +43,24 @@ Not yet exposed as production API:
 - raw GLFW window/monitor handles;
 - public focus event listeners (focus is available as snapshot state only);
 - arbitrary keyboard keys or mouse buttons outside the current `InputKey` / `InputMouseButton` vocabulary;
-- controller input;
-- sensitivity/Y inversion/dead-zone/controller-curve settings;
-- configurable action clamping/normalization/response processing;
+- controller discovery, polling, callbacks, connection lifecycle, button/axis vocabulary, or action bindings;
+- radial two-axis stick dead zones;
+- mouse smoothing/acceleration or per-axis sensitivity;
+- settings persistence/UI;
+- configurable general action clamping/normalization beyond the explicit P3-T10 response mapping;
 - live remapping UI or binding hot reload;
 - content-scale callbacks as a consumer API;
 - production networking integration of `PlayerInputCommand`;
 - a production packet layout for tick input commands;
 - gameplay/UI input-consumption or focus-routing policy.
 
-`InputSnapshot`, `InputActionBindings`, and `InputActionEvaluator` remain client/platform renderer-frame APIs. `PlayerInputCommand` and its codec live in `engine-core`, while `PlayerInputCommandSampler` is the client/platform bridge. `game-server` therefore remains independent of `engine-platform-lwjgl` and can consume/replay core tick commands without GLFW/LWJGL.
+`InputResponseSettings`, `PlayerInputCommand`, and its codec live in `engine-core`. `InputSnapshot`, `InputActionBindings`, and `InputActionEvaluator` remain client/platform renderer-frame APIs, while `PlayerInputCommandSampler` is the client/platform bridge. `game-server` therefore remains independent of `engine-platform-lwjgl` and can consume/replay core tick commands without GLFW/LWJGL.
 
-The current JSON binding schema is intentionally strict and versioned at `schemaVersion: 1`. Every required action must appear exactly once. Unknown/duplicate fields, invalid enum/control names, empty action binding lists, duplicate binding descriptors, invalid action components, unsupported schema versions, malformed JSON, and unreadable paths fail rather than being ignored or partially applied. P3-T09 does not change that schema or define migration between future schema versions.
+The current JSON binding schema is intentionally strict and versioned at `schemaVersion: 1`. Every required action must appear exactly once. Unknown/duplicate fields, invalid enum/control names, empty action binding lists, duplicate binding descriptors, invalid action components, unsupported schema versions, malformed JSON, and unreadable paths fail rather than being ignored or partially applied. P3-T09/P3-T10 do not change that schema or define migration between future schema versions.
 
-Action evaluation adds binding contributions in declared binding order using ordinary finite Java `double` arithmetic. Exact cancellation is inactive. Mouse-delta controls have renderer-frame activity semantics: a non-zero delta may press/hold LOOK for that frame and a later zero-delta frame may release it. The evaluator does not infer event order across different physical bindings; only one bound key/button carrying both hardware edges qualifies for the retained one-frame-tap exception.
+Action evaluation adds binding contributions in declared binding order using ordinary finite Java `double` arithmetic. Mouse-delta controls are first shaped by the evaluator's current `InputResponseSettings`, then multiplied by their existing binding scale. Exact cancellation is inactive. Mouse-delta controls still have renderer-frame activity semantics: a non-zero resulting delta may press/hold LOOK for that frame and a later zero resulting delta may release it. The evaluator does not infer event order across different physical bindings; only one bound key/button carrying both hardware edges qualifies for the retained one-frame-tap exception.
+
+`InputResponseSettings.applyControllerAxis(...)` is deliberately only an axis-local pure scalar primitive. It validates `[-1,1]`, maps magnitudes at/below the configured dead zone to zero, renormalizes the remaining magnitude into `[0,1]`, applies the positive curve exponent, and restores sign. This does not mean the engine can currently discover or read a controller.
 
 Tick sampling is deliberately asymmetric across level and one-shot data. Latest MOVE and digital scalar/held state repeat across emitted ticks. LOOK deltas and digital pressed/released edges accumulate across renderer frames until the next emitted tick command, then are consumed once. A second tick emitted without another submitted renderer frame receives zero LOOK and no repeated edges.
 
@@ -72,7 +78,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, P3-T07 adds pure-Java binding metadata/JSON loading, P3-T08 adds pure-Java action evaluation, and P3-T09 adds pure-Java tick-command sampling/codec/replay over those existing boundaries. These tasks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, P3-T07 adds pure-Java binding metadata/JSON loading, P3-T08 adds pure-Java action evaluation, P3-T09 adds pure-Java tick-command sampling/codec/replay, and P3-T10 adds pure-Java response math/evaluator integration over those existing boundaries. These tasks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

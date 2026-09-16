@@ -1,5 +1,6 @@
 package com.samo.engine.platform.api;
 
+import com.samo.engine.core.api.InputResponseSettings;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
@@ -8,14 +9,24 @@ import java.util.Objects;
 public final class InputActionEvaluator {
     private final InputActionBindings bindings;
     private final EnumMap<InputAction, Boolean> previouslyActive = new EnumMap<>(InputAction.class);
+    private InputResponseSettings responseSettings;
     private boolean hasPreviousFrame;
     private long lastFrameId;
 
     public InputActionEvaluator(InputActionBindings bindings) {
+        this(bindings, InputResponseSettings.defaults());
+    }
+
+    public InputActionEvaluator(InputActionBindings bindings, InputResponseSettings responseSettings) {
         this.bindings = Objects.requireNonNull(bindings, "bindings");
+        this.responseSettings = Objects.requireNonNull(responseSettings, "responseSettings");
         for (InputAction action : InputAction.values()) {
             previouslyActive.put(action, false);
         }
+    }
+
+    public void setResponseSettings(InputResponseSettings responseSettings) {
+        this.responseSettings = Objects.requireNonNull(responseSettings, "responseSettings");
     }
 
     public InputActionSnapshot evaluate(InputSnapshot snapshot) {
@@ -32,7 +43,7 @@ public final class InputActionEvaluator {
         EnumMap<InputAction, Boolean> nextActive = new EnumMap<>(InputAction.class);
 
         for (InputAction action : InputAction.values()) {
-            Evaluation evaluation = evaluateAction(action, bindings.bindingsFor(action), snapshot);
+            Evaluation evaluation = evaluateAction(action, bindings.bindingsFor(action), snapshot, responseSettings);
             boolean previous = previouslyActive.get(action);
             boolean pressed = !previous && evaluation.active;
             boolean released = previous && !evaluation.active;
@@ -59,14 +70,15 @@ public final class InputActionEvaluator {
     private static Evaluation evaluateAction(
             InputAction action,
             List<InputBinding> actionBindings,
-            InputSnapshot snapshot) {
+            InputSnapshot snapshot,
+            InputResponseSettings responseSettings) {
         double value = 0.0d;
         double x = 0.0d;
         double y = 0.0d;
         boolean sawCompleteTap = false;
 
         for (InputBinding binding : actionBindings) {
-            BindingSample sample = sample(binding, snapshot);
+            BindingSample sample = sample(binding, snapshot, responseSettings);
             sawCompleteTap |= sample.pressed && sample.released;
 
             double contribution = multiplyFinite(sample.amount, binding.scale());
@@ -83,7 +95,10 @@ public final class InputActionEvaluator {
         return new Evaluation(value, x, y, active, sawCompleteTap);
     }
 
-    private static BindingSample sample(InputBinding binding, InputSnapshot snapshot) {
+    private static BindingSample sample(
+            InputBinding binding,
+            InputSnapshot snapshot,
+            InputResponseSettings responseSettings) {
         InputBinding.Control control = binding.control();
         if (control instanceof InputBinding.KeyControl keyControl) {
             InputKey key = keyControl.key();
@@ -101,8 +116,8 @@ public final class InputActionEvaluator {
         }
         InputBinding.MouseDeltaControl mouseDeltaControl = (InputBinding.MouseDeltaControl) control;
         double amount = mouseDeltaControl.axis() == InputBinding.MouseDeltaAxis.X
-                ? snapshot.mouseDeltaX()
-                : snapshot.mouseDeltaY();
+                ? responseSettings.applyMouseX(snapshot.mouseDeltaX())
+                : responseSettings.applyMouseY(snapshot.mouseDeltaY());
         return new BindingSample(amount, false, false);
     }
 

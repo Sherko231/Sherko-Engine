@@ -82,6 +82,23 @@ D-045 / P4-T08 fixes the engine camera-matrix convention used by `CameraMatrices
 
 This convention is renderer-independent math inside `engine-core`, while intentionally matching the selected OpenGL 4.6 renderer baseline. It does not authorize OpenGL calls or renderer dependencies in core.
 
+## Screen coordinates and screen-to-world rays
+
+D-046 / P4-T07 fixes the public screen-to-world mapping consumed by `ScreenRays`:
+
+- viewport/screen origin is top-left;
+- screen X increases right and screen Y increases down;
+- screen sample coordinates are continuous and must use the same coordinate domain and units as the supplied viewport rectangle;
+- when that domain is raster pixels, whole-number coordinates are pixel edges and a pixel center is at `index + 0.5`;
+- viewport mapping is `ndcX = 2 * (screenX - viewportX) / viewportWidth - 1` and `ndcY = 1 - 2 * (screenY - viewportY) / viewportHeight`;
+- samples on the closed viewport boundary are valid and map to NDC `±1`; samples outside are invalid;
+- near/far clip depths come directly from D-045: NDC `z=-1` and `z=+1`;
+- world unprojection uses the inverse of `projection * view` with homogeneous division;
+- a screen ray begins at the unprojected near-plane sample and points toward the corresponding unprojected far-plane sample;
+- the resulting `Ray3f` direction is normalized.
+
+`ScreenRays` does not choose GLFW logical coordinates versus framebuffer pixels and performs no implicit conversion between them. A caller may use either domain only if both the screen sample and viewport rectangle are expressed in that same domain.
+
 ## Boundary conversion rule
 
 External systems may use different coordinate or unit conventions. Conversion belongs at the boundary that owns that external system.
@@ -101,13 +118,9 @@ The canonical engine convention does not change to match an external library. In
 
 Do not confuse world/view space with unrelated coordinate domains.
 
-The following remain deliberately undefined here and are not implied by D-041/D-045:
+The following remain deliberately undefined here and are not implied by D-041/D-045/D-046:
 
-- GLFW logical-window screen coordinates;
-- framebuffer pixel coordinates;
-- screen-space origin or Y direction;
-- pixel-center versus pixel-edge sampling convention;
-- screen-to-NDC viewport mapping and world-ray origin policy;
+- automatic conversion between GLFW logical-window coordinates and framebuffer pixels;
 - texture/UV/image origin conventions;
 - glTF authoring basis/conversion details;
 - Jolt internal basis/conversion details;
@@ -115,7 +128,7 @@ The following remain deliberately undefined here and are not implied by D-041/D-
 - quaternion canonical-sign or serialization policy;
 - network transform quantization or packet layout.
 
-P4-T07 owns the screen-coordinate/viewport/unprojection choices needed for screen-to-world rays. Later adapters and tests must cite this document and show any required conversion explicitly.
+Later adapters and tests must cite this document and show any required conversion explicitly.
 
 ## Consumption rule for later phases
 
@@ -130,8 +143,8 @@ Any future task that defines or implements one of the following must treat this 
 - world-space geometry primitives;
 - transform replication/quantization.
 
-Future renderer, physics, and asset-conversion tests must cite the canonical conventions once those production paths exist. P4-T01/P4-T08 do not fabricate those implementations merely to satisfy forward-looking acceptance statements.
+Future renderer, physics, and asset-conversion tests must cite the canonical conventions once those production paths exist. P4-T01/P4-T07/P4-T08 do not fabricate those implementations merely to satisfy forward-looking acceptance statements.
 
 ## Decision authority
 
-D-041 records canonical world space and D-045 records the camera view/projection convention in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.
+D-041 records canonical world space, D-045 records the camera view/projection convention, and D-046 records the screen-to-world mapping in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.

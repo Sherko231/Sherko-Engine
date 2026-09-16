@@ -1,5 +1,5 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-org.joml:joml:1.10.9=runtimeClasspath,testRuntimeClasspath
-empty=annotationProcessor,compileClasspath,testAnnotationProcessor,testCompileClasspath
+org.joml:joml:1.10.9=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+empty=annotationProcessor,testAnnotationProcessor

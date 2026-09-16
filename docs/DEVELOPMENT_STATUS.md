@@ -6,130 +6,83 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` for P4-T01 | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
-| Last accepted phase | Phase 3 — Platform and input |
-| Last accepted Phase 3 task | P3-T10 / Issue #93 / PR #160 |
-| P3-T10 final candidate | `cc5842c37956f67272b62f4071b016523ac86159` |
-| P3-T10 heavy verification | workflow #299 / run `35105650405`, all five required jobs passed |
-| P3-T10 merged `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
-| P3-T10 exact-merge verification | workflow #300 / run `35106618677`, lightweight master verification passed |
 | Active phase | Phase 4 — Math and spatial conventions |
-| Accepted Phase 4 task | P4-T01 / Issue #94 / PR #161 |
-| P4-T01 merged commit | `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54` |
-| P4-T01 verification | Markdown-only exemption after complete-diff and contradiction audit; no build/runtime CI required by policy |
-| P4-T02 activation baseline | `bbe0fb31a3832f391c2f909027cab6f74e47c540` |
-| Active executable task | P4-T02 / Issue #95 — JOML hot-loop allocation policy/evidence |
-| Accepted cross-cutting maintenance | Issue #165 / PR #166 — persistent cumulative `game-sandbox` playground |
-| Sandbox final candidate | `0f8fad8abf8e8e8a723b95ff60e7a459816989a0` |
-| Sandbox heavy verification | workflow #301 / run `35113258638`, all five required jobs passed |
-| Sandbox merged `master` | `0526f7b4758c204e247b6d02d2063cace12ce89c` |
-| Sandbox exact-merge verification | workflow #302 / run `35113801623`, lightweight master verification passed |
-| Next planned after P4-T02 acceptance | P4-T03 / Issue #96 — requires fresh audit/activation before implementation |
+| Last accepted Phase 3 task | P3-T10 / Issue #93 / PR #160 |
+| Accepted P4-T01 | Issue #94 / PR #161 — D-041 canonical spatial convention |
+| Accepted P4-T02 | Issue #95 / PR #170 — JOML 1.10.9 hot-loop allocation evidence |
+| P4-T02 final candidate | `55d677d3bb83b91a1ef23e31bf8b08ebc9d1e557` |
+| P4-T02 heavy verification | run `35120185073` (#319), all five required jobs passed |
+| P4-T02 merged `master` | `58131ddbb72876e4ec5a722bc25b5f17d777b854` |
+| P4-T02 exact-merge verification | run `35121240096` (#320), lightweight master verification passed |
+| Active executable task | P4-T03 / Issue #96 — cached hierarchical `Transform` |
+| P4-T03 activation baseline | `58131ddbb72876e4ec5a722bc25b5f17d777b854` |
+| Next planned after P4-T03 acceptance | P4-T04 / Issue #97 — transform cycle rejection |
+| Accepted sandbox maintenance | Issue #165 / PR #166 — persistent cumulative owner playground |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 3 accepted
 
-Phase 3 is complete through P3-T10. Its accepted platform/input foundation includes:
-
-- production GLFW/OpenGL window lifecycle, sizing, display-mode, focus/cursor, and relative-mouse ownership under D-031 through D-035;
-- immutable renderer-frame hardware snapshots under D-036;
-- data-driven gameplay action bindings under D-037;
-- deterministic renderer-frame action evaluation/transitions under D-038;
-- immutable device-neutral per-tick `PlayerInputCommand`, fixed 126-byte replay/storage codec, tick sampler, and deterministic headless replay under D-039;
-- deterministic `InputResponseSettings` for mouse sensitivity/Y inversion plus the bounded axis-local controller response primitive under D-040.
-
-P3-T09's replay scenario satisfied the Phase 3 exit behavior and remained green on the final P3-T10 candidate. P3-T10 merged through PR #160 and exact merged `master` passed the required lightweight verifier. Issue #93 is closed completed. The Phase 4 entry planning review is recorded on #93 and #94.
+Phase 3 is complete through P3-T10. The accepted platform/input foundation includes production GLFW/OpenGL window ownership, logical/framebuffer sizing, display modes, focus/cursor and relative mouse behavior, immutable renderer-frame hardware snapshots, strict data-driven action bindings, deterministic action evaluation, tick-aligned `PlayerInputCommand` plus fixed 126-byte replay/storage codec, deterministic headless replay, and deterministic `InputResponseSettings`.
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## Persistent sandbox maintenance accepted — Issue #165 / PR #166
+## Persistent sandbox accepted
 
-P3-T04A originally established `game-sandbox` as the owner-facing observation surface using a scripted approximately 38-second timeline. Issue #165 / PR #166 deliberately replaced that presentation/maintenance model without changing the accepted Phase 3 engine APIs or Phase 4 ordering.
+`game-sandbox` is the canonical persistent cumulative owner-facing playground. It keeps already-implemented public timing/window/input/action/tick-command/response behavior active together until explicit `Ctrl+Q` exit. Existing owner controls include window-mode cycling, cursor capture, mouse sensitivity, and mouse-Y inversion. The playground remains visually empty until production renderer/world presentation exists.
 
-The accepted model is one persistent cumulative owner playground:
+Future tasks extend this same playground only when a capability is meaningfully usable through already-authorized public APIs. Otherwise the task records `Sandbox impact: none — <reason>` rather than adding internals, direct native calls, or future-roadmap APIs merely for demonstration.
 
-- canonical command: `.\gradlew.bat :game-sandbox:runSandbox`;
-- no fixed duration, automatic feature tour, or automatic shutdown;
-- `F` cycles windowed/borderless/exclusive modes;
-- `R` toggles cursor capture;
-- `Right Shift + F` cycles public mouse-sensitivity settings;
-- `Right Shift + R` toggles public mouse-Y inversion;
-- `Ctrl + Q` requests orderly sandbox exit;
-- ordinary gameplay/action bindings remain active concurrently;
-- fixed-step timing, action snapshots, tick commands, structured logging, and native-resource cleanup continue running together;
-- `runEngineDemo` is compatibility-only and delegates to the same playground; it is not a second experience.
+## P4-T01 accepted — canonical spatial convention
 
-The durable maintenance rule is in `AGENTS.md`: when a future capability is meaningfully usable through already-authorized public production APIs, integrate it into this same cumulative playground and preserve existing usable capabilities. Do not replace the sandbox with a temporary timed showcase. If a meaningful sandbox path would require internals, direct native calls, or future roadmap work, record `Sandbox impact: none — <reason>` instead.
-
-The maintenance added no renderer, gameplay camera, controller-capture API, world/physics gameplay, networking integration, UI/editor surface, or new engine public API merely to make the sandbox richer. The window therefore remains visually empty until the production renderer boundary exists.
-
-Final candidate `0f8fad8abf8e8e8a723b95ff60e7a459816989a0` passed workflow #301 / run `35113258638` with all five required heavy jobs green: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. PR #166 merged as `0526f7b4758c204e247b6d02d2063cace12ce89c`. Exact merged `master` then passed workflow #302 / run `35113801623` Lightweight master verification, including committed dependency-lock resolution, headless-server runtime-boundary verification, and exact-merge client/server version identity. Issue #165 is accepted completed after this handoff checkpoint is merged.
-
-Independent review was not performed because no separate reviewer identity was available in the authoring environment. Wiki impact: none — no public engine API or consumer contract changed.
-
-## P4-T01 accepted — canonical spatial conventions
-
-P4-T01 / Issue #94 established the canonical spatial documentation/architecture contract through PR #161, merged as `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54`.
-
-The accepted world-space convention is:
+D-041 and `docs/SPATIAL_CONVENTIONS.md` define:
 
 - right-handed Cartesian world;
 - +X right;
 - +Y up;
 - -Z forward (+Z backward);
-- meters for world position/distance and meters per second for linear velocity;
-- radians internally and radians per second for angular velocity;
-- positive rotation follows the right-hand rule around the positive axis;
-- transform scale is dimensionless, with `(1,1,1)` as identity.
+- meters for linear world quantities;
+- radians internally;
+- positive rotation by the right-hand rule;
+- dimensionless scale, `(1,1,1)` identity.
 
-The normative document is `docs/SPATIAL_CONVENTIONS.md`; D-041 records the durable decision. External library/format differences must be converted at adapter/import/export boundaries rather than redefining engine world space.
+External libraries/formats convert at adapter/import/export boundaries instead of redefining engine world space. Projection/NDC depth policy, external-format/Jolt/OpenAL adapter details, and network quantization remain later bounded tasks.
 
-P4-T01 deliberately does not choose projection/NDC depth convention, reversed-Z, FOV/near/far policy, Euler storage/order, quaternion canonical sign, glTF/Jolt/OpenAL conversion details, network quantization, or any P4-T02+ runtime implementation.
+## P4-T02 accepted — JOML allocation baseline
 
-## P4-T01 verification and evidence
+P4-T02 / Issue #95 introduced `org.joml:joml:1.10.9` into `engine-core` and added deterministic test evidence for the existing mutable/preallocated hot-loop policy. The acceptance workload exercises `Vector3f`, `Quaternionf`, and `Matrix4f` with caller-owned destinations, warms the exact workload, then uses Java 25 `com.sun.management.ThreadMXBean` current-thread allocation accounting. Every representative measured math pass must report zero heap bytes while an escaping allocating control must report positive allocation.
 
-P4-T01 was documentation/architecture only. The final PR changed exactly eight Markdown files:
+P2-T11 sampled JFR allocation evidence remains complementary and is not treated as proof of mathematical zero allocation. P4-T02 also verified D-041's +90° +Y mapping from canonical forward `(0,0,-1)` to left `(-1,0,0)`.
 
-- `README.md`;
-- `ROADMAP.md`;
-- `docs/ARCHITECTURE.md`;
-- `docs/DECISIONS.md`;
-- `docs/DEVELOPMENT_STATUS.md`;
-- `docs/SPATIAL_CONVENTIONS.md`;
-- `wiki/CORE/SPATIAL_CONVENTIONS.md`;
-- `wiki/README.md`.
+PR #170 final head `55d677d3bb83b91a1ef23e31bf8b08ebc9d1e557` passed all five heavy jobs in run `35120185073`. It merged as `58131ddbb72876e4ec5a722bc25b5f17d777b854`, and exact merged master passed lightweight run `35121240096`. Issue #95 is closed completed.
 
-The complete changed-file audit found no Java, Gradle, dependency, lockfile, workflow, resource, sandbox source, module-edge, or `ENGINE_SCOPE.md` change. Repository searches found no conflicting authoritative `left-handed` or degree-based world-space contract; existing backlog references to meters/radians agreed with D-041. `ENGINE_SCOPE.md` remained unchanged and continues to select JOML.
+## P4-T03 executable checkpoint — cached hierarchical Transform
 
-Because every changed path ended in `.md`, PR #161 qualified for the repository Markdown-only exemption. Heavy five-job CI and post-merge lightweight runtime verification were not required; no passing runtime/build result is claimed for this documentation-only task. No workflow run was generated for the final PR head or merge commit, as expected under the exemption.
+Issue #96 was activated from exact accepted master `58131ddbb72876e4ec5a722bc25b5f17d777b854` after a fresh audit of D-041, P4-T02/JOML ownership, current architecture, and the Phase 4 backlog.
 
-Independent review was not performed because no separate reviewer identity was available in the authoring environment. Residual risk is documentation-level ambiguity in the frozen spatial convention; mitigation is the executable Issue contract, D-041, normative document, architecture/wiki cross-check, contradiction search, and complete-diff audit.
+The implementation checkpoint in this branch introduces public `com.samo.engine.core.api.Transform` with:
 
-Sandbox impact: none — P4-T01 added no executable/human-observable runtime capability.
+- local position, normalized quaternion rotation, and local scale;
+- optional parent identity;
+- local `T * R * S` composition;
+- world `parentWorld * local` composition;
+- cached world matrix plus local dirty state;
+- lazy parent-world revision validation so a child read observes parent mutation without implementing P4-T05 descendant traversal;
+- caller-owned JOML values/destinations copied rather than retained as mutable aliases;
+- finite-value validation and atomic rejection of invalid rotation/position/scale input;
+- zero and negative scale allowed for forward composition only.
 
-## Deferred P4-T01 acceptance evidence
+D-042 records the public math ownership decision: beginning with `Transform`, JOML is the public spatial math type family for `engine-core`. `engine-core` therefore exposes JOML through its Gradle `api` dependency; mechanically affected dependency locks are reconciled without changing project dependency edges.
 
-The original backlog wording requires renderer, physics, and asset-conversion tests to cite the canonical spatial document. Those production paths do not exist yet and were not fabricated by P4-T01. Their future executable Issues must cite `docs/SPATIAL_CONVENTIONS.md` when those tests become real.
+P4-T03 intentionally does not implement P4-T04 general parent-cycle rejection. Parent graphs must remain acyclic until #97 defines rejection behavior. It also does not implement P4-T05 child collections/descendant dirty propagation, inverse/decomposition APIs, Euler APIs, transform serialization/quantization, world/entity storage, renderer integration, or physics adapters.
 
-## P4-T02 executable checkpoint — JOML hot-loop allocation
+Consumer documentation is synchronized in `wiki/CORE/TRANSFORMS.md`, `wiki/API_INDEX.md`, and `wiki/LIMITATIONS.md`.
 
-Issue #95 was freshly audited against `master` `bbe0fb31a3832f391c2f909027cab6f74e47c540`, D-041, the version catalog/locks, P2-T11 allocation evidence, and current architecture before implementation began.
+Acceptance is not asserted by this commit-contained checkpoint. The exact final non-draft PR candidate must pass the five-job heavy matrix; exact merged master must then pass the lightweight verifier before Issue #96 closes.
 
-The bounded contract is:
+Independent review: required by the public API/durable architecture contract. No separate reviewer identity is available in the connected authoring environment, so it must be recorded as not performed with residual risk rather than treated as satisfied by CI.
 
-- pin `org.joml:joml:1.10.9` in the central catalog;
-- own it in `engine-core` as `implementation`, not `api`, so no JOML type becomes a cross-module/public signature from P4-T02;
-- use a test-only representative workload with preallocated mutable `Vector3f`, `Quaternionf`, `Matrix4f`, and distinct destination objects;
-- after warm-up, measure repeated current-thread heap-allocation deltas with Java 25 `com.sun.management.ThreadMXBean` and require every math pass to report exactly zero bytes while an escaping allocating control reports a positive delta;
-- retain P2-T11 sampled JFR evidence as complementary profiling only, not as a zero-allocation oracle;
-- verify that +90° around canonical +Y maps forward `(0,0,-1)` to left `(-1,0,0)` within tolerance;
-- generate `engine-core/build/reports/allocation/p4-t02-joml-hot-loop-allocation.txt`;
-- do not implement P4-T03 `Transform`, hierarchy/caching, geometry, camera/projection, quantization, or any public math wrapper/API.
-
-This operationalizes existing `ENGINE_SCOPE.md` and backlog choices rather than creating a new durable architecture decision. `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, and `docs/BUILD_AND_VERIFY.md` remain authoritative and do not require ceremonial changes when their existing statements stay correct.
-
-Acceptance is live GitHub/CI state, not asserted by this commit-contained checkpoint. The final non-Markdown candidate still requires the five-job heavy PR matrix and exact merged `master` then requires the lightweight verifier. Wiki impact: none — no public engine API changes. Sandbox impact: none — dependency/policy/evidence only, with no meaningful owner-facing capability before P4-T03+.
+Sandbox impact: none — without renderer/world visualization, printing arbitrary transform matrices is not a meaningful owner-facing capability and would add diagnostic clutter while pulling no useful interactive behavior forward.
 
 ## Open gates and blockers
 
@@ -139,8 +92,8 @@ Acceptance is live GitHub/CI state, not asserted by this commit-contained checkp
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None of those gates blocks Phase 4 spatial documentation/math work.
+None blocks P4-T03 pure Java/JOML transform work.
 
 ## Exact next action
 
-Complete and verify P4-T02 / Issue #95 on its dedicated branch. After #95 is accepted and closed, freshly audit P4-T03 / Issue #96 against the resulting `master`, D-041, JOML ownership, and P4-T02 allocation evidence before converting #96 from planning to an executable contract.
+Finish P4-T03 self-review and consistency audit, open one final non-draft PR for Issue #96, require the heavy five-job matrix on the exact final head, merge only that tested candidate if master remains current, require the exact-merge lightweight master verifier, then close #96. After acceptance, freshly audit P4-T04 / Issue #97 before implementation.

@@ -6,73 +6,74 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` | `cd6b2ae5a01e44b27647e4b5230bfd766afc630b` |
-| Last accepted feature | P3-T08 / Issue #91 / PR #158; merged feature commit `ab42c30d4b186e0ecb1aab1f53a5819ac8d0e097`; exact-merge workflow #293 / run `34769991670` attempt 2 passed |
-| Active feature implementation | P3-T09 / Issue #92 / branch `p3-t09-player-input-commands` |
-| Next planned task | P3-T10 / Issue #93; planning-only until P3-T09 completes |
+| Verified starting `master` | `b9144e9e939cf468a5228f499aac130886d16456` |
+| Last accepted feature | P3-T09 / Issue #92 / PR #159; merged commit `b9144e9e939cf468a5228f499aac130886d16456`; heavy workflow #294 / run `34771652425` passed; exact-merge workflow #295 / run `34771935986` passed |
+| Active feature implementation | P3-T10 / Issue #93 / branch `p3-t10-input-response-settings` |
+| Next planned phase | Phase 4 planning review after P3-T10 completion and Phase 3 exit confirmation |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-Immediately after P3-T08, two Markdown-only commits (`ec552900...` then `cd6b2ae5...`) resulted from an authoring-tool mistake followed by an exact restoration of this file. P3-T09 starts from the restored current `master` and all implementation work is confined to its dedicated branch.
+## Accepted Phase 3 foundation through P3-T09
 
-## Completed Phase 3 foundation
-
-P3-T01 through P3-T08 are accepted, together with P3-T04A/P3-T04B sandbox maintenance. The platform/input boundary provides:
+P3-T01 through P3-T09 are accepted, together with P3-T04A/P3-T04B sandbox maintenance. The platform/input boundary provides:
 
 - D-031 through D-035: production GLFW/OpenGL window lifecycle, size delivery, display modes, focus/cursor safety, and relative mouse acquisition;
-- D-036: immutable renderer-frame `InputSnapshot` with device-neutral key/button vocabulary and retained hardware edges;
+- D-036: immutable renderer-frame `InputSnapshot` with engine-owned key/button vocabulary and retained hardware edges;
 - D-037: immutable complete data-driven action bindings for exactly eleven gameplay actions;
-- D-038: caller-owned stateful renderer-frame `InputActionEvaluator`, immutable action snapshots/states, deterministic aggregation, and action-level pressed/held/released semantics.
+- D-038: caller-owned stateful renderer-frame `InputActionEvaluator`, deterministic aggregation, and action-level pressed/held/released semantics;
+- D-039: immutable device-neutral per-tick `PlayerInputCommand`, explicit fixed 126-byte replay/storage codec, renderer-frame-to-tick sampler, and deterministic headless replay evidence.
+
+P3-T09 completed through PR #159. Its exact final PR candidate `0e480de55f43adbd73f96b39b18bd6eaab1e2008` passed heavy five-job workflow #294 / run `34771652425`. Merge commit `b9144e9e939cf468a5228f499aac130886d16456` passed lightweight exact-merge workflow #295 / run `34771935986`. Issue #92 is closed completed.
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## P3-T09 active implementation — tick-aligned replayable commands
+## P3-T10 active implementation — deterministic input response settings
 
-Issue #92 is ACTIVE / executable. The task adds a device-neutral simulation-tick command boundary without adding a project/module dependency edge or production dependency.
+Issue #93 is ACTIVE / executable. The branch starts exactly from verified `master` `b9144e9e...`.
 
-Current branch implementation includes:
+Current implementation scope:
 
-- `engine-core` public immutable `PlayerInputCommand` with MOVE, LOOK, and the existing nine DIGITAL gameplay actions;
-- `engine-core` `PlayerInputCommandCodec` using explicit fixed binary schema v1, magic `SPIC`, big-endian encoding, and exact encoded size 126 bytes;
-- `engine-platform-lwjgl` public caller-owned `PlayerInputCommandSampler` converting renderer-frame `InputActionSnapshot` values into per-tick commands;
-- zero-tick frames retain pending LOOK delta and digital edges; the next emitted command consumes those one-shot values exactly once;
-- multiple ticks without another renderer snapshot repeat latest MOVE / digital scalar+held state while LOOK and pressed/released edges become zero/false after the first tick;
-- strictly increasing successful frame/tick identities with atomic failure behavior;
-- non-finite values and non-finite LOOK accumulation are rejected before sampler state advances;
-- a deterministic encode/decode/headless replay test with an independently calculated expected final state;
-- canonical sandbox diagnostics now emit `PlayerInputCommand` only for actually due fixed simulation ticks;
-- wiki API/input/limitations guidance updated for the new public boundary.
+- new immutable `engine-core` `InputResponseSettings` with mouse sensitivity, Y inversion, controller dead zone, and controller response exponent;
+- neutral defaults `1.0 / false / 0.0 / 1.0`;
+- strict finite/range validation;
+- deterministic `applyMouseX`, `applyMouseY`, and axis-local `applyControllerAxis` response math;
+- `InputActionEvaluator(InputActionBindings)` remains source-compatible and uses neutral defaults;
+- new evaluator constructor accepts explicit `InputResponseSettings`;
+- `setResponseSettings(...)` changes future evaluator frames only;
+- relative mouse delta is shaped before existing binding scale and additive aggregation;
+- controller response math is defined and tested without introducing controller discovery, polling, vocabulary, callbacks, or bindings;
+- P3-T09 `PlayerInputCommand`, codec, sampler, and replay semantics remain unchanged.
 
-The original activation text incorrectly totaled the codec layout as 124 bytes; the declared fields total 126 bytes (`4 + 2 + 2 + 8 + 32 + 72 + 6`). The correction is recorded on Issue #92 before final candidate verification.
+D-040 is the intended durable decision for this bounded response-settings ownership/flow.
 
 ## Scope boundaries
 
-P3-T09 does not implement production networking, transport packet layout, prediction/replication, controller input, sensitivity, Y inversion, dead zones, response curves, gameplay movement/camera behavior, or P3-T10 work. The codec is a replay/storage command format, not a production network packet contract.
+P3-T10 does not implement controller/gamepad capture, radial stick dead zones, mouse smoothing/acceleration, per-axis sensitivity, settings persistence/UI, gameplay camera/movement, production networking, packet changes, prediction/replication, or Phase 4 work.
 
-No `ENGINE_SCOPE.md`, external dependency, version catalog, dependency lockfile, or project/module dependency change is expected.
+No `ENGINE_SCOPE.md`, external dependency, version catalog, dependency lockfile, workflow, project/module dependency edge, binding JSON schema, `InputSnapshot`, `PlayerInputCommand`, replay codec, or game-server dependency change is authorized.
 
 ## Verification state
 
-This authoring environment has connected GitHub access but no local checkout/toolchain. No local Gradle pass is claimed.
+This authoring environment has connected GitHub access but no local repository checkout/toolchain. No local Gradle pass is claimed.
 
-Required focused commands when executed by CI/Windows Java 25 environment:
+Focused verification required on the final candidate:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.PlayerInputCommandCodecTest" --tests "com.samo.engine.core.api.PlayerInputCommandReplayTest" --rerun-tasks
-.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.PlayerInputCommandSamplerTest" --rerun-tasks
-.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.InputResponseSettingsTest" --rerun-tasks
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.InputActionEvaluatorTest" --tests "com.samo.engine.platform.api.InputActionEvaluatorResponseSettingsTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.PlayerInputCommandReplayTest" --rerun-tasks
 .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 .\gradlew.bat resolveAndLockAllDependencies
 ```
 
-Final acceptance remains the normal repository lifecycle: complete diff/docs/self-review first, one final non-draft PR, heavy five-job CI on the exact PR head, merge only while head/base remain current, then lightweight exact-merge `master` verification before closing #92.
+The final non-draft PR must pass the normal heavy five-job matrix on the exact final head. If the branch changes after that pass, the prior run becomes obsolete. Merge only while the tested head and base remain current; then require the lightweight exact-merge `master` verifier.
 
 ## Phase 3 exit status
 
-P3-T09 makes the Phase 3 backlog exit behavior executable: a fixed recorded `PlayerInputCommand` sequence can be encoded, decoded, and replayed into a headless deterministic test consumer with the same independently expected result. This evidence is limited to the input-command boundary and does not claim deterministic native physics or production network replay.
+The P3-T09 replay scenario already exercises the backlog exit behavior: a fixed device-neutral command sequence can be encoded, decoded, and replayed into a headless deterministic test consumer with the same independently calculated result.
 
-Phase 3 is **not complete** after P3-T09 because P3-T10 remains a required Phase 3 task. Do not start P3-T10 until #92 completes its full PR/merge verification lifecycle.
+P3-T10 is the last required Phase 3 task. Phase 3 may be marked complete only after the P3-T10 exact final candidate passes its response tests plus the existing replay evidence, merges, and the exact merged `master` passes the lightweight verifier. Then perform and record the P4 planning review before activating P4-T01.
 
 ## Open gates and blockers
 
@@ -82,15 +83,15 @@ Phase 3 is **not complete** after P3-T09 because P3-T10 remains a required Phase
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None of those gates blocks bounded P3-T09 input-command work.
+None of those gates blocks bounded P3-T10 response-settings work.
 
 ## Exact next action
 
-1. finish documentation/decision/build-verification synchronization and final complete-diff self-review;
-2. confirm branch is based on current `master` and no open PR conflicts exist;
-3. open one final non-draft PR with `Refs #92`;
+1. finish D-040 / architecture / build-verification / wiki synchronization and complete-diff self-review;
+2. confirm branch remains based on current `master` and no conflicting PR exists;
+3. open one final non-draft PR with `Refs #93`;
 4. require all five heavy PR jobs on the exact final head;
-5. correct any failures on the branch and require a fresh exact-head pass;
+5. correct any failures only on the task branch and require a fresh exact-head pass;
 6. merge only while the tested head/base remain current;
 7. require lightweight exact-merge `master` verification;
-8. record final evidence and close #92; only then freshly audit P3-T10.
+8. record final P3-T10 and Phase 3 exit evidence, perform the P4 planning review, and close #93 only when all acceptance is consistent.

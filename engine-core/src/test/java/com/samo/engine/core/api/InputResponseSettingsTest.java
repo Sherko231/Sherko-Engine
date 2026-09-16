@@ -2,10 +2,13 @@ package com.samo.engine.core.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import org.junit.jupiter.api.Test;
 
 class InputResponseSettingsTest {
+    private static final double EPSILON = 1.0e-12d;
+
     @Test
     void defaultsAreNeutral() {
         InputResponseSettings settings = InputResponseSettings.defaults();
@@ -76,8 +79,8 @@ class InputResponseSettingsTest {
         assertThat(settings.applyControllerAxis(0.0d)).isEqualTo(0.0d);
         assertThat(settings.applyControllerAxis(0.2d)).isEqualTo(0.0d);
         assertThat(settings.applyControllerAxis(-0.2d)).isEqualTo(0.0d);
-        assertThat(settings.applyControllerAxis(0.6d)).isEqualTo(0.25d);
-        assertThat(settings.applyControllerAxis(-0.6d)).isEqualTo(-0.25d);
+        assertThat(settings.applyControllerAxis(0.6d)).isCloseTo(0.25d, within(EPSILON));
+        assertThat(settings.applyControllerAxis(-0.6d)).isCloseTo(-0.25d, within(EPSILON));
         assertThat(settings.applyControllerAxis(1.0d)).isEqualTo(1.0d);
         assertThat(settings.applyControllerAxis(-1.0d)).isEqualTo(-1.0d);
     }
@@ -86,8 +89,8 @@ class InputResponseSettingsTest {
     void linearControllerCurveRenormalizesOutsideDeadZone() {
         InputResponseSettings settings = new InputResponseSettings(1.0d, false, 0.25d, 1.0d);
 
-        assertThat(settings.applyControllerAxis(0.625d)).isEqualTo(0.5d);
-        assertThat(settings.applyControllerAxis(-0.625d)).isEqualTo(-0.5d);
+        assertThat(settings.applyControllerAxis(0.625d)).isCloseTo(0.5d, within(EPSILON));
+        assertThat(settings.applyControllerAxis(-0.625d)).isCloseTo(-0.5d, within(EPSILON));
     }
 
     @Test

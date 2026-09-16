@@ -74,25 +74,17 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 ## Current focus — M1 / Phase 3
 
-**Goal:** produce stable platform events and tick-aligned player commands on the existing Phase 2 lifecycle/timing foundation.
+**Goal:** finish the platform/input foundation with deterministic renderer-frame response policy while preserving the verified tick-aligned replay boundary.
 
-P3-T01 / Issue #84 through P3-T07 / Issue #90 are complete. The production platform/input boundary owns separate logical/framebuffer size delivery, in-place primary-monitor window modes, focus-loss-safe cursor capture/input cleanup, raw/fallback relative mouse acquisition, immutable renderer-frame hardware `InputSnapshot` delivery, and strict immutable data-driven action-binding metadata/loading.
+P3-T01 through P3-T09 are complete. The production platform/input boundary now owns GLFW/OpenGL window lifecycle, logical/framebuffer sizing, display modes, focus-safe cursor capture, raw/fallback relative mouse acquisition, immutable renderer-frame `InputSnapshot`, strict data-driven action bindings, stateful renderer-frame action evaluation, and the `PlayerInputCommandSampler` bridge into device-neutral per-tick commands.
 
-P3-T04A / Issue #149 established `game-sandbox` as the canonical owner-facing manual demo and preserved the headless server boundary through a non-exported demo-only platform runtime. P3-T04B / Issue #151 made the demo model the existing structured `EngineLogger` boundary.
+P3-T09 / Issue #92 completed through PR #159 on merged `master` `b9144e9e939cf468a5228f499aac130886d16456`. Its exact final PR candidate passed heavy workflow #294 / run `34771652425`; the exact merge passed lightweight workflow #295 / run `34771935986`. D-039 places immutable `PlayerInputCommand` and its explicit 126-byte replay/storage codec in `engine-core`, retains pending LOOK/edges across zero-tick frames, and keeps `game-server` independent of the platform module. The deterministic encode/decode/headless replay scenario exercises the Phase 3 backlog exit behavior at the input-command boundary.
 
-P3-T05 / Issue #88 completed through PR #155 on merged `master` `2f3dcd3d9117db28b994115f0c420b884e5a59b0`. Its exact final head passed heavy workflow #282 and the exact merge passed lightweight workflow #283. D-035 keeps relative mouse acquisition inside `GlfwWindow`: raw mode when supported, disabled-cursor relative fallback otherwise, and explicit focus/capture/lifecycle baseline clearing.
+P3-T10 / Issue #93 is the active final Phase 3 task. D-040 adds immutable `InputResponseSettings` in `engine-core`: mouse sensitivity, Y inversion, controller dead zone, and controller response exponent. `InputActionEvaluator` applies mouse response before binding scale/aggregation while retaining the existing neutral constructor and action transition/frame-order semantics. Controller shaping is an axis-local deterministic scalar primitive only; controller discovery, polling, vocabulary, callbacks, and bindings are not introduced by this task.
 
-P3-T06 / Issue #89 completed through PR #156 on merged `master` `92ad157adb696bd5a9d21933f6d9af60be3634a7`. Its exact final head passed heavy workflow #285 and the exact merge passed lightweight workflow #286. D-036 exposes immutable renderer-frame `InputSnapshot` values plus engine-defined `InputKey` and `InputMouseButton` vocabulary without exposing GLFW/LWJGL types or adding a server dependency on the platform module.
+P3-T04A / Issue #149 remains the canonical owner-facing manual demo. P3-T09 extended it to emit tick-command diagnostics only when fixed-step timing reports due simulation ticks. P3-T10 requires no sandbox source change merely to expose scalar response math because no settings UI/config surface exists; automated public-API tests are the acceptance path.
 
-P3-T07 / Issue #90 completed through PR #157 on merged `master` `5012235cc0fcc2fc702919cf2e7bf185bf3c3595`. Its exact final head passed heavy workflow #290 and the exact merge passed lightweight workflow #291. D-037 defines immutable data-driven action-binding metadata for exactly eleven Phase 3 actions and strict JSON schema-v1 loading. MOVE/LOOK are `VECTOR2`; the remaining actions are `DIGITAL`. Jackson 2.21.2 remains an implementation-only parser dependency inside `engine-platform-lwjgl`.
-
-P3-T08 / Issue #91 is the active bounded feature task. D-038 adds renderer-frame action evaluation over P3-T06 hardware snapshots and P3-T07 bindings through one caller-owned stateful `InputActionEvaluator`. It produces immutable `InputActionSnapshot` / `InputActionState`, deterministic additive component values, pressed/held/released transitions, preservation of a complete same-binding one-frame key/button tap, strict increasing source frame identity, and atomic failure without adding a module edge or dependency.
-
-P3-T08 remains renderer-frame/client-platform input. P3-T09 retains tick-aligned device-neutral `PlayerInputCommand` and replay/network portability; P3-T10 retains response settings/controller curves. No platform dependency is added to `game-server`.
-
-The owner-facing sandbox now demonstrates P3-T08 through production public APIs: the committed demo binding set is evaluated each frame and bounded diagnostics expose MOVE X/Y plus representative JUMP/INTERACT transitions alongside the existing raw hardware state. This is observation only, not P3-T09 tick/replay evidence.
-
-Completing P3-T08 will not complete Phase 3; the phase exit still requires replaying an identical input sequence into headless simulation.
+Phase 3 is not complete until P3-T10's exact final candidate passes its response tests plus the existing P3-T09 replay evidence, merges while head/base remain current, and the exact merged `master` passes the lightweight verifier. After that, perform the required Phase 4 planning review before activating P4-T01.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
 

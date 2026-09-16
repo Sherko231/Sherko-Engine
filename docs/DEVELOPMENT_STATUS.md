@@ -6,74 +6,70 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` | `b9144e9e939cf468a5228f499aac130886d16456` |
-| Last accepted feature before this candidate | P3-T09 / Issue #92 / PR #159; merged commit `b9144e9e939cf468a5228f499aac130886d16456`; heavy workflow #294 / run `34771652425` passed; exact-merge workflow #295 / run `34771935986` passed |
-| Final Phase 3 task represented by this checkpoint | P3-T10 / Issue #93 / PR #160 candidate; consult live GitHub state for final-candidate/merge verification and closure |
-| Next planned phase | Phase 4 planning review only after P3-T10 acceptance and Phase 3 exit confirmation |
-| Milestone | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
+| Verified starting `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
+| Last accepted phase | Phase 3 — Platform and input |
+| Last accepted task | P3-T10 / Issue #93 / PR #160 |
+| P3-T10 final candidate | `cc5842c37956f67272b62f4071b016523ac86159` |
+| P3-T10 heavy verification | workflow #299 / run `35105650405`, all five required jobs passed |
+| Accepted merged `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
+| Exact-merge verification | workflow #300 / run `35106618677`, lightweight master verification passed |
+| Active phase | Phase 4 — Math and spatial conventions |
+| Active task | P4-T01 / Issue #94 / branch `p4-t01-spatial-conventions` |
+| Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-## Accepted Phase 3 foundation through P3-T09
+## Phase 3 accepted
 
-P3-T01 through P3-T09 are accepted, together with P3-T04A/P3-T04B sandbox maintenance. The platform/input boundary provides:
+Phase 3 is complete through P3-T10. Its accepted platform/input foundation includes:
 
-- D-031 through D-035: production GLFW/OpenGL window lifecycle, size delivery, display modes, focus/cursor safety, and relative mouse acquisition;
-- D-036: immutable renderer-frame `InputSnapshot` with engine-owned key/button vocabulary and retained hardware edges;
-- D-037: immutable complete data-driven action bindings for exactly eleven gameplay actions;
-- D-038: caller-owned stateful renderer-frame `InputActionEvaluator`, deterministic aggregation, and action-level pressed/held/released semantics;
-- D-039: immutable device-neutral per-tick `PlayerInputCommand`, explicit fixed 126-byte replay/storage codec, renderer-frame-to-tick sampler, and deterministic headless replay evidence.
+- production GLFW/OpenGL window lifecycle, sizing, display-mode, focus/cursor, and relative-mouse ownership under D-031 through D-035;
+- immutable renderer-frame hardware snapshots under D-036;
+- data-driven gameplay action bindings under D-037;
+- deterministic renderer-frame action evaluation/transitions under D-038;
+- immutable device-neutral per-tick `PlayerInputCommand`, fixed 126-byte replay/storage codec, tick sampler, and deterministic headless replay under D-039;
+- deterministic `InputResponseSettings` for mouse sensitivity/Y inversion plus the bounded axis-local controller response primitive under D-040.
 
-P3-T09 completed through PR #159. Its exact final PR candidate `0e480de55f43adbd73f96b39b18bd6eaab1e2008` passed heavy five-job workflow #294 / run `34771652425`. Merge commit `b9144e9e939cf468a5228f499aac130886d16456` passed lightweight exact-merge workflow #295 / run `34771935986`. Issue #92 is closed completed.
+P3-T09's replay scenario satisfied the Phase 3 exit behavior and remained green on the final P3-T10 candidate. P3-T10 merged through PR #160 and exact merged `master` passed the required lightweight verifier. Issue #93 is closed completed. The Phase 4 entry planning review is recorded on #93 and #94.
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## P3-T10 implementation represented here — deterministic input response settings
+## P4-T01 active — canonical spatial conventions
 
-Issue #93 is the executable contract for the final required Phase 3 task. This checkpoint contains its bounded implementation; live GitHub Issue #93 / PR #160 state determines whether final-candidate CI, merge, exact-merge verification, the Phase 4 planning review, and closure have occurred after this commit was created.
+Issue #94 is ACTIVE / executable. The task branch starts exactly from accepted `master` `e1801b11...`.
 
-Implemented scope:
+P4-T01 is documentation/architecture only. It establishes one canonical world-space contract before transform/camera/renderer/physics/assets/audio/network spatial code begins relying on implicit assumptions:
 
-- new immutable `engine-core` `InputResponseSettings` with mouse sensitivity, Y inversion, controller dead zone, and controller response exponent;
-- neutral defaults `1.0 / false / 0.0 / 1.0`;
-- strict finite/range validation;
-- deterministic `applyMouseX`, `applyMouseY`, and axis-local `applyControllerAxis` response math;
-- `InputActionEvaluator(InputActionBindings)` remains source-compatible and uses neutral defaults;
-- new evaluator constructor accepts explicit `InputResponseSettings`;
-- `setResponseSettings(...)` changes future evaluator frames only;
-- relative mouse delta is shaped before existing binding scale and additive aggregation;
-- controller response math is defined and tested without introducing controller discovery, polling, vocabulary, callbacks, or bindings;
-- P3-T09 `PlayerInputCommand`, codec, sampler, and replay semantics remain unchanged.
+- right-handed Cartesian world;
+- +X right;
+- +Y up;
+- -Z forward (+Z backward);
+- meters for world position/distance and meters/second for linear velocity;
+- radians internally and radians/second for angular velocity;
+- positive rotation follows the right-hand rule around the positive axis;
+- transform scale is dimensionless, with `(1,1,1)` as identity.
 
-D-040 records the durable response-settings ownership/flow.
+The normative document is `docs/SPATIAL_CONVENTIONS.md`; D-041 records the durable decision. External library/format differences must be converted at adapter/import/export boundaries rather than redefining engine world space.
 
-## Scope boundaries
+P4-T01 deliberately does not choose projection/NDC depth convention, reversed-Z, FOV/near/far policy, Euler storage/order, quaternion canonical sign, glTF/Jolt/OpenAL conversion details, network quantization, or any P4-T02+ implementation.
 
-P3-T10 does not implement controller/gamepad capture, radial stick dead zones, mouse smoothing/acceleration, per-axis sensitivity, settings persistence/UI, gameplay camera/movement, production networking, packet changes, prediction/replication, or Phase 4 work.
+## Verification / CI state for P4-T01
 
-No `ENGINE_SCOPE.md`, external dependency, version catalog, dependency lockfile, workflow, project/module dependency edge, binding JSON schema, `InputSnapshot`, `PlayerInputCommand`, replay codec, or game-server dependency change is authorized or present in this candidate.
+P4-T01 is authorized as a Markdown-only task. No local Gradle execution is claimed by this connected authoring environment.
 
-## Verification state
+Before final PR:
 
-This authoring environment has connected GitHub access but no local repository checkout/toolchain. No local Gradle pass is claimed.
+- inspect the complete branch diff and require every changed path to end in `.md` for the Markdown-only exemption;
+- search the repository for conflicting authoritative handedness/axis/unit claims;
+- verify `ENGINE_SCOPE.md` is unchanged and still selects JOML;
+- verify no Java/Gradle/dependency/lock/workflow/module-edge change exists;
+- verify D-041 does not pull projection/depth/adapter implementation choices forward;
+- reconcile `README.md`, `ROADMAP.md`, architecture, wiki navigation, and this handoff with Phase 3 completion / Phase 4 activation.
 
-Focused verification selectors for P3-T10 are:
+If the final complete diff remains Markdown-only, heavy PR CI and post-merge lightweight runtime verification are not required by `AGENTS.md`; their absence is an expected exemption, not a passing test. If any non-Markdown path appears, the exemption is lost and the normal heavy-final-candidate plus exact-merge lifecycle applies.
 
-```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.InputResponseSettingsTest" --rerun-tasks
-.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.InputActionEvaluatorTest" --tests "com.samo.engine.platform.api.InputActionEvaluatorResponseSettingsTest" --rerun-tasks
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.PlayerInputCommandReplayTest" --rerun-tasks
-.\gradlew.bat :game-server:verifyHeadlessServerRuntime
-.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
-.\gradlew.bat resolveAndLockAllDependencies
-```
+## Deferred acceptance evidence
 
-Final acceptance requires the normal heavy five-job matrix on the exact final PR head. If the branch changes after a pass, the prior run is obsolete. Merge only while the tested head and base remain current; then require the lightweight exact-merge `master` verifier. The authoritative current result belongs in live PR #160 / Issue #93 because workflow state can advance after this file's commit.
-
-## Phase 3 exit status
-
-The P3-T09 replay scenario exercises the backlog exit behavior: a fixed device-neutral command sequence can be encoded, decoded, and replayed into a headless deterministic test consumer with the same independently calculated result.
-
-P3-T10 is the last required Phase 3 task. Do not infer Phase 3 completion from this file alone. Confirm live evidence that the exact P3-T10 final candidate passed its response tests plus existing replay evidence, merged with a current base, and the exact merged `master` passed the lightweight verifier. Then perform and record the P4 planning review before activating P4-T01.
+The original P4-T01 backlog wording requires renderer, physics, and asset-conversion tests to cite the canonical spatial document. Those production paths do not exist yet and must not be fabricated by P4-T01. Their future executable Issues must cite `docs/SPATIAL_CONVENTIONS.md` when those tests become real.
 
 ## Open gates and blockers
 
@@ -83,14 +79,8 @@ P3-T10 is the last required Phase 3 task. Do not infer Phase 3 completion from t
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None of those gates blocks bounded P3-T10 response-settings work or the subsequent Phase 4 planning review.
+None of those gates blocks Phase 4 spatial documentation/math work.
 
 ## Exact next action
 
-Inspect live Issue #93 and PR #160 before doing anything else.
-
-- If PR #160 has not yet passed heavy CI on its current head, finish that exact-candidate verification; any newer commit invalidates older CI evidence.
-- If the exact current candidate passed but is not merged, re-confirm its head and `master` base are unchanged, then merge.
-- If merged, require the lightweight exact-merge `master` verifier on the merge SHA.
-- Only after that evidence passes, record the Phase 4 planning review against the completed Phase 3 evidence, record final P3-T10 completion evidence, and close #93.
-- Do not activate or implement P4-T01 until those live steps are complete.
+Finish the bounded P4-T01 Markdown changes, run the complete-diff/contradiction audit, record review provenance and sandbox/wiki impact, then open one final PR linked with `Refs #94`. Merge only after confirming the Markdown-only exemption still applies and `master` has not advanced; close #94 only after merged repository state and documentation are consistent. Do not activate P4-T02 until P4-T01 is accepted.

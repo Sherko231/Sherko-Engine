@@ -16,6 +16,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - [Development status](docs/DEVELOPMENT_STATUS.md) — commit-contained handoff checkpoint; inspect live GitHub state before continuing.
 - [Roadmap](ROADMAP.md) — milestone-level plan and current phase outcome.
 - [Architecture](docs/ARCHITECTURE.md) — module responsibilities, dependencies, and implementation maturity.
+- [Spatial conventions](docs/SPATIAL_CONVENTIONS.md) — canonical world handedness, axes, linear/angular units, rotation sign, and boundary-conversion rule.
 - [Decision log](docs/DECISIONS.md) — durable accepted/provisional/superseded engineering decisions.
 - [Build and verification](docs/BUILD_AND_VERIFY.md) — canonical verification commands and evidence expectations.
 - [GitHub execution model](docs/GITHUB_PROJECT_SETUP.md) — Issue/branch/PR lifecycle and CI-efficiency policy.
@@ -25,15 +26,11 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-The Java 25 multi-project foundation declares all 16 production-target modules plus experimental `feasibility-spikes`. Phase 1 and Phase 2 are complete. `engine-core` provides lifecycle, dependency/startup rollback, deterministic fixed-step timing, typed configuration, native-resource diagnostics, structured logging, fatal termination, and the device-neutral per-tick input/replay contract.
+The Java 25 multi-project foundation declares all 16 production-target modules plus experimental `feasibility-spikes`. Phase 1 and Phase 2 are complete. `engine-core` provides lifecycle, dependency/startup rollback, deterministic fixed-step timing, typed configuration, native-resource diagnostics, structured logging, fatal termination, device-neutral per-tick input/replay, and deterministic input-response math.
 
-P3-T01 through P3-T09 are formally complete. P3-T09 / Issue #92 merged through PR #159 at `b9144e9e939cf468a5228f499aac130886d16456`; heavy PR workflow #294 and exact-merge lightweight workflow #295 passed. The platform/input foundation now includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, deterministic headless replay evidence, and owner-facing tick-command diagnostics.
+Phase 3 is complete through P3-T10 / Issue #93 / PR #160. The final candidate passed the five-job heavy matrix, merged as `e1801b11a713ce6cc73276c644aa15351ac508a1`, and the exact merged commit passed the lightweight master verifier. The platform/input foundation now includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, deterministic response settings, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, and deterministic headless replay evidence.
 
-P3-T10 / Issue #93 is the final required Phase 3 task. Its implementation adds immutable deterministic `InputResponseSettings` in `engine-core`, applies mouse sensitivity/Y inversion at the existing `InputActionEvaluator` boundary before binding scale/aggregation, and defines controller dead-zone/response-curve shaping as a pure axis-local scalar contract without introducing controller discovery/polling/bindings. Consult live Issue #93 / PR #160 to determine whether its final-candidate, merge, and exact-merge verification lifecycle has completed; this orientation page deliberately does not duplicate that volatile workflow state.
-
-P3-T09 command/replay semantics remain unchanged: `PlayerInputCommandSampler` consumes already-evaluated action state, and `game-server` remains independent of `engine-platform-lwjgl`.
-
-Phase 3 completion additionally requires the P3-T10 acceptance lifecycle and the required Phase 4 planning review. Do not activate P4-T01 from this README alone; inspect the live Issue/PR evidence and the commit-contained handoff first.
+Phase 4 is now the active M1 focus. P4-T01 / Issue #94 establishes the canonical world convention before transform/camera/renderer/physics/asset/network spatial work consumes implicit assumptions: right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, right-hand-rule positive rotation, and dimensionless scale. Consult live Issue #94 for the current task/PR state rather than treating this README as workflow authority.
 
 Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence.
 

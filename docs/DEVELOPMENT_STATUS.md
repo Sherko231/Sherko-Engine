@@ -11,13 +11,14 @@
 | Accepted P4-T01 | Issue #94 / PR #161 — D-041 canonical spatial convention |
 | Accepted P4-T02 | Issue #95 / PR #170 — JOML 1.10.9 hot-loop allocation evidence |
 | Accepted P4-T03 | Issue #96 / PR #171 — D-042 public JOML spatial math + cached hierarchical `Transform` |
-| P4-T03 final candidate | `046d46d6cc7663260f8ac50ecbb209a86b07fe94` |
-| P4-T03 heavy verification | run `35125069380` (#322), all five required jobs passed |
-| P4-T03 merged `master` | `fdc7c64488bcd78928f5c95759e616e89fd8b3bd` |
-| P4-T03 exact-merge verification | run `35125956410` (#323), Lightweight master verification passed |
-| Active executable task | P4-T04 / Issue #97 — reject transform parent cycles |
-| P4-T04 activation baseline | `fdc7c64488bcd78928f5c95759e616e89fd8b3bd` |
-| Next planned after P4-T04 acceptance | P4-T05 / Issue #98 — descendant dirty propagation |
+| Accepted P4-T04 | Issue #97 / PR #172 — D-043 atomic transform-parent cycle rejection |
+| P4-T04 final candidate | `fb65fd1e4303fe1cacb1319866d2df198e6c9e7e` |
+| P4-T04 heavy verification | run `35127781471` (#324), all five required jobs passed |
+| P4-T04 merged `master` | `908000921ed93dfec242ca9719d2f53f03b75536` |
+| P4-T04 exact-merge verification | run `35128432521` (#325), Lightweight master verification passed |
+| Active executable task | P4-T05 / Issue #98 — descendant-only transform dirty propagation |
+| P4-T05 activation baseline | `908000921ed93dfec242ca9719d2f53f03b75536` |
+| Next planned after P4-T05 acceptance | P4-T06 / Issue #99 — audit live contract before activation |
 | Accepted sandbox maintenance | Issue #165 / PR #166 — persistent cumulative owner playground |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
@@ -34,45 +35,34 @@ Phase 3 is complete through P3-T10. The accepted platform/input foundation inclu
 
 A task extends the sandbox only when a capability is meaningfully usable through already-authorized public APIs. Otherwise it records `Sandbox impact: none — <reason>` rather than adding internals, direct native calls, or future-roadmap APIs merely for demonstration.
 
-## P4-T01 accepted — canonical spatial convention
+## Phase 4 accepted foundation through P4-T04
 
-D-041 and `docs/SPATIAL_CONVENTIONS.md` define one right-handed world convention: +X right, +Y up, -Z forward, meters for linear world quantities, radians internally, right-hand positive rotation, and dimensionless transform scale. External systems convert at their adapter/import/export boundaries rather than redefining engine world space.
+D-041 fixes the canonical right-handed world convention. P4-T02 pins JOML 1.10.9 and records bounded hot-loop allocation evidence. D-042/P4-T03 provides public hierarchical `Transform` with local `T * R * S`, world `parentWorld * local`, copied JOML inputs/destinations, and cached world matrices. D-043/P4-T04 makes `setParent(...)` reject self/indirect cycles atomically before hierarchy mutation.
 
-## P4-T02 accepted — JOML allocation baseline
+P4-T04 final candidate `fb65fd1e4303fe1cacb1319866d2df198e6c9e7e` passed all five heavy jobs in run `35127781471`. PR #172 merged as `908000921ed93dfec242ca9719d2f53f03b75536`; exact merged master passed run `35128432521` Lightweight master verification. Issue #97 is closed completed.
 
-P4-T02 / Issue #95 pinned JOML 1.10.9 in `engine-core` and added deterministic zero-byte post-warm-up current-thread allocation evidence for a representative preallocated mutable JOML workload. It also verified the D-041 +90° +Y mapping from forward `(0,0,-1)` to left `(-1,0,0)`.
+## P4-T05 executable checkpoint — descendant-only dirty propagation
 
-Final candidate `55d677d3bb83b91a1ef23e31bf8b08ebc9d1e557` passed all five heavy jobs in run `35120185073`, merged as `58131ddbb72876e4ec5a722bc25b5f17d777b854`, and exact merged master passed lightweight run `35121240096`.
+Issue #98 is activated from exact accepted master `908000921ed93dfec242ca9719d2f53f03b75536` after confirming #97 completion, no open PR conflict, and current `Transform` semantics.
 
-## P4-T03 accepted — cached hierarchical Transform
+The bounded implementation replaces P4-T03's temporary parent-world revision fallback with explicit subtree invalidation:
 
-P4-T03 / Issue #96 introduced public `com.samo.engine.core.api.Transform` with local position, normalized quaternion rotation, local scale, optional parent identity, local `T * R * S`, world `parentWorld * local`, reusable matrix storage, cached world matrix, and lazy parent-world revision validation.
+- `Transform` privately tracks child membership; no public child enumeration API is added;
+- successful local position/rotation/scale mutation marks only that transform and its current descendants dirty;
+- successful reparent/detach updates old/new private child membership and invalidates only the moved subtree;
+- same-parent assignment remains a true no-op;
+- P4-T04 cycle validation still occurs before any hierarchy membership mutation;
+- world reads bring the requested parent current, then recompute only explicit dirty nodes;
+- unrelated ancestors/sibling branches remain cached when a descendant changes;
+- the previous `cachedParentWorldRevision` fallback is removed.
 
-D-042 makes JOML the public math type family for `engine-core` spatial APIs. Public JOML values are copied rather than retained/exposed as internal mutable aliases. Zero and negative scale remain allowed for forward composition only; inverse/decomposition policy is still future work.
+Tests use the existing private `worldRevision` field reflectively rather than introducing production diagnostics. Acceptance cases cover leaf-only invalidation, ancestor/middle subtree propagation, independent branch isolation, reparent, detach, same-parent no-op, and rejected-cycle integrity with hand-specified world positions.
 
-Final candidate `046d46d6cc7663260f8ac50ecbb209a86b07fe94` passed all five heavy jobs in run `35125069380`. PR #171 merged as `fdc7c64488bcd78928f5c95759e616e89fd8b3bd`; exact merged master passed run `35125956410` Lightweight master verification. Issue #96 is closed completed.
+D-044 records private child membership and descendant-only invalidation as the durable cache architecture. No dependency, lockfile, project edge, renderer/world/physics/game production source, serialization format, or sandbox source changes are part of P4-T05.
 
-## P4-T04 executable checkpoint — transform parent cycle rejection
+Independent review: required by the repository architecture-work contract. No separate reviewer identity is available in the connected authoring environment, so final PR/handoff must record `not performed` plus residual risk; CI is not a substitute.
 
-Issue #97 is activated from exact accepted master `fdc7c64488bcd78928f5c95759e616e89fd8b3bd` after a fresh audit of D-041/D-042, `Transform`, current Phase 4 backlog state, and live GitHub state.
-
-The bounded implementation changes only `Transform.setParent(...)` failure semantics:
-
-- same-parent assignment remains a no-op;
-- `null` still detaches;
-- self-parenting and assigning a descendant as the new parent are rejected before mutation;
-- rejection uses `IllegalArgumentException` with stable message `parent assignment would create a transform cycle`;
-- detection walks the proposed parent's current ancestor chain in O(depth), allocation-free;
-- the previous hierarchy/cache/local transform state remains intact after rejection;
-- legal unrelated/ancestor reparenting remains allowed.
-
-P4-T04 intentionally does not add child collections or descendant dirty propagation; P4-T05 owns that optimization. It also adds no dependency, project edge, entity/world storage, serialization, renderer/physics integration, inverse/decomposition API, or concurrency contract.
-
-D-043 records the durable cycle-rejection semantics. Consumer guidance is updated in `wiki/CORE/TRANSFORMS.md` and `wiki/LIMITATIONS.md` so callers no longer have to manually enforce acyclicity.
-
-Independent review is required for this caller-visible failure-semantics decision. No separate reviewer identity is available in the connected authoring environment, so final handoff must record `not performed` and residual risk rather than treating CI as a substitute.
-
-Sandbox impact: none — cycle rejection is failure prevention and there is still no meaningful renderer/world presentation path for hierarchy visualization.
+Sandbox impact: none — descendant invalidation changes transform cache behavior but has no meaningful visual presentation until world/render integration exists.
 
 ## Open gates and blockers
 
@@ -82,8 +72,8 @@ Sandbox impact: none — cycle rejection is failure prevention and there is stil
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None blocks P4-T04 pure Java transform validation work.
+None blocks P4-T05 pure Java transform cache/hierarchy work.
 
 ## Exact next action
 
-Finish P4-T04 code/tests/docs/wiki/self-review on its dedicated branch, then open one final non-draft PR for Issue #97. Require all five heavy jobs on the exact final head; merge only if that tested head and base are still current. Require exact merged `master` Lightweight master verification before closing #97. After acceptance, freshly audit P4-T05 / Issue #98 before implementation.
+Finish P4-T05 docs/wiki/self-review and consistency audit, open one final non-draft PR for Issue #98, require the five-job heavy matrix on the exact final head, merge only that tested candidate if `master` remains current, require exact merged `master` Lightweight master verification, then close #98. Freshly audit P4-T06 / Issue #99 before any later implementation.

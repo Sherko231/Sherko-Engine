@@ -24,6 +24,20 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 
 The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
+### Spatial transforms
+
+| Type | Purpose |
+| --- | --- |
+| `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
+
+`Transform` follows D-041: right-handed world, +X right, +Y up, -Z forward, meters, radians, and dimensionless scale. Local composition is `T * R * S`; world composition is `parentWorld * local`.
+
+D-042 makes JOML the public math type family for `engine-core` spatial APIs. `Transform` setters accept JOML read-only value interfaces and copy them; getters/world-matrix reads copy into caller-owned mutable JOML destinations. No internal mutable vector/quaternion/matrix is exposed.
+
+General transform-parent cycle rejection is not available until P4-T04. P4-T03 uses lazy parent-world revision validation rather than descendant dirty propagation; P4-T05 owns explicit descendant propagation.
+
+Usage: [Transforms](CORE/TRANSFORMS.md) and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
+
 ### Input response and tick-aligned player input
 
 | Type | Purpose |
@@ -112,6 +126,8 @@ The repository also contains game composition entry points, build/test utilities
 - [Subsystem composition/startup](CORE/SUBSYSTEM_COMPOSITION.md)
 - [Timing](CORE/TIMING.md)
 - [Configuration](CORE/CONFIGURATION.md)
+- [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md)
+- [Transforms](CORE/TRANSFORMS.md)
 - [Logging](CORE/LOGGING.md)
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)

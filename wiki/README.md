@@ -8,6 +8,7 @@ Use it when you want to answer questions such as:
 - How do I order and start multiple dependent subsystems?
 - How do I create a production GLFW/OpenGL window?
 - How do I read one stable renderer-frame keyboard/mouse snapshot without calling GLFW?
+- How do I build local/world transforms with the canonical world convention?
 - What world axes and units must future spatial APIs use?
 - How do I log structured engine events?
 - How do I track native resources safely?
@@ -24,14 +25,15 @@ Use it when you want to answer questions such as:
 5. [Timing and fixed-step simulation](CORE/TIMING.md)
 6. [Configuration](CORE/CONFIGURATION.md)
 7. [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md)
-8. [Structured logging](CORE/LOGGING.md)
-9. [Native resource ownership](CORE/NATIVE_RESOURCES.md)
-10. [Fatal termination](CORE/FATAL_TERMINATION.md)
-11. [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
-12. [Renderer-frame input snapshots](PLATFORM/INPUT.md)
-13. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
-14. [Current limitations](LIMITATIONS.md)
-15. [How this wiki must be maintained](MAINTENANCE.md)
+8. [Transforms](CORE/TRANSFORMS.md)
+9. [Structured logging](CORE/LOGGING.md)
+10. [Native resource ownership](CORE/NATIVE_RESOURCES.md)
+11. [Fatal termination](CORE/FATAL_TERMINATION.md)
+12. [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
+13. [Renderer-frame input snapshots](PLATFORM/INPUT.md)
+14. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
+15. [Current limitations](LIMITATIONS.md)
+16. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

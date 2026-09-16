@@ -11,10 +11,11 @@ This is the mandatory starting point for any AI coding agent working in this rep
 5. The active GitHub Issue — the executable implementation contract.
 6. The relevant phase/task in `docs/roadmap/TECHNICAL_BACKLOG.md`.
 7. Relevant sections of `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/BUILD_AND_VERIFY.md`, and feasibility evidence.
-8. Relevant pages under `wiki/` when the task adds, removes, renames, behaviorally changes, or changes the intended consumption of a public engine API.
-9. `game-sandbox/README.md` when the task adds or materially changes an engine capability that may be human-observable through production public APIs.
+8. `docs/SPATIAL_CONVENTIONS.md` before any task that defines, consumes, converts, serializes, tests, or documents math/spatial behavior, transforms, camera/view/projection behavior, renderer world-space assumptions, physics coordinates, asset-space conversion, spatial audio, or network-spatial/quantization behavior.
+9. Relevant pages under `wiki/` when the task adds, removes, renames, behaviorally changes, or changes the intended consumption of a public engine API.
+10. `game-sandbox/README.md` when the task adds or materially changes an engine capability that may be human-observable through production public APIs.
 
-Do not read the entire backlog as permission to implement future work. One active Issue defines one bounded change.
+Do not read the entire backlog or the spatial-conventions document as permission to implement future work. One active Issue defines one bounded change.
 
 ## Truth hierarchy
 
@@ -22,15 +23,16 @@ Use the highest applicable source when information conflicts:
 
 1. `ENGINE_SCOPE.md` for product boundaries and locked technology choices.
 2. `docs/DECISIONS.md` for durable architecture decisions within that scope.
-3. The active GitHub Issue for the exact task contract and allowed change.
-4. Code, tests, Gradle files, workflow configuration, and generated verification evidence for implemented behavior.
-5. `docs/DEVELOPMENT_STATUS.md` for the repository-commit checkpoint and handoff summary.
-6. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
-7. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
-8. `wiki/` for human/AI consumer guidance and practical usage of already implemented public engine APIs.
-9. `game-sandbox/` for owner-facing demonstration of already implemented public behavior only; it never overrides production code/tests or the sources above.
+3. `docs/SPATIAL_CONVENTIONS.md` for the accepted canonical engine world-space, axis, linear/angular-unit, rotation-sign, scale, and adapter-boundary contract when the question is spatial; it elaborates D-041 and may not override `ENGINE_SCOPE.md` or accepted decisions.
+4. The active GitHub Issue for the exact task contract and allowed change.
+5. Code, tests, Gradle files, workflow configuration, and generated verification evidence for implemented behavior.
+6. `docs/DEVELOPMENT_STATUS.md` for the repository-commit checkpoint and handoff summary.
+7. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
+8. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
+9. `wiki/` for human/AI consumer guidance and practical usage of already implemented public engine APIs.
+10. `game-sandbox/` for owner-facing demonstration of already implemented public behavior only; it never overrides production code/tests or the sources above.
 
-If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki and sandbox never override scope, decisions, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the lower source instead.
+If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki and sandbox never override scope, accepted decisions, the canonical spatial contract when applicable, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the lower source instead.
 
 ## Freshness and repository state
 
@@ -46,6 +48,7 @@ Run this audit before implementation and again before opening the final pull req
 
 - Verify every documented dependency or tool major version against the version catalog, relevant Gradle build files, and committed dependency lockfiles. When they disagree, stop and reconcile the active Issue before editing.
 - Treat `README.md` as repository orientation, not an independent status authority. If it names the current phase, completed milestone, module count, or next task, reconcile it with `docs/DEVELOPMENT_STATUS.md`, the roadmap, and live GitHub state.
+- For any spatially relevant task, compare the active Issue, implementation/tests, architecture text, and consumer guidance against `docs/SPATIAL_CONVENTIONS.md`. Do not let a library default, renderer/physics convention, imported asset basis, screen-space convention, or packet format silently redefine engine world space or units.
 - Distinguish a configured CI workflow from a platform-enforced merge requirement. Inspect branch protection or repository rulesets before claiming that CI blocks merging; if no required check exists, state that the agent contract still forbids merging before the required final-candidate verification unless the complete diff qualifies for the Markdown-only exemption below.
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
@@ -188,6 +191,7 @@ Manual `workflow_dispatch` remains available regardless of file type and runs th
 | --- | --- |
 | Product target, platform, v1 boundary, locked technology | `ENGINE_SCOPE.md`, then reconcile `ROADMAP.md` and decisions |
 | Durable architectural choice or superseded choice | `docs/DECISIONS.md` and `docs/ARCHITECTURE.md` |
+| Canonical world-space handedness/axes, linear or angular units, rotation sign, transform-scale convention, or external spatial conversion boundary | `docs/SPATIAL_CONVENTIONS.md`, `docs/DECISIONS.md`, and `docs/ARCHITECTURE.md`; reconcile affected tests/wiki/adapter docs |
 | Module role/dependency/status change | `docs/ARCHITECTURE.md` |
 | Build command, CI gate, or evidence command change | `docs/BUILD_AND_VERIFY.md` |
 | Completed task, next action, blocker, or verified conclusion | `docs/DEVELOPMENT_STATUS.md` |
@@ -208,10 +212,11 @@ Before yielding to another agent or opening the final PR:
 2. Confirm the active Issue and pull request state; normally no non-draft PR exists until the candidate is final.
 3. Run applicable focused verification from `docs/BUILD_AND_VERIFY.md`, or record a complete-diff Markdown-only exemption when it applies.
 4. Update the required documents from the matrix before final-candidate CI.
-5. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
-6. Evaluate `game-sandbox` impact. Update the demo/README through production public APIs when appropriate; otherwise record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
-7. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
-8. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
-9. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
-10. Ensure all intended changes are committed and pushed **before** opening/marking the final PR ready for heavy CI. Uncommitted local state is not transferable through Markdown.
-11. After the final PR run passes, avoid unnecessary candidate changes; merge only while the tested head/base remain current, then require the lightweight exact-merge verifier before task closure unless the Issue explicitly requires stronger post-merge evidence.
+5. If the task is spatially relevant, verify the final contract/code/tests and any affected adapter/wiki guidance remain consistent with `docs/SPATIAL_CONVENTIONS.md` and do not silently redefine engine world space or units.
+6. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
+7. Evaluate `game-sandbox` impact. Update the demo/README through production public APIs when appropriate; otherwise record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
+8. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
+9. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
+10. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
+11. Ensure all intended changes are committed and pushed **before** opening/marking the final PR ready for heavy CI. Uncommitted local state is not transferable through Markdown.
+12. After the final PR run passes, avoid unnecessary candidate changes; merge only while the tested head/base remain current, then require the lightweight exact-merge verifier before task closure unless the Issue explicitly requires stronger post-merge evidence.

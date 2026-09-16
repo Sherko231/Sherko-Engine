@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.lang.reflect.Field;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -15,6 +16,7 @@ final class TransformTest {
     private static final float EPSILON = 1.0e-5f;
     private static final String CYCLE_ERROR_MESSAGE =
             "parent assignment would create a transform cycle";
+    private static final Field WORLD_REVISION_FIELD = worldRevisionField();
 
     @Test
     void defaultsToIdentityLocalAndWorldTransform() {
@@ -90,7 +92,7 @@ final class TransformTest {
     }
 
     @Test
-    void parentMutationInvalidatesChildCacheLazily() {
+    void parentMutationInvalidatesChildCache() {
         Transform parent = new Transform();
         Transform child = new Transform();
         child.setLocalPosition(1.0f, 0.0f, 0.0f);
@@ -206,6 +208,201 @@ final class TransformTest {
         assertSame(a, b.parent());
         assertTransformedPoint(a, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
         assertTransformedPoint(b, 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f);
+    }
+
+    @Test
+    void leafMutationRecomputesOnlyThatLeaf() {
+        Transform rootA = new Transform();
+        rootA.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middleA = new Transform();
+        middleA.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middleA.setParent(rootA);
+        Transform leafA = new Transform();
+        leafA.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leafA.setParent(middleA);
+
+        Transform rootB = new Transform();
+        rootB.setLocalPosition(100.0f, 0.0f, 0.0f);
+        Transform leafB = new Transform();
+        leafB.setLocalPosition(4.0f, 0.0f, 0.0f);
+        leafB.setParent(rootB);
+
+        assertTransformedPoint(leafA, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leafB, 0.0f, 0.0f, 0.0f, 104.0f, 0.0f, 0.0f);
+        long rootABefore = worldRevision(rootA);
+        long middleABefore = worldRevision(middleA);
+        long leafABefore = worldRevision(leafA);
+        long rootBBefore = worldRevision(rootB);
+        long leafBBefore = worldRevision(leafB);
+
+        leafA.setLocalPosition(7.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leafA, 0.0f, 0.0f, 0.0f, 19.0f, 0.0f, 0.0f);
+
+        assertEquals(rootABefore, worldRevision(rootA));
+        assertEquals(middleABefore, worldRevision(middleA));
+        assertEquals(leafABefore + 1L, worldRevision(leafA));
+        assertEquals(rootBBefore, worldRevision(rootB));
+        assertEquals(leafBBefore, worldRevision(leafB));
+    }
+
+    @Test
+    void ancestorMutationRecomputesOnlyItsSubtree() {
+        Transform rootA = new Transform();
+        rootA.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middleA = new Transform();
+        middleA.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middleA.setParent(rootA);
+        Transform leafA = new Transform();
+        leafA.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leafA.setParent(middleA);
+        Transform rootB = new Transform();
+        Transform leafB = new Transform();
+        leafB.setParent(rootB);
+
+        assertTransformedPoint(leafA, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leafB, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        long rootABefore = worldRevision(rootA);
+        long middleABefore = worldRevision(middleA);
+        long leafABefore = worldRevision(leafA);
+        long rootBBefore = worldRevision(rootB);
+        long leafBBefore = worldRevision(leafB);
+
+        rootA.setLocalPosition(20.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leafA, 0.0f, 0.0f, 0.0f, 25.0f, 0.0f, 0.0f);
+
+        assertEquals(rootABefore + 1L, worldRevision(rootA));
+        assertEquals(middleABefore + 1L, worldRevision(middleA));
+        assertEquals(leafABefore + 1L, worldRevision(leafA));
+        assertEquals(rootBBefore, worldRevision(rootB));
+        assertEquals(leafBBefore, worldRevision(leafB));
+    }
+
+    @Test
+    void middleMutationDoesNotRecomputeParentOrSiblingBranch() {
+        Transform root = new Transform();
+        root.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middle = new Transform();
+        middle.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middle.setParent(root);
+        Transform leaf = new Transform();
+        leaf.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leaf.setParent(middle);
+        Transform sibling = new Transform();
+        sibling.setLocalPosition(50.0f, 0.0f, 0.0f);
+        sibling.setParent(root);
+
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        assertTransformedPoint(sibling, 0.0f, 0.0f, 0.0f, 60.0f, 0.0f, 0.0f);
+        long rootBefore = worldRevision(root);
+        long middleBefore = worldRevision(middle);
+        long leafBefore = worldRevision(leaf);
+        long siblingBefore = worldRevision(sibling);
+
+        middle.setLocalPosition(5.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 18.0f, 0.0f, 0.0f);
+
+        assertEquals(rootBefore, worldRevision(root));
+        assertEquals(middleBefore + 1L, worldRevision(middle));
+        assertEquals(leafBefore + 1L, worldRevision(leaf));
+        assertEquals(siblingBefore, worldRevision(sibling));
+    }
+
+    @Test
+    void reparentInvalidatesOnlyMovedSubtree() {
+        Transform oldRoot = new Transform();
+        oldRoot.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform newRoot = new Transform();
+        newRoot.setLocalPosition(100.0f, 0.0f, 0.0f);
+        Transform middle = new Transform();
+        middle.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middle.setParent(oldRoot);
+        Transform leaf = new Transform();
+        leaf.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leaf.setParent(middle);
+
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        assertTransformedPoint(newRoot, 0.0f, 0.0f, 0.0f, 100.0f, 0.0f, 0.0f);
+        long oldRootBefore = worldRevision(oldRoot);
+        long newRootBefore = worldRevision(newRoot);
+        long middleBefore = worldRevision(middle);
+        long leafBefore = worldRevision(leaf);
+
+        middle.setParent(newRoot);
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 105.0f, 0.0f, 0.0f);
+
+        assertEquals(oldRootBefore, worldRevision(oldRoot));
+        assertEquals(newRootBefore, worldRevision(newRoot));
+        assertEquals(middleBefore + 1L, worldRevision(middle));
+        assertEquals(leafBefore + 1L, worldRevision(leaf));
+    }
+
+    @Test
+    void detachInvalidatesOnlyDetachedSubtree() {
+        Transform root = new Transform();
+        root.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middle = new Transform();
+        middle.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middle.setParent(root);
+        Transform leaf = new Transform();
+        leaf.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leaf.setParent(middle);
+
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        long rootBefore = worldRevision(root);
+        long middleBefore = worldRevision(middle);
+        long leafBefore = worldRevision(leaf);
+
+        middle.setParent(null);
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f);
+
+        assertEquals(rootBefore, worldRevision(root));
+        assertEquals(middleBefore + 1L, worldRevision(middle));
+        assertEquals(leafBefore + 1L, worldRevision(leaf));
+    }
+
+    @Test
+    void sameParentAssignmentDoesNotRecomputeAnything() {
+        Transform parent = new Transform();
+        Transform child = new Transform();
+        child.setLocalPosition(2.0f, 0.0f, 0.0f);
+        child.setParent(parent);
+        assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f);
+        long parentBefore = worldRevision(parent);
+        long childBefore = worldRevision(child);
+
+        child.setParent(parent);
+        assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f);
+
+        assertEquals(parentBefore, worldRevision(parent));
+        assertEquals(childBefore, worldRevision(child));
+    }
+
+    @Test
+    void rejectedCycleDoesNotDirtyOrCorruptChildTracking() {
+        Transform root = new Transform();
+        root.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middle = new Transform();
+        middle.setLocalPosition(2.0f, 0.0f, 0.0f);
+        middle.setParent(root);
+        Transform leaf = new Transform();
+        leaf.setLocalPosition(3.0f, 0.0f, 0.0f);
+        leaf.setParent(middle);
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        long rootBefore = worldRevision(root);
+        long middleBefore = worldRevision(middle);
+        long leafBefore = worldRevision(leaf);
+
+        assertThrows(IllegalArgumentException.class, () -> root.setParent(leaf));
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 15.0f, 0.0f, 0.0f);
+        assertEquals(rootBefore, worldRevision(root));
+        assertEquals(middleBefore, worldRevision(middle));
+        assertEquals(leafBefore, worldRevision(leaf));
+
+        middle.setLocalPosition(4.0f, 0.0f, 0.0f);
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 17.0f, 0.0f, 0.0f);
+        assertEquals(rootBefore, worldRevision(root));
+        assertEquals(middleBefore + 1L, worldRevision(middle));
+        assertEquals(leafBefore + 1L, worldRevision(leaf));
     }
 
     @Test
@@ -327,6 +524,24 @@ final class TransformTest {
         Vector3f actual = new Vector3f(inputX, inputY, inputZ);
         matrix.transformPosition(actual);
         assertVector(actual, expectedX, expectedY, expectedZ);
+    }
+
+    private static long worldRevision(Transform transform) {
+        try {
+            return WORLD_REVISION_FIELD.getLong(transform);
+        } catch (IllegalAccessException error) {
+            throw new AssertionError(error);
+        }
+    }
+
+    private static Field worldRevisionField() {
+        try {
+            Field field = Transform.class.getDeclaredField("worldRevision");
+            field.setAccessible(true);
+            return field;
+        } catch (ReflectiveOperationException error) {
+            throw new ExceptionInInitializerError(error);
+        }
     }
 
     private static void assertVector(Vector3f actual, float x, float y, float z) {

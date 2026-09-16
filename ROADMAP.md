@@ -87,14 +87,14 @@ P4-T01 / Issue #94 is accepted. D-041 establishes the canonical world convention
 
 P4-T01 deliberately did not choose view/projection matrix details, OpenGL NDC/depth policy, reversed-Z, FOV/near/far rules, Euler/quaternion storage policy, external-format/Jolt/OpenAL conversion details, or network quantization. Those remain later bounded tasks. Renderer, physics, and asset-conversion tests must cite the canonical document once those production paths exist; P4-T01 did not fabricate future implementations to satisfy that forward-looking requirement early.
 
-P4-T02 / Issue #95 has been freshly audited and activated as an executable task. It pins JOML as the `engine-core` implementation math dependency and verifies the existing backlog requirement that representative hot-loop vector/quaternion/matrix arithmetic reuses mutable caller-owned destinations without measured post-warm-up heap allocation. It does not implement P4-T03 `Transform` or expose a public math API. Live GitHub state determines whether #95 is still active or already accepted. P4-T03 through P4-T09 remain separately planned tasks and must be freshly audited before execution. The Phase 4 exit remains: spatial tests pass independently of OpenGL and Jolt.
+P4-T02 / Issue #95 is accepted through PR #170. It pins JOML 1.10.9 in `engine-core` and verifies the existing hot-loop requirement with preallocated mutable vector/quaternion/matrix arithmetic and repeated zero-byte post-warm-up allocation-counter windows. P4-T03 / Issue #96 is the active executable task: it introduces the public cached hierarchical `Transform`, promotes JOML to the public `engine-core` spatial math type family, composes local matrices as `T * R * S`, and composes world matrices as `parentWorld * local` while preserving D-041. P4-T04 through P4-T09 remain separately bounded tasks; cycle rejection and explicit descendant dirty propagation are not pulled into P4-T03. The Phase 4 exit remains: spatial tests pass independently of OpenGL and Jolt.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-4---math-and-spatial-conventions). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
 
 ## Milestone exit outcomes
 
 ### M0 — Feasibility
-The base stack passed its smoke gates. P0-T09A blocks production Steam transport claims; P0-T13/P0-T14 block long-duration native-stability claims.
+The base stack passed its smoke gates. P0-T09A blocks production Steam transport work; P0-T13/P0-T14 block long-duration native-stability claims.
 
 ### M1 — Engine foundation
 Client and headless server run from repeatable commands; the runtime UI module boundary, fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.

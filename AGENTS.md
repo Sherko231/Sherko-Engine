@@ -30,7 +30,7 @@ Use the highest applicable source when information conflicts:
 7. GitHub Issues/Project for live workflow state that may have changed after the checked-out commit.
 8. `ROADMAP.md` and `docs/roadmap/TECHNICAL_BACKLOG.md` for planned outcomes and future task definitions.
 9. `wiki/` for human/AI consumer guidance and practical usage of already implemented public engine APIs.
-10. `game-sandbox/` for owner-facing demonstration of already implemented public behavior only; it never overrides production code/tests or the sources above.
+10. `game-sandbox/` for owner-facing observation of already implemented public behavior only; it never overrides production code/tests or the sources above.
 
 If a lower source conflicts with a higher source, stop and report the conflict. Do not silently choose one. The wiki and sandbox never override scope, accepted decisions, the canonical spatial contract when applicable, an active Issue, code/tests/evidence, status, or roadmap/backlog; correct the lower source instead.
 
@@ -53,7 +53,7 @@ Run this audit before implementation and again before opening the final pull req
 - Describe automated architecture and quality gates only to the extent their executable tests actually cover. Record known exclusions or gaps; do not infer comprehensive enforcement from task names or configuration.
 - Search repository documentation for stale claims about phase/task state, dependency versions, module counts, runner environment, CI enforcement, and gate coverage. A targeted search supplements reading; it does not replace checking the authoritative sources.
 - When public API or consumer-visible usage changed, compare `wiki/API_INDEX.md`, relevant usage/example pages, and `wiki/LIMITATIONS.md` with the actual production signatures and behavior. Remove stale examples and never document planned APIs as implemented.
-- When the changed capability is or should be observable in `game-sandbox`, compare the sandbox behavior/instructions with the production public API and the active Issue. Do not leave a stale owner-facing demo silently behind the engine.
+- When the changed capability is or should be observable in `game-sandbox`, compare the persistent sandbox behavior/instructions with the production public API and the active Issue. Do not leave the cumulative owner-facing playground silently behind the engine, and do not replace existing usable sandbox capabilities merely to showcase the newest task.
 - Before opening the final PR, make all expected documentation, wiki, sandbox, review-record, and handoff edits. Do not intentionally leave cosmetic/status cleanup until after a passing heavy PR run, because any later commit invalidates that candidate's CI evidence.
 
 ## Work rules
@@ -75,15 +75,19 @@ Run this audit before implementation and again before opening the final pull req
 - Do not use Java object serialization for disk or network protocols.
 - Keep `wiki/` synchronized with production consumer behavior: when a task adds/removes/renames a public engine API, changes a public signature, or changes lifecycle/ownership/threading/failure/configuration semantics visible to callers, update the relevant wiki pages in the same PR. If there is no wiki impact, record `Wiki impact: none — <reason>` rather than making meaningless wiki churn.
 
-## Owner-facing sandbox demo
+## Persistent owner-facing sandbox playground
 
-`game-sandbox` is the canonical manual demo used by the owner to observe the engine's current behavior. It supplements automated verification; it is not test or benchmark authority.
+`game-sandbox` is the canonical persistent, cumulative interactive playground used by the owner to exercise the engine's currently implemented public behavior. It supplements automated verification; it is not test or benchmark authority.
+
+The sandbox is a long-lived product-development surface, not a disposable demo for the current task and not a timed sequence that presents features one by one. The normal goal is that the owner launches one sandbox and can freely use all currently meaningful public capabilities together. New features should extend that same experience rather than replacing older working capabilities with a one-off showcase.
 
 For every task that adds or materially changes an engine capability, explicitly evaluate sandbox impact before handoff:
 
-- If the capability can be demonstrated through already-authorized **public production APIs** without implementing future roadmap work, update the relevant `game-sandbox` demo in the same PR and keep `game-sandbox/README.md` current.
-- If the capability cannot yet be demonstrated meaningfully because the required public API/presentation layer does not exist, record `Sandbox impact: none — <reason>` in the PR/handoff. Do not expose a public API solely for the demo, import engine implementation/internal packages, call LWJGL/native APIs directly from the sandbox, or implement a later task to make the demo richer.
-- Prefer evolving the existing sandbox experience over creating disconnected throwaway demos. Add a separate subsystem-specific entry point only when combining it into the existing demo would be materially confusing or impractical.
+- If the capability can be meaningfully exercised through already-authorized **public production APIs** without implementing future roadmap work, integrate it into the existing `game-sandbox` playground in the same PR and keep `game-sandbox/README.md` current.
+- Preserve already-usable sandbox capabilities unless the active Issue explicitly removes or supersedes them. Do not reset the sandbox into a temporary scripted demo, automatic feature tour, short-lived task-specific executable, or isolated showcase just because one new capability was added.
+- Prefer owner-controlled interaction over automatic timed transitions. A feature that is independently controllable should remain available for the owner to use when desired while other sandbox capabilities continue operating.
+- If the capability cannot yet be represented meaningfully because the required public API/presentation layer does not exist, record `Sandbox impact: none — <reason>` in the PR/handoff. Do not expose a public API solely for the sandbox, import engine implementation/internal packages, call LWJGL/native APIs directly from the sandbox, or implement a later task to make the playground richer.
+- A separate subsystem-specific sandbox entry point is exceptional. Add one only when coexistence in the main playground would be materially confusing or impractical and the active Issue explicitly authorizes the separate surface. Do not create throwaway demos by default.
 - Human-observable sandbox output may include clearly labeled diagnostics, but do not call a loop rate `FPS`, a benchmark, soak evidence, leak proof, or performance acceptance unless the active Issue actually establishes that measurement contract.
 - Sandbox execution never replaces unit tests, native acceptance, integration evidence, final-candidate PR CI, the lightweight exact-merge verifier, P0 feasibility gates, or any stronger task-specific acceptance requirement.
 
@@ -200,7 +204,7 @@ Manual `workflow_dispatch` remains available regardless of file type and runs th
 | Planned task definition or acceptance change | `docs/roadmap/TECHNICAL_BACKLOG.md`; update an existing executable Issue too |
 | Feasibility run/result change | matching file under `docs/feasibility/` plus status if the conclusion is durable |
 | Public engine API or consumer-visible API usage/lifecycle/ownership/configuration behavior change | relevant `wiki/` pages, including `wiki/API_INDEX.md` and `wiki/LIMITATIONS.md` when public surface/availability changes |
-| Human-observable engine capability or sandbox maintenance policy change | relevant `game-sandbox` source plus `game-sandbox/README.md`; if no runnable sandbox update is appropriate, record `Sandbox impact: none — <reason>` |
+| Human-observable engine capability or persistent-sandbox maintenance policy change | relevant `game-sandbox` source plus `game-sandbox/README.md`; integrate into the cumulative playground when possible, otherwise record `Sandbox impact: none — <reason>` |
 
 Update only the rows that apply. Do not copy volatile live status into every document. The wiki is consumer guidance and must not become a competing status/architecture authority.
 
@@ -214,7 +218,7 @@ Before yielding to another agent or opening the final PR:
 4. Update the required documents from the matrix before final-candidate CI.
 5. If the task is spatially relevant, verify the final contract/code/tests and any affected adapter/wiki guidance remain consistent with `docs/SPATIAL_CONVENTIONS.md` and do not silently redefine engine world space or units.
 6. If public API or consumer-visible behavior changed, verify the relevant `wiki/` pages/examples against production signatures and behavior; otherwise record `Wiki impact: none — <reason>` in the PR/handoff.
-7. Evaluate `game-sandbox` impact. Update the demo/README through production public APIs when appropriate; otherwise record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
+7. Evaluate `game-sandbox` impact. Integrate the capability into the existing persistent cumulative playground through production public APIs when appropriate; preserve existing usable capabilities and owner freedom instead of creating a temporary scripted showcase. If no runnable sandbox update is appropriate, record `Sandbox impact: none — <reason>` without bypassing boundaries or pulling future tasks forward.
 8. Repeat the consistency audit and resolve every stale or overstated claim in the files affected by the active Issue.
 9. Put the exact next action, remaining blockers, and skipped checks in `docs/DEVELOPMENT_STATUS.md` or the pull request, as appropriate.
 10. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.

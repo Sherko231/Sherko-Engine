@@ -24,19 +24,26 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 
 The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
-### Spatial transforms
+### Spatial transforms and geometry
 
 | Type | Purpose |
 | --- | --- |
 | `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
+| `Ray3f` | Immutable normalized world-space ray with plane/sphere/AABB intersections. |
+| `Plane3f` | Immutable normalized plane using `normal dot point + offset = 0`. |
+| `Sphere3f` | Immutable world-space sphere with inclusive containment/intersection queries. |
+| `Aabb3f` | Immutable axis-aligned box with inclusive containment/intersection queries. |
+| `Frustum3f` | Immutable six-inward-plane frustum with point/sphere/AABB classification. |
 
 `Transform` follows D-041: right-handed world, +X right, +Y up, -Z forward, meters, radians, and dimensionless scale. Local composition is `T * R * S`; world composition is `parentWorld * local`.
 
 D-042 makes JOML the public math type family for `engine-core` spatial APIs. `Transform` setters accept JOML read-only value interfaces and copy them; getters/world-matrix reads copy into caller-owned mutable JOML destinations. No internal mutable vector/quaternion/matrix is exposed.
 
-General transform-parent cycle rejection is not available until P4-T04. P4-T03 uses lazy parent-world revision validation rather than descendant dirty propagation; P4-T05 owns explicit descendant propagation.
+Transform parent cycles are rejected atomically, and successful local/reparent changes explicitly invalidate only the affected transform subtree while unrelated branches remain cached.
 
-Usage: [Transforms](CORE/TRANSFORMS.md) and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
+D-044 defines the P4-T06 geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly without selecting projection/NDC/depth conventions.
+
+Usage: [Transforms](CORE/TRANSFORMS.md), [Spatial primitives](CORE/SPATIAL_PRIMITIVES.md), and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
 
 ### Input response and tick-aligned player input
 
@@ -128,6 +135,7 @@ The repository also contains game composition entry points, build/test utilities
 - [Configuration](CORE/CONFIGURATION.md)
 - [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md)
 - [Transforms](CORE/TRANSFORMS.md)
+- [Spatial primitives](CORE/SPATIAL_PRIMITIVES.md)
 - [Logging](CORE/LOGGING.md)
 - [Native resources](CORE/NATIVE_RESOURCES.md)
 - [Fatal termination](CORE/FATAL_TERMINATION.md)

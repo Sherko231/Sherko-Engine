@@ -12,16 +12,22 @@ Implemented:
 - caller-owned input/destination values are copied rather than retained as internal mutable aliases;
 - self-parenting and indirect transform-parent cycles are rejected atomically before hierarchy mutation;
 - successful local/reparent mutations explicitly dirty only the changed transform and its descendants, while unrelated branches remain cached;
-- private child membership exists only to support invalidation and is not a public hierarchy-enumeration API.
+- private child membership exists only to support invalidation and is not a public hierarchy-enumeration API;
+- immutable `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, and `Frustum3f` world-geometry primitives;
+- normalized ray directions and plane equations, inclusive contact/containment semantics, ray plane/sphere/AABB queries, and frustum point/sphere/AABB classification;
+- geometry queries use exact production comparisons without an implicit epsilon; ray misses return `Float.NaN`.
 
 Current limitations:
 
+- `Frustum3f` accepts six inward-facing planes directly; there is no view/projection-matrix extraction yet;
+- screen-to-world ray construction, camera view/projection helpers, clip/NDC/depth convention, and reversed-Z policy are not implemented yet;
 - no public child enumeration or scene-graph API exists; hierarchy ownership beyond `parent()`/`setParent(...)` remains internal;
 - no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, serialization/quantization, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
+- no broad-phase structure, generic collision dispatcher, renderer-culling integration, or physics query adapter is part of the geometry primitive API;
 - zero and negative scale are allowed for forward composition, so consumers must not assume a transform is invertible;
 - `Transform` is mutable and externally serialized; concurrent mutation/read guarantees are not provided.
 
-Usage: [Transforms](CORE/TRANSFORMS.md) and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
+Usage: [Transforms](CORE/TRANSFORMS.md), [Spatial primitives](CORE/SPATIAL_PRIMITIVES.md), and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
 
 ## Platform/input
 

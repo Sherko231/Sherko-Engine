@@ -83,7 +83,7 @@ An all-zero quaternion or non-finite rotation fails with `IllegalArgumentExcepti
 
 Scale components must be finite.
 
-Zero and negative scale are allowed for forward transform composition. P4-T03 does not define inverse transforms or world/local decomposition, so consumers must not assume invertibility.
+Zero and negative scale are allowed for forward transform composition. The current API does not define inverse transforms or world/local decomposition, so consumers must not assume invertibility.
 
 ## Parenting, cycle rejection, and caching
 
@@ -97,9 +97,9 @@ IllegalArgumentException: parent assignment would create a transform cycle
 
 The rejection happens before hierarchy mutation, so the previous parent and cached/local transform behavior remain intact. Legal reparenting to an unrelated transform or to an existing ancestor remains allowed when it does not create a cycle.
 
-World matrices are cached. Local changes mark that transform dirty. A child also tracks the revision of the parent's cached world matrix, so a later child read observes parent changes even before descendant dirty propagation exists.
+World matrices are cached. A successful local position/rotation/scale mutation explicitly marks that transform and all of its descendants dirty. A successful reparent or detach updates private child membership and marks the moved subtree dirty. Ancestors and unrelated branches are not invalidated merely because a descendant changed.
 
-No child collection or descendant walk is part of P4-T04. P4-T05 separately owns explicit descendant dirty propagation. The current revision-based lazy validation keeps reads correct without implementing that future optimization early.
+When `worldMatrix(...)` is read, the requested transform first brings its parent current, then recomputes only if that transform is dirty. Private child tracking exists solely for invalidation and is not exposed as a public hierarchy-enumeration API.
 
 ## Threading
 

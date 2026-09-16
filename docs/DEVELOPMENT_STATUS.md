@@ -7,9 +7,9 @@
 | Field | Value |
 | --- | --- |
 | Verified starting `master` | `b9144e9e939cf468a5228f499aac130886d16456` |
-| Last accepted feature | P3-T09 / Issue #92 / PR #159; merged commit `b9144e9e939cf468a5228f499aac130886d16456`; heavy workflow #294 / run `34771652425` passed; exact-merge workflow #295 / run `34771935986` passed |
-| Active feature implementation | P3-T10 / Issue #93 / branch `p3-t10-input-response-settings` |
-| Next planned phase | Phase 4 planning review after P3-T10 completion and Phase 3 exit confirmation |
+| Last accepted feature before this candidate | P3-T09 / Issue #92 / PR #159; merged commit `b9144e9e939cf468a5228f499aac130886d16456`; heavy workflow #294 / run `34771652425` passed; exact-merge workflow #295 / run `34771935986` passed |
+| Final Phase 3 task represented by this checkpoint | P3-T10 / Issue #93 / PR #160 candidate; consult live GitHub state for final-candidate/merge verification and closure |
+| Next planned phase | Phase 4 planning review only after P3-T10 acceptance and Phase 3 exit confirmation |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4; P1 and P2 are complete |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
@@ -27,11 +27,11 @@ P3-T09 completed through PR #159. Its exact final PR candidate `0e480de55f43adbd
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## P3-T10 active implementation — deterministic input response settings
+## P3-T10 implementation represented here — deterministic input response settings
 
-Issue #93 is ACTIVE / executable. The branch starts exactly from verified `master` `b9144e9e...`.
+Issue #93 is the executable contract for the final required Phase 3 task. This checkpoint contains its bounded implementation; live GitHub Issue #93 / PR #160 state determines whether final-candidate CI, merge, exact-merge verification, the Phase 4 planning review, and closure have occurred after this commit was created.
 
-Current implementation scope:
+Implemented scope:
 
 - new immutable `engine-core` `InputResponseSettings` with mouse sensitivity, Y inversion, controller dead zone, and controller response exponent;
 - neutral defaults `1.0 / false / 0.0 / 1.0`;
@@ -44,19 +44,19 @@ Current implementation scope:
 - controller response math is defined and tested without introducing controller discovery, polling, vocabulary, callbacks, or bindings;
 - P3-T09 `PlayerInputCommand`, codec, sampler, and replay semantics remain unchanged.
 
-D-040 is the intended durable decision for this bounded response-settings ownership/flow.
+D-040 records the durable response-settings ownership/flow.
 
 ## Scope boundaries
 
 P3-T10 does not implement controller/gamepad capture, radial stick dead zones, mouse smoothing/acceleration, per-axis sensitivity, settings persistence/UI, gameplay camera/movement, production networking, packet changes, prediction/replication, or Phase 4 work.
 
-No `ENGINE_SCOPE.md`, external dependency, version catalog, dependency lockfile, workflow, project/module dependency edge, binding JSON schema, `InputSnapshot`, `PlayerInputCommand`, replay codec, or game-server dependency change is authorized.
+No `ENGINE_SCOPE.md`, external dependency, version catalog, dependency lockfile, workflow, project/module dependency edge, binding JSON schema, `InputSnapshot`, `PlayerInputCommand`, replay codec, or game-server dependency change is authorized or present in this candidate.
 
 ## Verification state
 
 This authoring environment has connected GitHub access but no local repository checkout/toolchain. No local Gradle pass is claimed.
 
-Focused verification required on the final candidate:
+Focused verification selectors for P3-T10 are:
 
 ```powershell
 .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.InputResponseSettingsTest" --rerun-tasks
@@ -67,13 +67,13 @@ Focused verification required on the final candidate:
 .\gradlew.bat resolveAndLockAllDependencies
 ```
 
-The final non-draft PR must pass the normal heavy five-job matrix on the exact final head. If the branch changes after that pass, the prior run becomes obsolete. Merge only while the tested head and base remain current; then require the lightweight exact-merge `master` verifier.
+Final acceptance requires the normal heavy five-job matrix on the exact final PR head. If the branch changes after a pass, the prior run is obsolete. Merge only while the tested head and base remain current; then require the lightweight exact-merge `master` verifier. The authoritative current result belongs in live PR #160 / Issue #93 because workflow state can advance after this file's commit.
 
 ## Phase 3 exit status
 
-The P3-T09 replay scenario already exercises the backlog exit behavior: a fixed device-neutral command sequence can be encoded, decoded, and replayed into a headless deterministic test consumer with the same independently calculated result.
+The P3-T09 replay scenario exercises the backlog exit behavior: a fixed device-neutral command sequence can be encoded, decoded, and replayed into a headless deterministic test consumer with the same independently calculated result.
 
-P3-T10 is the last required Phase 3 task. Phase 3 may be marked complete only after the P3-T10 exact final candidate passes its response tests plus the existing replay evidence, merges, and the exact merged `master` passes the lightweight verifier. Then perform and record the P4 planning review before activating P4-T01.
+P3-T10 is the last required Phase 3 task. Do not infer Phase 3 completion from this file alone. Confirm live evidence that the exact P3-T10 final candidate passed its response tests plus existing replay evidence, merged with a current base, and the exact merged `master` passed the lightweight verifier. Then perform and record the P4 planning review before activating P4-T01.
 
 ## Open gates and blockers
 
@@ -83,15 +83,14 @@ P3-T10 is the last required Phase 3 task. Phase 3 may be marked complete only af
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None of those gates blocks bounded P3-T10 response-settings work.
+None of those gates blocks bounded P3-T10 response-settings work or the subsequent Phase 4 planning review.
 
 ## Exact next action
 
-1. finish D-040 / architecture / build-verification / wiki synchronization and complete-diff self-review;
-2. confirm branch remains based on current `master` and no conflicting PR exists;
-3. open one final non-draft PR with `Refs #93`;
-4. require all five heavy PR jobs on the exact final head;
-5. correct any failures only on the task branch and require a fresh exact-head pass;
-6. merge only while the tested head/base remain current;
-7. require lightweight exact-merge `master` verification;
-8. record final P3-T10 and Phase 3 exit evidence, perform the P4 planning review, and close #93 only when all acceptance is consistent.
+Inspect live Issue #93 and PR #160 before doing anything else.
+
+- If PR #160 has not yet passed heavy CI on its current head, finish that exact-candidate verification; any newer commit invalidates older CI evidence.
+- If the exact current candidate passed but is not merged, re-confirm its head and `master` base are unchanged, then merge.
+- If merged, require the lightweight exact-merge `master` verifier on the merge SHA.
+- Only after that evidence passes, record the Phase 4 planning review against the completed Phase 3 evidence, record final P3-T10 completion evidence, and close #93.
+- Do not activate or implement P4-T01 until those live steps are complete.

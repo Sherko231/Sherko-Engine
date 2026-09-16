@@ -33,6 +33,8 @@ For valid primitives, ray intersections return the nearest non-negative paramete
 
 `Ray3f.pointAt(t, destination)` accepts only finite `t >= 0`.
 
+`ScreenRays.worldRay(...)` can now construct a `Ray3f` from screen/viewport coordinates plus view/projection matrices. That mapping follows D-046: top-left/Y-down screen space, same-domain sample/viewport coordinates, D-045 clip depths, inverse `projection * view`, and a near-plane ray origin. See [Spatial conventions](SPATIAL_CONVENTIONS.md) for the exact mapping.
+
 ## Planes
 
 A `Plane3f` uses:
@@ -72,4 +74,4 @@ Frustum3f frustum = new Frustum3f(left, right, bottom, top, near, far);
 
 A point is inside/on the frustum when every plane reports `signedDistance >= 0`. Sphere and AABB contact with a plane counts as intersection.
 
-P4-T06 intentionally does not extract frustum planes from view/projection matrices and does not choose OpenGL depth/NDC conventions. Camera projection construction and screen-to-world rays are separate Phase 4 tasks.
+`Frustum3f` still does not extract planes from view/projection matrices; matrix-to-frustum extraction remains separate future work. D-045 now defines camera projection and D-046 defines screen-to-world rays without changing the direct-plane frustum contract.

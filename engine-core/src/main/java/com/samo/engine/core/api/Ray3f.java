@@ -105,41 +105,53 @@ public final class Ray3f {
 
         double tMin = 0.0;
         double tMax = Double.POSITIVE_INFINITY;
-        double[] interval = updateSlab(originX, directionX, aabb.minX(), aabb.maxX(), tMin, tMax);
-        if (interval == null) return Float.NaN;
-        tMin = interval[0];
-        tMax = interval[1];
-        interval = updateSlab(originY, directionY, aabb.minY(), aabb.maxY(), tMin, tMax);
-        if (interval == null) return Float.NaN;
-        tMin = interval[0];
-        tMax = interval[1];
-        interval = updateSlab(originZ, directionZ, aabb.minZ(), aabb.maxZ(), tMin, tMax);
-        if (interval == null) return Float.NaN;
-        tMin = interval[0];
-        return tMin <= Float.MAX_VALUE ? (float) tMin : Float.NaN;
-    }
 
-    private static double[] updateSlab(
-            double origin,
-            double direction,
-            double minimum,
-            double maximum,
-            double tMin,
-            double tMax) {
-        if (direction == 0.0) {
-            return origin >= minimum && origin <= maximum ? new double[] {tMin, tMax} : null;
+        if (directionX == 0.0f) {
+            if (originX < aabb.minX() || originX > aabb.maxX()) return Float.NaN;
+        } else {
+            double first = (aabb.minX() - originX) / directionX;
+            double second = (aabb.maxX() - originX) / directionX;
+            if (first > second) {
+                double temporary = first;
+                first = second;
+                second = temporary;
+            }
+            tMin = Math.max(tMin, first);
+            tMax = Math.min(tMax, second);
+            if (tMin > tMax) return Float.NaN;
         }
-        double inverseDirection = 1.0 / direction;
-        double first = (minimum - origin) * inverseDirection;
-        double second = (maximum - origin) * inverseDirection;
-        if (first > second) {
-            double temporary = first;
-            first = second;
-            second = temporary;
+
+        if (directionY == 0.0f) {
+            if (originY < aabb.minY() || originY > aabb.maxY()) return Float.NaN;
+        } else {
+            double first = (aabb.minY() - originY) / directionY;
+            double second = (aabb.maxY() - originY) / directionY;
+            if (first > second) {
+                double temporary = first;
+                first = second;
+                second = temporary;
+            }
+            tMin = Math.max(tMin, first);
+            tMax = Math.min(tMax, second);
+            if (tMin > tMax) return Float.NaN;
         }
-        tMin = Math.max(tMin, first);
-        tMax = Math.min(tMax, second);
-        return tMin <= tMax ? new double[] {tMin, tMax} : null;
+
+        if (directionZ == 0.0f) {
+            if (originZ < aabb.minZ() || originZ > aabb.maxZ()) return Float.NaN;
+        } else {
+            double first = (aabb.minZ() - originZ) / directionZ;
+            double second = (aabb.maxZ() - originZ) / directionZ;
+            if (first > second) {
+                double temporary = first;
+                first = second;
+                second = temporary;
+            }
+            tMin = Math.max(tMin, first);
+            tMax = Math.min(tMax, second);
+            if (tMin > tMax) return Float.NaN;
+        }
+
+        return tMin <= Float.MAX_VALUE ? (float) tMin : Float.NaN;
     }
 
     private static void requireFinite(float value, String name) {

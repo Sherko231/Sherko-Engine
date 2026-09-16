@@ -17,7 +17,11 @@
 | Accepted Phase 4 task | P4-T01 / Issue #94 / PR #161 |
 | P4-T01 merged commit | `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54` |
 | P4-T01 verification | Markdown-only exemption after complete-diff and contradiction audit; no build/runtime CI required by policy |
-| Cross-cutting maintenance candidate | Issue #165 — persistent cumulative `game-sandbox` playground; confirm live PR/CI state before treating it as accepted |
+| Accepted cross-cutting maintenance | Issue #165 / PR #166 — persistent cumulative `game-sandbox` playground |
+| Sandbox final candidate | `0f8fad8abf8e8e8a723b95ff60e7a459816989a0` |
+| Sandbox heavy verification | workflow #301 / run `35113258638`, all five required jobs passed |
+| Sandbox merged `master` | `0526f7b4758c204e247b6d02d2063cace12ce89c` |
+| Sandbox exact-merge verification | workflow #302 / run `35113801623`, lightweight master verification passed |
 | Next planned roadmap task | P4-T02 / Issue #95 — requires fresh audit/activation before implementation |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
@@ -37,11 +41,11 @@ P3-T09's replay scenario satisfied the Phase 3 exit behavior and remained green 
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## Persistent sandbox maintenance — Issue #165 candidate
+## Persistent sandbox maintenance accepted — Issue #165 / PR #166
 
-P3-T04A originally established `game-sandbox` as the owner-facing observation surface using a scripted approximately 38-second timeline. Issue #165 deliberately replaces that presentation/maintenance model without changing the accepted Phase 3 engine APIs or Phase 4 ordering.
+P3-T04A originally established `game-sandbox` as the owner-facing observation surface using a scripted approximately 38-second timeline. Issue #165 / PR #166 deliberately replaced that presentation/maintenance model without changing the accepted Phase 3 engine APIs or Phase 4 ordering.
 
-The candidate model is one persistent cumulative owner playground:
+The accepted model is one persistent cumulative owner playground:
 
 - canonical command: `.\gradlew.bat :game-sandbox:runSandbox`;
 - no fixed duration, automatic feature tour, or automatic shutdown;
@@ -56,9 +60,11 @@ The candidate model is one persistent cumulative owner playground:
 
 The durable maintenance rule is in `AGENTS.md`: when a future capability is meaningfully usable through already-authorized public production APIs, integrate it into this same cumulative playground and preserve existing usable capabilities. Do not replace the sandbox with a temporary timed showcase. If a meaningful sandbox path would require internals, direct native calls, or future roadmap work, record `Sandbox impact: none — <reason>` instead.
 
-This maintenance task adds no renderer, gameplay camera, controller-capture API, world/physics gameplay, networking integration, UI/editor surface, or new engine public API merely to make the sandbox richer. The window therefore remains visually empty until the production renderer boundary exists.
+The maintenance added no renderer, gameplay camera, controller-capture API, world/physics gameplay, networking integration, UI/editor surface, or new engine public API merely to make the sandbox richer. The window therefore remains visually empty until the production renderer boundary exists.
 
-Because Issue #165 changes Java/Gradle files, it is not eligible for the Markdown-only exemption. Before accepting it, require the exact final PR head to pass the normal five-job heavy matrix and require the exact merged `master` commit to pass the ordinary lightweight verifier. Live GitHub state is authoritative for whether those steps are complete.
+Final candidate `0f8fad8abf8e8e8a723b95ff60e7a459816989a0` passed workflow #301 / run `35113258638` with all five required heavy jobs green: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. PR #166 merged as `0526f7b4758c204e247b6d02d2063cace12ce89c`. Exact merged `master` then passed workflow #302 / run `35113801623` Lightweight master verification, including committed dependency-lock resolution, headless-server runtime-boundary verification, and exact-merge client/server version identity. Issue #165 is accepted completed after this handoff checkpoint is merged.
+
+Independent review was not performed because no separate reviewer identity was available in the authoring environment. Wiki impact: none — no public engine API or consumer contract changed.
 
 ## P4-T01 accepted — canonical spatial conventions
 
@@ -112,8 +118,8 @@ The original backlog wording requires renderer, physics, and asset-conversion te
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None of those gates blocks Phase 4 spatial documentation/math work or the sandbox maintenance task.
+None of those gates blocks Phase 4 spatial documentation/math work.
 
 ## Exact next action
 
-Inspect live GitHub state first. If Issue #165 is not yet accepted, finish only that bounded maintenance contract through exact final-head heavy CI, merge, exact-merge lightweight verification, and issue closure. Once #165 is accepted, audit P4-T02 / Issue #95 against current `master`, the accepted D-041 spatial convention, JOML scope, hot-loop allocation evidence requirements, and current architecture before converting #95 from planning to an executable contract. Do not implement P4-T02 from its planning body without that fresh activation.
+Audit P4-T02 / Issue #95 against current `master`, the accepted D-041 spatial convention, JOML scope, hot-loop allocation evidence requirements, and current architecture before converting #95 from planning to an executable contract. Do not implement P4-T02 from its planning body without that fresh activation.

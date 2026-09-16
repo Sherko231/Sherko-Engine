@@ -17,12 +17,15 @@ Implemented:
 - normalized ray directions and plane equations, inclusive contact/containment semantics, ray plane/sphere/AABB queries, and frustum point/sphere/AABB classification;
 - geometry queries use exact production comparisons without an implicit epsilon; ray misses return `Float.NaN`;
 - public `CameraMatrices` construction for right-handed world-to-view matrices and conventional finite perspective projection;
-- vertical FOV in radians, positive aspect/near with `far > near`, camera forward mapped to view `-Z`, and OpenGL NDC depth `[-1,+1]` with near/far at `-1/+1` under D-045.
+- vertical FOV in radians, positive aspect/near with `far > near`, camera forward mapped to view `-Z`, and OpenGL NDC depth `[-1,+1]` with near/far at `-1/+1` under D-045;
+- public `ScreenRays.worldRay(...)` construction from read-only view/projection matrices;
+- top-left/Y-down screen mapping, same-domain screen/viewport coordinates, raster pixel centers at `index + 0.5`, closed viewport boundaries, inverse `projection * view` homogeneous unprojection, near-plane ray origin, and normalized near-to-far direction under D-046.
 
 Current limitations:
 
 - `Frustum3f` accepts six inward-facing planes directly; there is no view/projection-matrix frustum extraction yet;
-- screen-to-world ray construction, viewport/screen-origin and pixel-center mapping, and ray-origin policy are not implemented yet;
+- `ScreenRays` does not convert between GLFW logical-window coordinates and framebuffer pixels; callers must supply screen and viewport values in the same domain;
+- `ScreenRays` returns one immutable ray per call and does not expose a cached projector or zero-allocation destination API;
 - reversed-Z, infinite-far, orthographic, and jittered/TAA projection variants are not implemented;
 - no public camera component/object or Transform-to-camera decomposition API exists;
 - no public child enumeration or scene-graph API exists; hierarchy ownership beyond `parent()`/`setParent(...)` remains internal;

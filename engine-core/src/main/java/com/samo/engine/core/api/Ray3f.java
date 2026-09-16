@@ -37,6 +37,34 @@ public final class Ray3f {
         directionZ = (float) (direction.z() * inverseLength);
     }
 
+    Ray3f(
+            float originX,
+            float originY,
+            float originZ,
+            float directionX,
+            float directionY,
+            float directionZ) {
+        requireFinite(originX, "origin.x");
+        requireFinite(originY, "origin.y");
+        requireFinite(originZ, "origin.z");
+        requireFinite(directionX, "direction.x");
+        requireFinite(directionY, "direction.y");
+        requireFinite(directionZ, "direction.z");
+        double lengthSquared = (double) directionX * directionX
+                + (double) directionY * directionY
+                + (double) directionZ * directionZ;
+        if (!(lengthSquared > 0.0) || !Double.isFinite(lengthSquared)) {
+            throw new IllegalArgumentException("ray direction must have finite non-zero length");
+        }
+        double inverseLength = 1.0 / Math.sqrt(lengthSquared);
+        this.originX = originX;
+        this.originY = originY;
+        this.originZ = originZ;
+        this.directionX = (float) (directionX * inverseLength);
+        this.directionY = (float) (directionY * inverseLength);
+        this.directionZ = (float) (directionZ * inverseLength);
+    }
+
     public Vector3f origin(Vector3f destination) {
         return Objects.requireNonNull(destination, "destination").set(originX, originY, originZ);
     }

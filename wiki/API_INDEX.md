@@ -30,6 +30,7 @@ The engine foundation is locked to a 60 Hz simulation rate at the current stage.
 | --- | --- |
 | `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
 | `CameraMatrices` | Static right-handed view and finite perspective projection construction into caller-owned JOML matrices. |
+| `ScreenRays` | Static screen/viewport-to-world `Ray3f` construction from read-only view/projection matrices. |
 | `Ray3f` | Immutable normalized world-space ray with plane/sphere/AABB intersections. |
 | `Plane3f` | Immutable normalized plane using `normal dot point + offset = 0`. |
 | `Sphere3f` | Immutable world-space sphere with inclusive containment/intersection queries. |
@@ -43,6 +44,8 @@ D-042 makes JOML the public math type family for `engine-core` spatial APIs. `Tr
 Transform parent cycles are rejected atomically, and successful local/reparent changes explicitly invalidate only the affected transform subtree while unrelated branches remain cached.
 
 D-045 defines camera matrices: view space is right-handed with camera forward on `-Z`; perspective uses vertical FOV radians, positive aspect and near plane with `far > near`, conventional finite non-reversed depth, and OpenGL NDC z `[-1,+1]`. `CameraMatrices` mutates only the caller-provided destination after validation and has no renderer/LWJGL dependency.
+
+D-046 defines screen-to-world rays: screen/viewport origin is top-left, Y increases downward, raster pixel centers are at `index + 0.5`, screen samples and viewport coordinates must use the same coordinate domain, and closed viewport edges map to NDC `±1`. `ScreenRays.worldRay(...)` unprojects D-045 near/far clip depths through inverse `projection * view`, starts the returned `Ray3f` on the near plane, and points it toward the corresponding far point. It performs no GLFW logical/framebuffer conversion.
 
 D-044 defines the geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly.
 

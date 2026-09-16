@@ -38,6 +38,26 @@ Positive rotation follows the right-hand rule around the positive axis.
 
 Both APIs write into a caller-owned JOML `Matrix4f` destination after validating all inputs. `engine-core` does not depend on LWJGL/OpenGL to perform this math.
 
+## Screen-to-world rays
+
+`ScreenRays.worldRay(...)` converts one continuous screen sample and viewport rectangle into an immutable world-space `Ray3f`.
+
+The public mapping is:
+
+- viewport origin is top-left;
+- X increases right and Y increases down;
+- screen sample and viewport must use the same coordinate domain/units;
+- when using raster-pixel coordinates, whole numbers are pixel edges and a pixel center is at `index + 0.5`;
+- samples on the closed viewport boundary are valid;
+- screen X maps to NDC `[-1,+1]` left-to-right;
+- screen Y maps to NDC `[+1,-1]` top-to-bottom;
+- near/far clip depths are D-045's `-1/+1`;
+- unprojection uses inverse `projection * view` plus homogeneous division;
+- the ray origin is the unprojected near-plane point;
+- ray direction points from the near point toward the corresponding far point and is normalized.
+
+The API intentionally does not convert between GLFW logical coordinates and framebuffer pixels. Use either domain only when the sample and viewport rectangle are both expressed in that domain.
+
 ## External libraries and formats
 
 Treat the engine convention as the stable side of every boundary. If a renderer, physics library, audio library, asset format, editor surface, or network representation uses different axes or units, its owning adapter converts explicitly when data enters or leaves engine world space.
@@ -46,18 +66,14 @@ Do not use transform scale as a hidden unit conversion.
 
 ## Still intentionally undefined
 
-P4-T08 does not define:
+Current Phase 4 work still does not define:
 
-- window/framebuffer screen origin or Y direction;
-- pixel-center versus pixel-edge mapping;
-- screen-to-NDC viewport mapping and screen-to-world ray origin policy;
+- automatic logical-window ↔ framebuffer coordinate conversion;
 - texture or UV origin;
 - glTF/Jolt/OpenAL conversion details;
 - Euler storage order or quaternion canonical sign;
 - network transform quantization.
 
-P4-T07 owns the screen-coordinate/unprojection choices required to build world rays.
-
 ## API status
 
-Implemented public spatial APIs now include hierarchical `Transform`, immutable ray/plane/sphere/AABB/frustum primitives, and `CameraMatrices` view/perspective construction. Screen-to-world ray construction and network quantization remain later Phase 4 tasks.
+Implemented public spatial APIs now include hierarchical `Transform`, immutable ray/plane/sphere/AABB/frustum primitives, `CameraMatrices` view/perspective construction, and `ScreenRays` screen-to-world ray construction. Network quantization remains a later Phase 4 task.

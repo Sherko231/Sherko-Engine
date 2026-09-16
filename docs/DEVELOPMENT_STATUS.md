@@ -8,44 +8,47 @@
 | --- | --- |
 | Active phase | Phase 4 — Math and spatial conventions |
 | Accepted through P4-T06 | Issues #94–#99; P4-T06 merged by PR #174 |
-| P4-T06 final candidate | `c515a1a1444b7d594eef519f6009e0a53d52b8c6` |
-| P4-T06 heavy verification | run `35132115464` (#328), all five required jobs passed after infrastructure-only retries on the same SHA |
-| P4-T06 merged `master` | `19e790bec9ab2dc93d14b19e995bf212e169506c` |
-| P4-T06 exact-merge verification | run `35135140749` (#329), Lightweight master verification passed |
-| Active executable task | P4-T08 / Issue #101 — view and perspective projection matrices |
-| P4-T08 activation baseline | `19e790bec9ab2dc93d14b19e995bf212e169506c` |
-| Deferred until P4-T08 accepted | P4-T07 / Issue #100 — screen-to-world ray construction |
+| P4-T08 accepted | Issue #101 / PR #175 |
+| P4-T08 final candidate | `2ac964f60f115a2cee58e0d8b34b4d586079f698` |
+| P4-T08 heavy verification | run `35137500332` (#330), all five required jobs passed after infrastructure-only retries on the same SHA |
+| P4-T08 merged `master` | `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` |
+| P4-T08 exact-merge verification | run `35139973161` (#331), Lightweight master verification passed after codeload timeout retries |
+| Active executable task | P4-T07 / Issue #100 — screen-to-world ray construction |
+| P4-T07 activation baseline | `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` |
 | Accepted sandbox maintenance | Issue #165 / PR #166 — persistent cumulative owner playground |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
-## Accepted Phase 4 foundation through P4-T06
+## Accepted Phase 4 foundation
 
 D-041 fixes right-handed world space with +X right, +Y up, -Z forward, meters, radians internally, right-hand positive rotation, and dimensionless scale. P4-T02 pins JOML 1.10.9 and records bounded hot-loop allocation evidence. D-042/P4-T03 provides public hierarchical `Transform`; P4-T04 rejects parent cycles atomically; P4-T05 propagates transform dirtiness only through affected descendants.
 
 D-044/P4-T06 adds immutable public `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, and `Frustum3f` geometry primitives with copied JOML inputs, normalized ray/plane definitions, exact boundary-inclusive tests, and no projection/depth assumption. P4-T06 final candidate `c515a1a1444b7d594eef519f6009e0a53d52b8c6` passed the required five heavy jobs in run #328. PR #174 merged as `19e790bec9ab2dc93d14b19e995bf212e169506c`; exact merged master passed run #329 Lightweight master verification. Issue #99 is closed completed.
 
-## P4-T08 executable checkpoint — camera matrices
+D-045/P4-T08 adds public `CameraMatrices` view/perspective construction. View space is right-handed with camera forward on `-Z`; perspective uses vertical FOV radians, positive aspect/near with `far > near`, conventional finite non-reversed depth, and OpenGL NDC `[-1,+1]` with near/far at `-1/+1`. P4-T08 final candidate `2ac964f60f115a2cee58e0d8b34b4d586079f698` passed the five-job heavy matrix in run #330. PR #175 merged as `58b775fb634a1bb27ae6193194dd1c5d7f670ffa`; exact merged master passed run #331 Lightweight master verification. Issue #101 is closed completed.
 
-Fresh dependency review found that P4-T07/#100 explicitly requires the projection/depth convention owned by P4-T08/#101. P4-T08 is therefore executed first rather than silently selecting clip/depth semantics inside the ray task.
+## P4-T07 executable checkpoint — screen-to-world rays
 
-Issue #101 is activated from exact accepted master `19e790bec9ab2dc93d14b19e995bf212e169506c`. The bounded implementation adds public `CameraMatrices` in `engine-core`:
+Issue #100 is activated from exact accepted master `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` now that D-045 supplies its required projection/depth contract.
 
-- `view(position, forward, up, destination)` constructs a right-handed world-to-view matrix with camera forward mapped to view-space `-Z`;
-- `perspective(verticalFovRadians, aspectRatio, nearPlane, farPlane, destination)` constructs conventional finite perspective projection;
-- FOV is vertical and in radians;
-- near/far are meters with `near > 0` and `far > near`;
-- NDC depth is the OpenGL `[-1,+1]` convention, near `-1`, far `+1`;
-- reversed-Z is not selected;
-- methods validate fully before mutating caller-owned destinations and allocate no temporary JOML objects in the production path.
+The bounded implementation adds public `ScreenRays.worldRay(...)` in `engine-core`:
 
-D-045 records this durable convention. Analytical tests cover identity/translated/rotated views, non-unit/non-orthogonal inputs, invalid atomic failure, near/far NDC mapping, horizontal/vertical frustum edges, and destination reuse.
+- top-left screen/viewport origin, X right and Y down;
+- continuous sample coordinates in the same domain as the viewport rectangle;
+- raster pixel centers at `index + 0.5` when pixel coordinates are used;
+- closed viewport boundary mapped to NDC `±1`;
+- D-045 near/far clip depths `-1/+1`;
+- inverse `projection * view` homogeneous unprojection;
+- near-plane ray origin and normalized near-to-far direction;
+- no implicit logical-window/framebuffer conversion and no OpenGL/GLFW dependency.
 
-No dependency, lockfile, Gradle edge, renderer/platform/world/game source, Transform/geometry API, screen-to-world ray API, or sandbox source change is authorized.
+D-046 records this durable mapping. Analytical tests cover center/edge samples, Y direction, viewport offsets, rotated cameras, matrix immutability, singular/non-finite matrices, invalid homogeneous division, and interoperability with existing `Ray3f` geometry queries.
+
+No dependency, lockfile, Gradle edge, renderer/platform/world/game source, `CameraMatrices` behavior, Transform behavior, physics query, or sandbox source change is authorized.
 
 Independent review: required for public API/durable architecture work. No separate reviewer identity is available in the connected authoring environment unless one is explicitly provided; final PR must record `not performed` and residual risk. CI is not a substitute.
 
-Sandbox impact: none — camera matrix math has no production world/render presentation surface yet.
+Sandbox impact: none — there is still no production world/render scene/picking presentation surface where screen rays can be honestly demonstrated without pulling future work forward.
 
 ## Open gates and blockers
 
@@ -55,8 +58,8 @@ Sandbox impact: none — camera matrix math has no production world/render prese
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None blocks P4-T08 pure Java camera math.
+None blocks P4-T07 pure Java screen/world math.
 
 ## Exact next action
 
-Finish P4-T08 docs/wiki/self-review and consistency audit on `p4-t08-camera-matrices`, open one final non-draft PR for #101, require the five-job heavy matrix on the exact final head, merge only if the tested head/base remain current, require exact merged-master Lightweight verification, then close #101. After acceptance, return to P4-T07/#100 using D-045 rather than selecting another projection/depth convention.
+Finish P4-T07 implementation/docs/wiki/self-review and consistency audit on `p4-t07-screen-rays`, open one final non-draft PR for #100, require the five-job heavy matrix on the exact final head, merge only if the tested head/base remain current, require exact merged-master Lightweight verification, then close #100. Phase 4 exit remains a separate integration/planning gate.

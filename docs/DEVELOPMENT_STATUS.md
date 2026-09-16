@@ -17,12 +17,14 @@
 | Accepted Phase 4 task | P4-T01 / Issue #94 / PR #161 |
 | P4-T01 merged commit | `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54` |
 | P4-T01 verification | Markdown-only exemption after complete-diff and contradiction audit; no build/runtime CI required by policy |
+| P4-T02 activation baseline | `bbe0fb31a3832f391c2f909027cab6f74e47c540` |
+| Active executable task | P4-T02 / Issue #95 — JOML hot-loop allocation policy/evidence |
 | Accepted cross-cutting maintenance | Issue #165 / PR #166 — persistent cumulative `game-sandbox` playground |
 | Sandbox final candidate | `0f8fad8abf8e8e8a723b95ff60e7a459816989a0` |
 | Sandbox heavy verification | workflow #301 / run `35113258638`, all five required jobs passed |
 | Sandbox merged `master` | `0526f7b4758c204e247b6d02d2063cace12ce89c` |
 | Sandbox exact-merge verification | workflow #302 / run `35113801623`, lightweight master verification passed |
-| Next planned roadmap task | P4-T02 / Issue #95 — requires fresh audit/activation before implementation |
+| Next planned after P4-T02 acceptance | P4-T03 / Issue #96 — requires fresh audit/activation before implementation |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
@@ -110,6 +112,25 @@ Sandbox impact: none — P4-T01 added no executable/human-observable runtime cap
 
 The original backlog wording requires renderer, physics, and asset-conversion tests to cite the canonical spatial document. Those production paths do not exist yet and were not fabricated by P4-T01. Their future executable Issues must cite `docs/SPATIAL_CONVENTIONS.md` when those tests become real.
 
+## P4-T02 executable checkpoint — JOML hot-loop allocation
+
+Issue #95 was freshly audited against `master` `bbe0fb31a3832f391c2f909027cab6f74e47c540`, D-041, the version catalog/locks, P2-T11 allocation evidence, and current architecture before implementation began.
+
+The bounded contract is:
+
+- pin `org.joml:joml:1.10.9` in the central catalog;
+- own it in `engine-core` as `implementation`, not `api`, so no JOML type becomes a cross-module/public signature from P4-T02;
+- use a test-only representative workload with preallocated mutable `Vector3f`, `Quaternionf`, `Matrix4f`, and distinct destination objects;
+- after warm-up, measure repeated current-thread heap-allocation deltas with Java 25 `com.sun.management.ThreadMXBean` and require every math pass to report exactly zero bytes while an escaping allocating control reports a positive delta;
+- retain P2-T11 sampled JFR evidence as complementary profiling only, not as a zero-allocation oracle;
+- verify that +90° around canonical +Y maps forward `(0,0,-1)` to left `(-1,0,0)` within tolerance;
+- generate `engine-core/build/reports/allocation/p4-t02-joml-hot-loop-allocation.txt`;
+- do not implement P4-T03 `Transform`, hierarchy/caching, geometry, camera/projection, quantization, or any public math wrapper/API.
+
+This operationalizes existing `ENGINE_SCOPE.md` and backlog choices rather than creating a new durable architecture decision. `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, and `docs/BUILD_AND_VERIFY.md` remain authoritative and do not require ceremonial changes when their existing statements stay correct.
+
+Acceptance is live GitHub/CI state, not asserted by this commit-contained checkpoint. The final non-Markdown candidate still requires the five-job heavy PR matrix and exact merged `master` then requires the lightweight verifier. Wiki impact: none — no public engine API changes. Sandbox impact: none — dependency/policy/evidence only, with no meaningful owner-facing capability before P4-T03+.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -122,4 +143,4 @@ None of those gates blocks Phase 4 spatial documentation/math work.
 
 ## Exact next action
 
-Audit P4-T02 / Issue #95 against current `master`, the accepted D-041 spatial convention, JOML scope, hot-loop allocation evidence requirements, and current architecture before converting #95 from planning to an executable contract. Do not implement P4-T02 from its planning body without that fresh activation.
+Complete and verify P4-T02 / Issue #95 on its dedicated branch. After #95 is accepted and closed, freshly audit P4-T03 / Issue #96 against the resulting `master`, D-041, JOML ownership, and P4-T02 allocation evidence before converting #96 from planning to an executable contract.

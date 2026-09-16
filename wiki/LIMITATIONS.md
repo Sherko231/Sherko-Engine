@@ -10,12 +10,13 @@ Implemented:
 - JOML is the public math type family for engine-core spatial APIs under D-042;
 - local composition `T * R * S` and world composition `parentWorld * local` under the D-041 world convention;
 - caller-owned input/destination values are copied rather than retained as internal mutable aliases;
-- lazy parent-world revision validation keeps a child's cached world result current after parent mutation without a descendant walk.
+- self-parenting and indirect transform-parent cycles are rejected atomically before hierarchy mutation;
+- successful local/reparent mutations explicitly dirty only the changed transform and its descendants, while unrelated branches remain cached;
+- private child membership exists only to support invalidation and is not a public hierarchy-enumeration API.
 
 Current limitations:
 
-- general parent-cycle rejection is not implemented until P4-T04; callers must not create self-cycles or indirect cyclic parent graphs;
-- explicit descendant dirty propagation/children tracking is not implemented until P4-T05; P4-T03 uses lazy parent-revision validation instead;
+- no public child enumeration or scene-graph API exists; hierarchy ownership beyond `parent()`/`setParent(...)` remains internal;
 - no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, serialization/quantization, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
 - zero and negative scale are allowed for forward composition, so consumers must not assume a transform is invertible;
 - `Transform` is mutable and externally serialized; concurrent mutation/read guarantees are not provided.

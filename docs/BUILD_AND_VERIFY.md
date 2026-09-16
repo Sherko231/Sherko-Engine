@@ -19,15 +19,15 @@ Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\g
 | Show declared projects | `.\gradlew.bat projects` | 17 Gradle subprojects appear: the 16 production-target modules plus experimental `feasibility-spikes`. |
 | Compile/test every module and run the root quality gate | `.\gradlew.bat buildAllModules` | Root `check` and every subproject `build` complete. |
 | Run the root quality gate | `.\gradlew.bat check` | Checkstyle, architecture-boundary verification through `test-support`, and the Phase 0 source-exclusion boundary pass. |
-| Run root and subproject tests | `.\gradlew.bat test` | Aggregate JUnit Platform test tasks pass, including `test-support` architecture tests and the `game-sandbox` scripted-demo timeline test when present. |
+| Run root and subproject tests | `.\gradlew.bat test` | Aggregate JUnit Platform test tasks pass, including `test-support` architecture tests and current `game-sandbox` deterministic control tests. |
 | Run only the architecture boundary suite | `.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks` | The Gradle-derived subproject registry, production package ownership, main/test imports, fully qualified references, and boundary regressions pass. |
 | Generate and verify JaCoCo reports | `.\gradlew.bat verifyJacocoReports` | Tests run for all configured test-bearing engine modules and each produces XML plus HTML coverage reports. |
 | Run client foundation entry point | `.\gradlew.bat :game-client:runClient` | Client foundation process starts and exits cleanly. |
 | Run headless server foundation entry point | `.\gradlew.bat :game-server:runServer` | Server foundation process starts in headless mode and exits cleanly. |
 | Report client version metadata | `.\gradlew.bat :game-client:runClient --args="--version"` | Client reports executable, engine commit, protocol version, asset version, Java version, and native libraries available on its runtime classpath. |
 | Report server version metadata | `.\gradlew.bat :game-server:runServer --args="--version"` | Server reports the same shared identifiers plus its executable-specific native-library list. |
-| Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts, including after owner-facing sandbox demo dependencies are resolved. |
-| Run owner-facing sandbox demo | `.\gradlew.bat :game-sandbox:runEngineDemo` | Human-observation path opens the scripted production window demo on an interactive Windows desktop; this is not FPS, benchmark, soak, leak-proof, or CI acceptance evidence. |
+| Verify headless server dependency boundary | `.\gradlew.bat :game-server:verifyHeadlessServerRuntime` | Server runtime classpath contains no platform/render/audio projects or GLFW/OpenGL/OpenAL artifacts, including after persistent sandbox dependencies are resolved. |
+| Run persistent owner-facing sandbox | `.\gradlew.bat :game-sandbox:runSandbox` | Interactive playground opens on an interactive Windows desktop and remains owner-controlled until `Ctrl+Q`; this is not FPS, benchmark, soak, leak-proof, replay, or CI acceptance evidence. |
 | Run CI-native lifecycle smoke locally | `$env:ALSOFT_DRIVERS="null"; .\gradlew.bat runWindowsNativeCiSmoke; .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1; Remove-Item Env:ALSOFT_DRIVERS` | Historical root task aliases delegate to `feasibility-spikes`; GLFW/OpenAL/Jolt lifecycle smoke completes. |
 | Verify Java selection | `.\gradlew.bat javaToolchains` | Java 25 toolchain is available/selected. |
 | Resolve committed locks | `.\gradlew.bat resolveAndLockAllDependencies` | Resolution completes without changing locks after any authorized lock update has been committed. |
@@ -433,7 +433,7 @@ Require stable fields for `task=P3-T03`, `result=PASS`, `transition.count=20`, t
 
 No dependency, dependency-ownership, or lockfile change is expected for P3-T03. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
 
-CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after the P3-T02 native size test and uploads its JUnit XML plus report as artifact `p3-t03-window-modes`. Current task merge/closure mechanics are governed by the current CI gate below; stale/cancelled superseded PR runs are never passing evidence for the final candidate.
+CI keeps deterministic P3-T03 coverage inside ordinary aggregate tests. The Windows native job enables `GlfwWindowModeNativeTest` exactly once after P3-T02 native verification, uploads its JUnit XML plus the report as artifact `p3-t03-window-modes`, then continues the preserved Jolt lifecycle smoke. Current task merge/closure mechanics are governed by the current CI gate below; stale/cancelled superseded PR runs are never passing evidence for the final candidate.
 
 ## P3-T04 focus-loss input safety verification
 
@@ -467,7 +467,7 @@ Require stable fields for `task=P3-T04`, `result=PASS`, focus-transfer mechanism
 
 No dependency or lockfile change is expected for P3-T04. Run `resolveAndLockAllDependencies` without write mode and require tracked lockfiles to remain unchanged. The routine verification matrix still applies.
 
-CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt lifecycle smoke. Current task merge/closure mechanics are governed by the current CI gate below.
+CI keeps deterministic P3-T04 coverage in ordinary aggregate tests. The Windows native job enables `GlfwWindowFocusNativeTest` exactly once after P3-T03 native verification, uploads its JUnit XML and report as artifact `p3-t04-focus-loss`, then continues the preserved Jolt smoke. Current task merge/closure mechanics are governed by the current CI gate below.
 
 ## P3-T05 raw/fallback relative mouse verification
 
@@ -517,7 +517,7 @@ Run the deterministic snapshot/focus/motion regression suite:
 
 The suite must prove immutable snapshot stability, exact non-negative caller frame identity, engine-defined key/button queries without public GLFW codes, retained press/release edges, a complete press+release between snapshots, key-repeat without an extra press edge, mouse-button edge equivalents, one-shot relative mouse-delta consumption while preserving the D-035 baseline, focus-loss release synthesis plus stale-press/motion clearing, validation failures before consumption, stable shared reads from one snapshot, and that `captureInputSnapshot(...)` never polls GLFW itself.
 
-Also run the public-demo/headless/dependency checks:
+Also run the public-sandbox/headless/dependency checks:
 
 ```powershell
 .\gradlew.bat :game-sandbox:test --rerun-tasks
@@ -525,17 +525,17 @@ Also run the public-demo/headless/dependency checks:
 .\gradlew.bat resolveAndLockAllDependencies
 ```
 
-No dependency/version/lockfile/module-edge change is expected. The headless check must continue to prove that the sandbox's existing demo-only platform dependency is non-exported and that `game-server` contains no platform/render/audio/GLFW/OpenGL/OpenAL runtime dependency.
+No dependency/version/lockfile/module-edge change is expected. The headless check must continue to prove that the sandbox's platform dependency is non-exported and that `game-server` contains no platform/render/audio/GLFW/OpenGL/OpenAL runtime dependency.
 
 P3-T06 adds no new native call, so it does not add a new native-only acceptance test solely for snapshot construction. The exact final PR candidate must still pass the existing `Windows native smoke` job, thereby regressing the real P3-T01 through P3-T05 GLFW/focus/raw ingestion paths on the same candidate. If a future implementation change introduces behavior that cannot truthfully be established by deterministic backend tests plus those existing native paths, refine the active Issue before adding a new native oracle.
 
-The owner-facing manual demo remains:
+Current owner-facing manual observation uses the persistent playground:
 
 ```powershell
-.\gradlew.bat :game-sandbox:runEngineDemo
+.\gradlew.bat :game-sandbox:runSandbox
 ```
 
-P3-T06 extends that demo to capture one public `InputSnapshot` after each demo-frame `pollEvents()` call and emit bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence.
+The playground captures one public `InputSnapshot` after each poll and emits bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics while leaving the owner in control. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence. Historical P3-T06 evidence may reference the former `runEngineDemo` alias; that alias now delegates to the same persistent playground.
 
 Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then one passing lightweight exact-merge `master` verifier after merge. Do not repeat the routine heavy matrix after merge unless the active Issue explicitly requires stronger exact-merge evidence.
 
@@ -574,52 +574,50 @@ and require no further lock drift.
 
 Public source/API inspection plus the architecture suite must confirm that Jackson, GLFW, and LWJGL classes do not appear in the new binding API signatures. `game-server` must remain independent of `engine-platform-lwjgl` and therefore does not load action binding files directly at this stage.
 
-Sandbox impact is intentionally none: configuration metadata/loading is not meaningfully human-observable until P3-T08 evaluates bindings into action values. Do not add fake action diagnostics or implement T08 semantics solely for a demo.
+Sandbox impact is intentionally none for the historical P3-T07 task itself: configuration metadata/loading was not meaningfully human-observable until P3-T08 evaluated bindings into action values. The current persistent playground consumes the accepted binding/evaluation path; do not retroactively change P3-T07 acceptance.
 
 Before the final PR, run every applicable routine command from the matrix when the authoring environment supports the repository checkout/toolchain. If the current authoring environment cannot execute Gradle, record those commands as not run rather than as passing; final acceptance still requires the exact non-draft PR candidate to pass all five heavy CI jobs on the configured Windows x64 runner.
 
 P3-T07 itself adds no native operation. The existing `Windows native smoke` final-candidate job must still regress P3-T01 through P3-T05 native behavior on the same candidate. After merge, one lightweight exact-merge `master` verifier is required before Issue #90 may close. P3-T08 remains planning-only until then.
 
-## P3-T04A owner-facing sandbox demo verification
+## P3-T04A historical sandbox-origin verification
 
-Issue #149 turns the existing `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. The demo consumes only already-public production APIs and deliberately does not replace tests, native acceptance, phase gates, or CI.
+Issue #149 originally turned the `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. Its original acceptance used a scripted timeline and `EngineDemoTimelineTest`. That historical evidence remains valid for the task as it merged, but **it is not the current sandbox contract**. Issue #165 supersedes the presentation/maintenance model with the persistent cumulative playground described in `AGENTS.md` and `game-sandbox/README.md`.
 
-Run the focused deterministic timeline suite:
+Historical P3-T04A references to `EngineDemoTimelineTest`, the approximately 38-second run, `engineDemoRuntime`, and `runEngineDemo` describe the original merged implementation only. Do not treat those historical names as current commands or recreate the timed sequence. Current sandbox verification is defined in the next section.
+
+## Persistent sandbox playground verification — Issue #165
+
+Issue #165 replaces the scripted presentation model without adding a new engine public API. It removes the automatic timeline, makes `SandboxMain` / `runSandbox` canonical, retains `EngineDemoMain` / `runEngineDemo` only as a compatibility delegate, and keeps window/input/timing/action/tick-command/response capabilities live together until explicit owner exit.
+
+Run the focused pure-Java control suite:
 
 ```powershell
-.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.demo.EngineDemoTimelineTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxControlsTest" --rerun-tasks
 ```
 
-The suite must independently verify the scripted order and boundaries for `WINDOWED -> BORDERLESS_FULLSCREEN -> WINDOWED -> EXCLUSIVE_FULLSCREEN -> WINDOWED -> cursor capture -> cursor release -> shutdown`. It is a pure timeline test and does not claim native window behavior.
+The suite verifies the owner-control mapping independently of native GLFW behavior: plain `F` cycles window-mode intent, plain `R` toggles cursor-capture intent, `Right Shift + F` selects mouse-sensitivity cycling, `Right Shift + R` selects Y inversion, plain `Q` does not exit, either Control + Q selects explicit exit, and independent controls may coexist in one frame.
 
-Verify the demo classes and application task are available:
+Verify sandbox classes/tasks and server isolation:
 
 ```powershell
 .\gradlew.bat :game-sandbox:classes
 .\gradlew.bat :game-sandbox:tasks --group application
-```
-
-On an interactive Windows x64 desktop, the owner-facing manual run is:
-
-```powershell
-.\gradlew.bat :game-sandbox:runEngineDemo
-```
-
-The default run is roughly 38 seconds. It prints the timeline before startup, opens the public production `GlfwWindow`, polls events, reports logical/framebuffer dimensions, exercises the already-implemented window modes, enables cursor capture during an explicit Alt+Tab observation window, releases capture, returns to windowed mode, and performs orderly stop/close plus `NativeResourceRegistry.assertNoOpenResources()`.
-
-The current once-per-second sandbox diagnostic also includes the P3-T06 public snapshot frame ID, focus/capture state, W/A/S/D held state, and accumulated public snapshot mouse delta since the prior diagnostic. These values remain **diagnostics**, not FPS, rendering benchmark, performance acceptance, soak evidence, or proof of leak freedom. The current window is intentionally visually empty until renderer work provides a public production presentation path; do not add direct OpenGL/LWJGL calls merely to make the demo look richer.
-
-P3-T04A uses `compileOnly(project(":engine-platform-lwjgl"))` for demo source compilation plus a dedicated resolvable/non-consumable `engineDemoRuntime` used only by `runEngineDemo`. The platform dependency must not be published through `game-sandbox` runtime elements because `game-server` consumes `game-sandbox`. Therefore every sandbox verification must include:
-
-```powershell
 .\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\gradlew.bat resolveAndLockAllDependencies
 ```
 
-That command must continue to prove that `game-server` runtime contains no `engine-platform-lwjgl`, renderer/audio modules, GLFW, OpenGL, or OpenAL artifacts. If the custom demo configuration requires a lockfile update, regenerate only through the normal dependency-lock workflow, inspect the exact `game-sandbox/gradle.lockfile` diff, and then require ordinary `resolveAndLockAllDependencies` to be clean.
+The canonical interactive owner run is:
 
-The manual sandbox run is not required to execute inside unattended CI because it is human-observation tooling. The aggregate `test`, `buildAllModules`, architecture gate, coverage gate, headless-server boundary, and all existing native P3 acceptance remain authoritative automated verification. Current merge/closure mechanics follow the current CI gate below.
+```powershell
+.\gradlew.bat :game-sandbox:runSandbox
+```
 
-Future tasks must evaluate sandbox impact under `AGENTS.md`. A human-observable capability that can be demonstrated through already-authorized public production APIs updates `game-sandbox` in the same PR. If the necessary public boundary does not exist, record `Sandbox impact: none — <reason>` instead of exposing internals or implementing later roadmap work.
+It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. The window remains visually empty until the real renderer exists. Do not add direct OpenGL/LWJGL calls, future gameplay camera/controller/UI/world/physics/network features, or public APIs solely to make the sandbox richer.
+
+`game-sandbox` uses `compileOnly(project(":engine-platform-lwjgl"))` for source compilation plus a dedicated resolvable/non-consumable `sandboxRuntime` used by `runSandbox` and the legacy alias. That platform dependency must not be published through runtime elements consumed by `game-server`. `verifyHeadlessServerRuntime` remains the explicit boundary check.
+
+No dependency/version change is expected from Issue #165; only the custom configuration/task naming changes. `resolveAndLockAllDependencies` must not introduce unrelated drift. The final candidate is non-Markdown and therefore requires the ordinary exact-head heavy five-job matrix, followed after merge by the lightweight exact-merge master verifier before Issue #165 closes.
 
 ## Checkstyle boundary
 
@@ -686,7 +684,7 @@ For P1-T09 / Issue #39:
 .\gradlew.bat :game-server:verifyHeadlessServerRuntime
 ```
 
-The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears. P3-T04A's sandbox demo-only platform configuration must remain non-consumable/non-exported so this command continues to pass.
+The current entry points intentionally do not initialize later production subsystems. The headless verification inspects the resolved `game-server` runtime classpath and fails if `engine-platform-lwjgl`, `engine-render-opengl`, `engine-audio-openal`, `lwjgl-glfw`, `lwjgl-opengl`, or `lwjgl-openal` appears. The sandbox's platform configuration must remain non-consumable/non-exported so this command continues to pass.
 
 For P1-T10 / Issue #40, run both reports from the same checkout/build:
 
@@ -735,12 +733,12 @@ Do not use Gradle task counts as durable evidence; counts change when modules/pl
 
 ## Phase integration and next-phase readiness
 
-The phase exit gates in [TECHNICAL_BACKLOG.md](roadmap/TECHNICAL_BACKLOG.md) and milestone outcomes in [ROADMAP.md](../ROADMAP.md) remain the acceptance sources. This procedure adds evidence discipline, not new feature requirements or numerical thresholds. It applies to every phase, including a headless/test-only phase; a visual demo is not universally required.
+The phase exit gates in [TECHNICAL_BACKLOG.md](roadmap/TECHNICAL_BACKLOG.md) and milestone outcomes in [ROADMAP.md](../ROADMAP.md) remain the acceptance sources. This procedure adds evidence discipline, not new feature requirements or numerical thresholds. It applies to every phase, including a headless/test-only phase; a visual sandbox is not universally required.
 
 Before claiming a phase is complete:
 
 1. In the bounded phase-exit Issue/PR, link the applicable existing gate and identify every part of it that must be demonstrated. If required behavior is missing, leave the gate open and identify the bounded follow-up instead of weakening acceptance.
-2. Describe one repeatable scenario (or the minimum scenarios needed) through the actual participating systems and public boundaries. Use the sandbox when suitable and available, or a headless/test harness for nonvisual behavior. Mock-only subsystem tests do not demonstrate real integration.
+2. Describe one repeatable scenario (or the minimum scenarios needed) through the actual participating systems and public boundaries. Use the persistent sandbox when suitable and available, or a headless/test harness for nonvisual behavior. Mock-only subsystem tests do not demonstrate real integration.
 3. Record exact executable commands or manual steps, inputs/assets/seeds, tested commit, environment, original duration/impairment thresholds where specified, expected behavior, and observed results. Add commands to this file when implemented; do not publish hypothetical commands as runnable.
 4. Retain relevant logs, reports, traces, captures, and cleanup observations. State what was not exercised. Routine CI, a screenshot, or task checkmarks alone cannot replace an unexecuted integration/duration gate.
 5. Record pass/fail and remaining blockers in the Issue/PR; update `DEVELOPMENT_STATUS.md` with the durable conclusion and evidence links. Do not mark the phase complete while part of its exit gate remains unproven.
@@ -748,7 +746,7 @@ Before claiming a phase is complete:
 
 For the completed P2 phase, D-030 / Issue #135 defined the gate as one headless loop running deterministic fixed 60 Hz simulation ticks for at least 60 continuous seconds with bounded catch-up and verified cleanup. The gate evidence must show those properties together; isolated P2-T01 through P2-T13 suites do not satisfy it. The explicit command and retained report are defined in the P2 integrated exit-gate section above.
 
-For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered demo for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
+For comparison, P3 requires replaying an identical input sequence into headless simulation, while P4 requires spatial tests independent of OpenGL/Jolt. Use those actual gate forms rather than requiring a rendered sandbox for every phase. Later phases retain their own scene, multiplayer, tooling, and release criteria from the backlog.
 
 During a phase, add a small integration exercise within a task's authorized scope as soon as meaningful behavior is available. If it requires another task's implementation, record the missing dependency and keep the work bounded. Keep findings and review provenance in existing Issues/PRs and the current handoff documents; no parallel management document is required.
 
@@ -830,7 +828,7 @@ For every pull request, list each executed command and result, or for a qualifyi
 - cleanup/leak observations;
 - checks skipped because the environment could not support them.
 
-For sandbox/demo work, record automated test/build/headless-boundary results separately from manual human observation. A locally viewed window or console trace is useful owner feedback, not a substitute for final-candidate CI or a performance claim.
+For sandbox/playground work, record automated test/build/headless-boundary results separately from manual human observation. A locally viewed window or console trace is useful owner feedback, not a substitute for final-candidate CI or a performance claim.
 
 Configuration review is not runtime evidence. If a command was not run, write `not run` and why; a Markdown-only policy exemption is a reason, not a passing execution result.
 
@@ -843,7 +841,7 @@ After an authorized dependency/version or dependency-ownership change:
 .\gradlew.bat buildAllModules
 ```
 
-Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, P3-T05, and P3-T06 add no dependency or dependency-ownership change. P3-T04A adds only a non-exported existing-project dependency for the sandbox demo (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`); it must not alter selected library versions or the server runtime. P3-T07 adds the first production Jackson JSON parser dependency authorized by D-037: `jackson-databind:2.21.2` as `implementation` of `engine-platform-lwjgl`, resolving `jackson-core:2.21.2` and `jackson-annotations:2.21`; inspect the version-catalog and platform lock changes explicitly and require no unrelated lock drift. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for its dedicated configuration actually requires it, and inspect that diff explicitly.
+Review every changed lockfile. P1-T10A relocates existing dependencies without changing their selected versions. P3-T01 likewise places the already-selected LWJGL 3.4.3 core/GLFW/OpenGL dependencies and Windows natives into `engine-platform-lwjgl`; only that module's ownership-related lock change is expected for P3-T01, and no version-catalog change is authorized. P3-T02, P3-T03, P3-T04, P3-T05, and P3-T06 add no dependency or dependency-ownership change. P3-T04A originally added only a non-exported existing-project dependency for the sandbox surface (`compileOnly` plus dedicated non-consumable `engineDemoRuntime`). Issue #165 renames that custom resolvable configuration to `sandboxRuntime` and makes `runSandbox` canonical without changing dependency ownership or selected versions. It must not alter the server runtime. P3-T07 adds the first production Jackson JSON parser dependency authorized by D-037: `jackson-databind:2.21.2` as `implementation` of `engine-platform-lwjgl`, resolving `jackson-core:2.21.2` and `jackson-annotations:2.21`; inspect the version-catalog and platform lock changes explicitly and require no unrelated lock drift. Update `game-sandbox/gradle.lockfile` only if Gradle's lock resolution for its dedicated configuration actually requires it, and inspect that diff explicitly.
 
 ## Wiki/API-guide verification
 
@@ -860,11 +858,13 @@ Whenever a task changes public engine API or consumer-visible lifecycle, ownersh
 
 Wiki consistency is documentation verification, not evidence that production code works. For a qualifying Markdown-only wiki/docs task, apply the existing Markdown-only CI exemption only after auditing the complete changed-file set; no Gradle execution is required solely to prove prose/link synchronization.
 
-## Sandbox/demo verification
+## Persistent sandbox verification policy
 
-`game-sandbox` is the owner-facing observation path for already implemented engine behavior, not a specification or acceptance authority. For every implementation task, handoff must record either:
+`game-sandbox` is the owner-facing persistent cumulative playground for already implemented engine behavior, not a specification or acceptance authority. For every implementation task, handoff must record either:
 
-- `Sandbox impact: updated <demo/files>` when the new capability is demonstrable through already-authorized public production APIs; or
-- `Sandbox impact: none — <reason>` when a meaningful demo would require exposing internals, calling native libraries directly, or implementing a future roadmap task.
+- `Sandbox impact: updated <sandbox files>` when the new capability is meaningfully usable through already-authorized public production APIs; the update must extend the existing owner-controlled playground and preserve already-usable capabilities unless the task explicitly removes/supersedes them; or
+- `Sandbox impact: none — <reason>` when a meaningful playground path would require exposing internals, calling native libraries directly, or implementing a future roadmap task.
 
-Never weaken a production boundary or add a public API solely to satisfy the demo. `game-sandbox/README.md` owns the current manual run instructions and limitations; this file owns the distinction between manual observation and verification evidence.
+Do not reintroduce a fixed-duration timeline, automatic feature tour, disposable per-task executable, or one-feature showcase as the default sandbox model. Prefer owner-controlled interaction and coexistence. A separate subsystem-specific playground is exceptional and requires explicit Issue authorization.
+
+Never weaken a production boundary or add a public API solely to satisfy the sandbox. `game-sandbox/README.md` owns the current manual controls/run instructions and limitations; this file owns the distinction between manual observation and verification evidence.

@@ -2,7 +2,7 @@ plugins {
     `java-library`
 }
 
-val engineDemoRuntime by configurations.creating {
+val sandboxRuntime by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
@@ -10,7 +10,7 @@ val engineDemoRuntime by configurations.creating {
 dependencies {
     implementation(project(":engine-core"))
     compileOnly(project(":engine-platform-lwjgl"))
-    engineDemoRuntime(project(":engine-platform-lwjgl"))
+    sandboxRuntime(project(":engine-platform-lwjgl"))
     implementation(project(":engine-world"))
     implementation(project(":engine-physics-jolt"))
     implementation(project(":engine-network-api"))
@@ -18,12 +18,22 @@ dependencies {
     testImplementation(project(":test-support"))
 }
 
-tasks.register<JavaExec>("runEngineDemo") {
-    group = "application"
-    description = "Runs the owner-facing Sherko Engine sandbox demo."
-    classpath = sourceSets.main.get().runtimeClasspath + engineDemoRuntime
-    mainClass = "com.samo.game.sandbox.demo.EngineDemoMain"
+fun JavaExec.configureSandboxRun(mainClassName: String) {
+    classpath = sourceSets.main.get().runtimeClasspath + sandboxRuntime
+    mainClass = mainClassName
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(25)
     }
+}
+
+tasks.register<JavaExec>("runSandbox") {
+    group = "application"
+    description = "Runs the persistent owner-facing Sherko Engine sandbox playground."
+    configureSandboxRun("com.samo.game.sandbox.SandboxMain")
+}
+
+tasks.register<JavaExec>("runEngineDemo") {
+    group = "application"
+    description = "Legacy alias for runSandbox."
+    configureSandboxRun("com.samo.game.sandbox.demo.EngineDemoMain")
 }

@@ -7,11 +7,11 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - AI coding agents: read [`AGENTS.md`](AGENTS.md) first and follow its required order.
 - Humans: use this page for orientation, then open the scope, status, and live GitHub Issue/PR state.
 - Engine users: use the in-repository [`wiki/`](wiki/README.md) for public API/library usage and practical examples.
-- Owner-facing manual demo: see [`game-sandbox/README.md`](game-sandbox/README.md) and run `.\gradlew.bat :game-sandbox:runEngineDemo` on Windows x64.
+- Owner-facing persistent playground: see [`game-sandbox/README.md`](game-sandbox/README.md) and run `.\gradlew.bat :game-sandbox:runSandbox` on Windows x64.
 
 ## Project documents
 
-- [AI agent contract](AGENTS.md) — mandatory read order, truth hierarchy, work/CI rules, sandbox-maintenance rule, and handoff checklist.
+- [AI agent contract](AGENTS.md) — mandatory read order, truth hierarchy, work/CI rules, persistent-sandbox maintenance rule, and handoff checklist.
 - [Engine scope](ENGINE_SCOPE.md) — product and architecture boundaries.
 - [Development status](docs/DEVELOPMENT_STATUS.md) — commit-contained handoff checkpoint; inspect live GitHub state before continuing.
 - [Roadmap](ROADMAP.md) — milestone-level plan and current phase outcome.
@@ -22,7 +22,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - [GitHub execution model](docs/GITHUB_PROJECT_SETUP.md) — Issue/branch/PR lifecycle and CI-efficiency policy.
 - [Technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md) — detailed implementation task catalog with stable task IDs; checkboxes are not status.
 - [Engine API wiki](wiki/README.md) — consumer guide for implemented public APIs and current limitations.
-- [Engine sandbox](game-sandbox/README.md) — owner-facing manual observation path for implemented behavior.
+- [Engine sandbox](game-sandbox/README.md) — cumulative owner-facing interactive playground for implemented public behavior.
 
 ## Current state
 
@@ -31,6 +31,8 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 Phase 3 is complete through P3-T10 / Issue #93 / PR #160. The final candidate passed the five-job heavy matrix, merged as `e1801b11a713ce6cc73276c644aa15351ac508a1`, and the exact merged commit passed the lightweight master verifier. The platform/input foundation now includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, deterministic response settings, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, and deterministic headless replay evidence.
 
 Phase 4 is the active M1 focus. P4-T01 / Issue #94 is accepted and establishes the canonical world convention in [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md): right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, right-hand-rule positive rotation, and dimensionless scale. P4-T02 / Issue #95 is the next planned Phase 4 task and must be freshly audited and converted from planning to an executable contract before implementation. Live GitHub state remains authoritative for whether that activation has happened.
+
+`game-sandbox` is a persistent cumulative playground rather than a disposable feature demo. Capabilities that are meaningfully usable through already-authorized public production APIs should be integrated into that same sandbox experience as they land; features that cannot yet be exposed honestly remain out until their required public boundary exists.
 
 Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence.
 

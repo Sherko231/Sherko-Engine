@@ -145,15 +145,15 @@ final class TransformTest {
         transform.setLocalRotation(rotationInput);
         transform.setLocalScale(scaleInput);
 
-        positionInput.set(99.0f);
+        positionInput.set(99.0f, 99.0f, 99.0f);
         rotationInput.identity();
-        scaleInput.set(99.0f);
+        scaleInput.set(99.0f, 99.0f, 99.0f);
 
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
         assertVector(transform.localScale(new Vector3f()), 2.0f, 3.0f, 4.0f);
 
         Vector3f positionDestination = transform.localPosition(new Vector3f());
-        positionDestination.set(-77.0f);
+        positionDestination.set(-77.0f, -77.0f, -77.0f);
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
 
         Matrix4f worldDestination = transform.worldMatrix(new Matrix4f());

@@ -16,7 +16,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 - [Development status](docs/DEVELOPMENT_STATUS.md) — commit-contained handoff checkpoint; inspect live GitHub state before continuing.
 - [Roadmap](ROADMAP.md) — milestone-level plan and current phase outcome.
 - [Architecture](docs/ARCHITECTURE.md) — module responsibilities, dependencies, and implementation maturity.
-- [Spatial conventions](docs/SPATIAL_CONVENTIONS.md) — canonical world handedness, axes, linear/angular units, rotation sign, and boundary-conversion rule.
+- [Spatial conventions](docs/SPATIAL_CONVENTIONS.md) — canonical world handedness, axes, units, camera view/projection convention, and boundary-conversion rule.
 - [Decision log](docs/DECISIONS.md) — durable accepted/provisional/superseded engineering decisions.
 - [Build and verification](docs/BUILD_AND_VERIFY.md) — canonical verification commands and evidence expectations.
 - [GitHub execution model](docs/GITHUB_PROJECT_SETUP.md) — Issue/branch/PR lifecycle and CI-efficiency policy.
@@ -30,7 +30,7 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 
 Phase 3 is complete through P3-T10 / Issue #93 / PR #160. The platform/input foundation includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, deterministic response settings, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, and deterministic headless replay evidence.
 
-Phase 4 is the active M1 focus. P4-T01 through P4-T05 are accepted: canonical world-space conventions, JOML hot-loop policy/evidence, hierarchical `Transform`, atomic parent-cycle rejection, and descendant-only dirty propagation are in place. P4-T06 / Issue #99 is the active executable task adding immutable ray, plane, sphere, AABB, and frustum primitives without pulling camera projection or screen-to-world work forward.
+Phase 4 is the active M1 focus. P4-T01 through P4-T06 are accepted: canonical world-space conventions, JOML hot-loop policy/evidence, hierarchical `Transform`, atomic cycle rejection, descendant-only dirty propagation, and immutable ray/plane/sphere/AABB/frustum primitives are in place. P4-T08 / Issue #101 is active before P4-T07 because screen-to-world unprojection needs the durable view/projection and NDC depth convention defined by P4-T08.
 
 `game-sandbox` is a persistent cumulative playground rather than a disposable feature demo. Capabilities that are meaningfully usable through already-authorized public production APIs should be integrated into that same sandbox experience as they land; features that cannot yet be exposed honestly remain out until their required public boundary exists.
 

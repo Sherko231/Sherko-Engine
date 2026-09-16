@@ -15,12 +15,16 @@ Implemented:
 - private child membership exists only to support invalidation and is not a public hierarchy-enumeration API;
 - immutable `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, and `Frustum3f` world-geometry primitives;
 - normalized ray directions and plane equations, inclusive contact/containment semantics, ray plane/sphere/AABB queries, and frustum point/sphere/AABB classification;
-- geometry queries use exact production comparisons without an implicit epsilon; ray misses return `Float.NaN`.
+- geometry queries use exact production comparisons without an implicit epsilon; ray misses return `Float.NaN`;
+- public `CameraMatrices` construction for right-handed world-to-view matrices and conventional finite perspective projection;
+- vertical FOV in radians, positive aspect/near with `far > near`, camera forward mapped to view `-Z`, and OpenGL NDC depth `[-1,+1]` with near/far at `-1/+1` under D-045.
 
 Current limitations:
 
-- `Frustum3f` accepts six inward-facing planes directly; there is no view/projection-matrix extraction yet;
-- screen-to-world ray construction, camera view/projection helpers, clip/NDC/depth convention, and reversed-Z policy are not implemented yet;
+- `Frustum3f` accepts six inward-facing planes directly; there is no view/projection-matrix frustum extraction yet;
+- screen-to-world ray construction, viewport/screen-origin and pixel-center mapping, and ray-origin policy are not implemented yet;
+- reversed-Z, infinite-far, orthographic, and jittered/TAA projection variants are not implemented;
+- no public camera component/object or Transform-to-camera decomposition API exists;
 - no public child enumeration or scene-graph API exists; hierarchy ownership beyond `parent()`/`setParent(...)` remains internal;
 - no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, serialization/quantization, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
 - no broad-phase structure, generic collision dispatcher, renderer-culling integration, or physics query adapter is part of the geometry primitive API;

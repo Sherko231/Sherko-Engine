@@ -24,11 +24,12 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 
 The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
-### Spatial transforms and geometry
+### Spatial transforms, camera math, and geometry
 
 | Type | Purpose |
 | --- | --- |
 | `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
+| `CameraMatrices` | Static right-handed view and finite perspective projection construction into caller-owned JOML matrices. |
 | `Ray3f` | Immutable normalized world-space ray with plane/sphere/AABB intersections. |
 | `Plane3f` | Immutable normalized plane using `normal dot point + offset = 0`. |
 | `Sphere3f` | Immutable world-space sphere with inclusive containment/intersection queries. |
@@ -41,7 +42,9 @@ D-042 makes JOML the public math type family for `engine-core` spatial APIs. `Tr
 
 Transform parent cycles are rejected atomically, and successful local/reparent changes explicitly invalidate only the affected transform subtree while unrelated branches remain cached.
 
-D-044 defines the P4-T06 geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly without selecting projection/NDC/depth conventions.
+D-045 defines camera matrices: view space is right-handed with camera forward on `-Z`; perspective uses vertical FOV radians, positive aspect and near plane with `far > near`, conventional finite non-reversed depth, and OpenGL NDC z `[-1,+1]`. `CameraMatrices` mutates only the caller-provided destination after validation and has no renderer/LWJGL dependency.
+
+D-044 defines the geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly.
 
 Usage: [Transforms](CORE/TRANSFORMS.md), [Spatial primitives](CORE/SPATIAL_PRIMITIVES.md), and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
 

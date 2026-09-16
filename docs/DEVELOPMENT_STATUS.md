@@ -6,15 +6,18 @@
 
 | Field | Value |
 | --- | --- |
-| Verified starting `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
+| Verified starting `master` for P4-T01 | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
 | Last accepted phase | Phase 3 — Platform and input |
-| Last accepted task | P3-T10 / Issue #93 / PR #160 |
+| Last accepted Phase 3 task | P3-T10 / Issue #93 / PR #160 |
 | P3-T10 final candidate | `cc5842c37956f67272b62f4071b016523ac86159` |
 | P3-T10 heavy verification | workflow #299 / run `35105650405`, all five required jobs passed |
-| Accepted merged `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
-| Exact-merge verification | workflow #300 / run `35106618677`, lightweight master verification passed |
+| P3-T10 merged `master` | `e1801b11a713ce6cc73276c644aa15351ac508a1` |
+| P3-T10 exact-merge verification | workflow #300 / run `35106618677`, lightweight master verification passed |
 | Active phase | Phase 4 — Math and spatial conventions |
-| Active task | P4-T01 / Issue #94 / branch `p4-t01-spatial-conventions` |
+| Accepted Phase 4 task | P4-T01 / Issue #94 / PR #161 |
+| P4-T01 merged commit | `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54` |
+| P4-T01 verification | Markdown-only exemption after complete-diff and contradiction audit; no build/runtime CI required by policy |
+| Next planned task | P4-T02 / Issue #95 — requires fresh audit/activation before implementation |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
@@ -33,43 +36,49 @@ P3-T09's replay scenario satisfied the Phase 3 exit behavior and remained green 
 
 `game-server` remains independent of `engine-platform-lwjgl`.
 
-## P4-T01 active — canonical spatial conventions
+## P4-T01 accepted — canonical spatial conventions
 
-Issue #94 is ACTIVE / executable. The task branch starts exactly from accepted `master` `e1801b11...`.
+P4-T01 / Issue #94 established the canonical spatial documentation/architecture contract through PR #161, merged as `dc00a615a9a7e44dedf6f85a4b2867cd282a6e54`.
 
-P4-T01 is documentation/architecture only. It establishes one canonical world-space contract before transform/camera/renderer/physics/assets/audio/network spatial code begins relying on implicit assumptions:
+The accepted world-space convention is:
 
 - right-handed Cartesian world;
 - +X right;
 - +Y up;
 - -Z forward (+Z backward);
-- meters for world position/distance and meters/second for linear velocity;
-- radians internally and radians/second for angular velocity;
+- meters for world position/distance and meters per second for linear velocity;
+- radians internally and radians per second for angular velocity;
 - positive rotation follows the right-hand rule around the positive axis;
 - transform scale is dimensionless, with `(1,1,1)` as identity.
 
 The normative document is `docs/SPATIAL_CONVENTIONS.md`; D-041 records the durable decision. External library/format differences must be converted at adapter/import/export boundaries rather than redefining engine world space.
 
-P4-T01 deliberately does not choose projection/NDC depth convention, reversed-Z, FOV/near/far policy, Euler storage/order, quaternion canonical sign, glTF/Jolt/OpenAL conversion details, network quantization, or any P4-T02+ implementation.
+P4-T01 deliberately does not choose projection/NDC depth convention, reversed-Z, FOV/near/far policy, Euler storage/order, quaternion canonical sign, glTF/Jolt/OpenAL conversion details, network quantization, or any P4-T02+ runtime implementation.
 
-## Verification / CI state for P4-T01
+## P4-T01 verification and evidence
 
-P4-T01 is authorized as a Markdown-only task. No local Gradle execution is claimed by this connected authoring environment.
+P4-T01 was documentation/architecture only. The final PR changed exactly eight Markdown files:
 
-Before final PR:
+- `README.md`;
+- `ROADMAP.md`;
+- `docs/ARCHITECTURE.md`;
+- `docs/DECISIONS.md`;
+- `docs/DEVELOPMENT_STATUS.md`;
+- `docs/SPATIAL_CONVENTIONS.md`;
+- `wiki/CORE/SPATIAL_CONVENTIONS.md`;
+- `wiki/README.md`.
 
-- inspect the complete branch diff and require every changed path to end in `.md` for the Markdown-only exemption;
-- search the repository for conflicting authoritative handedness/axis/unit claims;
-- verify `ENGINE_SCOPE.md` is unchanged and still selects JOML;
-- verify no Java/Gradle/dependency/lock/workflow/module-edge change exists;
-- verify D-041 does not pull projection/depth/adapter implementation choices forward;
-- reconcile `README.md`, `ROADMAP.md`, architecture, wiki navigation, and this handoff with Phase 3 completion / Phase 4 activation.
+The complete changed-file audit found no Java, Gradle, dependency, lockfile, workflow, resource, sandbox source, module-edge, or `ENGINE_SCOPE.md` change. Repository searches found no conflicting authoritative `left-handed` or degree-based world-space contract; existing backlog references to meters/radians agreed with D-041. `ENGINE_SCOPE.md` remained unchanged and continues to select JOML.
 
-If the final complete diff remains Markdown-only, heavy PR CI and post-merge lightweight runtime verification are not required by `AGENTS.md`; their absence is an expected exemption, not a passing test. If any non-Markdown path appears, the exemption is lost and the normal heavy-final-candidate plus exact-merge lifecycle applies.
+Because every changed path ended in `.md`, PR #161 qualified for the repository Markdown-only exemption. Heavy five-job CI and post-merge lightweight runtime verification were not required; no passing runtime/build result is claimed for this documentation-only task. No workflow run was generated for the final PR head or merge commit, as expected under the exemption.
 
-## Deferred acceptance evidence
+Independent review was not performed because no separate reviewer identity was available in the authoring environment. Residual risk is documentation-level ambiguity in the frozen spatial convention; mitigation is the executable Issue contract, D-041, normative document, architecture/wiki cross-check, contradiction search, and complete-diff audit.
 
-The original P4-T01 backlog wording requires renderer, physics, and asset-conversion tests to cite the canonical spatial document. Those production paths do not exist yet and must not be fabricated by P4-T01. Their future executable Issues must cite `docs/SPATIAL_CONVENTIONS.md` when those tests become real.
+Sandbox impact: none — P4-T01 added no executable/human-observable runtime capability.
+
+## Deferred P4-T01 acceptance evidence
+
+The original backlog wording requires renderer, physics, and asset-conversion tests to cite the canonical spatial document. Those production paths do not exist yet and were not fabricated by P4-T01. Their future executable Issues must cite `docs/SPATIAL_CONVENTIONS.md` when those tests become real.
 
 ## Open gates and blockers
 
@@ -83,4 +92,4 @@ None of those gates blocks Phase 4 spatial documentation/math work.
 
 ## Exact next action
 
-Finish the bounded P4-T01 Markdown changes, run the complete-diff/contradiction audit, record review provenance and sandbox/wiki impact, then open one final PR linked with `Refs #94`. Merge only after confirming the Markdown-only exemption still applies and `master` has not advanced; close #94 only after merged repository state and documentation are consistent. Do not activate P4-T02 until P4-T01 is accepted.
+Treat P4-T01 as accepted after the Markdown-only handoff correction is merged and Issue #94 is closed consistently. Then audit P4-T02 / Issue #95 against the accepted D-041 convention, current `master`, JOML scope, hot-loop allocation evidence requirements, and current architecture before converting #95 from planning to an executable contract. Do not implement P4-T02 from its planning body without that fresh activation.

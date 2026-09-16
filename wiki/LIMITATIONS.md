@@ -2,6 +2,26 @@
 
 This page prevents planned roadmap work from being mistaken for an already usable library API.
 
+## Math / transforms
+
+Implemented:
+
+- public `engine-core` `Transform` with local position, normalized quaternion rotation, local scale, optional parent, and cached world matrix;
+- JOML is the public math type family for engine-core spatial APIs under D-042;
+- local composition `T * R * S` and world composition `parentWorld * local` under the D-041 world convention;
+- caller-owned input/destination values are copied rather than retained as internal mutable aliases;
+- lazy parent-world revision validation keeps a child's cached world result current after parent mutation without a descendant walk.
+
+Current limitations:
+
+- general parent-cycle rejection is not implemented until P4-T04; callers must not create self-cycles or indirect cyclic parent graphs;
+- explicit descendant dirty propagation/children tracking is not implemented until P4-T05; P4-T03 uses lazy parent-revision validation instead;
+- no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, serialization/quantization, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
+- zero and negative scale are allowed for forward composition, so consumers must not assume a transform is invertible;
+- `Transform` is mutable and externally serialized; concurrent mutation/read guarantees are not provided.
+
+Usage: [Transforms](CORE/TRANSFORMS.md) and [Spatial conventions](CORE/SPATIAL_CONVENTIONS.md).
+
 ## Platform/input
 
 Implemented:

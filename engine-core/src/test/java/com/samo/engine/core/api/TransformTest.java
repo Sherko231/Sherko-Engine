@@ -95,9 +95,7 @@ final class TransformTest {
         child.setParent(parent);
 
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
-
         parent.setLocalPosition(5.0f, 0.0f, 0.0f);
-
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
     }
 
@@ -105,9 +103,7 @@ final class TransformTest {
     void localMutationInvalidatesCachedWorldMatrix() {
         Transform transform = new Transform();
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-
         transform.setLocalPosition(-4.0f, 2.0f, 8.0f);
-
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, -4.0f, 2.0f, 8.0f);
     }
 
@@ -139,6 +135,7 @@ final class TransformTest {
         Transform transform = new Transform();
         Vector3f positionInput = new Vector3f(1.0f, 2.0f, 3.0f);
         Quaternionf rotationInput = new Quaternionf().rotationY(0.5f);
+        Quaternionf expectedRotation = new Quaternionf(rotationInput);
         Vector3f scaleInput = new Vector3f(2.0f, 3.0f, 4.0f);
 
         transform.setLocalPosition(positionInput);
@@ -150,11 +147,18 @@ final class TransformTest {
         scaleInput.set(99.0f, 99.0f, 99.0f);
 
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
+        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x,
+                expectedRotation.y, expectedRotation.z, expectedRotation.w);
         assertVector(transform.localScale(new Vector3f()), 2.0f, 3.0f, 4.0f);
 
         Vector3f positionDestination = transform.localPosition(new Vector3f());
         positionDestination.set(-77.0f, -77.0f, -77.0f);
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
+
+        Quaternionf rotationDestination = transform.localRotation(new Quaternionf());
+        rotationDestination.identity();
+        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x,
+                expectedRotation.y, expectedRotation.z, expectedRotation.w);
 
         Matrix4f worldDestination = transform.worldMatrix(new Matrix4f());
         worldDestination.zero();
@@ -164,9 +168,7 @@ final class TransformTest {
     @Test
     void rotationInputIsNormalized() {
         Transform transform = new Transform();
-
         transform.setLocalRotation(0.0f, 0.0f, 0.0f, 2.0f);
-
         assertQuaternion(transform.localRotation(new Quaternionf()), 0.0f, 0.0f, 0.0f, 1.0f);
     }
 
@@ -204,7 +206,6 @@ final class TransformTest {
     void zeroAndNegativeScaleAreAllowedForForwardComposition() {
         Transform transform = new Transform();
         transform.setLocalScale(-2.0f, 0.0f, 3.0f);
-
         assertTransformedPoint(transform, 1.0f, 2.0f, 1.0f, -2.0f, 0.0f, 3.0f);
     }
 

@@ -18,7 +18,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Code change | Implementation + tests/evidence | Dedicated task branch and final pull request linked to one active Issue |
 | CI lifecycle | Efficient final-candidate and exact-merge verification | [`docs/CI_LIFECYCLE.md`](docs/CI_LIFECYCLE.md) + `AGENTS.md` |
 | Engine consumer usage | How to use implemented public APIs | [`wiki/`](wiki/README.md), synchronized with production API changes |
-| Owner observation | Human-observable demonstration of implemented public behavior | [`game-sandbox/`](game-sandbox/README.md), synchronized when a task can be demonstrated without pulling future work forward |
+| Owner observation | Persistent cumulative interaction with implemented public behavior | [`game-sandbox/`](game-sandbox/README.md), extended in-place when a capability is meaningfully usable without pulling future work forward |
 
 ### Planning rule
 
@@ -35,7 +35,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
 - Any task involving spatial math, transforms, cameras, renderer/physics world-space assumptions, asset conversion, spatial audio, or network-spatial data must consume the accepted canonical contract in `docs/SPATIAL_CONVENTIONS.md` rather than relying on a library/tool default.
 - When a task changes how engine consumers use a public API, update the relevant `wiki/` pages in the same pull request; if there is no consumer/wiki impact, record that explicitly.
-- When a task adds or materially changes a human-observable engine capability, evaluate `game-sandbox` impact under `AGENTS.md`. Update the sandbox through public production APIs when appropriate, otherwise record `Sandbox impact: none — <reason>` instead of pulling future work forward.
+- `game-sandbox` is a persistent cumulative playground, not a disposable feature demo. When a task adds or materially changes a human-observable capability that is usable through already-authorized public production APIs, integrate it into the existing sandbox experience while preserving already-usable capabilities. Prefer owner-controlled interaction over timed feature tours. If the capability cannot yet be represented honestly without internals or future work, record `Sandbox impact: none — <reason>`.
 
 ## Milestones
 
@@ -74,6 +74,8 @@ P1-T08A / Issue #153 is complete through PR #154 on merged `master` `134bd3cc182
 Phase 2 is complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
 
 Phase 3 is also complete. P3-T01 through P3-T10 plus the owner-facing sandbox maintenance established the production platform/input boundary, renderer-frame hardware/action state, deterministic input response, tick-aligned `PlayerInputCommand`, fixed 126-byte replay/storage codec, and deterministic headless input replay. P3-T10 / Issue #93 completed through PR #160 on merged `master` `e1801b11a713ce6cc73276c644aa15351ac508a1`; the final candidate passed the heavy five-job matrix and the exact merge passed the lightweight master verifier. The Phase 4 entry review was recorded before P4 activation.
+
+P3-T04A originally established `game-sandbox` as an owner-observation surface using a scripted timeline. Maintenance Issue #165 supersedes only that presentation/maintenance model: the sandbox is now a persistent cumulative playground with owner-controlled interaction. This does not alter the accepted Phase 3 engine APIs or exit evidence.
 
 The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 
@@ -136,7 +138,7 @@ For work near execution:
 12. Use `workflow_dispatch` or a task-specific command for stronger post-merge evidence only when the active Issue explicitly requires it.
 13. Keep `docs/DEVELOPMENT_STATUS.md` synchronized with the durable checkpoint (completed tasks, next action, blockers, maturity, and evidence) without copying transient board columns.
 14. Keep `wiki/` synchronized whenever the public engine API or its consumer-visible use changes.
-15. Evaluate and update `game-sandbox` whenever a newly implemented capability is appropriately human-observable through the public engine boundary.
+15. Keep the persistent `game-sandbox` cumulative: integrate each newly usable public capability into the existing owner-controlled playground when appropriate, preserve existing usable capabilities, and avoid temporary scripted showcases.
 
 See [`docs/CI_LIFECYCLE.md`](docs/CI_LIFECYCLE.md) for the exact runner-efficiency model and exception rules.
 
@@ -165,7 +167,7 @@ A task is done only when:
 - native/resource ownership remains leak-free where applicable;
 - docs/contracts changed by the task are updated;
 - relevant `wiki/` usage/API pages are updated when public engine API or consumer-visible behavior changes, or `Wiki impact: none — <reason>` is recorded when no update is applicable;
-- sandbox impact is handled under `AGENTS.md`: update the owner-facing demo when appropriate or record `Sandbox impact: none — <reason>`;
+- sandbox impact is handled under `AGENTS.md`: integrate usable capability into the persistent playground or record `Sandbox impact: none — <reason>`;
 - the exact final PR candidate passes its required verification;
 - the linked pull request is merged;
 - the exact merged commit passes the applicable lightweight or explicitly stronger post-merge verification;

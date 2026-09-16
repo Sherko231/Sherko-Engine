@@ -5,7 +5,7 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 ## Start here
 
 - AI coding agents: read [`AGENTS.md`](AGENTS.md) first and follow its required order.
-- Humans: use this page for orientation, then open the scope, status, and active Issue.
+- Humans: use this page for orientation, then open the scope, status, and live GitHub Issue/PR state.
 - Engine users: use the in-repository [`wiki/`](wiki/README.md) for public API/library usage and practical examples.
 - Owner-facing manual demo: see [`game-sandbox/README.md`](game-sandbox/README.md) and run `.\gradlew.bat :game-sandbox:runEngineDemo` on Windows x64.
 
@@ -13,8 +13,8 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 - [AI agent contract](AGENTS.md) — mandatory read order, truth hierarchy, work/CI rules, sandbox-maintenance rule, and handoff checklist.
 - [Engine scope](ENGINE_SCOPE.md) — product and architecture boundaries.
-- [Development status](docs/DEVELOPMENT_STATUS.md) — exact checkpoint represented by the current repository commit.
-- [Roadmap](ROADMAP.md) — milestone-level plan and current focus.
+- [Development status](docs/DEVELOPMENT_STATUS.md) — commit-contained handoff checkpoint; inspect live GitHub state before continuing.
+- [Roadmap](ROADMAP.md) — milestone-level plan and current phase outcome.
 - [Architecture](docs/ARCHITECTURE.md) — module responsibilities, dependencies, and implementation maturity.
 - [Decision log](docs/DECISIONS.md) — durable accepted/provisional/superseded engineering decisions.
 - [Build and verification](docs/BUILD_AND_VERIFY.md) — canonical verification commands and evidence expectations.
@@ -29,11 +29,11 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 
 P3-T01 through P3-T09 are formally complete. P3-T09 / Issue #92 merged through PR #159 at `b9144e9e939cf468a5228f499aac130886d16456`; heavy PR workflow #294 and exact-merge lightweight workflow #295 passed. The platform/input foundation now includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, deterministic headless replay evidence, and owner-facing tick-command diagnostics.
 
-P3-T10 / Issue #93 is the active final Phase 3 task on branch `p3-t10-input-response-settings`. It adds immutable deterministic `InputResponseSettings` in `engine-core`, applies mouse sensitivity/Y inversion at the existing `InputActionEvaluator` boundary before binding scale/aggregation, and defines controller dead-zone/response-curve shaping as a pure axis-local scalar contract without introducing controller discovery/polling/bindings.
+P3-T10 / Issue #93 is the final required Phase 3 task. Its implementation adds immutable deterministic `InputResponseSettings` in `engine-core`, applies mouse sensitivity/Y inversion at the existing `InputActionEvaluator` boundary before binding scale/aggregation, and defines controller dead-zone/response-curve shaping as a pure axis-local scalar contract without introducing controller discovery/polling/bindings. Consult live Issue #93 / PR #160 to determine whether its final-candidate, merge, and exact-merge verification lifecycle has completed; this orientation page deliberately does not duplicate that volatile workflow state.
 
 P3-T09 command/replay semantics remain unchanged: `PlayerInputCommandSampler` consumes already-evaluated action state, and `game-server` remains independent of `engine-platform-lwjgl`.
 
-Phase 3 is not complete until the exact P3-T10 final candidate passes its response tests plus the existing replay exit evidence, merges, and the exact merged `master` passes the lightweight verifier. The required P4 planning review follows that completion gate.
+Phase 3 completion additionally requires the P3-T10 acceptance lifecycle and the required Phase 4 planning review. Do not activate P4-T01 from this README alone; inspect the live Issue/PR evidence and the commit-contained handoff first.
 
 Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence.
 

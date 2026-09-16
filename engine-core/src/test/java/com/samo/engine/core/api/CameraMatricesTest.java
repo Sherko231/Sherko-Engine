@@ -47,7 +47,7 @@ final class CameraMatricesTest {
 
         assertTransformed(view, new Vector3f(12, 2, 3), 0, 0, -2);
         assertTransformed(view, new Vector3f(10, 3, 3), 0, 1, 0);
-        assertTransformed(view, new Vector3f(10, 2, 2), 1, 0, 0);
+        assertTransformed(view, new Vector3f(10, 2, 4), 1, 0, 0);
     }
 
     @Test

@@ -205,38 +205,32 @@ public final class SandboxMain {
                                         latestCommand.moveY(),
                                         latestCommand.lookX(),
                                         latestCommand.lookY());
-                log(
-                        logger,
-                        EngineLogger.Level.DEBUG,
-                        "sandboxTime=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
-                                + "mode=%s, sensitivity=%.2f, invertY=%s, WASD=[%s,%s,%s,%s], frameMOVE=(%.1f,%.1f), "
-                                + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], %s, mouseDelta=(%.2f,%.2f) "
-                                + "(sandbox diagnostic; not FPS/benchmark/replay acceptance evidence)"
-                                .formatted(
-                                        elapsedSandboxNanos / 1_000_000_000.0,
-                                        accumulator.interpolationAlpha(),
-                                        latestInput.frameId(),
-                                        latestInput.focused(),
-                                        latestInput.cursorCaptured(),
-                                        currentWindowMode,
-                                        responseSettings.mouseSensitivity(),
-                                        responseSettings.invertMouseY(),
-                                        latestInput.keyHeld(InputKey.W),
-                                        latestInput.keyHeld(InputKey.A),
-                                        latestInput.keyHeld(InputKey.S),
-                                        latestInput.keyHeld(InputKey.D),
-                                        move.x(),
-                                        move.y(),
-                                        jump.pressed(),
-                                        jump.held(),
-                                        jump.released(),
-                                        interact.pressed(),
-                                        interact.held(),
-                                        interact.released(),
-                                        commandDiagnostic,
-                                        diagnosticMouseDeltaX,
-                                        diagnosticMouseDeltaY),
-                        cumulativeTicks);
+                String diagnosticMessage = SandboxDiagnosticFormatter.format(
+                        new SandboxDiagnosticFormatter.DiagnosticValues(
+                                elapsedSandboxNanos / 1_000_000_000.0,
+                                accumulator.interpolationAlpha(),
+                                latestInput.frameId(),
+                                latestInput.focused(),
+                                latestInput.cursorCaptured(),
+                                currentWindowMode.name(),
+                                responseSettings.mouseSensitivity(),
+                                responseSettings.invertMouseY(),
+                                latestInput.keyHeld(InputKey.W),
+                                latestInput.keyHeld(InputKey.A),
+                                latestInput.keyHeld(InputKey.S),
+                                latestInput.keyHeld(InputKey.D),
+                                move.x(),
+                                move.y(),
+                                jump.pressed(),
+                                jump.held(),
+                                jump.released(),
+                                interact.pressed(),
+                                interact.held(),
+                                interact.released(),
+                                commandDiagnostic,
+                                diagnosticMouseDeltaX,
+                                diagnosticMouseDeltaY));
+                log(logger, EngineLogger.Level.DEBUG, diagnosticMessage, cumulativeTicks);
                 diagnosticMouseDeltaX = 0.0d;
                 diagnosticMouseDeltaY = 0.0d;
                 do {

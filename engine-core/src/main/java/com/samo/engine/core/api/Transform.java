@@ -1,5 +1,6 @@
 package com.samo.engine.core.api;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -13,10 +14,10 @@ import org.joml.Vector3fc;
  * <p>Local composition is {@code T * R * S}; world composition is
  * {@code parentWorld * local}. Instances are externally serialized and do not retain caller-owned
  * JOML value/destination objects. Parent assignments that would create a hierarchy cycle are
- * rejected before mutation.
+ * rejected before mutation. Local and parent mutations explicitly invalidate only this transform
+ * and its descendants.
  */
 public final class Transform {
-    private static final long NO_PARENT_REVISION = -1L;
     private static final String CYCLE_ERROR_MESSAGE =
             "parent assignment would create a transform cycle";
 
@@ -27,9 +28,9 @@ public final class Transform {
     private final Matrix4f cachedWorldMatrix = new Matrix4f();
 
     private Transform parent;
+    private ArrayList<Transform> children;
     private boolean dirty = true;
     private long worldRevision;
-    private long cachedParentWorldRevision = NO_PARENT_REVISION;
 
     public Transform parent() {
         return parent;
@@ -40,8 +41,16 @@ public final class Transform {
             return;
         }
         validateParentDoesNotCreateCycle(parent);
+
+        Transform previousParent = this.parent;
+        if (parent != null) {
+            parent.addChild(this);
+        }
+        if (previousParent != null) {
+            previousParent.removeChild(this);
+        }
         this.parent = parent;
-        markDirty();
+        markSubtreeDirty();
     }
 
     public Vector3f localPosition(Vector3f destination) {
@@ -53,7 +62,7 @@ public final class Transform {
         requireFinite(y, "position.y");
         requireFinite(z, "position.z");
         localPosition.set(x, y, z);
-        markDirty();
+        markSubtreeDirty();
     }
 
     public void setLocalPosition(Vector3fc value) {
@@ -82,7 +91,7 @@ public final class Transform {
                 (float) (y * inverseLength),
                 (float) (z * inverseLength),
                 (float) (w * inverseLength));
-        markDirty();
+        markSubtreeDirty();
     }
 
     public void setLocalRotation(Quaternionfc value) {
@@ -99,7 +108,7 @@ public final class Transform {
         requireFinite(y, "scale.y");
         requireFinite(z, "scale.z");
         localScale.set(x, y, z);
-        markDirty();
+        markSubtreeDirty();
     }
 
     public void setLocalScale(Vector3fc value) {
@@ -121,14 +130,35 @@ public final class Transform {
         }
     }
 
+    private void addChild(Transform child) {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
+        children.add(child);
+    }
+
+    private void removeChild(Transform child) {
+        if (children == null) {
+            throw new IllegalStateException("transform child membership is inconsistent");
+        }
+        for (int index = 0; index < children.size(); index++) {
+            if (children.get(index) == child) {
+                children.remove(index);
+                if (children.isEmpty()) {
+                    children = null;
+                }
+                return;
+            }
+        }
+        throw new IllegalStateException("transform child membership is inconsistent");
+    }
+
     private void ensureWorldMatrixCurrent() {
-        long parentRevision = NO_PARENT_REVISION;
         if (parent != null) {
             parent.ensureWorldMatrixCurrent();
-            parentRevision = parent.worldRevision;
         }
 
-        if (!dirty && cachedParentWorldRevision == parentRevision) {
+        if (!dirty) {
             return;
         }
 
@@ -139,13 +169,18 @@ public final class Transform {
             parent.cachedWorldMatrix.mul(localMatrix, cachedWorldMatrix);
         }
 
-        cachedParentWorldRevision = parentRevision;
         dirty = false;
         worldRevision++;
     }
 
-    private void markDirty() {
+    private void markSubtreeDirty() {
         dirty = true;
+        if (children == null) {
+            return;
+        }
+        for (int index = 0; index < children.size(); index++) {
+            children.get(index).markSubtreeDirty();
+        }
     }
 
     private static void requireFinite(float value, String name) {

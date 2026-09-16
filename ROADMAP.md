@@ -8,8 +8,10 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 ## Roadmap model
 
 | Level | Purpose | Source of truth |
-| --- | --- |
+| --- | --- | --- |
 | Product scope | What the engine is and is not | [`ENGINE_SCOPE.md`](ENGINE_SCOPE.md) |
+| Durable architecture | Accepted architecture choices within scope | [`docs/DECISIONS.md`](docs/DECISIONS.md) |
+| Canonical spatial contract | Engine world handedness, axes, units, rotation sign, scale, and adapter-boundary rule | [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md), under D-041 |
 | Milestones | Major outcomes and ordering | this file |
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
 | Active work and live status | Work that can be picked up now and its current state | GitHub Issues / Project |
@@ -31,6 +33,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 - Demonstrate phase exit through the actual integrated runtime/test path and retain scenario, environment, tested SHA, observed results, and evidence using `docs/BUILD_AND_VERIFY.md`. Isolated test success alone does not establish integration.
 - Before materializing the next phase, review its assumptions, dependencies, current use cases, and planned acceptance against the completed phase's evidence. Record the review in the closing Issue/PR. Future task details remain planning baselines; refine them deliberately without changing scope, decisions, or exit thresholds implicitly.
 - Any task that requires an undeclared architectural change stops and produces a decision/update before implementation continues.
+- Any task involving spatial math, transforms, cameras, renderer/physics world-space assumptions, asset conversion, spatial audio, or network-spatial data must consume the accepted canonical contract in `docs/SPATIAL_CONVENTIONS.md` rather than relying on a library/tool default.
 - When a task changes how engine consumers use a public API, update the relevant `wiki/` pages in the same pull request; if there is no consumer/wiki impact, record that explicitly.
 - When a task adds or materially changes a human-observable engine capability, evaluate `game-sandbox` impact under `AGENTS.md`. Update the sandbox through public production APIs when appropriate, otherwise record `Sandbox impact: none — <reason>` instead of pulling future work forward.
 
@@ -78,11 +81,11 @@ The exact containing-commit checkpoint and verification evidence are recorded in
 
 **Goal:** prevent coordinate-system and transform bugs from spreading across renderer, physics, audio, assets, and networking by fixing one spatial convention and then building deterministic math/spatial primitives against it.
 
-P4-T01 / Issue #94 is the first bounded Phase 4 task. D-041 establishes the canonical world convention in [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md): right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, positive rotation by the right-hand rule, and dimensionless transform scale. External library or authoring-format differences are converted at adapter/import/export boundaries instead of redefining engine world space.
+P4-T01 / Issue #94 is accepted. D-041 establishes the canonical world convention in [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md): right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, positive rotation by the right-hand rule, and dimensionless transform scale. External library or authoring-format differences are converted at adapter/import/export boundaries instead of redefining engine world space.
 
-P4-T01 is documentation/architecture only. It deliberately does not choose view/projection matrix details, OpenGL NDC/depth policy, reversed-Z, FOV/near/far rules, Euler/quaternion storage policy, external-format/Jolt/OpenAL conversion details, or network quantization. Those remain later bounded tasks. Renderer, physics, and asset-conversion tests must cite the canonical document once those production paths exist; P4-T01 does not fabricate future implementations to satisfy that forward-looking requirement early.
+P4-T01 deliberately did not choose view/projection matrix details, OpenGL NDC/depth policy, reversed-Z, FOV/near/far rules, Euler/quaternion storage policy, external-format/Jolt/OpenAL conversion details, or network quantization. Those remain later bounded tasks. Renderer, physics, and asset-conversion tests must cite the canonical document once those production paths exist; P4-T01 did not fabricate future implementations to satisfy that forward-looking requirement early.
 
-P4-T02 through P4-T09 remain separately planned tasks for JOML hot-loop policy, transforms/hierarchy, geometry primitives, screen-to-world rays, view/projection construction, and transform quantization. Their executable Issues must be freshly audited against the accepted P4-T01 convention before implementation. The Phase 4 exit remains: spatial tests pass independently of OpenGL and Jolt.
+P4-T02 / Issue #95 is the next planned Phase 4 task. It remains planning-only until a fresh repository audit refines it into an executable contract from current `master`; implementation must read and preserve `docs/SPATIAL_CONVENTIONS.md`. P4-T03 through P4-T09 remain separately planned tasks for transforms/hierarchy, geometry primitives, screen-to-world rays, view/projection construction, and transform quantization. Their executable Issues must likewise be freshly audited against the accepted P4-T01 convention before implementation. The Phase 4 exit remains: spatial tests pass independently of OpenGL and Jolt.
 
 The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-4---math-and-spatial-conventions). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
 

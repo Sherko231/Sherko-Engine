@@ -58,7 +58,9 @@ The bounded implementation replaces P4-T03's temporary parent-world revision fal
 
 Tests use the existing private `worldRevision` field reflectively rather than introducing production diagnostics. Acceptance cases cover leaf-only invalidation, ancestor/middle subtree propagation, independent branch isolation, reparent, detach, same-parent no-op, and rejected-cycle integrity with hand-specified world positions.
 
-D-044 records private child membership and descendant-only invalidation as the durable cache architecture. No dependency, lockfile, project edge, renderer/world/physics/game production source, serialization format, or sandbox source changes are part of P4-T05.
+No new durable decision is added after implementation review: concrete private child storage is an implementation detail, while D-042 remains the public Transform/caching decision and D-043 remains the cycle-rejection decision. The active Issue records this amendment explicitly rather than freezing private representation as D-044.
+
+No dependency, lockfile, project edge, renderer/world/physics/game production source, serialization format, or sandbox source changes are part of P4-T05.
 
 Independent review: required by the repository architecture-work contract. No separate reviewer identity is available in the connected authoring environment, so final PR/handoff must record `not performed` plus residual risk; CI is not a substitute.
 
@@ -76,4 +78,4 @@ None blocks P4-T05 pure Java transform cache/hierarchy work.
 
 ## Exact next action
 
-Finish P4-T05 docs/wiki/self-review and consistency audit, open one final non-draft PR for Issue #98, require the five-job heavy matrix on the exact final head, merge only that tested candidate if `master` remains current, require exact merged `master` Lightweight master verification, then close #98. Freshly audit P4-T06 / Issue #99 before any later implementation.
+Finish P4-T05 self-review and consistency audit, open one final non-draft PR for Issue #98, require the five-job heavy matrix on the exact final head, merge only that tested candidate if `master` remains current, require exact merged `master` Lightweight master verification, then close #98. Freshly audit P4-T06 / Issue #99 before any later implementation.

@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 final class TransformTest {
     private static final float EPSILON = 1.0e-5f;
+    private static final String CYCLE_ERROR_MESSAGE =
+            "parent assignment would create a transform cycle";
 
     @Test
     void defaultsToIdentityLocalAndWorldTransform() {
@@ -128,6 +130,82 @@ final class TransformTest {
         assertNull(child.parent());
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f);
         assertVector(child.localPosition(new Vector3f()), 2.0f, 0.0f, 0.0f);
+    }
+
+    @Test
+    void rejectsSelfParentAtomically() {
+        Transform originalParent = new Transform();
+        originalParent.setLocalPosition(4.0f, 0.0f, 0.0f);
+        Transform transform = new Transform();
+        transform.setLocalPosition(2.0f, 0.0f, 0.0f);
+        transform.setParent(originalParent);
+        assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
+
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> transform.setParent(transform));
+
+        assertEquals(CYCLE_ERROR_MESSAGE, error.getMessage());
+        assertSame(originalParent, transform.parent());
+        assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
+    }
+
+    @Test
+    void rejectsIndirectCycleAndKeepsExistingHierarchyIntact() {
+        Transform rootParent = new Transform();
+        rootParent.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform a = new Transform();
+        a.setLocalPosition(1.0f, 0.0f, 0.0f);
+        a.setParent(rootParent);
+        Transform b = new Transform();
+        b.setLocalPosition(2.0f, 0.0f, 0.0f);
+        b.setParent(a);
+        Transform c = new Transform();
+        c.setLocalPosition(3.0f, 0.0f, 0.0f);
+        c.setParent(b);
+
+        assertTransformedPoint(c, 0.0f, 0.0f, 0.0f, 16.0f, 0.0f, 0.0f);
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> a.setParent(c));
+
+        assertEquals(CYCLE_ERROR_MESSAGE, error.getMessage());
+        assertSame(rootParent, a.parent());
+        assertSame(a, b.parent());
+        assertSame(b, c.parent());
+        assertTransformedPoint(c, 0.0f, 0.0f, 0.0f, 16.0f, 0.0f, 0.0f);
+    }
+
+    @Test
+    void allowsLegalReparentToExistingAncestor() {
+        Transform root = new Transform();
+        root.setLocalPosition(10.0f, 0.0f, 0.0f);
+        Transform middle = new Transform();
+        middle.setLocalPosition(3.0f, 0.0f, 0.0f);
+        middle.setParent(root);
+        Transform leaf = new Transform();
+        leaf.setLocalPosition(2.0f, 0.0f, 0.0f);
+        leaf.setParent(middle);
+
+        leaf.setParent(root);
+
+        assertSame(root, leaf.parent());
+        assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 12.0f, 0.0f, 0.0f);
+    }
+
+    @Test
+    void detachStillWorksAfterRejectedCycle() {
+        Transform a = new Transform();
+        a.setLocalPosition(1.0f, 0.0f, 0.0f);
+        Transform b = new Transform();
+        b.setLocalPosition(2.0f, 0.0f, 0.0f);
+        b.setParent(a);
+
+        assertThrows(IllegalArgumentException.class, () -> a.setParent(b));
+        a.setParent(null);
+
+        assertNull(a.parent());
+        assertSame(a, b.parent());
+        assertTransformedPoint(a, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+        assertTransformedPoint(b, 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f);
     }
 
     @Test

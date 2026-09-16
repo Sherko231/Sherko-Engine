@@ -85,19 +85,21 @@ Scale components must be finite.
 
 Zero and negative scale are allowed for forward transform composition. P4-T03 does not define inverse transforms or world/local decomposition, so consumers must not assume invertibility.
 
-## Parenting and caching
+## Parenting, cycle rejection, and caching
 
-`setParent(...)` changes hierarchy identity but preserves local position, rotation, and scale. `setParent(null)` detaches the transform.
+`setParent(...)` changes hierarchy identity but preserves local position, rotation, and scale. `setParent(null)` detaches the transform. Assigning the current parent again is a no-op.
+
+Parent graphs are kept acyclic by `Transform` itself. Before accepting a different non-null parent, `setParent(...)` walks that proposed parent's ancestor chain. Self-parenting or assigning a descendant as the new parent throws:
+
+```text
+IllegalArgumentException: parent assignment would create a transform cycle
+```
+
+The rejection happens before hierarchy mutation, so the previous parent and cached/local transform behavior remain intact. Legal reparenting to an unrelated transform or to an existing ancestor remains allowed when it does not create a cycle.
 
 World matrices are cached. Local changes mark that transform dirty. A child also tracks the revision of the parent's cached world matrix, so a later child read observes parent changes even before descendant dirty propagation exists.
 
-No child collection or descendant walk is part of P4-T03.
-
-## Current hierarchy limitation
-
-General parent-cycle rejection is not implemented until P4-T04. Do not build cyclic parent graphs, including indirect cycles. Cyclic hierarchy behavior is unsupported in P4-T03.
-
-P4-T05 separately owns explicit descendant dirty propagation. The current revision-based lazy validation keeps reads correct without implementing that future optimization early.
+No child collection or descendant walk is part of P4-T04. P4-T05 separately owns explicit descendant dirty propagation. The current revision-based lazy validation keeps reads correct without implementing that future optimization early.
 
 ## Threading
 

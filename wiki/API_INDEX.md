@@ -24,16 +24,19 @@ Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/S
 
 The engine foundation is locked to a 60 Hz simulation rate at the current stage. Usage: [Timing](CORE/TIMING.md).
 
-### Tick-aligned player input
+### Input response and tick-aligned player input
 
 | Type | Purpose |
 | --- | --- |
+| `InputResponseSettings` | Immutable deterministic mouse sensitivity/Y-inversion and controller-axis dead-zone/curve response math. |
 | `PlayerInputCommand` | Immutable device-neutral input state/edges for one simulation tick. |
 | `PlayerInputCommand.DigitalAction` | Fixed nine-action digital command vocabulary independent of platform input types. |
 | `PlayerInputCommand.DigitalState` | Immutable scalar plus pressed/held/released state for one digital action. |
 | `PlayerInputCommandCodec` | Explicit fixed-size version-1 ByteBuffer codec for replay/storage round trips. |
 
-The command carries MOVE X/Y, LOOK X/Y, and the nine digital actions without any GLFW/LWJGL type. `PlayerInputCommandCodec` encodes exactly 126 bytes in fixed big-endian field order and preserves the caller buffer's configured byte order. This is a replay/storage command format, not a frozen production network packet layout.
+`InputResponseSettings.defaults()` preserves raw mouse/controller scalar values. Mouse response multiplies by sensitivity before optional Y inversion. `applyControllerAxis(...)` is an axis-local pure mapping: values inside the configured dead zone map to zero, values outside are renormalized and raised to the configured positive exponent, with sign restored. This does not add a production controller capture/binding API.
+
+The tick command carries MOVE X/Y, LOOK X/Y, and the nine digital actions without any GLFW/LWJGL type. `PlayerInputCommandCodec` encodes exactly 126 bytes in fixed big-endian field order and preserves the caller buffer's configured byte order. This is a replay/storage command format, not a frozen production network packet layout.
 
 Usage: [Platform input](PLATFORM/INPUT.md).
 
@@ -78,7 +81,7 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 | `InputBinding` | Immutable device-neutral descriptor mapping one key/button/mouse-delta control to an action component with signed scale. |
 | `InputActionBindings` | Immutable complete action-binding set with strict versioned JSON loading. |
 | `InputBindingLoadException` | Reports binding-file read/schema/validation failures without exposing Jackson. |
-| `InputActionEvaluator` | Caller-owned stateful renderer-frame evaluator from one `InputSnapshot` + binding set to action state. |
+| `InputActionEvaluator` | Caller-owned stateful renderer-frame evaluator from one `InputSnapshot` + binding set to action state; applies configured mouse response before binding scale/aggregation. |
 | `InputActionSnapshot` | Immutable complete evaluated action view for one source hardware frame ID. |
 | `InputActionState` | Immutable per-action pressed/held/released state plus scalar or X/Y analog value. |
 | `PlayerInputCommandSampler` | Caller-owned bridge that retains renderer-frame edges/LOOK until the next due simulation tick and emits `engine-core` `PlayerInputCommand` values. |
@@ -89,11 +92,13 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 `InputActionBindings.load(Path)` loads strict schema version 1. All eleven actions must appear exactly once with at least one binding. Public descriptors reuse `InputKey` / `InputMouseButton` plus relative mouse X/Y controls; Jackson remains an implementation detail.
 
-`InputActionEvaluator.evaluate(InputSnapshot)` adds binding contributions by target component without clamping or normalization. DIGITAL activity is `value != 0`; VECTOR2 activity is `x != 0 || y != 0`. The evaluator emits action-level pressed/held/released transitions relative to its previous successful frame and preserves a complete one-frame key/button tap only when the same bound control reports both press and release. Later successful frame IDs must be strictly increasing; failed evaluations do not advance evaluator state.
+`InputActionEvaluator(InputActionBindings)` uses neutral `InputResponseSettings.defaults()`. The overload accepting `InputResponseSettings` and `setResponseSettings(...)` allow explicit caller-owned response policy. Settings replacement affects future evaluations only and does not reset the prior frame/activity baseline. For mouse-delta controls the evaluator applies sensitivity/Y inversion first, then existing binding scale and additive aggregation. Key/mouse-button behavior is unchanged.
+
+`InputActionEvaluator.evaluate(InputSnapshot)` adds binding contributions by target component without general clamping or normalization. DIGITAL activity is `value != 0`; VECTOR2 activity is `x != 0 || y != 0`. The evaluator emits action-level pressed/held/released transitions relative to its previous successful frame and preserves a complete one-frame key/button tap only when the same bound control reports both press and release. Later successful frame IDs must be strictly increasing; failed evaluations do not advance evaluator state.
 
 `PlayerInputCommandSampler.submit(InputActionSnapshot)` retains latest MOVE/digital level state, accumulates LOOK deltas, and OR-retains pending digital pressed/released edges until `nextCommand(long tickId)` emits them. When multiple ticks occur without another submitted renderer frame, later commands repeat latest level state but emit zero LOOK and no repeated edges.
 
-`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller API, or content-scale callback API. P3-T09 adds the tick-aligned replay/storage command boundary; controller/settings/response curves remain P3-T10.
+`GlfwWindow` intentionally exposes no raw GLFW window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller capture API, or content-scale callback API. P3-T10 defines controller response math only; controller discovery/polling/vocabulary/bindings remain unimplemented.
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick commands](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 

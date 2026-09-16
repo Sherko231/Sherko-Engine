@@ -12,7 +12,8 @@ import org.joml.Vector3fc;
  *
  * <p>Local composition is {@code T * R * S}; world composition is
  * {@code parentWorld * local}. Instances are externally serialized and do not retain caller-owned
- * JOML value/destination objects.
+ * JOML value/destination objects. Parent graphs must remain acyclic; explicit cycle rejection is
+ * owned by P4-T04.
  */
 public final class Transform {
     private static final long NO_PARENT_REVISION = -1L;

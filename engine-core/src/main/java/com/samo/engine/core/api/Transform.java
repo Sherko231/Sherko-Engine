@@ -12,11 +12,13 @@ import org.joml.Vector3fc;
  *
  * <p>Local composition is {@code T * R * S}; world composition is
  * {@code parentWorld * local}. Instances are externally serialized and do not retain caller-owned
- * JOML value/destination objects. Parent graphs must remain acyclic; explicit cycle rejection is
- * owned by P4-T04.
+ * JOML value/destination objects. Parent assignments that would create a hierarchy cycle are
+ * rejected before mutation.
  */
 public final class Transform {
     private static final long NO_PARENT_REVISION = -1L;
+    private static final String CYCLE_ERROR_MESSAGE =
+            "parent assignment would create a transform cycle";
 
     private final Vector3f localPosition = new Vector3f();
     private final Quaternionf localRotation = new Quaternionf();
@@ -37,6 +39,7 @@ public final class Transform {
         if (this.parent == parent) {
             return;
         }
+        validateParentDoesNotCreateCycle(parent);
         this.parent = parent;
         markDirty();
     }
@@ -108,6 +111,14 @@ public final class Transform {
         Objects.requireNonNull(destination, "destination");
         ensureWorldMatrixCurrent();
         return destination.set(cachedWorldMatrix);
+    }
+
+    private void validateParentDoesNotCreateCycle(Transform proposedParent) {
+        for (Transform ancestor = proposedParent; ancestor != null; ancestor = ancestor.parent) {
+            if (ancestor == this) {
+                throw new IllegalArgumentException(CYCLE_ERROR_MESSAGE);
+            }
+        }
     }
 
     private void ensureWorldMatrixCurrent() {

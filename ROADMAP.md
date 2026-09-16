@@ -8,7 +8,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 ## Roadmap model
 
 | Level | Purpose | Source of truth |
-| --- | --- | --- |
+| --- | --- |
 | Product scope | What the engine is and is not | [`ENGINE_SCOPE.md`](ENGINE_SCOPE.md) |
 | Milestones | Major outcomes and ordering | this file |
 | Technical backlog | Stable task IDs, detailed planning criteria, exit gates | [`docs/roadmap/TECHNICAL_BACKLOG.md`](docs/roadmap/TECHNICAL_BACKLOG.md) |
@@ -60,33 +60,31 @@ Durable Phase 0 conclusions include:
 
 The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as a production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
 
-## Completed foundation — M1 / Phases 1–2
+## Completed foundation — M1 / Phases 1–3
 
-**Outcome so far:** the build/module foundation plus the shared lifecycle, timing, configuration, ownership, allocation-observability, logging, and fatal-shutdown contracts are implemented and verified.
+**Outcome so far:** the build/module foundation plus shared lifecycle, timing, configuration, ownership, allocation-observability, logging, fatal-shutdown, and platform/input contracts are implemented and verified.
 
 Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
 
 P1-T08A / Issue #153 is complete through PR #154 on merged `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. It optimized the repository CI lifecycle without reducing the final-candidate gate: ordinary branch development runs no heavy matrix, the exact final non-draft PR candidate runs the existing five heavy jobs, and ordinary merged `master` commits run one lightweight exact-merge verifier. Full CI remains available deliberately through `workflow_dispatch` when a task requires stronger exact-merge evidence.
 
-Phase 2 is also complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
+Phase 2 is complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
+
+Phase 3 is also complete. P3-T01 through P3-T10 plus the owner-facing sandbox maintenance established the production platform/input boundary, renderer-frame hardware/action state, deterministic input response, tick-aligned `PlayerInputCommand`, fixed 126-byte replay/storage codec, and deterministic headless input replay. P3-T10 / Issue #93 completed through PR #160 on merged `master` `e1801b11a713ce6cc73276c644aa15351ac508a1`; the final candidate passed the heavy five-job matrix and the exact merge passed the lightweight master verifier. The Phase 4 entry review was recorded before P4 activation.
 
 The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
 
-## Current focus — M1 / Phase 3
+## Current focus — M1 / Phase 4
 
-**Goal:** finish the platform/input foundation with deterministic renderer-frame response policy while preserving the verified tick-aligned replay boundary.
+**Goal:** prevent coordinate-system and transform bugs from spreading across renderer, physics, audio, assets, and networking by fixing one spatial convention and then building deterministic math/spatial primitives against it.
 
-P3-T01 through P3-T09 are complete. The production platform/input boundary now owns GLFW/OpenGL window lifecycle, logical/framebuffer sizing, display modes, focus-safe cursor capture, raw/fallback relative mouse acquisition, immutable renderer-frame `InputSnapshot`, strict data-driven action bindings, stateful renderer-frame action evaluation, and the `PlayerInputCommandSampler` bridge into device-neutral per-tick commands.
+P4-T01 / Issue #94 is the first bounded Phase 4 task. D-041 establishes the canonical world convention in [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md): right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, positive rotation by the right-hand rule, and dimensionless transform scale. External library or authoring-format differences are converted at adapter/import/export boundaries instead of redefining engine world space.
 
-P3-T09 / Issue #92 completed through PR #159 on merged `master` `b9144e9e939cf468a5228f499aac130886d16456`. Its exact final PR candidate passed heavy workflow #294 / run `34771652425`; the exact merge passed lightweight workflow #295 / run `34771935986`. D-039 places immutable `PlayerInputCommand` and its explicit 126-byte replay/storage codec in `engine-core`, retains pending LOOK/edges across zero-tick frames, and keeps `game-server` independent of the platform module. The deterministic encode/decode/headless replay scenario exercises the Phase 3 backlog exit behavior at the input-command boundary.
+P4-T01 is documentation/architecture only. It deliberately does not choose view/projection matrix details, OpenGL NDC/depth policy, reversed-Z, FOV/near/far rules, Euler/quaternion storage policy, external-format/Jolt/OpenAL conversion details, or network quantization. Those remain later bounded tasks. Renderer, physics, and asset-conversion tests must cite the canonical document once those production paths exist; P4-T01 does not fabricate future implementations to satisfy that forward-looking requirement early.
 
-P3-T10 / Issue #93 is the final required Phase 3 task. D-040 defines immutable `InputResponseSettings` in `engine-core`: mouse sensitivity, Y inversion, controller dead zone, and controller response exponent. `InputActionEvaluator` applies mouse response before binding scale/aggregation while retaining the existing neutral constructor and action transition/frame-order semantics. Controller shaping is an axis-local deterministic scalar primitive only; controller discovery, polling, vocabulary, callbacks, and bindings are outside P3-T10. This roadmap intentionally does not state whether #93/PR #160 is currently open, merged, or closed; live GitHub state owns that answer.
+P4-T02 through P4-T09 remain separately planned tasks for JOML hot-loop policy, transforms/hierarchy, geometry primitives, screen-to-world rays, view/projection construction, and transform quantization. Their executable Issues must be freshly audited against the accepted P4-T01 convention before implementation. The Phase 4 exit remains: spatial tests pass independently of OpenGL and Jolt.
 
-P3-T04A / Issue #149 remains the canonical owner-facing manual demo. P3-T09 extended it to emit tick-command diagnostics only when fixed-step timing reports due simulation ticks. P3-T10 requires no sandbox source change merely to expose scalar response math because no settings UI/config surface exists; automated public-API tests are the acceptance path.
-
-Phase 3 completion requires verified acceptance of P3-T10 plus the existing P3-T09 replay exit evidence. After that, perform the required Phase 4 planning review before activating P4-T01. Check live Issue/PR evidence and `docs/DEVELOPMENT_STATUS.md`; do not infer completion or workflow state from this roadmap.
-
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-3---platform-and-input).
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-4---math-and-spatial-conventions). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
 
 ## Milestone exit outcomes
 

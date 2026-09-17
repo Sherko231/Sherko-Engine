@@ -42,8 +42,8 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | Milestone | Name | Horizon | Phases | Outcome |
 | --- | --- | --- | --- | --- |
 | M0 | Feasibility | FOLLOW-UP GATES | P0 | Native-stack feasibility is proven; end-to-end Steam transport and sustained-lifecycle evidence remain explicit blockers for the phases that consume them. |
-| M1 | Engine foundation | NOW | P1-P4 | Establish the build, module boundaries (including runtime UI), lifecycle, timing, input, math, and spatial contracts. |
-| M2 | Local playable runtime | NEXT | P5-P9 | Render and load a room, build world/physics/basic-audio/runtime-UI stacks, then prove a five-minute local co-op-style vertical slice. |
+| M1 | Engine foundation | COMPLETE | P1-P4 | Build/module boundaries, lifecycle, timing, input, math, and spatial contracts are implemented and verified. |
+| M2 | Local playable runtime | NOW | P5-P9 | Render and load a room, build world/physics/basic-audio/runtime-UI stacks, then prove a five-minute local co-op-style vertical slice. |
 | M3 | Multiplayer core | LATER | P10-P13 | Build transport, replication, prediction/correction, join-in-progress, and Steam session flow. |
 | M4 | Genre and presentation systems | LATER | P14 | Add network-aware audio, animation, IK, third-person presentation, visual feedback, navigation, perception, and one server-authoritative enemy. |
 | M5 | Tools | LATER | P15 | Add the minimum editor and diagnostics needed to author and debug the game without source edits. |
@@ -61,37 +61,37 @@ Durable Phase 0 conclusions include:
 4. The localhost impairment harness can reproduce latency, jitter, loss, duplication, and reordering.
 5. GLFW/OpenGL, Jolt JNI, OpenAL, and UDP can initialize, run together for 15 seconds under JFR, and shut down cleanly in the integrated smoke test.
 
-The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as a production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
+The conditional dedicated-server fallback P0-T10 is not selected. `P0-T09A` must prove the complete Steam connection/callback/send/receive/release/close path before P10/P13 may treat Steam as production transport. `P0-T13` and `P0-T14` provide sustained and repeated-lifecycle evidence.
 
-## Completed foundation — M1 / Phases 1–3
+## Completed foundation — M1 / Phases 1–4
 
-**Outcome so far:** the build/module foundation plus shared lifecycle, timing, configuration, ownership, allocation-observability, logging, fatal-shutdown, and platform/input contracts are implemented and verified.
+**Outcome:** the build/module foundation plus shared lifecycle, timing, configuration, ownership, allocation-observability, logging, fatal-shutdown, platform/input, math, and spatial contracts are implemented and verified.
 
-Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. The final additive follow-up P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged.
+Phase 1 is complete. The client and headless server build and run through repeatable commands; module/package boundaries, quality gates, dependency locking, CI, and reproducible version reporting are in place. P1-T10A moved disposable Phase 0 spikes into the experimental `feasibility-spikes` module while keeping the 16-module production target unchanged. P1-T08A / Issue #153 optimized the CI lifecycle without weakening exact-final-candidate verification.
 
-P1-T08A / Issue #153 is complete through PR #154 on merged `master` `134bd3cc18258325f835f2d704319bc23a6bca47`. It optimized the repository CI lifecycle without reducing the final-candidate gate: ordinary branch development runs no heavy matrix, the exact final non-draft PR candidate runs the existing five heavy jobs, and ordinary merged `master` commits run one lightweight exact-merge verifier. Full CI remains available deliberately through `workflow_dispatch` when a task requires stronger exact-merge evidence.
+Phase 2 is complete. P2-T01 through P2-T13 are merged, and the D-030 exit gate passed with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This does not replace independent P0-T09A/P0-T13/P0-T14 evidence.
 
-Phase 2 is complete. P2-T01 through P2-T13 are merged, and the D-030 Phase 2 exit gate passed on exact merged `master` with more than 60 continuous seconds of integrated fixed 60 Hz ticks, bounded catch-up, orderly lifecycle shutdown, and verified native-resource-registry cleanup. This completion does not replace the independent P0-T09A/P0-T13/P0-T14 feasibility gates.
+Phase 3 is complete. P3-T01 through P3-T10 established the production platform/input boundary, renderer-frame hardware/action state, deterministic response settings, tick-aligned `PlayerInputCommand`, fixed replay/storage codec, and deterministic headless replay. The persistent `game-sandbox` supersedes the earlier scripted demo presentation while preserving accepted production APIs.
 
-Phase 3 is also complete. P3-T01 through P3-T10 plus the owner-facing sandbox maintenance established the production platform/input boundary, renderer-frame hardware/action state, deterministic input response, tick-aligned `PlayerInputCommand`, fixed 126-byte replay/storage codec, and deterministic headless input replay. P3-T10 / Issue #93 completed through PR #160 on merged `master` `e1801b11a713ce6cc73276c644aa15351ac508a1`; the final candidate passed the heavy five-job matrix and the exact merge passed the lightweight master verifier. The Phase 4 entry review was recorded before P4 activation.
+Phase 4 is complete. P4-T01 through P4-T09 established the canonical D-041 world convention, JOML hot-loop policy, hierarchical transforms and cycle/dirty behavior, geometry primitives, D-045 view/perspective semantics, D-046 screen-to-world mapping, and D-047 bounded position/quaternion quantization. P4-T08 was intentionally completed before P4-T07 so ray construction consumed an accepted projection/depth convention.
 
-P3-T04A originally established `game-sandbox` as an owner-observation surface using a scripted timeline. Maintenance Issue #165 supersedes only that presentation/maintenance model: the sandbox is now a persistent cumulative playground with owner-controlled interaction. This does not alter the accepted Phase 3 engine APIs or exit evidence.
+P4-T09 / Issue #102 / PR #179 completed on merged `master` `66a81a418e0c953b8f00e54226265aa7cd226749`. Its final candidate passed the heavy five-job matrix in run #334 / `35246722603`, and the exact merge passed Lightweight verification in run #335 / `35247709901`.
 
-The exact containing-commit checkpoint and verification evidence are recorded in [`docs/DEVELOPMENT_STATUS.md`](docs/DEVELOPMENT_STATUS.md).
+The Phase 4 exit gate also passes. The accepted candidate and merged master share tree `c2e290e844cbd4ae0f08f40796b19967cc254b84`; root/subproject tests passed on that tree, while `engine-core` depends only on JOML and has no OpenGL/LWJGL or Jolt test dependency/import. The spatial test surface is therefore independently executable from OpenGL and Jolt. Issue #180 records the exit and Phase 5 readiness review.
 
-## Current focus — M1 / Phase 4
+## Current focus — M2 / Phase 5
 
-**Goal:** prevent coordinate-system and transform bugs from spreading across renderer, physics, audio, assets, and networking by fixing one spatial convention and then building deterministic math/spatial primitives against it.
+**Goal:** render a stable, inspectable 3D room without gameplay or physics dependencies, reaching a basic end-to-end room before visual polish.
 
-P4-T01 through P4-T06 are accepted. D-041 establishes the canonical world convention in [`docs/SPATIAL_CONVENTIONS.md`](docs/SPATIAL_CONVENTIONS.md): right-handed world, +X right, +Y up, -Z forward, meters for linear world quantities, radians for internal angular quantities, positive rotation by the right-hand rule, and dimensionless transform scale. P4-T02 pins JOML 1.10.9 and verifies the hot-loop mutable/preallocated usage pattern. P4-T03 through P4-T05 establish hierarchical transforms, atomic cycle rejection, and descendant-only dirty propagation. P4-T06 adds immutable ray/plane/sphere/AABB/frustum primitives.
+Phase 5 is ready to materialize as the current phase because its required platform and spatial inputs are accepted. However, renderer implementation has one explicit entry blocker from `ENGINE_SCOPE.md`: exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM values must be selected from a representative benchmark before Phase 5 renderer implementation begins.
 
-P4-T08 / Issue #101 is accepted through PR #175 and D-045: right-handed view space with camera forward `-Z`, vertical-FOV perspective, conventional finite projection, and OpenGL NDC depth `[-1,+1]`. P4-T08 was intentionally executed before P4-T07 so its projection/depth decision could be consumed rather than guessed.
+P5-T00 owns that hardware baseline and is the first executable task. P5-T01 through P5-T17 may exist as current-phase Issues for bounded planning/dependency visibility, but they remain blocked until P5-T00 is accepted and each task is freshly activated/refined against then-current `master`.
 
-P4-T07 / Issue #100 is accepted through PR #176 and D-046. It adds the renderer-neutral screen-to-world boundary: top-left/Y-down continuous screen samples in the same domain as the viewport, raster pixel centers at `index + 0.5`, closed viewport bounds, inverse `projection * view` homogeneous unprojection, near-plane ray origin, and normalized near-to-far direction.
+After P5-T00, the phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
 
-P4-T09 / Issue #102 is the next executable task. It is bounded to transform position/quaternion quantization helpers in `engine-core`; the executable Issue must fix exact ranges, representation, quaternion sign/normalization rules, failure behavior, public API, tests, and verification before implementation. It must not integrate networking or freeze a production transport packet layout. Completing P4-T09 will still not by itself complete Phase 4: the backlog exit gate requires spatial tests to pass independently of OpenGL and Jolt, followed by the next-phase readiness review before Phase 5 implementation is activated.
+Phase 5 exit gate remains the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish are deliberately not Phase 5 exit blockers.
 
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-4---math-and-spatial-conventions). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
+The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-5---rendering-foundation). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
 
 ## Milestone exit outcomes
 
@@ -99,7 +99,7 @@ The exact task definitions and planning acceptance criteria are in the [technica
 The base stack passed its smoke gates. P0-T09A blocks production Steam transport work; P0-T13/P0-T14 block long-duration native-stability claims.
 
 ### M1 — Engine foundation
-Client and headless server run from repeatable commands; the runtime UI module boundary, fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.
+Complete. Client and headless server run from repeatable commands; runtime UI module boundary, fixed-tick simulation, input replay, lifecycle/resource ownership, and spatial conventions are independently tested.
 
 ### M2 — Local playable runtime
 A five-minute local level proves rendering, cooked assets, component-driven scenes, player movement, physics interactions, basic audio, runtime HUD/menu flows, one cooperative objective, failure, and restart.
@@ -177,4 +177,4 @@ A task is done only when:
 
 ## Status convention
 
-This file uses planning horizons such as **NOW**, **NEXT**, **LATER**, and **COMPLETE** at milestone level. `docs/DEVELOPMENT_STATUS.md` records the checkpoint contained by the current commit; GitHub Issues/Project records newer live workflow state. Dates are deliberately omitted until enough Phase 1 throughput exists to estimate them credibly.
+This file uses planning horizons such as **NOW**, **NEXT**, **LATER**, and **COMPLETE** at milestone level. `docs/DEVELOPMENT_STATUS.md` records the checkpoint contained by the current commit; GitHub Issues/Project records newer live workflow state. Dates are deliberately omitted until enough implementation throughput exists to estimate them credibly.

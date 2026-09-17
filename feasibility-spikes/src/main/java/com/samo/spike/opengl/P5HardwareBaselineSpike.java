@@ -105,9 +105,9 @@ public final class P5HardwareBaselineSpike {
     private static final int WARMUP_FRAMES = 300;
     private static final int MEASUREMENT_FRAMES = 600;
     private static final int DRAWS_PER_FRAME = 1000;
-    private static final double FRAME_BUDGET_MILLIS = 16.667;
     private static final int FLOATS_PER_VERTEX = 8;
     private static final int INDEX_COUNT = 36;
+    private static final double FRAME_BUDGET_MILLIS = 16.667;
 
     private static final String VERTEX_SHADER = """
         #version 460 core
@@ -184,6 +184,11 @@ public final class P5HardwareBaselineSpike {
             glfwSwapInterval(0);
             GL.createCapabilities();
 
+            String openGlVersion = safeGlString(GL_VERSION);
+            String openGlVendor = safeGlString(GL_VENDOR);
+            String openGlRenderer = safeGlString(GL_RENDERER);
+            String displayMode = currentDisplayMode();
+
             program = createProgram();
             vao = glGenVertexArrays();
             vertexBuffer = glGenBuffers();
@@ -214,7 +219,7 @@ public final class P5HardwareBaselineSpike {
                 glFinish();
                 samplesMillis[frame] = (System.nanoTime() - startNanos) / 1_000_000.0;
             }
-            return summarize(samplesMillis);
+            return summarize(samplesMillis, displayMode, openGlVersion, openGlVendor, openGlRenderer);
         } finally {
             if (program != 0) {
                 glDeleteProgram(program);
@@ -240,6 +245,12 @@ public final class P5HardwareBaselineSpike {
         }
     }
 
+    private static String currentDisplayMode() {
+        long monitor = glfwGetPrimaryMonitor();
+        GLFWVidMode mode = monitor == MemoryUtil.NULL ? null : glfwGetVideoMode(monitor);
+        return mode == null ? "unavailable" : mode.width() + "x" + mode.height() + "@" + mode.refreshRate();
+    }
+
     private static void renderFrame(int offsetLocation) {
         glClearColor(0.035f, 0.045f, 0.065f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -255,13 +266,11 @@ public final class P5HardwareBaselineSpike {
     }
 
     private static void configureGeometry(int vao, int vertexBuffer, int indexBuffer) {
-        float[] vertices = cubeVertices();
-        int[] indices = cubeIndices();
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, cubeVertices(), GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndices(), GL_STATIC_DRAW);
         int stride = FLOATS_PER_VERTEX * Float.BYTES;
         glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
         glEnableVertexAttribArray(0);
@@ -323,7 +332,7 @@ public final class P5HardwareBaselineSpike {
         return shader;
     }
 
-    private static BenchmarkResult summarize(double[] samplesMillis) {
+    private static BenchmarkResult summarize(double[] samplesMillis, String displayMode, String openGlVersion, String openGlVendor, String openGlRenderer) {
         double[] sorted = samplesMillis.clone();
         Arrays.sort(sorted);
         double sum = 0.0;
@@ -336,7 +345,7 @@ public final class P5HardwareBaselineSpike {
         double median = percentile(sorted, 0.50);
         double p95 = percentile(sorted, 0.95);
         double p99 = percentile(sorted, 0.99);
-        return new BenchmarkResult(mean, median, p95, p99, maximum, p95 <= FRAME_BUDGET_MILLIS);
+        return new BenchmarkResult(mean, median, p95, p99, maximum, p95 <= FRAME_BUDGET_MILLIS, displayMode, openGlVersion, openGlVendor, openGlRenderer);
     }
 
     private static double percentile(double[] sorted, double percentile) {
@@ -346,22 +355,18 @@ public final class P5HardwareBaselineSpike {
 
     private static HardwareInfo collectHardwareInfo(int vramMiB) throws IOException, InterruptedException {
         Map<String, String> windows = queryWindowsHardware();
-        String commit = readCommand(List.of("git", "rev-parse", "HEAD"));
+        String commit = readCommand(List.of("git", "rev-parse", "HEAD")).strip();
         if (commit.isBlank()) {
             throw new IllegalStateException("Unable to determine exact repository SHA");
         }
-        long monitor = glfwGetPrimaryMonitor();
-        GLFWVidMode mode = monitor == MemoryUtil.NULL ? null : glfwGetVideoMode(monitor);
-        String display = mode == null ? "unavailable-before-glfw" : mode.width() + "x" + mode.height() + "@" + mode.refreshRate();
-        return new HardwareInfo(commit.strip(), windows.getOrDefault("CPU", "unknown"), windows.getOrDefault("RAM_BYTES", "unknown"), windows.getOrDefault("GPU", "unknown"), windows.getOrDefault("DRIVER", "unknown"), vramMiB, display);
+        return new HardwareInfo(commit, windows.getOrDefault("CPU", "unknown"), windows.getOrDefault("RAM_BYTES", "unknown"), windows.getOrDefault("VIDEO_CONTROLLERS", "unknown"), vramMiB);
     }
 
     private static Map<String, String> queryWindowsHardware() throws IOException, InterruptedException {
         String script = "$cpu=(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name);"
                 + "$ram=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory;"
-                + "$vc=Get-CimInstance Win32_VideoController | Select-Object -First 1;"
-                + "Write-Output ('CPU='+$cpu);Write-Output ('RAM_BYTES='+$ram);"
-                + "Write-Output ('GPU='+$vc.Name);Write-Output ('DRIVER='+$vc.DriverVersion)";
+                + "$video=((Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name + '@' + $_.DriverVersion }) -join '; ');"
+                + "Write-Output ('CPU='+$cpu);Write-Output ('RAM_BYTES='+$ram);Write-Output ('VIDEO_CONTROLLERS='+$video)";
         String output = readCommand(List.of("powershell.exe", "-NoProfile", "-Command", script));
         Map<String, String> values = new HashMap<>();
         for (String line : output.split("\\R")) {
@@ -395,13 +400,12 @@ public final class P5HardwareBaselineSpike {
                 "osArch=" + System.getProperty("os.arch"),
                 "cpu=" + hardware.cpu(),
                 "ramBytes=" + hardware.ramBytes(),
-                "gpu=" + hardware.gpu(),
-                "driverVersion=" + hardware.driverVersion(),
+                "videoControllers=" + hardware.videoControllers(),
                 "vramMiB=" + hardware.vramMiB(),
-                "displayMode=" + hardware.displayMode(),
-                "openGlVersion=" + safeGlString(GL_VERSION),
-                "openGlVendor=" + safeGlString(GL_VENDOR),
-                "openGlRenderer=" + safeGlString(GL_RENDERER),
+                "displayMode=" + result.displayMode(),
+                "openGlVersion=" + result.openGlVersion(),
+                "openGlVendor=" + result.openGlVendor(),
+                "openGlRenderer=" + result.openGlRenderer(),
                 "framebuffer=1920x1080",
                 "warmupFrames=" + WARMUP_FRAMES,
                 "measurementFrames=" + MEASUREMENT_FRAMES,
@@ -410,6 +414,7 @@ public final class P5HardwareBaselineSpike {
                 "texture=generated-2x2-checkerboard",
                 "depthTest=true",
                 "backFaceCulling=true",
+                "directionalLight=true",
                 "vsync=false",
                 "gpuCompletionPerSample=glFinish",
                 "frameBudgetMillis=" + FRAME_BUDGET_MILLIS,
@@ -433,7 +438,8 @@ public final class P5HardwareBaselineSpike {
     private static void requireWindowsX64() {
         String osName = System.getProperty("os.name", "");
         String osArch = System.getProperty("os.arch", "");
-        if (!osName.toLowerCase(Locale.ROOT).contains("windows") || !(osArch.equalsIgnoreCase("amd64") || osArch.equalsIgnoreCase("x86_64"))) {
+        boolean x64 = osArch.equalsIgnoreCase("amd64") || osArch.equalsIgnoreCase("x86_64");
+        if (!osName.toLowerCase(Locale.ROOT).contains("windows") || !x64) {
             throw new IllegalStateException("P5-T00 hardware baseline requires Windows x64");
         }
     }
@@ -481,9 +487,9 @@ public final class P5HardwareBaselineSpike {
         };
     }
 
-    private record HardwareInfo(String repositorySha, String cpu, String ramBytes, String gpu, String driverVersion, int vramMiB, String displayMode) {
+    private record HardwareInfo(String repositorySha, String cpu, String ramBytes, String videoControllers, int vramMiB) {
     }
 
-    private record BenchmarkResult(double meanMillis, double medianMillis, double p95Millis, double p99Millis, double maximumMillis, boolean passed) {
+    private record BenchmarkResult(double meanMillis, double medianMillis, double p95Millis, double p99Millis, double maximumMillis, boolean passed, String displayMode, String openGlVersion, String openGlVendor, String openGlRenderer) {
     }
 }

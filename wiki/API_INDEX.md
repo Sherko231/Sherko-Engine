@@ -29,6 +29,9 @@ The engine foundation is locked to a 60 Hz simulation rate at the current stage.
 | Type | Purpose |
 | --- | --- |
 | `Transform` | Mutable local position/rotation/scale plus optional parent and cached world-matrix composition. |
+| `TransformQuantization` | Deterministic bounded position/quaternion value quantization for later storage/network adapters. |
+| `TransformQuantization.QuantizedPosition` | Immutable three-short quantized canonical position value. |
+| `TransformQuantization.QuantizedRotation` | Immutable smallest-three quaternion value with omitted-component index. |
 | `CameraMatrices` | Static right-handed view and finite perspective projection construction into caller-owned JOML matrices. |
 | `ScreenRays` | Static screen/viewport-to-world `Ray3f` construction from read-only view/projection matrices. |
 | `Ray3f` | Immutable normalized world-space ray with plane/sphere/AABB intersections. |
@@ -46,6 +49,8 @@ Transform parent cycles are rejected atomically, and successful local/reparent c
 D-045 defines camera matrices: view space is right-handed with camera forward on `-Z`; perspective uses vertical FOV radians, positive aspect and near plane with `far > near`, conventional finite non-reversed depth, and OpenGL NDC z `[-1,+1]`. `CameraMatrices` mutates only the caller-provided destination after validation and has no renderer/LWJGL dependency.
 
 D-046 defines screen-to-world rays: screen/viewport origin is top-left, Y increases downward, raster pixel centers are at `index + 0.5`, screen samples and viewport coordinates must use the same coordinate domain, and closed viewport edges map to NDC `±1`. `ScreenRays.worldRay(...)` unprojects D-045 near/far clip depths through inverse `projection * view`, starts the returned `Ray3f` on the near plane, and points it toward the corresponding far point. It performs no GLFW logical/framebuffer conversion.
+
+D-047 defines transform value quantization. Position uses one signed `short` per axis at `1/64 m` over `[-512.0, 511.984375] m`, with maximum per-axis round-trip error `1/128 m`. Rotation uses deterministic smallest-three encoding: normalize first, omit the largest-absolute component with lowest-index tie breaking, canonicalize sign so `q` and `-q` encode identically, store the remaining components in `[-32767,+32767]`, and reserve `Short.MIN_VALUE` as malformed. Valid quaternion round trips are bounded to `0.0002 rad` angular error. `TransformQuantization` does not define packet layout, byte order, protocol/version fields, authority, origin policy, transport, or scale quantization.
 
 D-044 defines the geometry semantics: primitives are immutable and copy JOML inputs; ray directions and plane equations are normalized; contact is boundary-inclusive with exact production comparisons and no hidden epsilon; ray misses return `Float.NaN`; and `Frustum3f` consumes six inward-facing planes directly.
 

@@ -19,7 +19,10 @@ Implemented:
 - public `CameraMatrices` construction for right-handed world-to-view matrices and conventional finite perspective projection;
 - vertical FOV in radians, positive aspect/near with `far > near`, camera forward mapped to view `-Z`, and OpenGL NDC depth `[-1,+1]` with near/far at `-1/+1` under D-045;
 - public `ScreenRays.worldRay(...)` construction from read-only view/projection matrices;
-- top-left/Y-down screen mapping, same-domain screen/viewport coordinates, raster pixel centers at `index + 0.5`, closed viewport boundaries, inverse `projection * view` homogeneous unprojection, near-plane ray origin, and normalized near-to-far direction under D-046.
+- top-left/Y-down screen mapping, same-domain screen/viewport coordinates, raster pixel centers at `index + 0.5`, closed viewport boundaries, inverse `projection * view` homogeneous unprojection, near-plane ray origin, and normalized near-to-far direction under D-046;
+- public `TransformQuantization` value helpers under D-047 for bounded canonical position and quaternion encode/decode;
+- position quantization at `1/64 m` over `[-512.0, 511.984375] m` with maximum `1/128 m` per-axis round-trip error and no clamping;
+- deterministic smallest-three quaternion quantization with lowest-index tie breaking, `q`/`-q` sign canonicalization, reserved malformed `Short.MIN_VALUE`, and maximum `0.0002 rad` valid round-trip angular error.
 
 Current limitations:
 
@@ -29,7 +32,9 @@ Current limitations:
 - reversed-Z, infinite-far, orthographic, and jittered/TAA projection variants are not implemented;
 - no public camera component/object or Transform-to-camera decomposition API exists;
 - no public child enumeration or scene-graph API exists; hierarchy ownership beyond `parent()`/`setParent(...)` remains internal;
-- no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, serialization/quantization, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
+- no inverse/world-to-local transform API, world-TRS decomposition, Euler API, transform interpolation, entity/component storage, renderer integration, or physics/Jolt adapter exists yet;
+- D-047 quantizes position and rotation values only: there is no transform-object codec, scale quantization, byte serialization, packet layout, origin/rebasing scheme, entity/tick association, replication authority, delta compression, transport integration, or persisted transform format;
+- D-047's fixed position range is not an open-world/world-partition scheme; later networking/storage work must explicitly define any origin-relative strategy it requires;
 - no broad-phase structure, generic collision dispatcher, renderer-culling integration, or physics query adapter is part of the geometry primitive API;
 - zero and negative scale are allowed for forward composition, so consumers must not assume a transform is invertible;
 - `Transform` is mutable and externally serialized; concurrent mutation/read guarantees are not provided.
@@ -63,7 +68,7 @@ Implemented:
 - preservation of a complete same-binding key/button press+release between hardware snapshots as one-frame `pressed=true`, `held=false`, `released=true` action state;
 - overlapping bindings keep transitions action-level: an extra binding does not duplicate press and releasing one binding does not release while the aggregate remains active;
 - strictly increasing evaluator frame identity after the first successful frame plus atomic failure on invalid frame order or non-finite input/aggregate values;
-- immutable `engine-core` `InputResponseSettings` with deterministic mouse sensitivity/Y inversion and axis-local controller dead-zone/curve response math;
+- immutable `engine-core` `InputResponseSettings` with deterministic mouse sensitivity/Y-inversion and axis-local controller dead-zone/curve response math;
 - `InputActionEvaluator` applies mouse response before binding scale/aggregation, while the legacy constructor uses neutral response defaults and runtime settings replacement affects future frames only;
 - immutable `engine-core` `PlayerInputCommand` values containing one simulation tick's MOVE/LOOK plus nine digital scalar/pressed/held/released states without platform/native types;
 - explicit fixed-size version-1 `PlayerInputCommandCodec` using caller-supplied `ByteBuffer` for replay/storage round trips without Java serialization;

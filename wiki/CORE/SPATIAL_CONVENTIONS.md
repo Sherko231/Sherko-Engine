@@ -58,6 +58,42 @@ The public mapping is:
 
 The API intentionally does not convert between GLFW logical coordinates and framebuffer pixels. Use either domain only when the sample and viewport rectangle are both expressed in that domain.
 
+## Transform quantization
+
+`TransformQuantization` provides value-level quantization for later storage/network adapters without defining a packet.
+
+Position:
+
+- `TransformQuantization.quantizePosition(...)` accepts canonical engine-space meters;
+- each axis uses one signed `short` with `1/64 m` steps;
+- valid range is `-512.0 m` through `511.984375 m` inclusive;
+- maximum per-axis round-trip error is `1/128 m` (`7.8125 mm`);
+- invalid/non-finite/out-of-range input throws instead of clamping.
+
+Rotation:
+
+- `quantizeRotation(...)` accepts any finite non-zero quaternion and normalizes it;
+- the largest-absolute component is omitted, with lowest-index tie breaking;
+- sign is canonicalized so equivalent `q` and `-q` produce exactly the same `QuantizedRotation`;
+- the remaining three components use signed codes `[-32767,+32767]`; `Short.MIN_VALUE` is reserved invalid;
+- `dequantizeRotation(...)` rejects malformed records, reconstructs the omitted positive component, normalizes the output, and writes into the caller-owned `Quaternionf`;
+- valid encode/decode angular orientation error is bounded by `0.0002 rad`.
+
+Example:
+
+```java
+var encodedPosition = TransformQuantization.quantizePosition(
+        new Vector3f(12.345f, -3.25f, 100.0f));
+Vector3f decodedPosition = TransformQuantization.dequantizePosition(
+        encodedPosition, new Vector3f());
+
+var encodedRotation = TransformQuantization.quantizeRotation(sourceRotation);
+Quaternionf decodedRotation = TransformQuantization.dequantizeRotation(
+        encodedRotation, new Quaternionf());
+```
+
+The values do not say whether they represent local or world transforms. They also do not define byte order, packet field order/version, entity/tick IDs, origin rebasing, authority, transport, delta compression, or scale quantization. Those belong to later executable networking/storage contracts.
+
 ## External libraries and formats
 
 Treat the engine convention as the stable side of every boundary. If a renderer, physics library, audio library, asset format, editor surface, or network representation uses different axes or units, its owning adapter converts explicitly when data enters or leaves engine world space.
@@ -71,9 +107,9 @@ Current Phase 4 work still does not define:
 - automatic logical-window ↔ framebuffer coordinate conversion;
 - texture or UV origin;
 - glTF/Jolt/OpenAL conversion details;
-- Euler storage order or quaternion canonical sign;
-- network transform quantization.
+- Euler storage order;
+- production network transform packet layout, origin policy, replication authority, protocol versioning, or delta compression.
 
 ## API status
 
-Implemented public spatial APIs now include hierarchical `Transform`, immutable ray/plane/sphere/AABB/frustum primitives, `CameraMatrices` view/perspective construction, and `ScreenRays` screen-to-world ray construction. Network quantization remains a later Phase 4 task.
+Implemented public spatial APIs now include hierarchical `Transform`, immutable ray/plane/sphere/AABB/frustum primitives, `CameraMatrices` view/perspective construction, `ScreenRays` screen-to-world ray construction, and D-047 `TransformQuantization` position/quaternion value quantization. Production network packet/replication integration remains future work.

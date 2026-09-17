@@ -13,8 +13,13 @@
 | P4-T08 heavy verification | run `35137500332` (#330), all five required jobs passed after infrastructure-only retries on the same SHA |
 | P4-T08 merged `master` | `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` |
 | P4-T08 exact-merge verification | run `35139973161` (#331), Lightweight master verification passed after codeload timeout retries |
-| Active executable task | P4-T07 / Issue #100 — screen-to-world ray construction |
-| P4-T07 activation baseline | `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` |
+| P4-T07 accepted | Issue #100 / PR #176 |
+| P4-T07 final candidate | `e065eedae8c26dd799f6d8c1c89bfa8928a9ae31` |
+| P4-T07 heavy verification | run `35148006238` (#332), all five required jobs passed after infrastructure-only retry on unchanged candidate |
+| P4-T07 merged `master` | `35e9ad2fe1802af8d1d71f564047e5c7b32ab85f` |
+| P4-T07 exact-merge verification | run `35149613106` (#333), Lightweight master verification passed on exact merged SHA |
+| Next executable task | P4-T09 / Issue #102 — bounded transform position/quaternion quantization helpers |
+| P4-T09 activation prerequisite | merge this Markdown-only handoff reconciliation, then activate #102 against the resulting current `master` SHA |
 | Accepted sandbox maintenance | Issue #165 / PR #166 — persistent cumulative owner playground |
 | Milestone | M1 — Engine Foundation remains in progress through P1-P4 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
@@ -27,28 +32,26 @@ D-044/P4-T06 adds immutable public `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, and
 
 D-045/P4-T08 adds public `CameraMatrices` view/perspective construction. View space is right-handed with camera forward on `-Z`; perspective uses vertical FOV radians, positive aspect/near with `far > near`, conventional finite non-reversed depth, and OpenGL NDC `[-1,+1]` with near/far at `-1/+1`. P4-T08 final candidate `2ac964f60f115a2cee58e0d8b34b4d586079f698` passed the five-job heavy matrix in run #330. PR #175 merged as `58b775fb634a1bb27ae6193194dd1c5d7f670ffa`; exact merged master passed run #331 Lightweight master verification. Issue #101 is closed completed.
 
-## P4-T07 executable checkpoint — screen-to-world rays
+D-046/P4-T07 adds public `ScreenRays.worldRay(...)` using top-left/Y-down continuous viewport samples, same-domain sample/viewport coordinates, raster pixel centers at `index + 0.5`, closed viewport boundaries, D-045 NDC depth `[-1,+1]`, inverse `projection * view` homogeneous unprojection, a near-plane ray origin, and normalized near-to-far direction. Final candidate `e065eedae8c26dd799f6d8c1c89bfa8928a9ae31` passed the required five-job matrix in run #332; PR #176 merged as `35e9ad2fe1802af8d1d71f564047e5c7b32ab85f`; exact merged master passed Lightweight run #333. Issue #100 is closed completed.
 
-Issue #100 is activated from exact accepted master `58b775fb634a1bb27ae6193194dd1c5d7f670ffa` now that D-045 supplies its required projection/depth contract.
+## P4-T09 readiness — transform quantization
 
-The bounded implementation adds public `ScreenRays.worldRay(...)` in `engine-core`:
+P4-T09 / Issue #102 is the final listed Phase 4 implementation task. Its purpose is to add bounded position/quaternion quantization helpers in `engine-core` without integrating networking and without declaring a production transport packet layout.
 
-- top-left screen/viewport origin, X right and Y down;
-- continuous sample coordinates in the same domain as the viewport rectangle;
-- raster pixel centers at `index + 0.5` when pixel coordinates are used;
-- closed viewport boundary mapped to NDC `±1`;
-- D-045 near/far clip depths `-1/+1`;
-- inverse `projection * view` homogeneous unprojection;
-- near-plane ray origin and normalized near-to-far direction;
-- no implicit logical-window/framebuffer conversion and no OpenGL/GLFW dependency.
+Activation must make the Issue executable and resolve the previously open design choices before Java changes begin:
 
-D-046 records this durable mapping. Analytical tests cover center/edge samples, Y direction, viewport offsets, rotated cameras, matrix immutability, singular/non-finite matrices, invalid homogeneous division, and interoperability with existing `Ray3f` geometry queries.
+- position representable range and quantization precision/error bound;
+- exact packed/value representation exposed by the helper API;
+- quaternion normalization, omitted-largest-component representation, and `q`/`-q` sign equivalence/canonicalization;
+- invalid, malformed, and out-of-range behavior;
+- exact public API, authorized files, deterministic tests, documentation/wiki impact, and focused verification command;
+- Phase 4 exit evidence remains separate from isolated P4-T09 unit acceptance.
 
-No dependency, lockfile, Gradle edge, renderer/platform/world/game source, `CameraMatrices` behavior, Transform behavior, physics query, or sandbox source change is authorized.
+`docs/SPATIAL_CONVENTIONS.md` remains authoritative for right-handed world space, meters, radians, and boundary conversion. P4-T09 may define its transform quantization semantics under its executable contract but must not silently redefine canonical engine units or freeze a future production network packet.
 
-Independent review: required for public API/durable architecture work. No separate reviewer identity is available in the connected authoring environment unless one is explicitly provided; final PR must record `not performed` and residual risk. CI is not a substitute.
+Independent review will be required if P4-T09 adds public API or a durable serialization/quantization decision. If unavailable, the implementation PR must record `not performed`, reason, and residual risk; CI is not a substitute.
 
-Sandbox impact: none — there is still no production world/render scene/picking presentation surface where screen rays can be honestly demonstrated without pulling future work forward.
+Sandbox impact for activation: none — this reconciliation adds no engine capability. The P4-T09 implementation Issue must separately evaluate whether quantization is meaningfully owner-observable; a console-only diagnostic is not required merely to demonstrate pure encoding math.
 
 ## Open gates and blockers
 
@@ -58,8 +61,8 @@ Sandbox impact: none — there is still no production world/render scene/picking
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-None blocks P4-T07 pure Java screen/world math.
+None blocks bounded pure-Java P4-T09 quantization helpers. These feasibility gates remain independent and must not be represented as satisfied by Phase 4 math tests.
 
 ## Exact next action
 
-Finish P4-T07 implementation/docs/wiki/self-review and consistency audit on `p4-t07-screen-rays`, open one final non-draft PR for #100, require the five-job heavy matrix on the exact final head, merge only if the tested head/base remain current, require exact merged-master Lightweight verification, then close #100. Phase 4 exit remains a separate integration/planning gate.
+Merge the Markdown-only P4-T09 activation/handoff reconciliation after complete-diff review. Then update Issue #102 against the resulting current `master` SHA to `ACTIVE / executable contract`, with all quantization ranges/representation/failure/API/test/verification decisions fixed before implementation. Create the dedicated implementation branch only from that verified `master`. After P4-T09 implementation/verification/merge, execute the separate Phase 4 exit-gate procedure from `docs/BUILD_AND_VERIFY.md` before claiming Phase 4/M1 complete or activating Phase 5 implementation.

@@ -17,6 +17,8 @@ public final class TransformQuantization {
     private static final double ROTATION_COMPONENT_LIMIT = 1.0 / Math.sqrt(2.0);
     private static final double ROTATION_ENCODE_SCALE = Short.MAX_VALUE / ROTATION_COMPONENT_LIMIT;
     private static final double ROTATION_DECODE_SCALE = ROTATION_COMPONENT_LIMIT / Short.MAX_VALUE;
+    private static final long ROTATION_UNIT_SQUARED_CODE_LIMIT =
+            2L * Short.MAX_VALUE * Short.MAX_VALUE;
 
     private TransformQuantization() {}
 
@@ -131,9 +133,19 @@ public final class TransformQuantization {
         Objects.requireNonNull(quantized, "quantized");
         Objects.requireNonNull(destination, "destination");
 
-        double a = quantized.a() * ROTATION_DECODE_SCALE;
-        double b = quantized.b() * ROTATION_DECODE_SCALE;
-        double c = quantized.c() * ROTATION_DECODE_SCALE;
+        long aCode = quantized.a();
+        long bCode = quantized.b();
+        long cCode = quantized.c();
+        long storedSquaredCodeLength =
+                aCode * aCode + bCode * bCode + cCode * cCode;
+        if (storedSquaredCodeLength >= ROTATION_UNIT_SQUARED_CODE_LIMIT) {
+            throw new IllegalArgumentException(
+                    "quantized rotation components do not leave a valid omitted component");
+        }
+
+        double a = aCode * ROTATION_DECODE_SCALE;
+        double b = bCode * ROTATION_DECODE_SCALE;
+        double c = cCode * ROTATION_DECODE_SCALE;
         double storedLengthSquared = a * a + b * b + c * c;
         if (!(storedLengthSquared < 1.0)) {
             throw new IllegalArgumentException(
@@ -193,11 +205,17 @@ public final class TransformQuantization {
         requireFinite(value, name);
         if (value < POSITION_MIN_METERS || value > POSITION_MAX_METERS) {
             throw new IllegalArgumentException(
-                    name + " must be within [" + POSITION_MIN_METERS + ", " + POSITION_MAX_METERS + "] meters");
+                    name
+                            + " must be within ["
+                            + POSITION_MIN_METERS
+                            + ", "
+                            + POSITION_MAX_METERS
+                            + "] meters");
         }
         long encoded = Math.round((double) value / POSITION_STEP_METERS);
         if (encoded < Short.MIN_VALUE || encoded > Short.MAX_VALUE) {
-            throw new IllegalArgumentException(name + " cannot be represented by position quantization");
+            throw new IllegalArgumentException(
+                    name + " cannot be represented by position quantization");
         }
         return (short) encoded;
     }

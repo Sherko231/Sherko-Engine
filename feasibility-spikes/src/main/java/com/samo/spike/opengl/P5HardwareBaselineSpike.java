@@ -67,6 +67,7 @@ import static org.lwjgl.opengl.GL11.glGenTextures;
 import static org.lwjgl.opengl.GL11.glGetString;
 import static org.lwjgl.opengl.GL11.glTexImage2D;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
+import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
@@ -95,9 +96,25 @@ import static org.lwjgl.opengl.GL20.glShaderSource;
 import static org.lwjgl.opengl.GL20.glUniform3f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
+import static org.lwjgl.opengl.GL30.GL_DEPTH_ATTACHMENT;
+import static org.lwjgl.opengl.GL30.GL_DEPTH_COMPONENT24;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_COMPLETE;
+import static org.lwjgl.opengl.GL30.GL_RENDERBUFFER;
+import static org.lwjgl.opengl.GL30.glBindFramebuffer;
+import static org.lwjgl.opengl.GL30.glBindRenderbuffer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glCheckFramebufferStatus;
+import static org.lwjgl.opengl.GL30.glDeleteFramebuffers;
+import static org.lwjgl.opengl.GL30.glDeleteRenderbuffers;
 import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
+import static org.lwjgl.opengl.GL30.glFramebufferRenderbuffer;
+import static org.lwjgl.opengl.GL30.glFramebufferTexture2D;
+import static org.lwjgl.opengl.GL30.glGenFramebuffers;
+import static org.lwjgl.opengl.GL30.glGenRenderbuffers;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL30.glRenderbufferStorage;
 
 public final class P5HardwareBaselineSpike {
     private static final int WIDTH = 1920;
@@ -163,12 +180,16 @@ public final class P5HardwareBaselineSpike {
         int vao = 0;
         int vertexBuffer = 0;
         int indexBuffer = 0;
-        int texture = 0;
+        int checkerTexture = 0;
+        int colorTexture = 0;
+        int depthRenderbuffer = 0;
+        int framebuffer = 0;
         int program = 0;
         try {
             if (!glfwInit()) {
                 throw new IllegalStateException("Failed to initialize GLFW");
             }
+
             glfwDefaultWindowHints();
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -176,10 +197,12 @@ public final class P5HardwareBaselineSpike {
             glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
             glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-            window = glfwCreateWindow(WIDTH, HEIGHT, "Sherko Engine - P5-T00 Hardware Baseline", MemoryUtil.NULL, MemoryUtil.NULL);
+
+            window = glfwCreateWindow(64, 64, "Sherko Engine - P5-T00 Hardware Baseline", MemoryUtil.NULL, MemoryUtil.NULL);
             if (window == MemoryUtil.NULL) {
-                throw new IllegalStateException("Failed to create hidden 1920x1080 OpenGL 4.6 Core window");
+                throw new IllegalStateException("Failed to create hidden OpenGL 4.6 Core measurement context");
             }
+
             glfwMakeContextCurrent(window);
             glfwSwapInterval(0);
             GL.createCapabilities();
@@ -189,11 +212,32 @@ public final class P5HardwareBaselineSpike {
             String openGlRenderer = safeGlString(GL_RENDERER);
             String displayMode = currentDisplayMode();
 
+            framebuffer = glGenFramebuffers();
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+            colorTexture = glGenTextures();
+            glBindTexture(GL_TEXTURE_2D, colorTexture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+
+            depthRenderbuffer = glGenRenderbuffers();
+            glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, WIDTH, HEIGHT);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
+
+            int framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
+                throw new IllegalStateException(String.format(Locale.ROOT, "P5-T00 framebuffer incomplete: 0x%X", framebufferStatus));
+            }
+            glViewport(0, 0, WIDTH, HEIGHT);
+
             program = createProgram();
             vao = glGenVertexArrays();
             vertexBuffer = glGenBuffers();
             indexBuffer = glGenBuffers();
-            texture = createCheckerTexture();
+            checkerTexture = createCheckerTexture();
             configureGeometry(vao, vertexBuffer, indexBuffer);
 
             glEnable(GL_DEPTH_TEST);
@@ -201,7 +245,8 @@ public final class P5HardwareBaselineSpike {
             glCullFace(GL_BACK);
             glUseProgram(program);
             glBindVertexArray(vao);
-            glBindTexture(GL_TEXTURE_2D, texture);
+            glBindTexture(GL_TEXTURE_2D, checkerTexture);
+
             int offsetLocation = glGetUniformLocation(program, "uOffset");
             if (offsetLocation < 0) {
                 throw new IllegalStateException("uOffset uniform was not found");
@@ -219,13 +264,14 @@ public final class P5HardwareBaselineSpike {
                 glFinish();
                 samplesMillis[frame] = (System.nanoTime() - startNanos) / 1_000_000.0;
             }
+
             return summarize(samplesMillis, displayMode, openGlVersion, openGlVendor, openGlRenderer);
         } finally {
             if (program != 0) {
                 glDeleteProgram(program);
             }
-            if (texture != 0) {
-                glDeleteTextures(texture);
+            if (checkerTexture != 0) {
+                glDeleteTextures(checkerTexture);
             }
             if (indexBuffer != 0) {
                 glDeleteBuffers(indexBuffer);
@@ -235,6 +281,15 @@ public final class P5HardwareBaselineSpike {
             }
             if (vao != 0) {
                 glDeleteVertexArrays(vao);
+            }
+            if (depthRenderbuffer != 0) {
+                glDeleteRenderbuffers(depthRenderbuffer);
+            }
+            if (colorTexture != 0) {
+                glDeleteTextures(colorTexture);
+            }
+            if (framebuffer != 0) {
+                glDeleteFramebuffers(framebuffer);
             }
             if (window != MemoryUtil.NULL) {
                 glfwDestroyWindow(window);
@@ -354,19 +409,44 @@ public final class P5HardwareBaselineSpike {
     }
 
     private static HardwareInfo collectHardwareInfo(int vramMiB) throws IOException, InterruptedException {
+        assertCleanCheckout();
         Map<String, String> windows = queryWindowsHardware();
         String commit = readCommand(List.of("git", "rev-parse", "HEAD")).strip();
         if (commit.isBlank()) {
             throw new IllegalStateException("Unable to determine exact repository SHA");
         }
-        return new HardwareInfo(commit, windows.getOrDefault("CPU", "unknown"), windows.getOrDefault("RAM_BYTES", "unknown"), windows.getOrDefault("VIDEO_CONTROLLERS", "unknown"), vramMiB);
+        return new HardwareInfo(
+                commit,
+                windows.getOrDefault("WINDOWS_CAPTION", "unknown"),
+                windows.getOrDefault("WINDOWS_VERSION", "unknown"),
+                windows.getOrDefault("WINDOWS_BUILD", "unknown"),
+                windows.getOrDefault("CPU", "unknown"),
+                windows.getOrDefault("RAM_BYTES", "unknown"),
+                windows.getOrDefault("VIDEO_CONTROLLERS", "unknown"),
+                vramMiB
+        );
+    }
+
+    private static void assertCleanCheckout() throws IOException, InterruptedException {
+        String status = readCommand(List.of("git", "status", "--porcelain")).strip();
+        if (!status.isEmpty()) {
+            throw new IllegalStateException("P5-T00 benchmark requires a clean Git checkout");
+        }
     }
 
     private static Map<String, String> queryWindowsHardware() throws IOException, InterruptedException {
-        String script = "$cpu=(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name);"
+        String script = "$os=Get-CimInstance Win32_OperatingSystem;"
+                + "$cpu=(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name);"
                 + "$ram=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory;"
-                + "$video=((Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name + '@' + $_.DriverVersion }) -join '; ');"
-                + "Write-Output ('CPU='+$cpu);Write-Output ('RAM_BYTES='+$ram);Write-Output ('VIDEO_CONTROLLERS='+$video)";
+                + "$video=((Get-CimInstance Win32_VideoController | ForEach-Object {"
+                + "$_.Name + '|' + $_.AdapterCompatibility + '|' + $_.DriverVersion + '|' + $_.PNPDeviceID"
+                + "}) -join '; ');"
+                + "Write-Output ('WINDOWS_CAPTION='+$os.Caption);"
+                + "Write-Output ('WINDOWS_VERSION='+$os.Version);"
+                + "Write-Output ('WINDOWS_BUILD='+$os.BuildNumber);"
+                + "Write-Output ('CPU='+$cpu);"
+                + "Write-Output ('RAM_BYTES='+$ram);"
+                + "Write-Output ('VIDEO_CONTROLLERS='+$video)";
         String output = readCommand(List.of("powershell.exe", "-NoProfile", "-Command", script));
         Map<String, String> values = new HashMap<>();
         for (String line : output.split("\\R")) {
@@ -394,21 +474,24 @@ public final class P5HardwareBaselineSpike {
                 "task=P5-T00",
                 "result=" + (result.passed() ? "PASS" : "FAIL"),
                 "repositorySha=" + hardware.repositorySha(),
+                "repositoryClean=true",
                 "javaVersion=" + System.getProperty("java.version"),
-                "osName=" + System.getProperty("os.name"),
-                "osVersion=" + System.getProperty("os.version"),
+                "windowsCaption=" + hardware.windowsCaption(),
+                "windowsVersion=" + hardware.windowsVersion(),
+                "windowsBuild=" + hardware.windowsBuild(),
                 "osArch=" + System.getProperty("os.arch"),
                 "cpu=" + hardware.cpu(),
                 "ramBytes=" + hardware.ramBytes(),
-                "videoControllers=" + hardware.videoControllers(),
+                "videoControllers=name|vendor|driverVersion|pnpDeviceId:" + hardware.videoControllers(),
                 "vramMiB=" + hardware.vramMiB(),
                 "displayMode=" + result.displayMode(),
                 "openGlVersion=" + result.openGlVersion(),
                 "openGlVendor=" + result.openGlVendor(),
                 "openGlRenderer=" + result.openGlRenderer(),
-                "framebuffer=1920x1080",
+                "framebuffer=offscreen-1920x1080-rgba8-depth24",
                 "warmupFrames=" + WARMUP_FRAMES,
                 "measurementFrames=" + MEASUREMENT_FRAMES,
+                "sampleCount=" + MEASUREMENT_FRAMES,
                 "drawsPerFrame=" + DRAWS_PER_FRAME,
                 "geometry=indexed-cube-position-normal-uv",
                 "texture=generated-2x2-checkerboard",
@@ -416,6 +499,7 @@ public final class P5HardwareBaselineSpike {
                 "backFaceCulling=true",
                 "directionalLight=true",
                 "vsync=false",
+                "presentationSwap=false",
                 "gpuCompletionPerSample=glFinish",
                 "frameBudgetMillis=" + FRAME_BUDGET_MILLIS,
                 String.format(Locale.ROOT, "meanMillis=%.6f", result.meanMillis()),
@@ -487,7 +571,7 @@ public final class P5HardwareBaselineSpike {
         };
     }
 
-    private record HardwareInfo(String repositorySha, String cpu, String ramBytes, String videoControllers, int vramMiB) {
+    private record HardwareInfo(String repositorySha, String windowsCaption, String windowsVersion, String windowsBuild, String cpu, String ramBytes, String videoControllers, int vramMiB) {
     }
 
     private record BenchmarkResult(double meanMillis, double medianMillis, double p95Millis, double p99Millis, double maximumMillis, boolean passed, String displayMode, String openGlVersion, String openGlVendor, String openGlRenderer) {

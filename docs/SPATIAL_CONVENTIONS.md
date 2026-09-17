@@ -99,6 +99,30 @@ D-046 / P4-T07 fixes the public screen-to-world mapping consumed by `ScreenRays`
 
 `ScreenRays` does not choose GLFW logical coordinates versus framebuffer pixels and performs no implicit conversion between them. A caller may use either domain only if both the screen sample and viewport rectangle are expressed in that same domain.
 
+## Transform value quantization
+
+D-047 / P4-T09 fixes reusable value-level quantization semantics consumed by `TransformQuantization` without defining a network packet or replication policy.
+
+Position quantization:
+
+- input position components are canonical engine-space meters;
+- each axis is quantized independently with step `1/64 m` into one signed 16-bit code;
+- valid range is exactly `[-512.0, 511.984375] m` per axis;
+- maximum accepted round-trip absolute error is `1/128 m` (`7.8125 mm`) per axis;
+- out-of-range or non-finite values fail; there is no saturation/clamping.
+
+Quaternion quantization:
+
+- finite non-zero inputs are normalized before encoding;
+- the largest-absolute quaternion component is omitted; equal magnitudes choose the lowest component index;
+- because `q` and `-q` represent the same orientation, the sign is canonicalized so the omitted component is non-negative and both signs encode identically;
+- the remaining three components retain original component order and map to signed codes `[-32767,+32767]` over `[-1/sqrt(2),+1/sqrt(2)]`;
+- code `-32768` is reserved invalid for stored quaternion components;
+- decode reconstructs the omitted component as the positive square root, rejects malformed triplets whose stored squared magnitude leaves no positive omitted component, and normalizes the result;
+- valid encode/decode round trips have angular orientation error bounded by `0.0002 rad`.
+
+These semantics are value-level only. The caller still decides whether the values represent local, world, or origin-relative transforms under a future replication/storage contract. P4-T09 defines no byte order, packet field order, protocol version, entity/tick IDs, delta compression, transport, authority, or scale quantization.
+
 ## Boundary conversion rule
 
 External systems may use different coordinate or unit conventions. Conversion belongs at the boundary that owns that external system.
@@ -109,7 +133,7 @@ Examples of boundaries that may require explicit conversion later include:
 - Jolt/Jolt-JNI physics adaptation;
 - OpenAL spatial-audio adaptation;
 - renderer camera/uniform upload;
-- network transform encoding/quantization;
+- network transform encoding/packet serialization around D-047 values;
 - editor/tooling display or human-entered units.
 
 The canonical engine convention does not change to match an external library. Instead, the adapter converts incoming data into the canonical convention and converts outgoing data from the canonical convention when necessary.
@@ -118,15 +142,15 @@ The canonical engine convention does not change to match an external library. In
 
 Do not confuse world/view space with unrelated coordinate domains.
 
-The following remain deliberately undefined here and are not implied by D-041/D-045/D-046:
+The following remain deliberately undefined here and are not implied by D-041/D-045/D-046/D-047:
 
 - automatic conversion between GLFW logical-window coordinates and framebuffer pixels;
 - texture/UV/image origin conventions;
 - glTF authoring basis/conversion details;
 - Jolt internal basis/conversion details;
 - OpenAL internal spatial details;
-- quaternion canonical-sign or serialization policy;
-- network transform quantization or packet layout.
+- Euler-angle storage/order policy;
+- production network transform packet layout, origin scheme, authority, delta/compression, or protocol versioning.
 
 Later adapters and tests must cite this document and show any required conversion explicitly.
 
@@ -141,10 +165,10 @@ Any future task that defines or implements one of the following must treat this 
 - spatial audio positions/directions;
 - asset conversion into cooked runtime data;
 - world-space geometry primitives;
-- transform replication/quantization.
+- transform replication/quantization and any packet/adaptor wrapping D-047 values.
 
-Future renderer, physics, and asset-conversion tests must cite the canonical conventions once those production paths exist. P4-T01/P4-T07/P4-T08 do not fabricate those implementations merely to satisfy forward-looking acceptance statements.
+Future renderer, physics, and asset-conversion tests must cite the canonical conventions once those production paths exist. P4-T01/P4-T07/P4-T08/P4-T09 do not fabricate those implementations merely to satisfy forward-looking acceptance statements.
 
 ## Decision authority
 
-D-041 records canonical world space, D-045 records the camera view/projection convention, and D-046 records the screen-to-world mapping in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.
+D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, and D-047 records transform value quantization in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.

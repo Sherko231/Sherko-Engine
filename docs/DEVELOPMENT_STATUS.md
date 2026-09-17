@@ -62,9 +62,9 @@ The activation audit found no existing repository benchmark capable of supportin
 
 Issue #182 was therefore refined before implementation to authorize one disposable measurement path under `feasibility-spikes`, using only its existing LWJGL dependencies and no production renderer code.
 
-The branch now contains `P5HardwareBaselineSpike` plus `:feasibility-spikes:runP5HardwareBaseline`. The frozen fixture uses a hidden 1920x1080 OpenGL 4.6 Core context, 300 warm-up frames, 600 measured frames, 1000 individual indexed textured cube draws per frame, depth testing, back-face culling, one fixed directional-light calculation, disabled vsync, and `glFinish` before each measured frame sample completes. Candidate acceptance is p95 synchronized frame time `<= 16.667 ms`.
+The branch now contains `P5HardwareBaselineSpike` plus `:feasibility-spikes:runP5HardwareBaseline`. The frozen fixture uses a hidden OpenGL 4.6 Core context with an explicit offscreen 1920x1080 RGBA8 + depth24 framebuffer, 300 warm-up frames, 600 measured frames, 1000 individual indexed textured cube draws per frame, depth testing, back-face culling, one fixed directional-light calculation, disabled vsync, no presentation swap, and `glFinish` before each measured frame sample completes. Candidate acceptance is p95 synchronized frame time `<= 16.667 ms`.
 
-The report records repository SHA, Java/Windows information, CPU/RAM and Windows video-controller/driver metadata, independently supplied exact VRAM, display mode, OpenGL vendor/version/renderer, fixed workload constants, mean/median/p95/p99/max frame time, and derived mean/p95 FPS. The report path is `build/spikes/p5-hardware-baseline/p5-t00-hardware-baseline.txt`.
+The benchmark requires a clean Git checkout and an independently verified exact VRAM value. The report records repository SHA, clean-checkout status, Java version, Windows caption/version/build, CPU/RAM, Windows video-controller vendor/driver/PNP metadata, supplied exact VRAM, primary display mode, OpenGL vendor/version/renderer, fixed workload constants, mean/median/p95/p99/max synchronized frame time, and derived mean/p95 FPS. The report path is `build/spikes/p5-hardware-baseline/p5-t00-hardware-baseline.txt`.
 
 No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged until a representative Windows x64 candidate machine other than the high-end development machine produces a qualifying retained report.
 
@@ -72,7 +72,7 @@ No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged 
 
 | Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
-| P5-T00 / #182 | P5 renderer implementation | Build verification for the disposable spike, then a passing representative Windows candidate report with exact VRAM and hardware/driver metadata |
+| P5-T00 / #182 | P5 renderer implementation | Java 25/repository CI verification for the disposable spike, then a passing representative Windows candidate report with independently verified exact VRAM and retained hardware/driver metadata |
 | P0-T09A / #42 | Production Steam transport work in P10/P13 | End-to-end two-process SteamNetworkingSockets lifecycle |
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
@@ -81,4 +81,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Verify the P5-T00 branch compiles and passes repository quality gates. Then run `.\gradlew.bat :feasibility-spikes:runP5HardwareBaseline -Pp5HardwareVramMiB=<exact MiB>` on a representative Windows x64 candidate machine that is not the high-end development machine. Do not edit `ENGINE_SCOPE.md`, complete #182, or begin P5-T01 until a qualifying report exists.
+Run the P5-T00 benchmark branch on a representative Windows x64 candidate with a clean checkout and independently verified exact VRAM using `.\gradlew.bat :feasibility-spikes:runP5HardwareBaseline -Pp5HardwareVramMiB=<exact MiB>`. Retain the generated report and review its hardware class and p95 result. Only after a representative candidate qualifies may the task write exact CPU/GPU/driver/RAM/VRAM values into `ENGINE_SCOPE.md`, finalize the PR, run the exact-final-head five-job heavy CI matrix, merge, run exact-merge Lightweight verification, and close #182. Do not begin P5-T01 earlier.

@@ -26,15 +26,15 @@ Java-first 3D engine scoped for small/medium first-/third-person, physics-heavy,
 
 ## Current state
 
-The Java 25 multi-project foundation declares all 16 production-target modules plus experimental `feasibility-spikes`. Phase 1 and Phase 2 are complete. `engine-core` provides lifecycle, dependency/startup rollback, deterministic fixed-step timing, typed configuration, native-resource diagnostics, structured logging, fatal termination, device-neutral per-tick input/replay, deterministic input-response math, and the production spatial foundation.
+The Java 25 multi-project foundation declares all 16 production-target modules plus experimental `feasibility-spikes`. M1 — Engine Foundation is complete: Phases 1 through 4 established the build/module boundaries, lifecycle/timing/configuration/resource contracts, production platform/input stack, deterministic tick input/replay, canonical spatial conventions, transforms, geometry primitives, camera/screen math, and bounded transform quantization.
 
-Phase 3 is complete through P3-T10 / Issue #93 / PR #160. The platform/input foundation includes renderer-frame hardware snapshots, strict data-driven action bindings, action transitions, deterministic response settings, tick-aligned `PlayerInputCommand`, the fixed 126-byte replay/storage codec, and deterministic headless replay evidence.
+Phase 4 completed through P4-T09 / Issue #102 / PR #179. P4-T08 was intentionally executed before P4-T07 so screen-to-world ray construction consumed an accepted view/projection convention. The Phase 4 exit gate is satisfied: the spatial test surface lives in pure-Java/JOML `engine-core`, with no OpenGL or Jolt dependency, and passed on the exact repository tree merged by PR #179.
 
-Phase 4 is the active M1 focus. P4-T01 through P4-T08 are accepted, with P4-T08 intentionally executed before P4-T07: canonical world-space conventions, JOML hot-loop policy/evidence, hierarchical `Transform`, atomic cycle rejection, descendant-only dirty propagation, immutable ray/plane/sphere/AABB/frustum primitives, durable right-handed view/perspective projection semantics, and the D-046 screen-to-world mapping are in place. P4-T09 / Issue #102 is the active executable task for bounded transform position/quaternion quantization helpers in `engine-core`; it must not integrate networking or freeze a production packet layout. Phase 4 completion remains a separate exit-gate verification after P4-T09.
+Phase 5 — Rendering foundation is now the current M2 focus. P5-T00 is the mandatory first executable task: select and document exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM from a representative benchmark. `ENGINE_SCOPE.md` requires that baseline before renderer implementation starts, so P5-T01 through P5-T17 remain blocked until P5-T00 is accepted.
 
 `game-sandbox` is a persistent cumulative playground rather than a disposable feature demo. Capabilities that are meaningfully usable through already-authorized public production APIs should be integrated into that same sandbox experience as they land; features that cannot yet be exposed honestly remain out until their required public boundary exists.
 
-Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence.
+Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence. They do not block Phase 5 renderer-foundation work, but they still limit the claims they were created to prove.
 
 ## Default contribution / CI lifecycle
 

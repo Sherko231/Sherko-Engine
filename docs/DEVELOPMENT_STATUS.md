@@ -16,8 +16,11 @@
 | P4-T09 merged `master` | `66a81a418e0c953b8f00e54226265aa7cd226749` |
 | P4-T09 exact-merge verification | run `35247709901` (#335), Lightweight master verification passed on the exact merge SHA |
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
-| Phase 4 exit/readiness record | Issue #180 |
-| Next executable task | P5-T00 — select and document representative/minimum Windows hardware baseline before renderer implementation |
+| Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
+| Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
+| Active executable task | P5-T00 / Issue #182 — representative Windows hardware baseline |
+| P5-T00 branch | `p5-t00-hardware-baseline` |
+| P5-T00 checkpoint | Disposable 1080p60 measurement path implemented in `feasibility-spikes`; representative-machine evidence not yet collected |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -51,13 +54,25 @@ Accepted prerequisites already exist:
 
 One entry requirement remains intentionally first in Phase 5: `ENGINE_SCOPE.md` requires exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM values selected from a representative benchmark **before Phase 5 renderer implementation**. P5-T00 owns that work.
 
-Phase 5 tasks may be materialized as current-phase Issues, but P5-T01 through P5-T17 must remain blocked on accepted P5-T00 evidence until the hardware baseline is fixed. Later Phase 6+ work remains backlog-only.
+Phase 5 tasks are materialized as Issues #182–#199, but P5-T01 through P5-T17 remain blocked on accepted P5-T00 evidence. Later Phase 6+ work remains backlog-only.
+
+## P5-T00 implementation checkpoint
+
+The activation audit found no existing repository benchmark capable of supporting a 1080p60 minimum/reference hardware claim. The old P0 OpenGL spike only clears a framebuffer and cannot be used as a representative renderer workload.
+
+Issue #182 was therefore refined before implementation to authorize one disposable measurement path under `feasibility-spikes`, using only its existing LWJGL dependencies and no production renderer code.
+
+The branch now contains `P5HardwareBaselineSpike` plus `:feasibility-spikes:runP5HardwareBaseline`. The frozen fixture uses a hidden 1920x1080 OpenGL 4.6 Core context, 300 warm-up frames, 600 measured frames, 1000 individual indexed textured cube draws per frame, depth testing, back-face culling, one fixed directional-light calculation, disabled vsync, and `glFinish` before each measured frame sample completes. Candidate acceptance is p95 synchronized frame time `<= 16.667 ms`.
+
+The report records repository SHA, Java/Windows information, CPU/RAM and Windows video-controller/driver metadata, independently supplied exact VRAM, display mode, OpenGL vendor/version/renderer, fixed workload constants, mean/median/p95/p99/max frame time, and derived mean/p95 FPS. The report path is `build/spikes/p5-hardware-baseline/p5-t00-hardware-baseline.txt`.
+
+No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged until a representative Windows x64 candidate machine other than the high-end development machine produces a qualifying retained report.
 
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
-| P5-T00 | P5 renderer implementation | Representative Windows benchmark and exact minimum/reference CPU, GPU, driver, RAM, VRAM values |
+| P5-T00 / #182 | P5 renderer implementation | Build verification for the disposable spike, then a passing representative Windows candidate report with exact VRAM and hardware/driver metadata |
 | P0-T09A / #42 | Production Steam transport work in P10/P13 | End-to-end two-process SteamNetworkingSockets lifecycle |
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
@@ -66,4 +81,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Execute P5-T00 from current verified `master` after the Phase 4 exit/readiness Markdown handoff is merged. Do not begin P5-T01 or later renderer implementation until P5-T00 has selected and documented the exact representative/minimum Windows hardware baseline required by `ENGINE_SCOPE.md`.
+Verify the P5-T00 branch compiles and passes repository quality gates. Then run `.\gradlew.bat :feasibility-spikes:runP5HardwareBaseline -Pp5HardwareVramMiB=<exact MiB>` on a representative Windows x64 candidate machine that is not the high-end development machine. Do not edit `ENGINE_SCOPE.md`, complete #182, or begin P5-T01 until a qualifying report exists.

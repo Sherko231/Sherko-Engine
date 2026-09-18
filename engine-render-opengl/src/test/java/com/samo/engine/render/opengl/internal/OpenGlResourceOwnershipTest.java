@@ -1,5 +1,6 @@
 package com.samo.engine.render.opengl.internal;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -187,6 +188,72 @@ class OpenGlResourceOwnershipTest {
     }
 
     @Test
+    void shaderRollbackKeepsSameThrowablePrimaryWithoutSelfSuppression() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeBackend backend = new FakeBackend();
+        RuntimeException primary = new IllegalStateException("shared shader failure");
+        backend.shaderSourceFailure = primary;
+        backend.shaderDeleteFailure = primary;
+
+        RuntimeException actual = assertThrows(
+                RuntimeException.class,
+                () -> OpenGlShader.compile(
+                        OpenGlShader.Stage.VERTEX,
+                        "fixture/shared.vert",
+                        "broken",
+                        guard,
+                        registry,
+                        backend));
+
+        assertSame(primary, actual);
+        assertEquals(0, actual.getSuppressed().length);
+        assertEquals(1, backend.deletedShaders);
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void programRollbackPreservesDistinctCleanupFailureOrder() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeBackend backend = new FakeBackend();
+        OpenGlShader vertex = OpenGlShader.compile(
+                OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
+        OpenGlShader fragment = OpenGlShader.compile(
+                OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
+
+        RuntimeException primary = new IllegalStateException("link operation failed");
+        RuntimeException fragmentDetach = new IllegalStateException("fragment detach failed");
+        RuntimeException vertexDetach = new IllegalStateException("vertex detach failed");
+        RuntimeException deleteProgram = new IllegalStateException("program delete failed");
+        backend.linkProgramFailure = primary;
+        backend.fragmentDetachFailure = fragmentDetach;
+        backend.vertexDetachFailure = vertexDetach;
+        backend.programDeleteFailure = deleteProgram;
+
+        RuntimeException actual = assertThrows(
+                RuntimeException.class,
+                () -> OpenGlProgram.link(
+                        "fixture-program",
+                        vertex,
+                        fragment,
+                        guard,
+                        registry,
+                        backend));
+
+        assertSame(primary, actual);
+        assertArrayEquals(
+                new Throwable[] {fragmentDetach, vertexDetach, deleteProgram},
+                actual.getSuppressed());
+        assertEquals(1, backend.deletedPrograms);
+
+        backend.shaderDeleteFailure = null;
+        fragment.close();
+        vertex.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
     void deleteFailurePropagatesOnceAndIsNeverRetried() {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -255,6 +322,12 @@ class OpenGlResourceOwnershipTest {
         private String shaderInfoLog = "";
         private String programInfoLog = "";
         private RuntimeException bufferDeleteFailure;
+        private RuntimeException shaderSourceFailure;
+        private RuntimeException shaderDeleteFailure;
+        private RuntimeException linkProgramFailure;
+        private RuntimeException fragmentDetachFailure;
+        private RuntimeException vertexDetachFailure;
+        private RuntimeException programDeleteFailure;
         private int createdBuffers;
         private int deletedBuffers;
         private int deletedVertexArrays;
@@ -353,6 +426,9 @@ class OpenGlResourceOwnershipTest {
         @Override
         public void shaderSource(int shader, String source) {
             trace.add("shader-source:" + shader);
+            if (shaderSourceFailure != null) {
+                throw shaderSourceFailure;
+            }
         }
 
         @Override
@@ -373,6 +449,9 @@ class OpenGlResourceOwnershipTest {
         @Override
         public void deleteShader(int shader) {
             deletedShaders++;
+            if (shaderDeleteFailure != null) {
+                throw shaderDeleteFailure;
+            }
         }
 
         @Override
@@ -388,6 +467,9 @@ class OpenGlResourceOwnershipTest {
         @Override
         public void linkProgram(int program) {
             trace.add("link:" + program);
+            if (linkProgramFailure != null) {
+                throw linkProgramFailure;
+            }
         }
 
         @Override
@@ -403,11 +485,20 @@ class OpenGlResourceOwnershipTest {
         @Override
         public void detachShader(int program, int shader) {
             trace.add("detach:" + program + ":" + shader);
+            if (shader == 21 && fragmentDetachFailure != null) {
+                throw fragmentDetachFailure;
+            }
+            if (shader == 20 && vertexDetachFailure != null) {
+                throw vertexDetachFailure;
+            }
         }
 
         @Override
         public void deleteProgram(int program) {
             deletedPrograms++;
+            if (programDeleteFailure != null) {
+                throw programDeleteFailure;
+            }
         }
     }
 }

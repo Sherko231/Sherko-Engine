@@ -55,6 +55,21 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.program = program;
     }
 
+    public static IndexedStaticMeshPipeline createProduction(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry registry,
+            String vertexSource,
+            String fragmentSource) {
+        return create(
+                threadGuard,
+                registry,
+                new LwjglOpenGlResourceBackend(),
+                new LwjglOpenGlDrawBackend(),
+                new LwjglOpenGlUniformBlockReflectionBackend(),
+                vertexSource,
+                fragmentSource);
+    }
+
     static IndexedStaticMeshPipeline create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,

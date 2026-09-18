@@ -64,7 +64,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
     private final OpenGlResourceBackend backend;
     private final OpenGlBuffer buffer;
     private final Slot[] slots;
-    private final int slotCapacityBytes;
+    private final long slotCapacityBytes;
     private boolean closeAttempted;
     private int nextSlot;
 
@@ -74,7 +74,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             OpenGlResourceBackend backend,
             OpenGlBuffer buffer,
             int slotCount,
-            int slotCapacityBytes) {
+            long slotCapacityBytes) {
         this.threadGuard = threadGuard;
         this.registry = registry;
         this.backend = backend;
@@ -88,7 +88,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
 
     static BoundedDynamicBufferUploader create(
             int slotCount,
-            int slotCapacityBytes,
+            long slotCapacityBytes,
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend backend) {
@@ -106,7 +106,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
 
         long totalCapacity;
         try {
-            totalCapacity = Math.multiplyExact((long) slotCount, (long) slotCapacityBytes);
+            totalCapacity = Math.multiplyExact((long) slotCount, slotCapacityBytes);
         } catch (ArithmeticException overflow) {
             throw new IllegalArgumentException("total upload capacity overflows long", overflow);
         }
@@ -134,7 +134,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         if (lengthBytes <= 0) {
             throw new IllegalArgumentException("upload data must contain at least one byte");
         }
-        if (lengthBytes > slotCapacityBytes) {
+        if ((long) lengthBytes > slotCapacityBytes) {
             throw new IllegalArgumentException(
                     "upload exceeds slot capacity: bytes=" + lengthBytes + ", capacity=" + slotCapacityBytes);
         }
@@ -142,7 +142,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         Slot slot = slots[nextSlot];
         prepareSlotForReuse(slot, nextSlot);
 
-        long offsetBytes = Math.multiplyExact((long) nextSlot, (long) slotCapacityBytes);
+        long offsetBytes = Math.multiplyExact((long) nextSlot, slotCapacityBytes);
         backend.uploadBufferSubData(buffer.handle(), offsetBytes, source);
 
         slot.generation++;
@@ -166,7 +166,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         if (slot.state != SlotState.UPLOADED
                 || slot.generation != actual.generation
                 || slot.lengthBytes != actual.lengthBytes
-                || actual.offsetBytes != Math.multiplyExact((long) actual.slotIndex, (long) slotCapacityBytes)) {
+                || actual.offsetBytes != Math.multiplyExact((long) actual.slotIndex, slotCapacityBytes)) {
             throw new IllegalStateException("slice is stale or is not the current uploaded slot generation");
         }
 

@@ -10,6 +10,7 @@ import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.OpenGlDebugMode;
 import com.samo.engine.render.api.OpenGlRenderer;
+import com.samo.engine.platform.api.WindowSizeListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,12 +43,25 @@ class IndexedStaticMeshNativeTest {
                 "P5-T07 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
+        int[] framebufferSize = {WIDTH, HEIGHT};
+        WindowSizeListener sizeListener = new WindowSizeListener() {
+            @Override
+            public void onLogicalWindowSizeChanged(int width, int height) {
+            }
+
+            @Override
+            public void onFramebufferSizeChanged(int width, int height) {
+                framebufferSize[0] = width;
+                framebufferSize[1] = height;
+            }
+        };
         GlfwWindow window = new GlfwWindow(
                 WIDTH,
                 HEIGHT,
                 "Sherko Engine P5-T07 Native Acceptance",
                 new EngineLogger(event -> { }),
                 registry,
+                sizeListener,
                 OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
@@ -58,6 +72,11 @@ class IndexedStaticMeshNativeTest {
             window.initialize();
             window.start();
             started = true;
+            window.pollEvents();
+            int framebufferWidth = framebufferSize[0];
+            int framebufferHeight = framebufferSize[1];
+            assertTrue(framebufferWidth > 0 && framebufferHeight > 0,
+                    "Native acceptance requires a visible non-zero framebuffer");
 
             Matrix4f view = CameraMatrices.view(
                     new Vector3f(0.0f, 0.0f, 2.0f),
@@ -66,7 +85,7 @@ class IndexedStaticMeshNativeTest {
                     new Matrix4f());
             Matrix4f projection = CameraMatrices.perspective(
                     (float) Math.toRadians(70.0),
-                    (float) WIDTH / HEIGHT,
+                    (float) framebufferWidth / framebufferHeight,
                     0.1f,
                     100.0f,
                     new Matrix4f());
@@ -75,14 +94,14 @@ class IndexedStaticMeshNativeTest {
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 query = GL15.glGenQueries();
                 GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
-                renderer.render(view, projection, WIDTH, HEIGHT);
+                renderer.render(view, projection, framebufferWidth, framebufferHeight);
                 GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
                 window.pollEvents();
                 int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
                 assertEquals(1, primitiveCount);
 
-                int visibleTrianglePixels = captureBackBuffer();
+                int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
                         "Expected a visible white triangle; pixels=" + visibleTrianglePixels);
 
@@ -116,18 +135,18 @@ class IndexedStaticMeshNativeTest {
         writeReport();
     }
 
-    private static int captureBackBuffer() throws IOException {
-        ByteBuffer pixels = ByteBuffer.allocateDirect(WIDTH * HEIGHT * 4);
+    private static int captureBackBuffer(int width, int height) throws IOException {
+        ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
-        GL11.glReadPixels(0, 0, WIDTH, HEIGHT, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
+        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
 
-        BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         int visibleTrianglePixels = 0;
-        for (int y = 0; y < HEIGHT; y++) {
-            int sourceY = HEIGHT - 1 - y;
-            for (int x = 0; x < WIDTH; x++) {
-                int offset = (sourceY * WIDTH + x) * 4;
+        for (int y = 0; y < height; y++) {
+            int sourceY = height - 1 - y;
+            for (int x = 0; x < width; x++) {
+                int offset = (sourceY * width + x) * 4;
                 int red = Byte.toUnsignedInt(pixels.get(offset));
                 int green = Byte.toUnsignedInt(pixels.get(offset + 1));
                 int blue = Byte.toUnsignedInt(pixels.get(offset + 2));

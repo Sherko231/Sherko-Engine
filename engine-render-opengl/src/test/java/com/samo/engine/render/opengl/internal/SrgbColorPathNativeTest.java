@@ -1,6 +1,7 @@
 package com.samo.engine.render.opengl.internal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -108,6 +109,9 @@ class SrgbColorPathNativeTest {
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
+                assertFalse(
+                        GL11.glIsEnabled(GL30.GL_FRAMEBUFFER_SRGB),
+                        "Renderer must not leak GL_FRAMEBUFFER_SRGB state after render");
                 window.pollEvents();
 
                 int[] center = readCenterPixel(framebufferWidth, framebufferHeight);

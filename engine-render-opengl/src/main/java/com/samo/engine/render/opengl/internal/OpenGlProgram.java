@@ -68,6 +68,10 @@ final class OpenGlProgram implements AutoCloseable {
                 "OpenGL program", handle, guard, registry, backend::deleteProgram));
     }
 
+    int handle() {
+        return owned.handle();
+    }
+
     private static void suppressCleanup(Throwable failure, Runnable cleanup) {
         try {
             cleanup.run();

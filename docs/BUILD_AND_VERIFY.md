@@ -832,6 +832,38 @@ The native acceptance loads the same committed runtime shader resources, compile
 
 This proves GLSL validation/compile/link safety only. It does not establish uniform reflection, materials, shader variants, hot reload, asset-cooking behavior, or draw correctness.
 
+## P5-T06 camera/per-frame uniform block verification
+
+Issue #188 defines two internal std140 block ABIs consumed by the committed Phase 5 vertex shader:
+
+- `CameraBlock`: binding 0, 128 bytes, view at offset 0, projection at offset 64;
+- `PerFrameBlock`: binding 1, 16 bytes, framebuffer width/height/inverse vector at offset 0.
+
+Focused packing/reflection tests:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.UniformBlockPackingTest" --tests "com.samo.engine.render.opengl.internal.UniformBlockLayoutVerifierTest" --rerun-tasks
+```
+
+The modified committed GLSL must also continue passing P5-T05 offline validation:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+```
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T06_NATIVE="true"
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.UniformBlockNativeTest" --rerun-tasks
+```
+
+The native test compiles/links the committed shader pair, reflects exact block sizes/bindings, packs representative D-045-compatible view/projection matrices plus framebuffer dimensions, verifies cleanup, and writes:
+
+`engine-render-opengl/build/reports/p5/p5-t06-uniform-blocks.txt`
+
+This proves the uniform-block ABI/reflection contract only. It does not establish a UBO allocator, world camera ownership, material blocks, or draw correctness.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

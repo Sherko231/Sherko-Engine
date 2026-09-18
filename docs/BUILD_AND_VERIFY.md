@@ -905,6 +905,31 @@ Owner-visible sandbox:
 
 The persistent sandbox should show one white indexed triangle on a dark background while preserving the existing controls.
 
+## P5-T07A renderer public-boundary verification
+
+Issue #213 repairs the P5-T07 Gradle/API boundary without changing `OpenGlRenderer` signatures or runtime renderer behavior.
+
+Run the executable consumer/API boundary gate:
+
+```powershell
+.\\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+```
+
+This gate compiles `src/publicApiTest/java` against the renderer API-only compile artifact plus only dependencies exported by the renderer's Gradle `api` metadata. The fixture imports and uses `OpenGlRenderer`, `OpenGlThreadGuard`, `NativeResourceRegistry`, and JOML matrix types, so it fails if signature dependencies are hidden as implementation details. The gate also inspects the API artifact to require `OpenGlRenderer` and reject renderer `.internal` classes, then inspects the normal runtime jar to require the indexed-mesh implementation and committed P5 shaders remain present.
+
+Continue to run the accepted P5-T07 deterministic renderer regression and architecture boundary test:
+
+```powershell
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+No dependency version is selected by P5-T07A. The last command is intentionally without `--write-locks`; unexpected lock drift is a failure to investigate, not an authorized lock refresh.
+
+Sandbox impact: none — the existing sandbox uses the same public `OpenGlRenderer` calls and runtime composition. Wiki impact is limited to clarifying renderer-module consumption; no public signature or lifecycle behavior changes.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

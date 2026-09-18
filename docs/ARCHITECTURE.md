@@ -30,6 +30,8 @@ P5-T06 / D-053 establishes the first fixed renderer uniform-block ABI without ad
 
 P5-T07 / D-054 makes `engine-render-opengl` consumable through the first bounded public production composition, `com.samo.engine.render.api.OpenGlRenderer`. The public renderer owns one known indexed triangle through the accepted P5-T03 resources, P5-T05 shaders, and P5-T06 uniform ABI; internal draw setup uses one VAO, position VBO, unsigned-int EBO, camera/per-frame UBOs, depth test `GL_LESS`, back-face culling, CCW front faces, and exactly one indexed draw. `GlfwWindow.present()` remains the platform-owned buffer-swap boundary and preserves native-handle encapsulation. `game-sandbox` consumes renderer/platform APIs only through compile-only plus non-consumable runtime composition, preserving the headless server dependency boundary. No arbitrary mesh/assets/materials/world submission/lighting/sRGB policy is introduced.
 
+P5-T07A / D-055 repairs that public module boundary without changing renderer behavior or signatures. `engine-render-opengl` publishes `engine-core` and `engine-platform-lwjgl` as API dependencies because `OpenGlRenderer` exposes their types; JOML remains transitively available through `engine-core`. The renderer's normal Gradle compile variant uses an API-only artifact containing `com.samo.engine.render.api`, while the runtime variant retains the complete implementation/resources. This keeps `.internal` packages out of the supported consumer compile surface without adding JPMS, a new module edge, or another renderer entry point.
+
 
 
 

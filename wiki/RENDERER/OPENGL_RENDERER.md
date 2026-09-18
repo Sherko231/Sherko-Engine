@@ -45,10 +45,12 @@ Every call currently:
 - enables depth testing with `GL_LESS`;
 - enables back-face culling with `GL_BACK`;
 - treats counter-clockwise winding as front-facing;
-- clears the development color/depth buffers while `GL_FRAMEBUFFER_SRGB` is enabled;
+- detects whether the actual default back buffer is `GL_SRGB` or `GL_LINEAR`;
+- clears the development color/depth buffers using the matching presentation-encoding path;
 - samples one renderer-owned 1x1 neutral-gray sRGB reference texture through an internal sampler;
 - draws exactly one engine-owned indexed triangle;
-- disables `GL_FRAMEBUFFER_SRGB` again before returning.
+- uses hardware `GL_FRAMEBUFFER_SRGB` encoding on an sRGB default buffer, or one bounded fragment encode on a linear default buffer;
+- disables `GL_FRAMEBUFFER_SRGB` before returning.
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 

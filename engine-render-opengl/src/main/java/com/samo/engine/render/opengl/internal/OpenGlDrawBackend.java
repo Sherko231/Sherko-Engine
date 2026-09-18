@@ -11,9 +11,13 @@ interface OpenGlDrawBackend {
 
     void configureDepthAndBackFaceCull();
 
+    int defaultFramebufferColorEncoding();
+
     void setFramebufferSrgbEnabled(boolean enabled);
 
-    void clearFrame();
+    void clearFrame(boolean hardwareSrgbEncode);
+
+    void setManualSrgbEncode(int program, boolean enabled);
 
     void bindTextureAndSampler(int unit, int texture, int sampler);
 

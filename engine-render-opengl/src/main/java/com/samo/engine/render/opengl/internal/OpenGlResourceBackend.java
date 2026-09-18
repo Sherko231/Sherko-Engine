@@ -1,9 +1,25 @@
 package com.samo.engine.render.opengl.internal;
 
 interface OpenGlResourceBackend {
+    enum FenceStatus {
+        SIGNALED,
+        TIMEOUT,
+        FAILED
+    }
+
     int createBuffer();
 
     void deleteBuffer(int handle);
+
+    void allocateDynamicBufferStorage(int handle, long capacityBytes);
+
+    void uploadBufferSubData(int handle, long offsetBytes, java.nio.ByteBuffer data);
+
+    long createFence();
+
+    FenceStatus fenceStatus(long fenceHandle);
+
+    void deleteFence(long fenceHandle);
 
     int createVertexArray();
 

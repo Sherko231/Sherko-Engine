@@ -41,8 +41,6 @@ final class OpenGlProgram implements AutoCloseable {
             vertexAttached = false;
             backend.detachShader(handle, fragment.handle());
             fragmentAttached = false;
-            return new OpenGlProgram(OwnedOpenGlHandle.register(
-                    "OpenGL program", handle, guard, registry, backend::deleteProgram));
         } catch (RuntimeException | Error failure) {
             if (fragmentAttached) {
                 suppressCleanup(failure, () -> backend.detachShader(handle, fragment.handle()));
@@ -53,6 +51,9 @@ final class OpenGlProgram implements AutoCloseable {
             suppressCleanup(failure, () -> backend.deleteProgram(handle));
             throw failure;
         }
+
+        return new OpenGlProgram(OwnedOpenGlHandle.register(
+                "OpenGL program", handle, guard, registry, backend::deleteProgram));
     }
 
     private static void suppressCleanup(Throwable failure, Runnable cleanup) {

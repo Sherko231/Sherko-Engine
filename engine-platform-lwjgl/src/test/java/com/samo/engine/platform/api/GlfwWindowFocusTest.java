@@ -159,8 +159,10 @@ class GlfwWindowFocusTest {
         window.setCursorCaptured(true);
 
         backend.queueKey(GLFW.GLFW_KEY_W, GLFW.GLFW_PRESS);
+        backend.queueMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_PRESS);
         window.pollEvents();
         assertTrue(window.isKeyHeldForTest(GLFW.GLFW_KEY_W));
+        assertTrue(window.isMouseButtonHeldForTest(GLFW.GLFW_MOUSE_BUTTON_LEFT));
 
         RuntimeException releaseFailure = new IllegalStateException("cursor release failed");
         backend.cursorFailure = releaseFailure;
@@ -169,6 +171,7 @@ class GlfwWindowFocusTest {
         RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
         assertSame(releaseFailure, actual);
         assertFalse(window.isKeyHeldForTest(GLFW.GLFW_KEY_W));
+        assertFalse(window.isMouseButtonHeldForTest(GLFW.GLFW_MOUSE_BUTTON_LEFT));
         assertFalse(window.isCursorEffectivelyCapturedForTest());
         assertEquals(
                 List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),

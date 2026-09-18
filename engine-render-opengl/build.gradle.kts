@@ -35,6 +35,7 @@ val publicApiJar by tasks.registering(Jar::class) {
 configurations.named("apiElements") {
     outgoing.artifacts.clear()
     outgoing.artifact(publicApiJar)
+    outgoing.variants.removeIf { it.name == "classes" }
 }
 
 publicApiTest.compileClasspath = files(publicApiJar.flatMap { it.archiveFile }) + publicApiConsumerClasspath
@@ -49,6 +50,11 @@ val verifyPublicApiArtifact by tasks.registering {
     doLast {
         val apiArtifact = publicApiJar.get().archiveFile.get().asFile
         val runtimeArtifact = tasks.named<Jar>("jar").get().archiveFile.get().asFile
+        val apiElements = configurations.getByName("apiElements")
+
+        check(apiElements.outgoing.variants.none { it.name == "classes" }) {
+            "Renderer apiElements must not expose the full main classes directory"
+        }
 
         java.util.zip.ZipFile(apiArtifact).use { archive ->
             val entries = archive.entries().asSequence().map { it.name }.toList()

@@ -108,7 +108,6 @@ Exit gate: spatial tests pass independently of OpenGL and Jolt.
 
 Goal: render a stable, inspectable 3D room without game or physics dependencies. Reach a basic end-to-end room before adding visual polish.
 
-- [ ] P5-T00 Calibrate and document the currently available Windows development/reference machine against the frozen 1080p/60 fixture, explicitly without treating that high-end machine as the minimum supported configuration. Acceptance: retained exact-head benchmark evidence is reproducible, `ENGINE_SCOPE.md` records the development/reference configuration and its limitation, and the representative mainstream/minimum proof is assigned to the Phase 5 exit gate / Issue #201.
 - [ ] P5-T01 Enable the OpenGL debug callback in debug builds and promote high-severity messages to test failures. Acceptance: an intentional invalid call is captured with source and type.
 - [ ] P5-T02 Enforce render-thread ownership for every OpenGL wrapper. Acceptance: a GPU call from a worker thread throws before entering OpenGL.
 - [ ] P5-T03 Implement explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Acceptance: every wrapper is idempotently closeable and registered for leak detection.
@@ -127,7 +126,7 @@ Goal: render a stable, inspectable 3D room without game or physics dependencies.
 - [ ] P5-T16 Add debug line, AABB, sphere, ray, and text counters. Acceptance: physics and networking modules can submit debug primitives through an interface without importing OpenGL.
 - [ ] P5-T17 Add a first-person view-model render layer with separate FOV/depth handling. Acceptance: held hands/tools do not clip through nearby world geometry.
 
-Exit gate: a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code, and Issue #201 has established the exact supported/minimum Windows CPU, GPU, driver floor, RAM, and VRAM on real representative mainstream/mid-range hardware at the 1080p60 target. Shadows, fog, tonemapping, and other polish do not block the foundation.
+Exit gate: a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code. Shadows, fog, tonemapping, and other polish do not block the foundation.
 
 ## Phase 6 - Asset pipeline and resource lifetime
 

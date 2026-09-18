@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 plugins {
     `java-library`
 }
@@ -56,7 +58,7 @@ val verifyPublicApiArtifact by tasks.registering {
             "Renderer apiElements must not expose the full main classes directory"
         }
 
-        java.util.zip.ZipFile(apiArtifact).use { archive ->
+        ZipFile(apiArtifact).use { archive ->
             val entries = archive.entries().asSequence().map { it.name }.toList()
             check("com/samo/engine/render/api/OpenGlRenderer.class" in entries) {
                 "Renderer API artifact must contain OpenGlRenderer"
@@ -66,7 +68,7 @@ val verifyPublicApiArtifact by tasks.registering {
             }
         }
 
-        java.util.zip.ZipFile(runtimeArtifact).use { archive ->
+        ZipFile(runtimeArtifact).use { archive ->
             val entries = archive.entries().asSequence().map { it.name }.toList()
             check("com/samo/engine/render/api/OpenGlRenderer.class" in entries) {
                 "Renderer runtime artifact must contain OpenGlRenderer"

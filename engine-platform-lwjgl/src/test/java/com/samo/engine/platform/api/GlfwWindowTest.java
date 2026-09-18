@@ -9,6 +9,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.glfw.GLFW;
@@ -354,6 +355,40 @@ class GlfwWindowTest {
         assertTrue(backend.trace.contains("size-callbacks-release:101"));
         assertTrue(backend.trace.contains("context:0"));
         assertTrue(backend.trace.contains("capabilities-clear"));
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void exposesStableGuardBoundToTheWindowLifecycleOwner() throws Exception {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        OpenGlThreadGuard guard = window.openGlThreadGuard();
+
+        assertSame(guard, window.openGlThreadGuard());
+        assertThrows(IllegalStateException.class, guard::assertOwnerThread);
+
+        window.initialize();
+        guard.assertOwnerThread();
+
+        AtomicBoolean gpuActionEntered = new AtomicBoolean();
+        AtomicReference<Throwable> workerFailure = new AtomicReference<>();
+        Thread worker = Thread.ofPlatform().start(() -> {
+            try {
+                guard.assertOwnerThread();
+                gpuActionEntered.set(true);
+            } catch (Throwable failure) {
+                workerFailure.set(failure);
+            }
+        });
+        worker.join(5_000L);
+
+        assertTrue(workerFailure.get() instanceof IllegalStateException);
+        assertTrue(!gpuActionEntered.get());
+
+        window.start();
+        window.stop();
         window.close();
         registry.assertNoOpenResources();
     }

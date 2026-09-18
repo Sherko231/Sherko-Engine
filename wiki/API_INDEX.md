@@ -103,6 +103,7 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 | --- | --- |
 | `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, optional OpenGL debug diagnostics, owner-thread event polling, size delivery, display-mode transitions, focus-safe cursor capture, and renderer-frame hardware snapshot production. |
 | `OpenGlDebugMode` | Explicit per-window debug policy; default `DISABLED`, optional `FAIL_ON_HIGH_SEVERITY` for development/test diagnostics. |
+| `OpenGlThreadGuard` | Stable non-owning OpenGL thread-affinity guard; future GPU-facing wrappers call `assertOwnerThread()` before native OpenGL entry. |
 | `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
 | `WindowMode` | Selects `WINDOWED`, `BORDERLESS_FULLSCREEN`, or `EXCLUSIVE_FULLSCREEN` for a started `GlfwWindow`. |
 | `InputSnapshot` | Immutable renderer-frame keyboard/mouse/focus/capture/relative-motion state captured from one started `GlfwWindow`. |

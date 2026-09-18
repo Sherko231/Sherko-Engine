@@ -18,9 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T01 / Issue #183 — OpenGL debug callback with high-severity failure policy |
-| P5-T01 branch | `p5-t01-opengl-debug-callback` |
-| P5-T01 checkpoint | Implementation, focused backend coverage, Windows native acceptance path, CI wiring, sandbox opt-in, and consumer docs prepared; final candidate verification pending |
+| Active executable task | P5-T02 / Issue #184 — render-thread ownership for OpenGL calls |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -54,9 +52,11 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 is the active executable renderer-foundation task.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 is accepted; P5-T02 / #184 is the active executable renderer-foundation task.
 
-P5-T01 adds explicit `OpenGlDebugMode` configuration to the existing `GlfwWindow` ownership boundary. Existing constructors remain debug-disabled. The opt-in high-severity mode requests and verifies an OpenGL debug context, owns the debug callback, logs normalized driver diagnostics through `EngineLogger`, stages failures instead of throwing from native callback code, and surfaces high severity once from owner-thread `pollEvents()`. The existing persistent sandbox opts into this development diagnostic mode. No renderer resource wrapper, draw path, raw OpenGL handle, dependency, or module edge is added.
+P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
+
+P5-T02 / #184 is active on branch `p5-t02-render-thread-ownership`. It adds a stable `OpenGlThreadGuard` bound once to the existing `GlfwWindow` lifecycle/context owner thread, makes current window owner-thread checks delegate to the same guard, and exposes the guard for future GPU-facing wrappers. It adds no renderer resource wrapper, command queue, render worker, raw context/handle, dependency, or module edge.
 
 ## Open gates and blockers
 
@@ -70,4 +70,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Finalize P5-T01 / #183 on branch `p5-t01-opengl-debug-callback`: audit the complete diff, run the final exact-head five-job CI matrix including the P5-T01 Windows native acceptance, merge only the tested candidate, then require exact-merge Lightweight verification before closing #183. No hardware benchmark or minimum-hardware gate remains in the current Phase 5 roadmap.
+Finalize P5-T02 / #184 on branch `p5-t02-render-thread-ownership`: audit the complete diff, run the exact-final-head five-job CI matrix, merge only the tested candidate, then require exact-merge Lightweight verification before closing #184. Do not pull P5-T03 resource wrappers, a render worker, or cross-thread command dispatch forward.

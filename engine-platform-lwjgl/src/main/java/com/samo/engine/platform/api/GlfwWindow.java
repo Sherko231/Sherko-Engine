@@ -58,7 +58,8 @@ public final class GlfwWindow extends EngineSubsystem {
     private final boolean[] pendingPressedMouseButtons = new boolean[InputMouseButton.values().length];
     private final boolean[] pendingReleasedMouseButtons = new boolean[InputMouseButton.values().length];
 
-    private Thread ownerThread;
+    private final OpenGlThreadGuard openGlThreadGuard = new OpenGlThreadGuard();
+
     private CallbackState callbackState;
     private SizeCallbackState sizeCallbackState;
     private InputCallbackState inputCallbackState;
@@ -190,6 +191,11 @@ public final class GlfwWindow extends EngineSubsystem {
         this.sizeListener = Objects.requireNonNull(sizeListener, "sizeListener");
         this.openGlDebugMode = Objects.requireNonNull(openGlDebugMode, "openGlDebugMode");
         this.backend = Objects.requireNonNull(backend, "backend");
+    }
+
+    /** Returns the stable non-owning guard for production OpenGL thread affinity. */
+    public OpenGlThreadGuard openGlThreadGuard() {
+        return openGlThreadGuard;
     }
 
     public void pollEvents() {
@@ -343,7 +349,7 @@ public final class GlfwWindow extends EngineSubsystem {
 
     @Override
     protected void onInitialize() {
-        ownerThread = Thread.currentThread();
+        openGlThreadGuard.bindOwnerThread(Thread.currentThread());
         try {
             callbackState = backend.installErrorCallback();
             if (!backend.initGlfw()) {
@@ -1192,9 +1198,7 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private void requireOwnerThread() {
-        if (ownerThread != Thread.currentThread()) {
-            throw new IllegalStateException("GLFW window lifecycle must run on the initializing thread");
-        }
+        openGlThreadGuard.assertOwnerThread();
     }
 
     private static void validatePlatformDimensions(String kind, Dimensions dimensions) {

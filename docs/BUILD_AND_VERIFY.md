@@ -754,6 +754,29 @@ The focused tests must prove pre-initialize rejection, one-time binding, owner-t
 
 P5-T02 does not add a separate native acceptance executable because it introduces no new native OpenGL operation. The normal five-job final-candidate CI still applies, including the existing Windows native smoke and P5-T01 debug-callback acceptance.
 
+## P5-T03 OpenGL resource ownership verification
+
+Issue #185 adds internal `engine-render-opengl` wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. They consume `OpenGlThreadGuard` and `NativeResourceRegistry`; they do not expose a public renderer-resource API or implement drawing/upload/material behavior.
+
+Focused failure-injection verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlResourceOwnershipTest" --rerun-tasks
+```
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T03_NATIVE="true"
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlResourceNativeTest" --rerun-tasks
+```
+
+The native test creates all seven resource wrapper types on the production OpenGL 4.6 context, compiles one vertex and one fragment shader, links one program, closes resources in reverse dependency order, verifies the shared native-resource registry after window cleanup, and writes:
+
+`engine-render-opengl/build/reports/p5/p5-t03-opengl-resources.txt`
+
+This evidence proves bounded resource lifetime/cleanup only. It does not prove draw correctness, upload policy, material behavior, asset loading, performance, or renderer-loop behavior.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

@@ -311,6 +311,21 @@ jobs:
             engine-platform-lwjgl/build/reports/p5/p5-t01-opengl-debug.txt
           if-no-files-found: error
 
+      - name: Verify P5-T03 OpenGL resource ownership
+        env:
+          SHERKO_P5_T03_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlResourceNativeTest" --rerun-tasks
+
+      - name: Upload P5-T03 OpenGL resource evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t03-opengl-resources
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.OpenGlResourceNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t03-opengl-resources.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

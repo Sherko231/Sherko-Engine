@@ -229,6 +229,10 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         registration.close();
     }
 
+    int bufferHandle() {
+        return buffer.handle();
+    }
+
     private void requireOpen() {
         if (closeAttempted) {
             throw new IllegalStateException("dynamic buffer uploader is closed");

@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T06 / Issue #188 — camera and per-frame uniform blocks |
+| Active executable task | P5-T07 / Issue #189 — first indexed static mesh |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T05 / #187 are accepted; P5-T06 / #188 is the active executable renderer-foundation task.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T06 / #188 are accepted; P5-T07 / #189 is the active executable renderer-foundation task.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -64,7 +64,9 @@ P5-T04 / #186 is accepted. PR #207 final head `842c644ac72cb4819c6e0ff6b31728357
 
 P5-T05 / #187 is accepted. PR #208 final head `a1fa179bc5daab0345ebfb32f3d62ed66d548d4c` passed all five heavy CI jobs in run #360 / `35337827503`, merged as `5dc3ac09a7ffc98ad249d60ad5d165c234fa4198`, and exact-merge Lightweight verification passed in run #361 / `35338981955`.
 
-P5-T06 / #188 is active on branch `p5-t06-uniform-blocks`. It defines fixed internal std140 camera/per-frame block ABIs, explicit CPU packing, committed GLSL declarations, independent runtime reflection verification, focused mismatch tests, and bounded Windows native evidence using accepted D-041/D-045 matrices. It adds no world/ECS camera ownership, descriptor framework, UBO allocator, material blocks, module edge, public API, or P5-T07 draw path.
+P5-T06 / #188 is accepted. PR #209 final head `a28d76fbb83df3ec7a80c9b345c67c0f1bce6d8e` passed all five heavy CI jobs in run #362 / `35339837097`, merged as `cd49273608344e1bdf0d23698591ab516d049fc8`, and exact-merge Lightweight verification passed in run #363 / `35340897864`.
+
+P5-T07 / #189 is active on branch `p5-t07-indexed-static-mesh`. It adds public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, retained Windows primitive-count/PNG evidence, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
 
 ## Open gates and blockers
 
@@ -78,4 +80,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Finalize P5-T06 / #188 on branch `p5-t06-uniform-blocks`: audit the complete diff, run the exact-final-head five-job CI matrix including continued offline GLSL validation and bounded Windows uniform-block reflection acceptance, merge only the tested candidate, then require exact-merge Lightweight verification before closing #188. Do not pull P5-T07 indexed draw, world/ECS camera ownership, general descriptor/UBO allocation, or material work forward.
+Finalize P5-T07 / #189 on branch `p5-t07-indexed-static-mesh`: audit the complete diff, run the exact-final-head five-job CI matrix including continued offline GLSL validation and retained Windows indexed-draw PNG/query evidence, merge only the tested candidate, then require exact-merge Lightweight verification before closing #189. Do not pull P5-T08 sRGB policy, arbitrary mesh/assets, materials, lighting, world/ECS, or physics work forward.

@@ -22,6 +22,9 @@ P5-T02 / D-049 adds one stable public `OpenGlThreadGuard` to that same window/co
 
 P5-T03 / D-050 begins `engine-render-opengl` production implementation with package-internal explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Each wrapper asserts D-049 thread affinity before native work, registers successful ownership with the existing native-resource registry, and closes deterministically. Shader/program compile/link failure paths clean only handles created by the failed operation; caller-owned shader wrappers remain independently owned. The renderer module directly reuses the scope-selected LWJGL 3.4.3 OpenGL binding. No public renderer resource API, draw submission, upload strategy, texture/material semantics, resource manager/cache, world/gameplay dependency, or new project edge is introduced.
 
+P5-T04 / D-051 adds one internal fixed-slot dynamic-buffer uploader on top of the P5-T03 owned-buffer and P5-T02 thread-affinity contracts. Capacity is explicit and immutable; uploads are bounded sub-data writes into whole slots, submitted slots carry registered OpenGL sync fences, and strict round-robin reuse occurs only after a non-blocking signaled check. Timeout/wait failure or uploaded-but-unsubmitted wrap rejects before data mutation or ring advancement. This remains an internal correctness path only: no persistent mapping, general streaming allocator, public upload API, draw submission, frame graph, job system, or performance claim is introduced.
+
+
 
 
 | Module | Intended responsibility | Current state | Direct project dependencies |

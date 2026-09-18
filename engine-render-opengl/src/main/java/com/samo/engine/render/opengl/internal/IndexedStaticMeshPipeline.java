@@ -141,10 +141,21 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     guard,
                     resources,
                     gl);
+            int framebufferEncoding = draw.defaultFramebufferColorEncoding();
+            boolean hardwareSrgb;
+            if (framebufferEncoding == org.lwjgl.opengl.GL21.GL_SRGB) {
+                hardwareSrgb = true;
+            } else if (framebufferEncoding == org.lwjgl.opengl.GL11.GL_LINEAR) {
+                hardwareSrgb = false;
+            } else {
+                throw new IllegalStateException(
+                        "Unsupported default framebuffer color encoding: " + framebufferEncoding);
+            }
+
             fragment = OpenGlShader.compile(
                     OpenGlShader.Stage.FRAGMENT,
                     "shaders/p5/basic.frag",
-                    fragSource,
+                    fragmentSourceForPresentation(fragSource, hardwareSrgb),
                     guard,
                     resources,
                     gl);
@@ -157,17 +168,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     gl);
 
             UniformBlockLayoutVerifier.verify(linkedProgram.handle(), guard, reflection);
-
-            int framebufferEncoding = draw.defaultFramebufferColorEncoding();
-            boolean hardwareSrgb;
-            if (framebufferEncoding == org.lwjgl.opengl.GL21.GL_SRGB) {
-                hardwareSrgb = true;
-            } else if (framebufferEncoding == org.lwjgl.opengl.GL11.GL_LINEAR) {
-                hardwareSrgb = false;
-            } else {
-                throw new IllegalStateException(
-                        "Unsupported default framebuffer color encoding: " + framebufferEncoding);
-            }
 
             draw.configurePositionAttribute(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
@@ -235,7 +235,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
         try {
             drawBackend.clearFrame(hardwareFramebufferSrgb);
-            drawBackend.setManualSrgbEncode(program.handle(), !hardwareFramebufferSrgb);
             drawBackend.bindTextureAndSampler(0, referenceTexture.handle(), referenceSampler.handle());
             drawBackend.useProgram(program.handle());
             drawBackend.bindVertexArray(vertexArray.handle());
@@ -291,6 +290,22 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
         data.putInt(0).putInt(1).putInt(2);
         return data.flip();
+    }
+
+    static String fragmentSourceForPresentation(String fragmentSource, boolean hardwareFramebufferSrgb) {
+        String source = Objects.requireNonNull(fragmentSource, "fragmentSource");
+        if (hardwareFramebufferSrgb) {
+            return source;
+        }
+        String version = "#version 460 core";
+        if (!source.startsWith(version)) {
+            throw new IllegalArgumentException(
+                    "Fragment shader must start with '" + version + "' for P5-T08 variant injection");
+        }
+        return version
+                + System.lineSeparator()
+                + "#define SHERKO_MANUAL_SRGB_ENCODE 1"
+                + source.substring(version.length());
     }
 
     private static ByteBuffer referenceGrayTexture() {

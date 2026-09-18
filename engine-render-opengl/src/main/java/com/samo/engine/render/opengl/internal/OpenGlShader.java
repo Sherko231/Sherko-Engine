@@ -29,7 +29,18 @@ final class OpenGlShader implements AutoCloseable {
             OpenGlThreadGuard guard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend backend) {
+        return compile(stage, "<inline>", source, guard, registry, backend);
+    }
+
+    static OpenGlShader compile(
+            Stage stage,
+            String sourceName,
+            String source,
+            OpenGlThreadGuard guard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend backend) {
         Stage shaderStage = Objects.requireNonNull(stage, "stage");
+        String name = Objects.requireNonNull(sourceName, "sourceName");
         String shaderSource = Objects.requireNonNull(source, "source");
         guard.assertOwnerThread();
 
@@ -42,7 +53,9 @@ final class OpenGlShader implements AutoCloseable {
             backend.shaderSource(handle, shaderSource);
             backend.compileShader(handle);
             if (!backend.shaderCompileSucceeded(handle)) {
-                throw new IllegalStateException("OpenGL shader compilation failed: " + backend.shaderInfoLog(handle));
+                throw new IllegalStateException(
+                        "OpenGL shader compilation failed for " + name + " [" + shaderStage + "]: "
+                                + backend.shaderInfoLog(handle));
             }
         } catch (RuntimeException | Error failure) {
             try {

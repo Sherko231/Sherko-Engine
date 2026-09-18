@@ -138,8 +138,15 @@ class OpenGlResourceOwnershipTest {
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> OpenGlShader.compile(
-                        OpenGlShader.Stage.VERTEX, "broken", guard, registry, backend));
+                        OpenGlShader.Stage.VERTEX,
+                        "fixture/broken.vert",
+                        "broken",
+                        guard,
+                        registry,
+                        backend));
 
+        assertTrue(failure.getMessage().contains("fixture/broken.vert"));
+        assertTrue(failure.getMessage().contains("VERTEX"));
         assertTrue(failure.getMessage().contains("fixture compile error"));
         assertEquals(1, backend.deletedShaders);
         registry.assertNoOpenResources();
@@ -159,8 +166,15 @@ class OpenGlResourceOwnershipTest {
 
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
-                () -> OpenGlProgram.link(vertex, fragment, guard, registry, backend));
+                () -> OpenGlProgram.link(
+                        "fixture-program",
+                        vertex,
+                        fragment,
+                        guard,
+                        registry,
+                        backend));
 
+        assertTrue(failure.getMessage().contains("fixture-program"));
         assertTrue(failure.getMessage().contains("fixture link error"));
         assertEquals(1, backend.deletedPrograms);
         assertEquals(0, backend.deletedShaders);

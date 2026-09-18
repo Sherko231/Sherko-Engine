@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T04 / Issue #186 — bounded dynamic-buffer upload path |
+| Active executable task | P5-T05 / Issue #187 — offline GLSL validation and runtime link verification |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T03 / #185 are accepted; P5-T04 / #186 is the active executable renderer-foundation task.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T04 / #186 are accepted; P5-T05 / #187 is the active executable renderer-foundation task.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -60,7 +60,9 @@ P5-T02 / #184 is accepted. PR #205 final head `7222a9a40279e65b40d70a36adf86d391
 
 P5-T03 / #185 is accepted. PR #206 final head `b00196ed0ac2fed6d831c3b44024d776819499a8` passed all five heavy CI jobs in run #356 / `35333540082`, merged as `0d8c2a623cf8ad53539af827e3d0d897f6d79ca6`, and exact-merge Lightweight verification passed in run #357 / `35333968825`.
 
-P5-T04 / #186 is active on branch `p5-t04-bounded-dynamic-upload`. It adds one internal fixed-slot dynamic-buffer ring with explicit capacity, bounded sub-data writes, registered per-submitted-slot GLsync fences, deterministic wrap/reuse checks, focused failure tests, and bounded Windows readback evidence. It adds no persistent mapping, general streaming allocator, public upload API, draw submission, frame graph, job system, or performance claim.
+P5-T04 / #186 is accepted. PR #207 final head `842c644ac72cb4819c6e0ff6b3172835738c7aba` passed all five heavy CI jobs in run #358 / `35335280661`, merged as `c11131c5d4c5a2be820a6d3f493bc0f09e2eb131`, and exact-merge Lightweight verification passed in run #359 / `35336687979`.
+
+P5-T05 / #187 is active on branch `p5-t05-glsl-validation`. It adds committed Phase 5 vertex/fragment GLSL resources, build/test-only offline Shaderc validation using the locked LWJGL 3.4.3 family, a deliberately broken fixture, strengthened internal runtime compile/link diagnostics, and bounded Windows native acceptance of the same committed shader pair. It adds no material, variants, reflection, hot reload, asset pipeline, draw path, module edge, or public shader API.
 
 ## Open gates and blockers
 
@@ -74,4 +76,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Finalize P5-T04 / #186 on branch `p5-t04-bounded-dynamic-upload`: audit the complete diff, run the exact-final-head five-job CI matrix including the bounded P5-T04 Windows native acceptance, merge only the tested candidate, then require exact-merge Lightweight verification before closing #186. Do not pull persistent mapping, general streaming allocation, draw submission, materials, frame-graph, or job-system work forward.
+Finalize P5-T05 / #187 on branch `p5-t05-glsl-validation`: audit the complete diff, run the exact-final-head five-job CI matrix including explicit offline GLSL validation and bounded Windows runtime compile/link acceptance, merge only the tested candidate, then require exact-merge Lightweight verification before closing #187. Do not pull P5-T06 uniform/reflection work, materials, variants, hot reload, asset pipeline, or draw submission forward.

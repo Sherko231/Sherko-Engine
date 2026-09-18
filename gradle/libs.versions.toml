@@ -16,6 +16,7 @@ lwjgl-core = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
 lwjgl-glfw = { module = "org.lwjgl:lwjgl-glfw", version.ref = "lwjgl" }
 lwjgl-openal = { module = "org.lwjgl:lwjgl-openal", version.ref = "lwjgl" }
 lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
+lwjgl-shaderc = { module = "org.lwjgl:lwjgl-shaderc", version.ref = "lwjgl" }
 jolt-jni-windows64 = { module = "com.github.stephengold:jolt-jni-Windows64", version.ref = "jolt-jni" }
 snaploader = { module = "io.github.electrostat-lab:snaploader", version.ref = "snaploader" }
 oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }

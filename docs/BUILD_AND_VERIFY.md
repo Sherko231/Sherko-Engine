@@ -800,6 +800,38 @@ The native test uploads distinct patterns through a three-slot ring, inserts rea
 
 This proves bounded upload correctness/synchronization only. It does not establish performance, streaming-allocator behavior, or persistent-mapping superiority.
 
+## P5-T05 GLSL validation verification
+
+Issue #187 adds one committed Phase 5 runtime shader pair and validates it twice: offline during build verification with locked LWJGL Shaderc, then on the real OpenGL 4.6 runtime path.
+
+Offline validation:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+```
+
+The task validates:
+- `shaders/p5/basic.vert`;
+- `shaders/p5/basic.frag`;
+- one deliberately broken test fixture that must fail with source/stage diagnostics.
+
+No machine-global `glslangValidator`, editor plugin, SDK path, or PATH configuration is required.
+
+Focused runtime-diagnostic verification remains part of the normal renderer tests.
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T05_NATIVE="true"
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.GlslRuntimeValidationNativeTest" --rerun-tasks
+```
+
+The native acceptance loads the same committed runtime shader resources, compiles vertex/fragment stages through `OpenGlShader`, links them through `OpenGlProgram`, verifies cleanup, and writes:
+
+`engine-render-opengl/build/reports/p5/p5-t05-glsl-runtime.txt`
+
+This proves GLSL validation/compile/link safety only. It does not establish uniform reflection, materials, shader variants, hot reload, asset-cooking behavior, or draw correctness.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

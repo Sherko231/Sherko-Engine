@@ -24,6 +24,9 @@ P5-T03 / D-050 begins `engine-render-opengl` production implementation with pack
 
 P5-T04 / D-051 adds one internal fixed-slot dynamic-buffer uploader on top of the P5-T03 owned-buffer and P5-T02 thread-affinity contracts. Capacity is explicit and immutable; uploads are bounded sub-data writes into whole slots, submitted slots carry registered OpenGL sync fences, and strict round-robin reuse occurs only after a non-blocking signaled check. Timeout/wait failure or uploaded-but-unsubmitted wrap rejects before data mutation or ring advancement. This remains an internal correctness path only: no persistent mapping, general streaming allocator, public upload API, draw submission, frame graph, job system, or performance claim is introduced.
 
+P5-T05 / D-052 adds a repository-controlled shader validation path without changing the public renderer surface. The first committed runtime GLSL pair lives under `engine-render-opengl/src/main/resources/shaders/p5/`; a build/test-only LWJGL Shaderc validator compiles those sources offline during verification, and a deliberately broken test fixture proves deterministic failure with diagnostics. The same committed pair is then compiled and linked on the production OpenGL 4.6 context in Windows native acceptance. Shaderc remains test/build-only, while runtime `OpenGlShader`/`OpenGlProgram` diagnostics preserve internal source/program identity and driver logs. No material system, shader variants, reflection, hot reload, asset pipeline, or draw path is introduced.
+
+
 
 
 

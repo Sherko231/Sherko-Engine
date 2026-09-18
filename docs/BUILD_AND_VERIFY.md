@@ -915,7 +915,7 @@ Run the executable consumer/API boundary gate:
 .\\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 ```
 
-This gate compiles `src/publicApiTest/java` against the renderer API-only compile artifact plus only dependencies exported by the renderer's Gradle `api` metadata. The fixture imports and uses `OpenGlRenderer`, `OpenGlThreadGuard`, `NativeResourceRegistry`, and JOML matrix types, so it fails if signature dependencies are hidden as implementation details. The gate also inspects the API artifact to require `OpenGlRenderer` and reject renderer `.internal` classes, then inspects the normal runtime jar to require the indexed-mesh implementation and committed P5 shaders remain present.
+This gate compiles `src/publicApiTest/java` against the renderer API-only compile artifact plus only dependencies exported by the renderer's Gradle `api` metadata. The fixture imports and uses `OpenGlRenderer`, `OpenGlThreadGuard`, `NativeResourceRegistry`, and JOML matrix types, so it fails if signature dependencies are hidden as implementation details. The gate also requires `apiElements` not to expose the Java plugin's full-main `classes` secondary artifact, inspects the API jar to require `OpenGlRenderer` and reject renderer `.internal` classes, then inspects the normal runtime jar to require the indexed-mesh implementation and committed P5 shaders remain present.
 
 Continue to run the accepted P5-T07 deterministic renderer regression and architecture boundary test:
 

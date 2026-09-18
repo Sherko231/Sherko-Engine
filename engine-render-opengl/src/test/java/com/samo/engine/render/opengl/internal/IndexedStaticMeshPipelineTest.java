@@ -103,7 +103,7 @@ class IndexedStaticMeshPipelineTest {
                 draw,
                 new FakeReflectionBackend(),
                 "vertex",
-                "fragment");
+                "#version 460 core\nvoid main() {}");
         draw.trace.clear();
         resources.uploads.clear();
 

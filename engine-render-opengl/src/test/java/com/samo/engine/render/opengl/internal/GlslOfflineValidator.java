@@ -4,6 +4,9 @@ import java.util.Objects;
 import org.lwjgl.util.shaderc.Shaderc;
 
 final class GlslOfflineValidator {
+    record ValidationResult(long warningCount, String diagnostics) {
+    }
+
     enum Stage {
         VERTEX(Shaderc.shaderc_glsl_vertex_shader),
         FRAGMENT(Shaderc.shaderc_glsl_fragment_shader);
@@ -18,7 +21,7 @@ final class GlslOfflineValidator {
     private GlslOfflineValidator() {
     }
 
-    static void validate(Stage stage, String sourceName, String source) {
+    static ValidationResult validate(Stage stage, String sourceName, String source) {
         Stage shaderStage = Objects.requireNonNull(stage, "stage");
         String name = Objects.requireNonNull(sourceName, "sourceName");
         String shaderSource = Objects.requireNonNull(source, "source");
@@ -42,6 +45,9 @@ final class GlslOfflineValidator {
                 throw new IllegalStateException("Unable to initialize Shaderc options for " + name);
             }
 
+            Shaderc.shaderc_compile_options_set_source_language(
+                    options, Shaderc.shaderc_source_language_glsl);
+
             result = Shaderc.shaderc_compile_into_spv(
                     compiler,
                     shaderSource,
@@ -55,12 +61,15 @@ final class GlslOfflineValidator {
             }
 
             int status = Shaderc.shaderc_result_get_compilation_status(result);
+            String diagnostics = Shaderc.shaderc_result_get_error_message(result);
             if (status != Shaderc.shaderc_compilation_status_success) {
-                String diagnostics = Shaderc.shaderc_result_get_error_message(result);
                 throw new IllegalStateException(
                         "Offline GLSL validation failed for " + name + " [" + shaderStage + "]: "
                                 + diagnostics);
             }
+            return new ValidationResult(
+                    Shaderc.shaderc_result_get_num_warnings(result),
+                    diagnostics == null ? "" : diagnostics);
         } finally {
             if (result != 0L) {
                 Shaderc.shaderc_result_release(result);

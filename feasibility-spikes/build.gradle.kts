@@ -39,26 +39,6 @@ tasks.register<JavaExec>("runOpenGL46Spike") {
     )
 }
 
-val p5HardwareEvidenceDir = rootProject.layout.buildDirectory.dir("spikes/p5-hardware-baseline")
-
-tasks.register<JavaExec>("runP5HardwareBaseline") {
-    description = "Runs the P5-T00 disposable 1080p60 representative-hardware benchmark."
-    useSpikeRuntime("com.samo.spike.opengl.P5HardwareBaselineSpike")
-    systemProperty(
-        "spike.reportPath",
-        p5HardwareEvidenceDir.get().file("p5-t00-hardware-baseline.txt").asFile.absolutePath
-    )
-    providers.gradleProperty("p5HardwareVramMiB").orNull?.let {
-        systemProperty("spike.vramMiB", it)
-    }
-    doFirst {
-        p5HardwareEvidenceDir.get().asFile.mkdirs()
-        if (providers.gradleProperty("p5HardwareVramMiB").orNull == null) {
-            throw GradleException("P5-T00 requires -Pp5HardwareVramMiB=<exact MiB> from an independently verified GPU specification.")
-        }
-    }
-}
-
 tasks.register<JavaExec>("runJoltLifecycleSpike") {
     description = "Runs the P0-T04 Jolt JNI lifecycle/cleanup feasibility spike."
     useSpikeRuntime("com.samo.spike.physics.JoltLifecycleSpike")

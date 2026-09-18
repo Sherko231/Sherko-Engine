@@ -26,6 +26,9 @@ P5-T04 / D-051 adds one internal fixed-slot dynamic-buffer uploader on top of th
 
 P5-T05 / D-052 adds a repository-controlled shader validation path without changing the public renderer surface. The first committed runtime GLSL pair lives under `engine-render-opengl/src/main/resources/shaders/p5/`; a build/test-only LWJGL Shaderc validator compiles those sources offline during verification, and a deliberately broken test fixture proves deterministic failure with diagnostics. The same committed pair is then compiled and linked on the production OpenGL 4.6 context in Windows native acceptance. Shaderc remains test/build-only, while runtime `OpenGlShader`/`OpenGlProgram` diagnostics preserve internal source/program identity and driver logs. No material system, shader variants, reflection, hot reload, asset pipeline, or draw path is introduced.
 
+P5-T06 / D-053 establishes the first fixed renderer uniform-block ABI without adding a draw path. `CameraBlock` uses std140 binding 0 with 128 bytes for view/projection matrices at offsets 0/64; `PerFrameBlock` uses std140 binding 1 with one 16-byte framebuffer-size/inverse vector. Internal CPU packers write the accepted D-041/D-045 matrices in explicit column-major order, while an independent internal OpenGL reflection backend verifies both block sizes and bindings on the linked committed P5 shader program. No world/ECS camera ownership, general descriptor/reflection framework, uniform-buffer allocator, material block system, or P5-T07 draw behavior is introduced.
+
+
 
 
 

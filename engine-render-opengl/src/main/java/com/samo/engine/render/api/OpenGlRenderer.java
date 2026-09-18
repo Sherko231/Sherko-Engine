@@ -3,9 +3,6 @@ package com.samo.engine.render.api;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
-import com.samo.engine.render.opengl.internal.LwjglOpenGlDrawBackend;
-import com.samo.engine.render.opengl.internal.LwjglOpenGlResourceBackend;
-import com.samo.engine.render.opengl.internal.LwjglOpenGlUniformBlockReflectionBackend;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -30,12 +27,9 @@ public final class OpenGlRenderer implements AutoCloseable {
             NativeResourceRegistry nativeResources) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry registry = Objects.requireNonNull(nativeResources, "nativeResources");
-        return new OpenGlRenderer(IndexedStaticMeshPipeline.create(
+        return new OpenGlRenderer(IndexedStaticMeshPipeline.createProduction(
                 guard,
                 registry,
-                new LwjglOpenGlResourceBackend(),
-                new LwjglOpenGlDrawBackend(),
-                new LwjglOpenGlUniformBlockReflectionBackend(),
                 loadShader("shaders/p5/basic.vert"),
                 loadShader("shaders/p5/basic.frag")));
     }

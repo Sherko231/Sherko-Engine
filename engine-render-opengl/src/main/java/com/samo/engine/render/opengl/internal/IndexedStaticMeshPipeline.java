@@ -21,6 +21,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlBuffer indexBuffer;
     private final OpenGlBuffer cameraBuffer;
     private final OpenGlBuffer perFrameBuffer;
+    private final OpenGlTexture referenceTexture;
+    private final OpenGlSampler referenceSampler;
     private final OpenGlShader vertexShader;
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
@@ -39,6 +41,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlBuffer indexBuffer,
             OpenGlBuffer cameraBuffer,
             OpenGlBuffer perFrameBuffer,
+            OpenGlTexture referenceTexture,
+            OpenGlSampler referenceSampler,
             OpenGlShader vertexShader,
             OpenGlShader fragmentShader,
             OpenGlProgram program) {
@@ -50,6 +54,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.indexBuffer = indexBuffer;
         this.cameraBuffer = cameraBuffer;
         this.perFrameBuffer = perFrameBuffer;
+        this.referenceTexture = referenceTexture;
+        this.referenceSampler = referenceSampler;
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.program = program;
@@ -93,6 +99,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         OpenGlBuffer indices = null;
         OpenGlBuffer camera = null;
         OpenGlBuffer perFrame = null;
+        OpenGlTexture texture = null;
+        OpenGlSampler sampler = null;
         OpenGlShader vertex = null;
         OpenGlShader fragment = null;
         OpenGlProgram linkedProgram = null;
@@ -112,6 +120,16 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             perFrame = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(perFrame.handle(), PerFrameUniformBlock.SIZE_BYTES);
+
+            texture = OpenGlTexture.createRgba8(
+                    guard,
+                    resources,
+                    gl,
+                    TextureColorEncoding.SRGB_COLOR,
+                    1,
+                    1,
+                    referenceGrayTexture());
+            sampler = OpenGlSampler.createLinearClamp(guard, resources, gl);
 
             vertex = OpenGlShader.compile(
                     OpenGlShader.Stage.VERTEX,
@@ -151,6 +169,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     indices,
                     camera,
                     perFrame,
+                    texture,
+                    sampler,
                     vertex,
                     fragment,
                     linkedProgram);
@@ -158,6 +178,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);
             suppressClose(failure, vertex);
+            suppressClose(failure, sampler);
+            suppressClose(failure, texture);
             suppressClose(failure, perFrame);
             suppressClose(failure, camera);
             suppressClose(failure, indices);
@@ -195,14 +217,21 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
         drawBackend.setViewport(framebufferWidth, framebufferHeight);
         drawBackend.configureDepthAndBackFaceCull();
-        drawBackend.clearFrame();
-        drawBackend.useProgram(program.handle());
-        drawBackend.bindVertexArray(vertexArray.handle());
+        drawBackend.setFramebufferSrgbEnabled(true);
         try {
-            drawBackend.drawIndexedTriangle();
+            drawBackend.clearFrame();
+            drawBackend.bindTextureAndSampler(0, referenceTexture.handle(), referenceSampler.handle());
+            drawBackend.useProgram(program.handle());
+            drawBackend.bindVertexArray(vertexArray.handle());
+            try {
+                drawBackend.drawIndexedTriangle();
+            } finally {
+                drawBackend.bindDefaultVertexArray();
+                drawBackend.useDefaultProgram();
+                drawBackend.bindTextureAndSampler(0, 0, 0);
+            }
         } finally {
-            drawBackend.bindDefaultVertexArray();
-            drawBackend.useDefaultProgram();
+            drawBackend.setFramebufferSrgbEnabled(false);
         }
     }
 
@@ -224,6 +253,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         closeInto(failures, program);
         closeInto(failures, fragmentShader);
         closeInto(failures, vertexShader);
+        closeInto(failures, referenceSampler);
+        closeInto(failures, referenceTexture);
         closeInto(failures, perFrameBuffer);
         closeInto(failures, cameraBuffer);
         closeInto(failures, indexBuffer);
@@ -243,6 +274,12 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private static ByteBuffer triangleIndices() {
         ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
         data.putInt(0).putInt(1).putInt(2);
+        return data.flip();
+    }
+
+    private static ByteBuffer referenceGrayTexture() {
+        ByteBuffer data = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
+        data.put((byte) 128).put((byte) 128).put((byte) 128).put((byte) 255);
         return data.flip();
     }
 

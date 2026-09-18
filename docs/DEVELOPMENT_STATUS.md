@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T07B / Issue #224 is accepted; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | P5-T08 / Issue #190 — define sRGB framebuffer and texture sampling rules |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -88,4 +88,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-P5-T07B / #224 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned renderer task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed.
+Complete P5-T08 / #190 on branch `p5-t08-srgb-color-path`: establish D-056 sRGB color-texture decode versus linear-data storage, request an sRGB-capable default framebuffer, enable exactly one framebuffer encode around the production draw boundary, preserve the P5-T07 scene as a neutral-gray reference, and retain numeric/PNG Windows evidence. Stop before P5-T09 materials, P6 asset/cooker work, HDR/tonemapping/fog/post-processing, or P5-T15 presentation architecture.

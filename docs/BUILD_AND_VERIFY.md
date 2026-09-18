@@ -615,7 +615,19 @@ The canonical interactive owner run is:
 
 It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. Since accepted P5-T07, the sandbox renders one white indexed triangle through the public `OpenGlRenderer` and presents it through `GlfwWindow.present()`. Do not add direct OpenGL/LWJGL calls, future gameplay camera/controller/UI/world/physics/network features, or public APIs solely to make the sandbox richer.
 
-`game-sandbox` uses `compileOnly` dependencies on `engine-platform-lwjgl` and `engine-render-opengl` for sandbox source compilation plus the dedicated resolvable/non-consumable `sandboxRuntime` used by `runSandbox` and the legacy alias. Those sandbox-only platform/renderer dependencies must not be published through runtime elements consumed by `game-server`. `verifyHeadlessServerRuntime` remains the explicit boundary check.
+`game-sandbox` uses `compileOnly` for `engine-platform-lwjgl`. Its renderer compile-only dependency explicitly targets `engine-render-opengl` `runtimeElements` with `isTransitive = false` so Gradle/IntelliJ model the in-repository renderer as a module dependency while D-055's default renderer `apiElements` remains API-only for ordinary consumers. The dedicated resolvable/non-consumable `sandboxRuntime` remains the runtime source for `runSandbox` and the legacy alias. These sandbox-only platform/renderer dependencies must not be published through runtime elements consumed by `game-server`; `verifyHeadlessServerRuntime` remains the explicit boundary check.
+
+After P5-T07B / Issue #224, also verify sandbox compile wiring and the original public-renderer boundary together:
+
+```powershell
+.\\gradlew.bat :game-sandbox:compileJava --rerun-tasks
+.\\gradlew.bat :game-sandbox:check --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :game-server:verifyHeadlessServerRuntime
+```
+
+Manual IDE verification is separate from CI: reload/sync the Gradle project in IntelliJ and confirm `SandboxMain` resolves `OpenGlRenderer` without adding a manual Project Structure dependency.
 
 No dependency/version change is expected from Issue #165; only the custom configuration/task naming changes. `resolveAndLockAllDependencies` must not introduce unrelated drift. The final candidate is non-Markdown and therefore requires the ordinary exact-head heavy five-job matrix, followed after merge by the lightweight exact-merge master verifier before Issue #165 closes.
 

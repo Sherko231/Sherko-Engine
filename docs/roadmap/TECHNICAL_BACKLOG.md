@@ -108,7 +108,6 @@ Exit gate: spatial tests pass independently of OpenGL and Jolt.
 
 Goal: render a stable, inspectable 3D room without game or physics dependencies. Reach a basic end-to-end room before adding visual polish.
 
-- [ ] P5-T00 Select and document exact minimum/reference Windows hardware (CPU, GPU, driver floor, RAM, VRAM) for the 1080p/60 target using a representative benchmark rather than the high-end development machine. Acceptance: `ENGINE_SCOPE.md` contains exact values and the benchmark result is reproducible.
 - [ ] P5-T01 Enable the OpenGL debug callback in debug builds and promote high-severity messages to test failures. Acceptance: an intentional invalid call is captured with source and type.
 - [ ] P5-T02 Enforce render-thread ownership for every OpenGL wrapper. Acceptance: a GPU call from a worker thread throws before entering OpenGL.
 - [ ] P5-T03 Implement explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Acceptance: every wrapper is idempotently closeable and registered for leak detection.

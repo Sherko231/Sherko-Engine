@@ -119,10 +119,9 @@ server composition -> world / physics / network APIs and adapters
 
 ## Target hardware policy
 
-- Product target: mainstream/mid-range Windows gaming PCs, not only the development machine.
+- Product target: mainstream/mid-range Windows gaming PCs.
 - Initial performance target: 1080p at 60 FPS.
-- Exact minimum CPU, GPU, driver, RAM, and VRAM values must be selected by a representative-hardware benchmark before Phase 5 renderer implementation.
-- A successful run on a high-end development GPU does not establish the minimum supported hardware.
+- Exact minimum CPU, GPU, driver, RAM, and VRAM values are not a current roadmap gate. Do not claim minimum supported hardware without separate future evidence explicitly authorized by the owner.
 
 ## Perspective policy
 

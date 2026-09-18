@@ -83,9 +83,9 @@ The Phase 4 exit gate also passes. The accepted candidate and merged master shar
 
 **Goal:** render a stable, inspectable 3D room without gameplay or physics dependencies, reaching a basic end-to-end room before visual polish.
 
-Phase 5 is ready to materialize as the current phase because its required platform and spatial inputs are accepted. However, renderer implementation has one explicit entry blocker from `ENGINE_SCOPE.md`: exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM values must be selected from a representative benchmark before Phase 5 renderer implementation begins.
+Phase 5 is ready to proceed because its required platform and spatial inputs are accepted.
 
-P5-T00 owns that hardware baseline and is the first executable task. P5-T01 through P5-T17 may exist as current-phase Issues for bounded planning/dependency visibility, but they remain blocked until P5-T00 is accepted and each task is freshly activated/refined against then-current `master`.
+P5-T01 is the first executable renderer-foundation task. P5-T01 through P5-T17 should each be freshly activated/refined against then-current `master` before implementation.
 
 After P5-T00, the phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
 

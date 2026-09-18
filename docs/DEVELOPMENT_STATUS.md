@@ -16,8 +16,11 @@
 | P4-T09 merged `master` | `66a81a418e0c953b8f00e54226265aa7cd226749` |
 | P4-T09 exact-merge verification | run `35247709901` (#335), Lightweight master verification passed on the exact merge SHA |
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
-| Phase 4 exit/readiness record | Issue #180 |
-| Next executable task | P5-T00 — select and document representative/minimum Windows hardware baseline before renderer implementation |
+| Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
+| Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
+| Active executable task | P5-T00 / Issue #182 — remove obsolete hardware-baseline gate |
+| P5-T00 branch | `p5-t00-hardware-baseline` |
+| P5-T00 checkpoint | Owner removed mandatory hardware benchmarking from the roadmap; cleanup branch removes the spike/task and unblocks P5-T01 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -49,15 +52,14 @@ Accepted prerequisites already exist:
 - existing `engine-render-opengl` module boundary;
 - Java 25 / Windows x64 / OpenGL 4.6 Core / forward-renderer technology choices in `ENGINE_SCOPE.md`.
 
-One entry requirement remains intentionally first in Phase 5: `ENGINE_SCOPE.md` requires exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM values selected from a representative benchmark **before Phase 5 renderer implementation**. P5-T00 owns that work.
+The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Phase 5 tasks may be materialized as current-phase Issues, but P5-T01 through P5-T17 must remain blocked on accepted P5-T00 evidence until the hardware baseline is fixed. Later Phase 6+ work remains backlog-only.
+Issue #182 now owns only the cleanup that removes the obsolete P5-T00 benchmark code/task and stale documentation. Follow-up #201 is closed as not planned. After this cleanup merges, P5-T01 / #183 is the next executable renderer-foundation task.
 
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
-| P5-T00 | P5 renderer implementation | Representative Windows benchmark and exact minimum/reference CPU, GPU, driver, RAM, VRAM values |
 | P0-T09A / #42 | Production Steam transport work in P10/P13 | End-to-end two-process SteamNetworkingSockets lifecycle |
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
@@ -66,4 +68,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Execute P5-T00 from current verified `master` after the Phase 4 exit/readiness Markdown handoff is merged. Do not begin P5-T01 or later renderer implementation until P5-T00 has selected and documented the exact representative/minimum Windows hardware baseline required by `ENGINE_SCOPE.md`.
+Merge the P5-T00 removal cleanup after its final verification, close #182 as not planned, then freshly activate P5-T01 / #183 against current `master`. No hardware benchmark or minimum-hardware gate remains in the current Phase 5 roadmap.

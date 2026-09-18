@@ -231,15 +231,93 @@ class GlfwWindowMouseMotionTest {
         assertFalse(window.isCursorEffectivelyCapturedForTest());
         assertTrue(window.isRawMouseMotionEnabledForTest());
         assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
+        assertEquals(List.of(true, false), backend.rawTransitions);
+        assertEquals(
+                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
 
         backend.rawDisableFailure = null;
-        backend.cursorNormalFailure = null;
         window.pollEvents();
+        assertEquals(List.of(true, false), backend.rawTransitions);
+        assertEquals(
+                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        RuntimeException cursorRetryFailure =
+                assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
+        assertSame(cursorFailure, cursorRetryFailure);
+        assertFalse(window.isRawMouseMotionEnabledForTest());
+        assertEquals(List.of(true, false, false), backend.rawTransitions);
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        backend.cursorNormalFailure = null;
+        window.setCursorCaptured(false);
+        assertEquals(List.of(true, false, false), backend.rawTransitions);
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
 
         window.stop();
         window.close();
         registry.assertNoOpenResources();
         assertFalse(window.isRawMouseMotionEnabledForTest());
+    }
+
+    @Test
+    void successfulCursorRetryIsNotRepeatedWhileRawCleanupRemainsPending() {
+        MotionBackend backend = new MotionBackend();
+        backend.rawSupported = true;
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry);
+        start(window);
+        window.setCursorCaptured(true);
+
+        RuntimeException rawFailure = new IllegalStateException("raw disable failed");
+        RuntimeException cursorFailure = new IllegalStateException("cursor release failed");
+        backend.rawDisableFailure = rawFailure;
+        backend.cursorNormalFailure = cursorFailure;
+        backend.queueFocus(false);
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
+        assertSame(rawFailure, actual);
+        assertEquals(1, actual.getSuppressed().length);
+        assertSame(cursorFailure, actual.getSuppressed()[0]);
+        assertTrue(window.isRawMouseMotionEnabledForTest());
+        assertFalse(window.isCursorEffectivelyCapturedForTest());
+
+        backend.cursorNormalFailure = null;
+        RuntimeException retryFailure =
+                assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
+        assertSame(rawFailure, retryFailure);
+        assertTrue(window.isRawMouseMotionEnabledForTest());
+        assertEquals(List.of(true, false, false), backend.rawTransitions);
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        backend.rawDisableFailure = null;
+        window.setCursorCaptured(false);
+        assertFalse(window.isRawMouseMotionEnabledForTest());
+        assertEquals(List.of(true, false, false, false), backend.rawTransitions);
+        assertEquals(3, backend.cursorModes.size());
+
+        window.stop();
+        assertEquals(List.of(true, false, false, false), backend.rawTransitions);
+        assertEquals(3, backend.cursorModes.size());
+        window.close();
+        registry.assertNoOpenResources();
     }
 
     @Test

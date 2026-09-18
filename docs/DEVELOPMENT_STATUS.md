@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T07A / Issue #213 is accepted; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | P3-T04C / Issue #216 — repair focus-loss cursor-normalization recovery; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -82,4 +82,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-P5-T07A / #213 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull materials, arbitrary meshes/assets, render packets, culling/sorting, lighting, world/ECS, performance work, or other later renderer tasks forward.
+Complete P3-T04C / #216 as a bounded platform defect repair before activating P5-T08. Preserve D-034/D-035 focus-loss semantics while separating effective gameplay capture from a pending native cursor-normalization cleanup obligation; verify explicit-release/lifecycle retries and independent raw/cursor cleanup recovery. P5-T08 / #190 remains PLANNED and must not be activated in this task.

@@ -159,8 +159,10 @@ class GlfwWindowFocusTest {
         window.setCursorCaptured(true);
 
         backend.queueKey(GLFW.GLFW_KEY_W, GLFW.GLFW_PRESS);
+        backend.queueMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_PRESS);
         window.pollEvents();
         assertTrue(window.isKeyHeldForTest(GLFW.GLFW_KEY_W));
+        assertTrue(window.isMouseButtonHeldForTest(GLFW.GLFW_MOUSE_BUTTON_LEFT));
 
         RuntimeException releaseFailure = new IllegalStateException("cursor release failed");
         backend.cursorFailure = releaseFailure;
@@ -169,13 +171,106 @@ class GlfwWindowFocusTest {
         RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
         assertSame(releaseFailure, actual);
         assertFalse(window.isKeyHeldForTest(GLFW.GLFW_KEY_W));
+        assertFalse(window.isMouseButtonHeldForTest(GLFW.GLFW_MOUSE_BUTTON_LEFT));
         assertFalse(window.isCursorEffectivelyCapturedForTest());
+        assertEquals(
+                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
 
         backend.cursorFailure = null;
         window.pollEvents();
+        assertEquals(
+                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        window.setCursorCaptured(false);
+        assertFalse(window.isCursorEffectivelyCapturedForTest());
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        window.setCursorCaptured(false);
+        assertEquals(3, backend.cursorModes.size());
 
         window.stop();
+        assertEquals(3, backend.cursorModes.size());
         window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void stopRetriesFailedFocusLossCursorNormalization() {
+        FocusBackend backend = new FocusBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry);
+        window.initialize();
+        window.start();
+        window.setCursorCaptured(true);
+
+        RuntimeException releaseFailure = new IllegalStateException("cursor release failed");
+        backend.cursorFailure = releaseFailure;
+        backend.queueFocus(false);
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
+        assertSame(releaseFailure, actual);
+        assertFalse(window.isCursorEffectivelyCapturedForTest());
+        assertEquals(
+                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        backend.cursorFailure = null;
+        window.stop();
+
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void closeRetriesCursorNormalizationAfterStopFailure() {
+        FocusBackend backend = new FocusBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry);
+        window.initialize();
+        window.start();
+        window.setCursorCaptured(true);
+
+        RuntimeException releaseFailure = new IllegalStateException("cursor release failed");
+        backend.cursorFailure = releaseFailure;
+        backend.queueFocus(false);
+
+        RuntimeException pollFailure = assertThrows(RuntimeException.class, window::pollEvents);
+        assertSame(releaseFailure, pollFailure);
+        assertFalse(window.isCursorEffectivelyCapturedForTest());
+
+        RuntimeException stopFailure = assertThrows(RuntimeException.class, window::stop);
+        assertSame(releaseFailure, stopFailure);
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        backend.cursorFailure = null;
+        window.close();
+
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
         registry.assertNoOpenResources();
     }
 

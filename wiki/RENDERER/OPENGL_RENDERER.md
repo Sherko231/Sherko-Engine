@@ -4,6 +4,8 @@
 
 It exists to establish one real engine-owned indexed draw without exposing OpenGL handles or prematurely defining a general mesh/material/world API.
 
+A Gradle consumer should declare only `engine-render-opengl` for this renderer boundary. Its compile variant exports the public signature dependencies required by `OpenGlRenderer` (`engine-core`, `engine-platform-lwjgl`, and JOML transitively through core) while exposing only `com.samo.engine.render.api` renderer classes. Renderer `.internal` implementation classes are not part of the supported consumer compile surface; the runtime variant still contains the complete implementation and shader resources.
+
 ## Create
 
 Create the renderer only after the production `GlfwWindow` has successfully started and its OpenGL 4.6 context is current on the owner thread:

@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T07 / Issue #189 — first indexed static mesh |
+| Active executable task | None — P5-T07 / Issue #189 is accepted; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T06 / #188 are accepted; P5-T07 / #189 is the active executable renderer-foundation task.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T07 / #189 are accepted. P5-T08 / #190 is the next planned renderer-foundation task and remains PLANNED until deliberately activated against the current repository state.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -66,7 +66,7 @@ P5-T05 / #187 is accepted. PR #208 final head `a1fa179bc5daab0345ebfb32f3d62ed66
 
 P5-T06 / #188 is accepted. PR #209 final head `a28d76fbb83df3ec7a80c9b345c67c0f1bce6d8e` passed all five heavy CI jobs in run #362 / `35339837097`, merged as `cd49273608344e1bdf0d23698591ab516d049fc8`, and exact-merge Lightweight verification passed in run #363 / `35340897864`.
 
-P5-T07 / #189 is active on branch `p5-t07-indexed-static-mesh`. It adds public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, retained Windows primitive-count/PNG evidence, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
+P5-T07 / #189 is accepted. PR #210 final head `18e364f1bdf39d2808f7bdef15fe5b866fff2ebc` passed the required five-job final-candidate CI in run #366 / `35349866530`, including the retained Windows indexed-draw primitive-count/PNG evidence. It merged as `617d0b961d9eb84dcc118a49e8a84cf83092927d`, and exact merged `master` passed Lightweight master verification in run #367 / `35350927079`. The accepted task provides public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
 
 ## Open gates and blockers
 
@@ -80,4 +80,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Finalize P5-T07 / #189 on branch `p5-t07-indexed-static-mesh`: audit the complete diff, run the exact-final-head five-job CI matrix including continued offline GLSL validation and retained Windows indexed-draw PNG/query evidence, merge only the tested candidate, then require exact-merge Lightweight verification before closing #189. Do not pull P5-T08 sRGB policy, arbitrary mesh/assets, materials, lighting, world/ECS, or physics work forward.
+Close the P5-T07 / #189 handoff after this Markdown-only reconciliation is merged, then treat P5-T08 / #190 as the next planned task only. Before activating P5-T08, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull arbitrary mesh/assets, materials, lighting, world/ECS, physics, or later renderer work forward.

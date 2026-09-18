@@ -76,7 +76,7 @@ final class OpenGlProgram implements AutoCloseable {
         try {
             cleanup.run();
         } catch (RuntimeException | Error cleanupFailure) {
-            failure.addSuppressed(cleanupFailure);
+            CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
         }
     }
 

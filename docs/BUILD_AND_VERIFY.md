@@ -930,14 +930,14 @@ Focused verification:
 .\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 ```
 
-The deterministic tests require the window's `GLFW_SRGB_CAPABLE` hint, exact `GL_SRGB8_ALPHA8` versus `GL_RGBA8` format selection, the fixed renderer reference texture using the sRGB-color path, and `GL_FRAMEBUFFER_SRGB` enable/disable around draw work including failure cleanup.
+The deterministic tests require the window's `GLFW_SRGB_CAPABLE` hint, exact `GL_SRGB8_ALPHA8` versus `GL_RGBA8` format selection, the fixed renderer reference texture using the sRGB-color path, and both presentation modes: hardware `GL_FRAMEBUFFER_SRGB` on an `GL_SRGB` default buffer and one manual fragment encode with framebuffer sRGB disabled on an `GL_LINEAR` default buffer.
 
-Windows native acceptance runs `SrgbColorPathNativeTest` with `SHERKO_P5_T08_NATIVE=true`. It verifies that the production default back buffer reports `GL_SRGB` color encoding, renders through public `OpenGlRenderer`, reads back the triangle center, and requires RGB bytes within ±8 of encoded gray 128. That band is deliberately far from the approximate missing-encode value (~55) and missing-decode/double-gamma value (~188). It retains:
+Windows native acceptance runs `SrgbColorPathNativeTest` with `SHERKO_P5_T08_NATIVE=true`. It records whether the production default back buffer is `GL_SRGB` or `GL_LINEAR`, renders through public `OpenGlRenderer`, reads back the triangle center, and requires RGB bytes within ±8 of encoded gray 128 in either mode. Run #381 demonstrated the real linear-default-buffer case, which is now an explicitly supported fallback instead of a failed capability assumption. The band remains deliberately far from approximate missing-encode (~55) and missing-decode/double-encode (~188) outcomes. It retains:
 
 - `engine-render-opengl/build/reports/p5/p5-t08-srgb.txt`
 - `engine-render-opengl/build/reports/p5/p5-t08-srgb.png`
 
-This proves only the fixed reference texture decode plus exactly one default-framebuffer encode. It does not establish general materials, arbitrary textures, asset/cooker behavior, HDR, tonemapping, fog, or post-processing.
+This proves only the fixed reference texture decode plus exactly one presentation encode, using hardware on `GL_SRGB` default buffers or the bounded fragment fallback on `GL_LINEAR` default buffers. It does not establish general materials, arbitrary textures, asset/cooker behavior, HDR, tonemapping, fog, or post-processing.
 
 ## P5-T07A renderer public-boundary verification
 

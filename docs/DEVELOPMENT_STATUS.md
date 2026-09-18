@@ -20,7 +20,7 @@
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
 | Active executable task | P5-T00 / Issue #182 — representative Windows hardware baseline |
 | P5-T00 branch | `p5-t00-hardware-baseline` |
-| P5-T00 checkpoint | Disposable 1080p60 measurement path implemented in `feasibility-spikes`; representative-machine evidence not yet collected |
+| P5-T00 checkpoint | Exact-head 1080p60 fixture and CI evidence passed on the available development/reference machine; representative mainstream minimum is deferred to Phase 5 exit / #201 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -66,13 +66,13 @@ The branch now contains `P5HardwareBaselineSpike` plus `:feasibility-spikes:runP
 
 The benchmark requires a clean Git checkout and an independently verified exact VRAM value. The report records repository SHA, clean-checkout status, Java version, Windows caption/version/build, CPU/RAM, Windows video-controller vendor/driver/PNP metadata, supplied exact VRAM, primary display mode, OpenGL vendor/version/renderer, fixed workload constants, mean/median/p95/p99/max synchronized frame time, and derived mean/p95 FPS. The report path is `build/spikes/p5-hardware-baseline/p5-t00-hardware-baseline.txt`.
 
-No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged until a representative Windows x64 candidate machine other than the high-end development machine produces a qualifying retained report. Draft PR #200 also carries a branch-scoped two-slot Windows evidence job authorized by Issue #182; its artifacts are diagnostic until the runner hardware is shown to be representative. Run #340 passed all ordinary CI jobs and both P5-T00 slots, but both slots executed on Core Ultra 9 275HX / RTX 5090 Laptop 24 GB systems and therefore do not satisfy the representative mid-range evidence requirement. The first evidence workflow also checked out GitHub's PR merge SHA; the job is corrected to benchmark the exact PR head SHA on the next candidate run.
+P5-T00 exact-head run #342 passed the five ordinary CI jobs and the fixed benchmark fixture on the currently available development/reference machine. The physical machine is Intel Core Ultra 9 275HX with NVIDIA GeForce RTX 5090 Laptop GPU, 24463 MiB VRAM, 64 GiB-class RAM, Windows 11 x64, and NVIDIA OpenGL 4.6 driver 592.02; observed p95 synchronized frame time was approximately 0.82–0.90 ms across logical runner registrations. The owner confirmed all current runners map to this same physical machine, so these results are retained as development/reference evidence only. Issue #201 now owns the exact mainstream/minimum CPU/GPU/driver/RAM/VRAM proof and blocks Phase 5 exit rather than P5-T01. `ENGINE_SCOPE.md` records this distinction.
 
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
 | --- | --- | --- |
-| P5-T00 / #182 | P5 renderer implementation | Java 25/repository CI verification for the disposable spike, then a passing representative Windows candidate report with independently verified exact VRAM and retained hardware/driver metadata |
+| P5-EXIT / #201 | Phase 5 completion and minimum-hardware support claims | Real representative mainstream/mid-range Windows benchmark establishing exact CPU/GPU/driver/RAM/VRAM floor at 1080p60 |
 | P0-T09A / #42 | Production Steam transport work in P10/P13 | End-to-end two-process SteamNetworkingSockets lifecycle |
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
@@ -81,4 +81,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Run the P5-T00 benchmark branch on a representative Windows x64 candidate with a clean checkout and independently verified exact VRAM using `.\gradlew.bat :feasibility-spikes:runP5HardwareBaseline -Pp5HardwareVramMiB=<exact MiB>`. Retain the generated report and review its hardware class and p95 result. Only after a representative candidate qualifies may the task write exact CPU/GPU/driver/RAM/VRAM values into `ENGINE_SCOPE.md`, finalize the PR, run the exact-final-head five-job heavy CI matrix, merge, run exact-merge Lightweight verification, and close #182. Do not begin P5-T01 earlier.
+Finalize P5-T00 as a development/reference calibration task: remove its temporary branch-specific evidence workflow, run the exact-final-head five-job heavy CI matrix, merge, run exact-merge Lightweight verification, and close #182. Then freshly activate P5-T01 / #183 against current `master`. Issue #201 remains open and blocks Phase 5 exit until real representative mainstream/mid-range hardware is available and proves the exact supported/minimum floor.

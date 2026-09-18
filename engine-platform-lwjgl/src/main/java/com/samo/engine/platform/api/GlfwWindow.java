@@ -376,6 +376,7 @@ public final class GlfwWindow extends EngineSubsystem {
             backend.windowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6);
             backend.windowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
             backend.windowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
+            backend.windowHint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE);
             if (openGlDebugMode == OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY) {
                 backend.windowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
             }

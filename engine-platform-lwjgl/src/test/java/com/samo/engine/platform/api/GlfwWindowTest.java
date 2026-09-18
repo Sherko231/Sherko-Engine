@@ -1092,6 +1092,11 @@ class GlfwWindowTest {
         }
 
         @Override
+        public void swapBuffers(long handle) {
+            trace.add("swap:" + handle);
+        }
+
+        @Override
         public void pollEvents() {
             trace.add("poll-events");
             pollCount++;

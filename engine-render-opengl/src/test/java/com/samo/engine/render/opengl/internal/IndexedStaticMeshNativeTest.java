@@ -103,7 +103,7 @@ class IndexedStaticMeshNativeTest {
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
-                        "Expected a visible white triangle; pixels=" + visibleTrianglePixels);
+                        "Expected a visible reference-gray triangle; pixels=" + visibleTrianglePixels);
 
                 window.present();
             } finally {
@@ -151,7 +151,9 @@ class IndexedStaticMeshNativeTest {
                 int green = Byte.toUnsignedInt(pixels.get(offset + 1));
                 int blue = Byte.toUnsignedInt(pixels.get(offset + 2));
                 int alpha = Byte.toUnsignedInt(pixels.get(offset + 3));
-                if (red > 220 && green > 220 && blue > 220) {
+                if (red >= 110 && red <= 150
+                        && green >= 110 && green <= 150
+                        && blue >= 110 && blue <= 150) {
                     visibleTrianglePixels++;
                 }
                 int argb = (alpha << 24) | (red << 16) | (green << 8) | blue;
@@ -192,12 +194,13 @@ class IndexedStaticMeshNativeTest {
                 "capture=p5-t07-indexed-mesh.png",
                 "high.severity.debug.error=none-observed-after-poll",
                 "native.resource.registry.empty.after.cleanup=true",
-                "srgb.claim=false",
+                "triangle.color=reference-gray",
+                "srgb.claim=verified-separately-by-p5-t08",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=first indexed production draw only; no asset, material, lighting, sRGB, world, or performance claim"));
+                "evidence.scope=first indexed production draw only; sRGB correctness is asserted separately by P5-T08; no asset, material, lighting, world, or performance claim"));
     }
 
     private static String environmentOr(String key, String fallback) {

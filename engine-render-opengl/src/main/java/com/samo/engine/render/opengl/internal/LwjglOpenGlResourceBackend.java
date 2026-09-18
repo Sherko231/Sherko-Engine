@@ -2,7 +2,9 @@ package com.samo.engine.render.opengl.internal;
 
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL44;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlResourceBackend implements OpenGlResourceBackend {
@@ -14,6 +16,37 @@ final class LwjglOpenGlResourceBackend implements OpenGlResourceBackend {
     @Override
     public void deleteBuffer(int handle) {
         GL15Compat.deleteBuffer(handle);
+    }
+
+    @Override
+    public void allocateDynamicBufferStorage(int handle, long capacityBytes) {
+        GL45.glNamedBufferStorage(handle, capacityBytes, GL44.GL_DYNAMIC_STORAGE_BIT);
+    }
+
+    @Override
+    public void uploadBufferSubData(int handle, long offsetBytes, java.nio.ByteBuffer data) {
+        GL45.glNamedBufferSubData(handle, offsetBytes, data);
+    }
+
+    @Override
+    public long createFence() {
+        return GL32.glFenceSync(GL32.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    }
+
+    @Override
+    public FenceStatus fenceStatus(long fenceHandle) {
+        int status = GL32.glClientWaitSync(fenceHandle, 0, 0L);
+        return switch (status) {
+            case GL32.GL_ALREADY_SIGNALED, GL32.GL_CONDITION_SATISFIED -> FenceStatus.SIGNALED;
+            case GL32.GL_TIMEOUT_EXPIRED -> FenceStatus.TIMEOUT;
+            case GL32.GL_WAIT_FAILED -> FenceStatus.FAILED;
+            default -> throw new IllegalStateException("Unexpected OpenGL fence wait status: " + status);
+        };
+    }
+
+    @Override
+    public void deleteFence(long fenceHandle) {
+        GL32.glDeleteSync(fenceHandle);
     }
 
     @Override

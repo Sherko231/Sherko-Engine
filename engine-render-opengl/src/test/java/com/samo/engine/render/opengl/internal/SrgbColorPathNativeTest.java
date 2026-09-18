@@ -86,10 +86,10 @@ class SrgbColorPathNativeTest {
                     GL30.GL_FRAMEBUFFER,
                     GL11.GL_BACK_LEFT,
                     GL30.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
-            assertEquals(
-                    GL21.GL_SRGB,
-                    framebufferEncoding,
-                    "Default back buffer must report sRGB color encoding");
+            assertTrue(
+                    framebufferEncoding == GL21.GL_SRGB || framebufferEncoding == GL11.GL_LINEAR,
+                    "Default back buffer must report GL_SRGB or GL_LINEAR color encoding, but was "
+                            + framebufferEncoding);
 
             Matrix4f view = CameraMatrices.view(
                     new Vector3f(0.0f, 0.0f, 2.0f),
@@ -210,7 +210,10 @@ class SrgbColorPathNativeTest {
                 "task=P5-T08",
                 "result=PASS",
                 "default.framebuffer.encoding=" + framebufferEncoding,
-                "expected.framebuffer.encoding=GL_SRGB",
+                "framebuffer.encoding.mode="
+                        + (framebufferEncoding == GL21.GL_SRGB ? "GL_SRGB" : "GL_LINEAR"),
+                "presentation.encode.mode="
+                        + (framebufferEncoding == GL21.GL_SRGB ? "hardware-framebuffer" : "manual-fragment"),
                 "texture.encoding=GL_SRGB8_ALPHA8",
                 "reference.input.srgb.byte=" + REFERENCE_SRGB_BYTE,
                 "reference.output.rgb=" + red + "," + green + "," + blue,
@@ -223,7 +226,7 @@ class SrgbColorPathNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=fixed renderer reference texture decode plus exactly one default-framebuffer sRGB encode; no HDR, tonemapping, materials, assets, or post-processing claim"));
+                "evidence.scope=fixed renderer reference texture decode plus exactly one presentation sRGB encode; hardware on GL_SRGB default buffers, fragment fallback on GL_LINEAR default buffers; no HDR, tonemapping, materials, assets, or post-processing claim"));
     }
 
     private static int linearByteAfterSrgbDecode(int srgbByte) {

@@ -326,6 +326,21 @@ jobs:
             engine-render-opengl/build/reports/p5/p5-t03-opengl-resources.txt
           if-no-files-found: error
 
+      - name: Verify P5-T04 bounded dynamic upload
+        env:
+          SHERKO_P5_T04_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderNativeTest" --rerun-tasks
+
+      - name: Upload P5-T04 bounded upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t04-bounded-upload
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t04-bounded-upload.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

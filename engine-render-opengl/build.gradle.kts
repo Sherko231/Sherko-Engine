@@ -17,6 +17,8 @@ dependencies {
 tasks.register<Test>("validateGlsl") {
     description = "Validates committed Phase 5 GLSL sources with locked LWJGL Shaderc."
     group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     useJUnitPlatform()
     filter {
         includeTestsMatching("com.samo.engine.render.opengl.internal.GlslOfflineValidationTest.validatesCommittedRuntimeShaders")

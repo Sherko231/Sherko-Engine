@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P3-T04C / Issue #216 — repair focus-loss cursor-normalization recovery; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | None — P3-T04C / Issue #216 is accepted; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -70,6 +70,8 @@ P5-T07 / #189 is accepted. PR #210 final head `18e364f1bdf39d2808f7bdef15fe5b866
 
 P5-T07A / #213 is accepted. PR #214 final head `15352732cf7f93edf04f6d1059060c6570bc935e` passed the required five-job final-candidate CI in run #372 / `35358518445`; the Windows native job was retried without changing the candidate after its first attempt was cancelled during the existing P5-T07 indexed-draw step, and the retry completed successfully. PR #214 merged as `3e3487e7edaa2f4f308e8d2588387a15ee76877e`, and exact merged `master` passed Lightweight master verification in run #373 / `35359739592`. D-055 now exposes the `OpenGlRenderer` signature dependencies through Gradle API metadata while the renderer compile variant exposes only `com.samo.engine.render.api`; the runtime artifact remains complete. No renderer public signature, module edge, native ownership/thread-affinity behavior, or P5-T08+ feature changed.
 
+P3-T04C / #216 is accepted. PR #217 final head `16b2542c8eb4c13aea68e400c070c49c912ffd8a` passed the required five-job final-candidate CI in run #374 / `35361440175`; the Windows native job was retried without changing the candidate after its first attempt was cancelled during the later P5-T06 regression, and the full retry completed successfully including P3-T04 focus-loss and P3-T05 raw/fallback native acceptance. PR #217 merged as `7b622491d150635cc0eecb844334135f2310c1d2`, and exact merged `master` passed Lightweight master verification in run #375 / `35362538577`. The repair keeps gameplay-visible cursor capture ineffective immediately on focus loss while separately retaining a private pending native cursor-normalization obligation, so explicit release, stop, and failed-stop close cleanup can retry `GLFW_CURSOR_NORMAL`; raw-mode cleanup remains independently retryable. No public API, dependency/module edge, input vocabulary, ownership model, or Phase 5 renderer scope changed.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -82,4 +84,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Complete P3-T04C / #216 as a bounded platform defect repair before activating P5-T08. Preserve D-034/D-035 focus-loss semantics while separating effective gameplay capture from a pending native cursor-normalization cleanup obligation; verify explicit-release/lifecycle retries and independent raw/cursor cleanup recovery. P5-T08 / #190 remains PLANNED and must not be activated in this task.
+P3-T04C / #216 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned renderer task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull materials, arbitrary meshes/assets, render packets, culling/sorting, lighting, world/ECS, performance work, or other later renderer tasks forward.

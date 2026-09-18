@@ -111,7 +111,7 @@ On systems where GLFW raw mouse motion is unavailable, the relative-motion fallb
 
 P5-T07 provides the first bounded public production renderer path through `OpenGlRenderer` plus window-owned `GlfwWindow.present()`. It draws one engine-owned indexed position-only triangle with the accepted P5-T06 camera/per-frame uniform blocks, full-framebuffer viewport, depth test `GL_LESS`, back-face culling, CCW front faces, and one indexed draw.
 
-This is intentionally not a general renderer API yet. There is no arbitrary mesh submission, asset loading/import, textures, materials, lighting, sRGB/gamma policy, world/ECS integration, batching, frustum culling/sorting, render graph, render worker/command queue, or public native resource handle surface. The persistent sandbox demonstrates only this first production draw while preserving the existing input/window/timing playground.
+This is intentionally not a general renderer API yet. P5-T08 adds only one internal sRGB reference texture, explicit sRGB-versus-linear storage rules, and one default-framebuffer sRGB encode boundary. There is still no arbitrary mesh submission, public/arbitrary texture creation, asset loading/import, materials, lighting, HDR/tonemapping/fog/post-processing, world/ECS integration, batching, frustum culling/sorting, render graph, render worker/command queue, or public native resource handle surface. The persistent sandbox demonstrates the fixed neutral-gray sRGB reference draw while preserving the existing input/window/timing playground.
 
 ## Assets/world/physics/audio/networking/editor
 

@@ -17,7 +17,6 @@ interface OpenGlDrawBackend {
 
     void clearFrame(boolean hardwareSrgbEncode);
 
-    void setManualSrgbEncode(int program, boolean enabled);
 
     void bindTextureAndSampler(int unit, int texture, int sampler);
 

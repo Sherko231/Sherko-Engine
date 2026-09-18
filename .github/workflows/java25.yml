@@ -52,6 +52,9 @@ jobs:
           git diff --exit-code -- ':(glob)**/*.lockfile' '*.lockfile'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Validate committed Phase 5 GLSL
+        run: .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+
       - name: Build all modules
         run: .\gradlew.bat buildAllModules
 
@@ -339,6 +342,21 @@ jobs:
           path: |
             engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderNativeTest.xml
             engine-render-opengl/build/reports/p5/p5-t04-bounded-upload.txt
+          if-no-files-found: error
+
+      - name: Verify P5-T05 committed GLSL runtime compile/link
+        env:
+          SHERKO_P5_T05_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.GlslRuntimeValidationNativeTest" --rerun-tasks
+
+      - name: Upload P5-T05 GLSL runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t05-glsl-runtime
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.GlslRuntimeValidationNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t05-glsl-runtime.txt
           if-no-files-found: error
 
       - name: Run Jolt JNI lifecycle smoke

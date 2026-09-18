@@ -69,7 +69,6 @@ class IndexedStaticMeshPipelineTest {
                 "state:depth-less:cull-back:front-ccw",
                 "srgb:true",
                 "clear:true",
-                "manual-srgb:203:false",
                 "texture:0:301:401",
                 "program:203",
                 "vao:101",
@@ -115,7 +114,6 @@ class IndexedStaticMeshPipelineTest {
                 "state:depth-less:cull-back:front-ccw",
                 "srgb:false",
                 "clear:false",
-                "manual-srgb:203:true",
                 "texture:0:301:401",
                 "program:203",
                 "vao:101",
@@ -127,6 +125,18 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+    }
+
+    @Test
+    void fragmentVariantInjectsManualEncodeOnlyForLinearDefaultFramebuffer() {
+        String source = "#version 460 core\nvoid main() {}";
+
+        assertEquals(source, IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, true));
+
+        String fallback = IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, false);
+        assertTrue(fallback.startsWith(
+                "#version 460 core" + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
+        assertTrue(fallback.endsWith("\nvoid main() {}"));
     }
 
     @Test
@@ -362,11 +372,6 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void clearFrame(boolean hardwareSrgbEncode) {
             trace.add("clear:" + hardwareSrgbEncode);
-        }
-
-        @Override
-        public void setManualSrgbEncode(int program, boolean enabled) {
-            trace.add("manual-srgb:" + program + ":" + enabled);
         }
 
         @Override

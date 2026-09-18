@@ -2,8 +2,10 @@ package com.samo.engine.render.opengl.internal;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -40,6 +42,14 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
+    public int defaultFramebufferColorEncoding() {
+        return GL30.glGetFramebufferAttachmentParameteri(
+                GL30.GL_FRAMEBUFFER,
+                GL11.GL_BACK_LEFT,
+                GL30.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
+    }
+
+    @Override
     public void setFramebufferSrgbEnabled(boolean enabled) {
         if (enabled) {
             GL11.glEnable(GL30.GL_FRAMEBUFFER_SRGB);
@@ -49,10 +59,23 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void clearFrame() {
-        GL11.glClearColor(0.08f, 0.10f, 0.14f, 1.0f);
+    public void clearFrame(boolean hardwareSrgbEncode) {
+        if (hardwareSrgbEncode) {
+            GL11.glClearColor(0.08f, 0.10f, 0.14f, 1.0f);
+        } else {
+            GL11.glClearColor(
+                    linearToSrgb(0.08f),
+                    linearToSrgb(0.10f),
+                    linearToSrgb(0.14f),
+                    1.0f);
+        }
         GL11.glClearDepth(1.0d);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+    }
+
+    @Override
+    public void setManualSrgbEncode(int program, boolean enabled) {
+        GL41.glProgramUniform1i(program, 0, enabled ? 1 : 0);
     }
 
     @Override
@@ -84,5 +107,11 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     @Override
     public void useDefaultProgram() {
         GL20.glUseProgram(0);
+    }
+
+    private static float linearToSrgb(float linear) {
+        return linear <= 0.0031308f
+                ? linear * 12.92f
+                : 1.055f * (float) Math.pow(linear, 1.0 / 2.4) - 0.055f;
     }
 }

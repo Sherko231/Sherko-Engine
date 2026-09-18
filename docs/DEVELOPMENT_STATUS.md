@@ -80,4 +80,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Close the P5-T07 / #189 handoff after this Markdown-only reconciliation is merged, then treat P5-T08 / #190 as the next planned task only. Before activating P5-T08, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull arbitrary mesh/assets, materials, lighting, world/ECS, physics, or later renderer work forward.
+P5-T07 / #189 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull arbitrary mesh/assets, materials, lighting, world/ECS, physics, or later renderer work forward.

@@ -101,7 +101,8 @@ class IndexedStaticMeshNativeTest {
             registry.assertNoOpenResources();
         } finally {
             if (query != 0) {
-                attemptCleanup(() -> GL15.glDeleteQueries(query));
+                int queryToDelete = query;
+                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
             }
             if (!closed) {
                 if (started && !stopped) {

@@ -359,6 +359,40 @@ class GlfwWindowTest {
     }
 
     @Test
+    void exposesStableGuardBoundToTheWindowLifecycleOwner() throws Exception {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        OpenGlThreadGuard guard = window.openGlThreadGuard();
+
+        assertSame(guard, window.openGlThreadGuard());
+        assertThrows(IllegalStateException.class, guard::assertOwnerThread);
+
+        window.initialize();
+        guard.assertOwnerThread();
+
+        int traceSize = backend.trace.size();
+        AtomicReference<Throwable> workerFailure = new AtomicReference<>();
+        Thread worker = Thread.ofPlatform().start(() -> {
+            try {
+                guard.assertOwnerThread();
+                backend.glVersion();
+            } catch (Throwable failure) {
+                workerFailure.set(failure);
+            }
+        });
+        worker.join(5_000L);
+
+        assertTrue(workerFailure.get() instanceof IllegalStateException);
+        assertEquals(traceSize, backend.trace.size());
+
+        window.start();
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
     void pollEventsRequiresStartedOwnerThreadAndNeverPollsWhenIllegal() throws Exception {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();

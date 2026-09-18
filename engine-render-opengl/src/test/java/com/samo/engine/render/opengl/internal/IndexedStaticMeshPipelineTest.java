@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL21;
 
 class IndexedStaticMeshPipelineTest {
     @Test
@@ -66,7 +68,8 @@ class IndexedStaticMeshPipelineTest {
                 "viewport:800x600",
                 "state:depth-less:cull-back:front-ccw",
                 "srgb:true",
-                "clear",
+                "clear:true",
+                "manual-srgb:203:false",
                 "texture:0:301:401",
                 "program:203",
                 "vao:101",
@@ -85,6 +88,45 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(1, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
+    }
+
+    @Test
+    void linearDefaultFramebufferUsesSingleManualSrgbEncode() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        draw.defaultFramebufferEncoding = GL11.GL_LINEAR;
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+        draw.trace.clear();
+        resources.uploads.clear();
+
+        pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
+
+        assertEquals(List.of(
+                "viewport:800x600",
+                "state:depth-less:cull-back:front-ccw",
+                "srgb:false",
+                "clear:false",
+                "manual-srgb:203:true",
+                "texture:0:301:401",
+                "program:203",
+                "vao:101",
+                "draw:triangles:3:uint:0",
+                "vao:0",
+                "program:0",
+                "texture:0:0:0",
+                "srgb:false"), draw.trace);
+
+        pipeline.close();
+        registry.assertNoOpenResources();
     }
 
     @Test
@@ -280,6 +322,7 @@ class IndexedStaticMeshPipelineTest {
     private static final class FakeDrawBackend implements OpenGlDrawBackend {
         private final List<String> trace = new ArrayList<>();
         private RuntimeException drawFailure;
+        private int defaultFramebufferEncoding = GL21.GL_SRGB;
 
         @Override
         public void configurePositionAttribute(int vertexArray, int vertexBuffer) {
@@ -307,13 +350,23 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
+        public int defaultFramebufferColorEncoding() {
+            return defaultFramebufferEncoding;
+        }
+
+        @Override
         public void setFramebufferSrgbEnabled(boolean enabled) {
             trace.add("srgb:" + enabled);
         }
 
         @Override
-        public void clearFrame() {
-            trace.add("clear");
+        public void clearFrame(boolean hardwareSrgbEncode) {
+            trace.add("clear:" + hardwareSrgbEncode);
+        }
+
+        @Override
+        public void setManualSrgbEncode(int program, boolean enabled) {
+            trace.add("manual-srgb:" + program + ":" + enabled);
         }
 
         @Override

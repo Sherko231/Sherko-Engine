@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
-import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -71,11 +70,6 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         }
         GL11.glClearDepth(1.0d);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-    }
-
-    @Override
-    public void setManualSrgbEncode(int program, boolean enabled) {
-        GL41.glProgramUniform1i(program, 0, enabled ? 1 : 0);
     }
 
     @Override

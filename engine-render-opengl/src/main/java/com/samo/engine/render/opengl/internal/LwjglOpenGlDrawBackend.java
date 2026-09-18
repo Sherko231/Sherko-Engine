@@ -40,10 +40,25 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
+    public void setFramebufferSrgbEnabled(boolean enabled) {
+        if (enabled) {
+            GL11.glEnable(GL30.GL_FRAMEBUFFER_SRGB);
+        } else {
+            GL11.glDisable(GL30.GL_FRAMEBUFFER_SRGB);
+        }
+    }
+
+    @Override
     public void clearFrame() {
         GL11.glClearColor(0.08f, 0.10f, 0.14f, 1.0f);
         GL11.glClearDepth(1.0d);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+    }
+
+    @Override
+    public void bindTextureAndSampler(int unit, int texture, int sampler) {
+        GL45.glBindTextureUnit(unit, texture);
+        org.lwjgl.opengl.GL33.glBindSampler(unit, sampler);
     }
 
     @Override

@@ -66,7 +66,7 @@ The branch now contains `P5HardwareBaselineSpike` plus `:feasibility-spikes:runP
 
 The benchmark requires a clean Git checkout and an independently verified exact VRAM value. The report records repository SHA, clean-checkout status, Java version, Windows caption/version/build, CPU/RAM, Windows video-controller vendor/driver/PNP metadata, supplied exact VRAM, primary display mode, OpenGL vendor/version/renderer, fixed workload constants, mean/median/p95/p99/max synchronized frame time, and derived mean/p95 FPS. The report path is `build/spikes/p5-hardware-baseline/p5-t00-hardware-baseline.txt`.
 
-No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged until a representative Windows x64 candidate machine other than the high-end development machine produces a qualifying retained report.
+No hardware baseline has been accepted yet. `ENGINE_SCOPE.md` remains unchanged until a representative Windows x64 candidate machine other than the high-end development machine produces a qualifying retained report. Draft PR #200 also carries a branch-scoped two-slot Windows evidence job authorized by Issue #182; its artifacts are diagnostic until the runner hardware is shown to be representative.
 
 ## Open gates and blockers
 

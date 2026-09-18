@@ -13,7 +13,8 @@ import org.joml.Matrix4fc;
  * Minimal production OpenGL renderer composition for the fixed indexed reference mesh.
  *
  * <p>The current internal path samples one renderer-owned sRGB reference texture and writes linear
- * shader output through one default-framebuffer sRGB encode. This API intentionally does not expose
+ * shader output through exactly one presentation sRGB encode, using hardware when the default buffer
+ * is sRGB or an internal fallback when it is linear. This API intentionally does not expose
  * native handles, arbitrary meshes or textures, materials, world submission, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {

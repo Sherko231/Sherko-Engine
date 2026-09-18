@@ -30,7 +30,7 @@ The Java 25 multi-project foundation declares all 16 production-target modules p
 
 Phase 4 completed through P4-T09 / Issue #102 / PR #179. P4-T08 was intentionally executed before P4-T07 so screen-to-world ray construction consumed an accepted view/projection convention. The Phase 4 exit gate is satisfied: the spatial test surface lives in pure-Java/JOML `engine-core`, with no OpenGL or Jolt dependency, and passed on the exact repository tree merged by PR #179.
 
-Phase 5 — Rendering foundation is now the current M2 focus. P5-T00 is the mandatory first executable task: select and document exact minimum/reference Windows CPU, GPU, driver floor, RAM, and VRAM from a representative benchmark. `ENGINE_SCOPE.md` requires that baseline before renderer implementation starts, so P5-T01 through P5-T17 remain blocked until P5-T00 is accepted.
+Phase 5 — Rendering foundation is now the current M2 focus. P5-T01 is the first executable renderer task. The roadmap keeps 1080p60 as the initial performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current gate and must not be claimed without separate future evidence.
 
 `game-sandbox` is a persistent cumulative playground rather than a disposable feature demo. Capabilities that are meaningfully usable through already-authorized public production APIs should be integrated into that same sandbox experience as they land; features that cannot yet be exposed honestly remain out until their required public boundary exists.
 

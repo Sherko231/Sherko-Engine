@@ -8,6 +8,7 @@ import com.samo.engine.core.api.InputResponseSettings;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.core.api.PlayerInputCommand;
 import com.samo.engine.platform.api.GlfwWindow;
+import com.samo.engine.platform.api.OpenGlDebugMode;
 import com.samo.engine.platform.api.InputAction;
 import com.samo.engine.platform.api.InputActionBindings;
 import com.samo.engine.platform.api.InputActionEvaluator;
@@ -78,7 +79,8 @@ public final class SandboxMain {
                 "Sherko Engine Sandbox",
                 logger,
                 nativeResources,
-                sizeListener);
+                sizeListener,
+                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
         Throwable primaryFailure = null;

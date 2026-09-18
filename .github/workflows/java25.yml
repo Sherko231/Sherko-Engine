@@ -296,6 +296,21 @@ jobs:
             engine-platform-lwjgl/build/reports/p3/p3-t05-mouse-motion.txt
           if-no-files-found: error
 
+      - name: Verify P5-T01 OpenGL debug callback
+        env:
+          SHERKO_P5_T01_NATIVE: "true"
+        run: .\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowDebugNativeTest" --rerun-tasks
+
+      - name: Upload P5-T01 OpenGL debug evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t01-opengl-debug
+          path: |
+            engine-platform-lwjgl/build/test-results/test/TEST-com.samo.engine.platform.api.GlfwWindowDebugNativeTest.xml
+            engine-platform-lwjgl/build/reports/p5/p5-t01-opengl-debug.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

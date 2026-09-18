@@ -33,6 +33,7 @@ Normal input bindings remain active at the same time: W/A/S/D, mouse movement, S
 The current playground keeps these capabilities active together rather than showing them one by one:
 
 - production `GlfwWindow` / OpenGL 4.6 startup through the public engine API;
+- explicit `OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY` diagnostics, so a high-severity driver message fails at the owner-thread `pollEvents()` boundary instead of being ignored;
 - logical window size versus framebuffer pixel size notifications;
 - manual transitions among windowed, borderless fullscreen, and exclusive fullscreen on the same production window/context;
 - explicit cursor capture and the focus-loss safety rule: Alt+Tab releases effective capture and focus regain does not silently recapture;

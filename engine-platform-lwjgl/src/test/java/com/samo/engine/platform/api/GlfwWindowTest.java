@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL43;
 
 class GlfwWindowTest {
     @Test
@@ -34,7 +35,24 @@ class GlfwWindowTest {
         assertThrows(NullPointerException.class,
                 () -> new GlfwWindow(1280, 720, "window", logger, null, listener, backend));
         assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", logger, registry, null, backend));
+                () -> new GlfwWindow(
+                        1280,
+                        720,
+                        "window",
+                        logger,
+                        registry,
+                        (WindowSizeListener) null,
+                        backend));
+        assertThrows(NullPointerException.class,
+                () -> new GlfwWindow(
+                        1280,
+                        720,
+                        "window",
+                        logger,
+                        registry,
+                        listener,
+                        null,
+                        backend));
         assertEquals(List.of(), backend.trace);
     }
 
@@ -63,6 +81,151 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+    }
+
+    @Test
+    void debugModeRequestsDebugContextInstallsCallbackAndSurfacesHighSeverityOnce() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        List<EngineLogger.Event> events = new ArrayList<>();
+        GlfwWindow window = new GlfwWindow(
+                1280,
+                720,
+                "debug window",
+                new EngineLogger(events::add),
+                registry,
+                new RecordingSizeListener(),
+                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
+                backend);
+
+        window.initialize();
+        assertTrue(backend.trace.contains(hint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE)));
+        window.start();
+        assertTrue(backend.trace.contains("debug-context-query"));
+        assertTrue(backend.trace.contains("debug-callback-install"));
+
+        backend.emitDebug(
+                GL43.GL_DEBUG_SOURCE_API,
+                GL43.GL_DEBUG_TYPE_ERROR,
+                77,
+                GL43.GL_DEBUG_SEVERITY_HIGH,
+                "fixture invalid operation");
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, window::pollEvents);
+        assertTrue(failure.getMessage().contains("source=API"));
+        assertTrue(failure.getMessage().contains("type=ERROR"));
+        assertTrue(failure.getMessage().contains("severity=HIGH"));
+        assertTrue(failure.getMessage().contains("id=77"));
+        assertTrue(failure.getMessage().contains("fixture invalid operation"));
+
+        EngineLogger.Event debugEvent = events.getLast();
+        assertEquals(EngineLogger.Level.ERROR, debugEvent.level());
+        assertEquals(failure.getMessage(), debugEvent.message());
+
+        window.pollEvents();
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+
+        assertEquals(1, backend.debugReleaseCount);
+        assertTrue(backend.trace.indexOf("debug-callback-release")
+                < backend.trace.indexOf("context:0"));
+        assertTrue(backend.trace.indexOf("debug-callback-release")
+                < backend.trace.indexOf("capabilities-clear"));
+    }
+
+    @Test
+    void debugModeReportsNonHighSeverityWithoutFailing() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        List<EngineLogger.Event> events = new ArrayList<>();
+        GlfwWindow window = new GlfwWindow(
+                1280,
+                720,
+                "debug window",
+                new EngineLogger(events::add),
+                registry,
+                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
+                backend);
+
+        window.initialize();
+        window.start();
+        backend.emitDebug(
+                GL43.GL_DEBUG_SOURCE_APPLICATION,
+                GL43.GL_DEBUG_TYPE_PERFORMANCE,
+                12,
+                GL43.GL_DEBUG_SEVERITY_MEDIUM,
+                "fixture medium");
+
+        window.pollEvents();
+
+        EngineLogger.Event debugEvent = events.getLast();
+        assertEquals(EngineLogger.Level.WARN, debugEvent.level());
+        assertTrue(debugEvent.message().contains("source=APPLICATION"));
+        assertTrue(debugEvent.message().contains("type=PERFORMANCE"));
+        assertTrue(debugEvent.message().contains("severity=MEDIUM"));
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void enabledDebugModeRequiresActualDebugContextAndCleansFailedStart() {
+        FakeBackend backend = new FakeBackend();
+        backend.debugContext = false;
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = new GlfwWindow(
+                1280,
+                720,
+                "debug window",
+                new EngineLogger(event -> { }),
+                registry,
+                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
+                backend);
+        window.initialize();
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, window::start);
+
+        assertTrue(failure.getMessage().contains("debug context"));
+        assertEquals(0, backend.debugInstallCount);
+        assertTrue(backend.trace.contains("context:0"));
+        assertTrue(backend.trace.contains("capabilities-clear"));
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void debugCallbackLoggingFailureIsStagedInsteadOfEscapingCallback() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        RuntimeException loggingFailure = new IllegalStateException("debug log failed");
+        GlfwWindow window = new GlfwWindow(
+                1280,
+                720,
+                "debug window",
+                new EngineLogger(event -> {
+                    if (event.message().startsWith("OpenGL debug")) {
+                        throw loggingFailure;
+                    }
+                }),
+                registry,
+                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
+                backend);
+        window.initialize();
+        window.start();
+
+        backend.emitDebug(
+                GL43.GL_DEBUG_SOURCE_API,
+                GL43.GL_DEBUG_TYPE_PERFORMANCE,
+                3,
+                GL43.GL_DEBUG_SEVERITY_LOW,
+                "low message");
+
+        RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
+        assertSame(loggingFailure, actual);
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
     }
 
     @Test
@@ -686,11 +849,22 @@ class GlfwWindowTest {
         private RuntimeException sizeReleaseFailure;
         private RuntimeException hideFailure;
         private GlfwWindow.SizeEventSink sizeEventSink;
+        private GlfwWindow.DebugEventSink debugEventSink;
+        private boolean debugContext = true;
+        private int debugInstallCount;
+        private int debugReleaseCount;
         private int pollCount;
         private int sizeReleaseCount;
         private int modeTransitionCount;
         private int destroyCount;
         private int terminateCount;
+
+        void emitDebug(int source, int type, int id, int severity, String message) {
+            if (debugEventSink == null) {
+                throw new IllegalStateException("debug callback not installed");
+            }
+            debugEventSink.onMessage(source, type, id, severity, message);
+        }
 
         void queueLogicalSize(int width, int height) {
             queuedEvents.add(() -> sizeEventSink.onLogicalSize(width, height));
@@ -778,6 +952,27 @@ class GlfwWindowTest {
         @Override
         public String glRenderer() {
             return renderer;
+        }
+
+        @Override
+        public boolean openGlDebugContext() {
+            trace.add("debug-context-query");
+            return debugContext;
+        }
+
+        @Override
+        public GlfwWindow.DebugCallbackState installOpenGlDebugCallback(GlfwWindow.DebugEventSink sink) {
+            trace.add("debug-callback-install");
+            debugInstallCount++;
+            debugEventSink = sink;
+            return new GlfwWindow.DebugCallbackState(new Object());
+        }
+
+        @Override
+        public void releaseOpenGlDebugCallback(GlfwWindow.DebugCallbackState state) {
+            trace.add("debug-callback-release");
+            debugReleaseCount++;
+            debugEventSink = null;
         }
 
         @Override

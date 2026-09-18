@@ -70,6 +70,26 @@ final class LwjglOpenGlResourceBackend implements OpenGlResourceBackend {
     }
 
     @Override
+    public void allocateRgba8Texture(
+            int handle,
+            TextureColorEncoding colorEncoding,
+            int width,
+            int height,
+            java.nio.ByteBuffer rgbaBytes) {
+        GL45.glTextureStorage2D(handle, 1, colorEncoding.internalFormat(), width, height);
+        GL45.glTextureSubImage2D(
+                handle,
+                0,
+                0,
+                0,
+                width,
+                height,
+                org.lwjgl.opengl.GL11.GL_RGBA,
+                org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,
+                rgbaBytes);
+    }
+
+    @Override
     public int createSampler() {
         return GL33.glGenSamplers();
     }
@@ -77,6 +97,26 @@ final class LwjglOpenGlResourceBackend implements OpenGlResourceBackend {
     @Override
     public void deleteSampler(int handle) {
         GL33.glDeleteSamplers(handle);
+    }
+
+    @Override
+    public void configureLinearClampSampler(int handle) {
+        GL33.glSamplerParameteri(
+                handle,
+                org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER,
+                org.lwjgl.opengl.GL11.GL_LINEAR);
+        GL33.glSamplerParameteri(
+                handle,
+                org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER,
+                org.lwjgl.opengl.GL11.GL_LINEAR);
+        GL33.glSamplerParameteri(
+                handle,
+                org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S,
+                org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
+        GL33.glSamplerParameteri(
+                handle,
+                org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T,
+                org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
     }
 
     @Override

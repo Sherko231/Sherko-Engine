@@ -613,9 +613,9 @@ The canonical interactive owner run is:
 .\gradlew.bat :game-sandbox:runSandbox
 ```
 
-It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. The window remains visually empty until the real renderer exists. Do not add direct OpenGL/LWJGL calls, future gameplay camera/controller/UI/world/physics/network features, or public APIs solely to make the sandbox richer.
+It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. Since accepted P5-T07, the sandbox renders one white indexed triangle through the public `OpenGlRenderer` and presents it through `GlfwWindow.present()`. Do not add direct OpenGL/LWJGL calls, future gameplay camera/controller/UI/world/physics/network features, or public APIs solely to make the sandbox richer.
 
-`game-sandbox` uses `compileOnly(project(":engine-platform-lwjgl"))` for source compilation plus a dedicated resolvable/non-consumable `sandboxRuntime` used by `runSandbox` and the legacy alias. That platform dependency must not be published through runtime elements consumed by `game-server`. `verifyHeadlessServerRuntime` remains the explicit boundary check.
+`game-sandbox` uses `compileOnly` dependencies on `engine-platform-lwjgl` and `engine-render-opengl` for sandbox source compilation plus the dedicated resolvable/non-consumable `sandboxRuntime` used by `runSandbox` and the legacy alias. Those sandbox-only platform/renderer dependencies must not be published through runtime elements consumed by `game-server`. `verifyHeadlessServerRuntime` remains the explicit boundary check.
 
 No dependency/version change is expected from Issue #165; only the custom configuration/task naming changes. `resolveAndLockAllDependencies` must not introduce unrelated drift. The final candidate is non-Markdown and therefore requires the ordinary exact-head heavy five-job matrix, followed after merge by the lightweight exact-merge master verifier before Issue #165 closes.
 

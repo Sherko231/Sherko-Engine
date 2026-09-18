@@ -83,9 +83,9 @@ The Phase 4 exit gate also passes. The accepted candidate and merged master shar
 
 **Goal:** render a stable, inspectable 3D room without gameplay or physics dependencies, reaching a basic end-to-end room before visual polish.
 
-Phase 5 is ready to proceed because its required platform and spatial inputs are accepted. P5-T00 calibrates the currently available high-end development/reference machine and records that it does not establish the mainstream minimum hardware floor.
+Phase 5 is ready to proceed because its required platform and spatial inputs are accepted.
 
-P5-T01 through P5-T17 may proceed after P5-T00 is accepted and each task is freshly activated/refined against then-current `master`. Exact minimum CPU, GPU, driver floor, RAM, and VRAM selection is owned by the Phase 5 exit gate / Issue #201 and must be proven on real representative mainstream/mid-range Windows hardware before Phase 5 can be declared complete or minimum-hardware support can be claimed.
+P5-T01 is the first executable renderer-foundation task. P5-T01 through P5-T17 should each be freshly activated/refined against then-current `master` before implementation.
 
 After P5-T00, the phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
 

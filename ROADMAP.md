@@ -87,7 +87,7 @@ Phase 5 is ready to proceed because its required platform and spatial inputs are
 
 P5-T01 is the first executable renderer-foundation task. P5-T01 through P5-T17 should each be freshly activated/refined against then-current `master` before implementation.
 
-After P5-T00, the phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
+The phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
 
 Phase 5 exit gate remains the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish are deliberately not Phase 5 exit blockers.
 

@@ -2,6 +2,7 @@ package com.samo.engine.render.opengl.internal;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,6 +37,27 @@ class BoundedDynamicBufferUploaderTest {
 
         assertEquals(0, backend.createdBuffers);
         registry.assertNoOpenResources();
+    }
+
+    @Test
+    void creationRollbackKeepsSameThrowablePrimaryWithoutSelfSuppression() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeBackend backend = new FakeBackend();
+        RuntimeException primary = new IllegalStateException("shared allocation/delete failure");
+        backend.allocationFailure = primary;
+        backend.bufferDeleteFailure = primary;
+
+        RuntimeException actual = assertThrows(
+                RuntimeException.class,
+                () -> BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend));
+
+        assertSame(primary, actual);
+        assertEquals(0, actual.getSuppressed().length);
+        assertEquals(1, backend.deletedBuffers);
+        IllegalStateException registryFailure =
+                assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
+        assertTrue(registryFailure.getMessage().contains("CLOSE_FAILED"));
     }
 
     @Test
@@ -163,6 +185,33 @@ class BoundedDynamicBufferUploaderTest {
     }
 
     @Test
+    void fenceRegistrationRollbackKeepsDistinctDeleteFailureSuppressed() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeBackend backend = new FakeBackend();
+        backend.nextFence = 100L;
+        RuntimeException cleanupFailure = new IllegalStateException("fence delete failed");
+        backend.fenceDeleteFailure = cleanupFailure;
+        NativeResourceRegistry.Registration duplicate =
+                registry.register("OpenGL sync", 100L, () -> { });
+
+        try (BoundedDynamicBufferUploader uploader =
+                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+            BoundedDynamicBufferUploader.Slice slice = uploader.upload(bytes(1));
+
+            RuntimeException actual =
+                    assertThrows(RuntimeException.class, () -> uploader.markSubmitted(slice));
+
+            assertSame(cleanupFailure, actual.getSuppressed()[0]);
+            assertEquals(1, actual.getSuppressed().length);
+            assertEquals(1, backend.deletedFences);
+        } finally {
+            duplicate.close();
+        }
+        registry.assertNoOpenResources();
+    }
+
+    @Test
     void wrongThreadOperationsRejectBeforeBackendMutationAndOwnerCanContinue() throws Exception {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -257,6 +306,9 @@ class BoundedDynamicBufferUploaderTest {
         private int createdFences;
         private int deletedFences;
         private long allocatedCapacity;
+        private RuntimeException allocationFailure;
+        private RuntimeException bufferDeleteFailure;
+        private RuntimeException fenceDeleteFailure;
         private FenceStatus fenceStatus = FenceStatus.SIGNALED;
         private final Map<Long, byte[]> uploads = new HashMap<>();
 
@@ -269,11 +321,17 @@ class BoundedDynamicBufferUploaderTest {
         @Override
         public void deleteBuffer(int handle) {
             deletedBuffers++;
+            if (bufferDeleteFailure != null) {
+                throw bufferDeleteFailure;
+            }
         }
 
         @Override
         public void allocateDynamicBufferStorage(int handle, long capacityBytes) {
             allocatedCapacity = capacityBytes;
+            if (allocationFailure != null) {
+                throw allocationFailure;
+            }
         }
 
         @Override
@@ -299,6 +357,9 @@ class BoundedDynamicBufferUploaderTest {
         @Override
         public void deleteFence(long fenceHandle) {
             deletedFences++;
+            if (fenceDeleteFailure != null) {
+                throw fenceDeleteFailure;
+            }
         }
 
         @Override

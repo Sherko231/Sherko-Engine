@@ -45,7 +45,7 @@ final class OwnedOpenGlHandle implements AutoCloseable {
             try {
                 nativeDeleter.accept(handle);
             } catch (RuntimeException | Error cleanupFailure) {
-                failure.addSuppressed(cleanupFailure);
+                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
             }
             throw failure;
         }

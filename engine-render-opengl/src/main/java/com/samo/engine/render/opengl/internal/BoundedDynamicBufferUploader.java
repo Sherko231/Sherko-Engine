@@ -120,7 +120,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             try {
                 buffer.close();
             } catch (RuntimeException | Error cleanupFailure) {
-                failure.addSuppressed(cleanupFailure);
+                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
             }
             throw failure;
         }
@@ -188,7 +188,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             try {
                 backend.deleteFence(fenceHandle);
             } catch (RuntimeException | Error cleanupFailure) {
-                failure.addSuppressed(cleanupFailure);
+                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
             }
             throw failure;
         }

@@ -75,6 +75,7 @@ class GlfwWindowTest {
                 hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6),
                 hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE),
                 hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
+                hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE),
                 hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE),
                 hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE),
                 "create:1280x720:  title  "), backend.trace);
@@ -257,6 +258,7 @@ class GlfwWindowTest {
                 hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6),
                 hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE),
                 hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
+                hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE),
                 hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE),
                 hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE),
                 "create:1280x720:  title  ",

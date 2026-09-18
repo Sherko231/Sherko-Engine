@@ -17,6 +17,17 @@ final class OpenGlProgram implements AutoCloseable {
             OpenGlThreadGuard guard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend backend) {
+        return link("<program>", vertexShader, fragmentShader, guard, registry, backend);
+    }
+
+    static OpenGlProgram link(
+            String programLabel,
+            OpenGlShader vertexShader,
+            OpenGlShader fragmentShader,
+            OpenGlThreadGuard guard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend backend) {
+        String label = Objects.requireNonNull(programLabel, "programLabel");
         OpenGlShader vertex = Objects.requireNonNull(vertexShader, "vertexShader");
         OpenGlShader fragment = Objects.requireNonNull(fragmentShader, "fragmentShader");
         guard.assertOwnerThread();
@@ -35,7 +46,8 @@ final class OpenGlProgram implements AutoCloseable {
             fragmentAttached = true;
             backend.linkProgram(handle);
             if (!backend.programLinkSucceeded(handle)) {
-                throw new IllegalStateException("OpenGL program link failed: " + backend.programInfoLog(handle));
+                throw new IllegalStateException(
+                        "OpenGL program link failed for " + label + ": " + backend.programInfoLog(handle));
             }
             backend.detachShader(handle, vertex.handle());
             vertexAttached = false;

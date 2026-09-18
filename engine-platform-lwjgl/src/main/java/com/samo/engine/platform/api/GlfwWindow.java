@@ -198,6 +198,15 @@ public final class GlfwWindow extends EngineSubsystem {
         return openGlThreadGuard;
     }
 
+    /** Presents the current OpenGL back buffer for this started window. */
+    public void present() {
+        if (!eventPollingEnabled) {
+            throw new IllegalStateException("GLFW presentation requires a started window");
+        }
+        requireOwnerThread();
+        backend.swapBuffers(windowHandle);
+    }
+
     public void pollEvents() {
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW event polling requires a started window");
@@ -1419,6 +1428,8 @@ public final class GlfwWindow extends EngineSubsystem {
                 int height,
                 int refreshRate);
 
+        void swapBuffers(long handle);
+
         void pollEvents();
 
         void showWindow(long handle);
@@ -1781,6 +1792,11 @@ public final class GlfwWindow extends EngineSubsystem {
                 int height,
                 int refreshRate) {
             GLFW.glfwSetWindowMonitor(handle, monitor, x, y, width, height, refreshRate);
+        }
+
+        @Override
+        public void swapBuffers(long handle) {
+            GLFW.glfwSwapBuffers(handle);
         }
 
         @Override

@@ -233,6 +233,45 @@ class GlfwWindowFocusTest {
     }
 
     @Test
+    void closeRetriesCursorNormalizationAfterStopFailure() {
+        FocusBackend backend = new FocusBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry);
+        window.initialize();
+        window.start();
+        window.setCursorCaptured(true);
+
+        RuntimeException releaseFailure = new IllegalStateException("cursor release failed");
+        backend.cursorFailure = releaseFailure;
+        backend.queueFocus(false);
+
+        RuntimeException pollFailure = assertThrows(RuntimeException.class, window::pollEvents);
+        assertSame(releaseFailure, pollFailure);
+        assertFalse(window.isCursorEffectivelyCapturedForTest());
+
+        RuntimeException stopFailure = assertThrows(RuntimeException.class, window::stop);
+        assertSame(releaseFailure, stopFailure);
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+
+        backend.cursorFailure = null;
+        window.close();
+
+        assertEquals(
+                List.of(
+                        GLFW.GLFW_CURSOR_DISABLED,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL,
+                        GLFW.GLFW_CURSOR_NORMAL),
+                backend.cursorModes);
+        registry.assertNoOpenResources();
+    }
+
+    @Test
     void inputCallbackInstallFailureCleansEarlierStartedState() {
         FocusBackend backend = new FocusBackend();
         RuntimeException failure = new IllegalStateException("input callback install failed");

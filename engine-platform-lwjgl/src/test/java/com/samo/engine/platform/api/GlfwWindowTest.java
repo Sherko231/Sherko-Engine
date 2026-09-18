@@ -9,6 +9,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.glfw.GLFW;
@@ -371,12 +372,12 @@ class GlfwWindowTest {
         window.initialize();
         guard.assertOwnerThread();
 
-        int traceSize = backend.trace.size();
+        AtomicBoolean gpuActionEntered = new AtomicBoolean();
         AtomicReference<Throwable> workerFailure = new AtomicReference<>();
         Thread worker = Thread.ofPlatform().start(() -> {
             try {
                 guard.assertOwnerThread();
-                backend.glVersion();
+                gpuActionEntered.set(true);
             } catch (Throwable failure) {
                 workerFailure.set(failure);
             }
@@ -384,7 +385,7 @@ class GlfwWindowTest {
         worker.join(5_000L);
 
         assertTrue(workerFailure.get() instanceof IllegalStateException);
-        assertEquals(traceSize, backend.trace.size());
+        assertTrue(!gpuActionEntered.get());
 
         window.start();
         window.stop();

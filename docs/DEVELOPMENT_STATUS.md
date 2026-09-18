@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T07A / Issue #213 — repair public renderer module boundary; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | None — P5-T07A / Issue #213 is accepted; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -66,7 +66,9 @@ P5-T05 / #187 is accepted. PR #208 final head `a1fa179bc5daab0345ebfb32f3d62ed66
 
 P5-T06 / #188 is accepted. PR #209 final head `a28d76fbb83df3ec7a80c9b345c67c0f1bce6d8e` passed all five heavy CI jobs in run #362 / `35339837097`, merged as `cd49273608344e1bdf0d23698591ab516d049fc8`, and exact-merge Lightweight verification passed in run #363 / `35340897864`.
 
-P5-T07 / #189 is accepted. PR #210 final head `18e364f1bdf39d2808f7bdef15fe5b866fff2ebc` passed the required five-job final-candidate CI in run #366 / `35349866530`, including the retained Windows indexed-draw primitive-count/PNG evidence. It merged as `617d0b961d9eb84dcc118a49e8a84cf83092927d`, and exact merged `master` passed Lightweight master verification in run #367 / `35350927079`. The accepted task provides public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
+P5-T07 / #189 is accepted. PR #210 final head `18e364f1bdf39d2808f7bdef15fe5b866fff2ebc` passed the required five-job final-candidate CI in run #366 / `35349866530`, including the retained Windows indexed-draw primitive-count/PNG evidence. It merged as `617d0b961d9eb84dcc118a49e8a84cf83092927d`, and exact merged `master` passed Lightweight master verification in run #367 / `35350927079`. The accepted task provides public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, retained Windows primitive-count/PNG evidence, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
+
+P5-T07A / #213 is accepted. PR #214 final head `15352732cf7f93edf04f6d1059060c6570bc935e` passed the required five-job final-candidate CI in run #372 / `35358518445`; the Windows native job was retried without changing the candidate after its first attempt was cancelled during the existing P5-T07 indexed-draw step, and the retry completed successfully. PR #214 merged as `3e3487e7edaa2f4f308e8d2588387a15ee76877e`, and exact merged `master` passed Lightweight master verification in run #373 / `35359739592`. D-055 now exposes the `OpenGlRenderer` signature dependencies through Gradle API metadata while the renderer compile variant exposes only `com.samo.engine.render.api`; the runtime artifact remains complete. No renderer public signature, module edge, native ownership/thread-affinity behavior, or P5-T08+ feature changed.
 
 ## Open gates and blockers
 
@@ -80,4 +82,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Complete P5-T07A / #213 on branch `fix/p5-t07a-renderer-public-boundary`: verify renderer-only consumer compilation, API/runtime artifact separation, existing P5-T07 renderer behavior, architecture boundaries, dependency locks, and the normal five-job final candidate. After merge, require exact merged-master Lightweight verification before closing #213. P5-T08 / #190 remains PLANNED and must not be activated in this task.
+P5-T07A / #213 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull materials, arbitrary meshes/assets, render packets, culling/sorting, lighting, world/ECS, performance work, or other later renderer tasks forward.

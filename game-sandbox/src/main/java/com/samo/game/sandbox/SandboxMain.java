@@ -5,6 +5,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.FixedStepAccumulator;
 import com.samo.engine.core.api.FixedStepCatchUpPolicy;
 import com.samo.engine.core.api.InputResponseSettings;
+import com.samo.engine.core.api.CameraMatrices;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.core.api.PlayerInputCommand;
 import com.samo.engine.platform.api.GlfwWindow;
@@ -19,6 +20,7 @@ import com.samo.engine.platform.api.InputSnapshot;
 import com.samo.engine.platform.api.PlayerInputCommandSampler;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
+import com.samo.engine.render.api.OpenGlRenderer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,6 +28,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.EnumSet;
 import java.util.Objects;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 /** Persistent owner-facing Sherko Engine playground using public production APIs only. */
 public final class SandboxMain {
@@ -58,6 +62,7 @@ public final class SandboxMain {
             }
         });
         NativeResourceRegistry nativeResources = new NativeResourceRegistry();
+        SandboxFramebufferSize framebufferSize = new SandboxFramebufferSize(1280, 720);
         InputResponseSettings responseSettings = InputResponseSettings.defaults();
         InputActionEvaluator actionEvaluator = new InputActionEvaluator(loadSandboxBindings(), responseSettings);
         PlayerInputCommandSampler commandSampler = new PlayerInputCommandSampler();
@@ -69,6 +74,7 @@ public final class SandboxMain {
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+                framebufferSize.update(width, height);
                 log(logger, EngineLogger.Level.INFO, "Framebuffer size changed to %dx%d".formatted(width, height));
             }
         };
@@ -83,12 +89,21 @@ public final class SandboxMain {
                 OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
+        OpenGlRenderer renderer = null;
         Throwable primaryFailure = null;
         try {
             window.initialize();
             window.start();
             started = true;
-            runSandbox(window, logger, actionEvaluator, commandSampler, responseSettings);
+            renderer = OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources);
+            runSandbox(
+                    window,
+                    renderer,
+                    framebufferSize,
+                    logger,
+                    actionEvaluator,
+                    commandSampler,
+                    responseSettings);
         } catch (InterruptedException failure) {
             primaryFailure = failure;
             Thread.currentThread().interrupt();
@@ -97,12 +112,14 @@ public final class SandboxMain {
             primaryFailure = failure;
             throw failure;
         } finally {
-            cleanup(window, nativeResources, logger, started, primaryFailure);
+            cleanup(window, renderer, nativeResources, logger, started, primaryFailure);
         }
     }
 
     private static void runSandbox(
             GlfwWindow window,
+            OpenGlRenderer renderer,
+            SandboxFramebufferSize framebufferSize,
             EngineLogger logger,
             InputActionEvaluator actionEvaluator,
             PlayerInputCommandSampler commandSampler,
@@ -122,6 +139,12 @@ public final class SandboxMain {
         InputResponseSettings responseSettings = initialResponseSettings;
         int sensitivityIndex = indexOfSensitivity(responseSettings.mouseSensitivity());
         boolean exitRequested = false;
+        Matrix4f view = CameraMatrices.view(
+                new Vector3f(0.0f, 0.0f, 2.0f),
+                new Vector3f(0.0f, 0.0f, -1.0f),
+                new Vector3f(0.0f, 1.0f, 0.0f),
+                new Matrix4f());
+        Matrix4f projection = new Matrix4f();
 
         clock.sampleElapsedNanos();
         while (!exitRequested) {
@@ -193,6 +216,22 @@ public final class SandboxMain {
                 latestCommand = commandSampler.nextCommand(cumulativeTicks + offset);
             }
             cumulativeTicks += dueTicks;
+
+            if (!exitRequested && framebufferSize.width() > 0 && framebufferSize.height() > 0) {
+                float aspectRatio = (float) framebufferSize.width() / framebufferSize.height();
+                CameraMatrices.perspective(
+                        (float) Math.toRadians(70.0),
+                        aspectRatio,
+                        0.1f,
+                        100.0f,
+                        projection);
+                renderer.render(
+                        view,
+                        projection,
+                        framebufferSize.width(),
+                        framebufferSize.height());
+                window.present();
+            }
 
             if (elapsedSandboxNanos >= nextDiagnosticNanos) {
                 InputActionState move = latestActions.state(InputAction.MOVE);
@@ -290,12 +329,16 @@ public final class SandboxMain {
 
     private static void cleanup(
             GlfwWindow window,
+            OpenGlRenderer renderer,
             NativeResourceRegistry nativeResources,
             EngineLogger logger,
             boolean started,
             Throwable primaryFailure) {
         Throwable cleanupFailure = null;
 
+        if (renderer != null) {
+            cleanupFailure = attempt(cleanupFailure, renderer::close);
+        }
         if (started) {
             cleanupFailure = attempt(cleanupFailure, () -> window.setCursorCaptured(false));
             cleanupFailure = attempt(cleanupFailure, () -> window.setWindowMode(WindowMode.WINDOWED));
@@ -361,7 +404,7 @@ public final class SandboxMain {
     private static void printControls() {
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
-        System.out.println("The window remains visually empty until production renderer work exists.");
+        System.out.println("The production renderer draws one indexed white triangle on a dark background.");
         System.out.println();
         System.out.println("Owner controls:");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");
@@ -372,5 +415,28 @@ public final class SandboxMain {
         System.out.println();
         System.out.println("Gameplay/input bindings remain active at the same time: W/A/S/D, mouse, Space, E, mouse buttons, etc.");
         System.out.println();
+    }
+
+    private static final class SandboxFramebufferSize {
+        private int width;
+        private int height;
+
+        private SandboxFramebufferSize(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        void update(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        int width() {
+            return width;
+        }
+
+        int height() {
+            return height;
+        }
     }
 }

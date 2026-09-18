@@ -17,6 +17,10 @@ final class OpenGlVertexArray implements AutoCloseable {
                 "OpenGL vertex array", handle, guard, registry, backend::deleteVertexArray));
     }
 
+    int handle() {
+        return owned.handle();
+    }
+
     @Override
     public void close() {
         owned.close();

@@ -101,7 +101,7 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 | Type | Purpose |
 | --- | --- |
-| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, optional OpenGL debug diagnostics, owner-thread event polling, size delivery, display-mode transitions, focus-safe cursor capture, and renderer-frame hardware snapshot production. |
+| `GlfwWindow` | Owns one production GLFW/OpenGL 4.6 window/context lifetime, optional OpenGL debug diagnostics, owner-thread event polling/presentation, size delivery, display-mode transitions, focus-safe cursor capture, and renderer-frame hardware snapshot production. |
 | `OpenGlDebugMode` | Explicit per-window debug policy; default `DISABLED`, optional `FAIL_ON_HIGH_SEVERITY` for development/test diagnostics. |
 | `OpenGlThreadGuard` | Stable non-owning OpenGL thread-affinity guard; future GPU-facing wrappers call `assertOwnerThread()` before native OpenGL entry. |
 | `WindowSizeListener` | Renderer-neutral receiver that keeps logical window dimensions separate from framebuffer pixel dimensions. |
@@ -132,9 +132,21 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 `PlayerInputCommandSampler.submit(InputActionSnapshot)` retains latest MOVE/digital level state, accumulates LOOK deltas, and OR-retains pending digital pressed/released edges until `nextCommand(long tickId)` emits them. When multiple ticks occur without another submitted renderer frame, later commands repeat latest level state but emit zero LOOK and no repeated edges.
 
-`GlfwWindow` intentionally exposes no raw GLFW/OpenGL callback or window/monitor handle, buffer-swap API, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller capture API, or content-scale callback API. P3-T10 defines controller response math only; controller discovery/polling/vocabulary/bindings remain unimplemented.
+`GlfwWindow` intentionally exposes no raw GLFW/OpenGL callback or window/monitor handle, monitor-selection/custom-video-mode API, public raw-mouse toggle, controller capture API, or content-scale callback API. `present()` is the only public buffer-swap boundary and does not expose the native window handle. P3-T10 defines controller response math only; controller discovery/polling/vocabulary/bindings remain unimplemented.
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick commands](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
+
+## `engine-render-opengl` — `com.samo.engine.render.api`
+
+| Type | Purpose |
+| --- | --- |
+| `OpenGlRenderer` | First bounded production OpenGL renderer composition: owns one known indexed triangle, accepted shaders/uniform blocks, explicit depth/back-face-cull state, and one indexed draw per `render(...)` call. |
+
+`OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources)` requires an already-started production OpenGL context on the owner thread. `render(view, projection, framebufferWidth, framebufferHeight)` consumes caller-supplied D-041/D-045 matrices and positive framebuffer pixel dimensions. The renderer exposes no native handles, arbitrary mesh API, asset loading, materials, lighting, world/ECS submission, or sRGB policy.
+
+Presentation is separate and platform-owned: call `GlfwWindow.present()` after rendering.
+
+Usage: [OpenGL renderer](RENDERER/OPENGL_RENDERER.md).
 
 ## Not an engine-consumer API
 

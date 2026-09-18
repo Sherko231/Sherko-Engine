@@ -447,6 +447,10 @@ class GlfwWindowInputSnapshotTest {
         }
 
         @Override
+        public void swapBuffers(long handle) {
+        }
+
+        @Override
         public void pollEvents() {
             pollCount++;
             List<Runnable> events = List.copyOf(queuedEvents);

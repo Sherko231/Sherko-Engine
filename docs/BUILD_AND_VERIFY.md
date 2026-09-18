@@ -864,6 +864,47 @@ The native test compiles/links the committed shader pair, reflects exact block s
 
 This proves the uniform-block ABI/reflection contract only. It does not establish a UBO allocator, world camera ownership, material blocks, or draw correctness.
 
+## P5-T07 first indexed static mesh verification
+
+Issue #189 introduces the first public production renderer path and window-owned presentation.
+
+Focused deterministic tests:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+```
+
+The renderer test verifies exact one-time VAO/VBO/EBO/UBO setup, camera/per-frame binding indices 0/1, full-framebuffer viewport, depth `GL_LESS`, back-face culling, CCW front faces, exactly one indexed triangle draw, wrong-thread/invalid-frame rejection before draw mutation, idempotent close, and partial-creation cleanup.
+
+The committed shaders must continue to pass P5-T05 offline validation:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+```
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T07_NATIVE="true"
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshNativeTest" --rerun-tasks
+```
+
+The native test renders through public `OpenGlRenderer`, requires exactly one generated primitive through an OpenGL pipeline query, polls the production debug window after the draw so staged high-severity errors surface, reads back the default back buffer, retains a PNG with visible triangle pixels, presents through `GlfwWindow.present()`, verifies cleanup, and writes:
+
+- `engine-render-opengl/build/reports/p5/p5-t07-indexed-mesh.txt`
+- `engine-render-opengl/build/reports/p5/p5-t07-indexed-mesh.png`
+
+This is the authorized equivalent retained capture for P5-T07. It proves only the first indexed production draw; it does not establish sRGB correctness, arbitrary mesh loading, materials, lighting, world/ECS submission, or performance.
+
+Owner-visible sandbox:
+
+```powershell
+.\gradlew.bat :game-sandbox:runSandbox
+```
+
+The persistent sandbox should show one white indexed triangle on a dark background while preserving the existing controls.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

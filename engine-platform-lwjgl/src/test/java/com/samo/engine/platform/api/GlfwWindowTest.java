@@ -1,6 +1,7 @@
 package com.samo.engine.platform.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -785,6 +786,66 @@ class GlfwWindowTest {
         assertEquals(1, backend.destroyCount);
     }
 
+    @Test
+    void presentRequiresStartedWindow() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, window::present);
+
+        assertTrue(failure.getMessage().contains("started window"));
+        assertFalse(backend.trace.contains("swap:101"));
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void presentSwapsOwnedWindowOnOwnerThread() {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+
+        window.present();
+
+        assertTrue(backend.trace.contains("swap:101"));
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void wrongThreadPresentRejectsBeforeSwapAndOwnerCanStillPresent() throws Exception {
+        FakeBackend backend = new FakeBackend();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        GlfwWindow window = window(backend, registry, new ArrayList<>());
+        window.initialize();
+        window.start();
+        AtomicReference<Throwable> result = new AtomicReference<>();
+
+        Thread worker = Thread.ofPlatform().start(() -> {
+            try {
+                window.present();
+            } catch (Throwable failure) {
+                result.set(failure);
+            }
+        });
+        worker.join(5_000L);
+
+        assertTrue(result.get() instanceof IllegalStateException);
+        assertFalse(backend.trace.contains("swap:101"));
+
+        window.present();
+        assertTrue(backend.trace.contains("swap:101"));
+
+        window.stop();
+        window.close();
+        registry.assertNoOpenResources();
+    }
+
     private static void verifyLoggingFailure(Throwable loggingFailure) {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -1089,6 +1150,11 @@ class GlfwWindowTest {
             attachedMonitor = monitor;
             windowPosition = new GlfwWindow.Position(x, y);
             logicalSize = new GlfwWindow.Dimensions(width, height);
+        }
+
+        @Override
+        public void swapBuffers(long handle) {
+            trace.add("swap:" + handle);
         }
 
         @Override

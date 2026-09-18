@@ -33,6 +33,10 @@ Normal input bindings remain active at the same time: W/A/S/D, mouse movement, S
 The current playground keeps these capabilities active together rather than showing them one by one:
 
 - production `GlfwWindow` / OpenGL 4.6 startup through the public engine API;
+- public `OpenGlRenderer` production composition drawing one indexed static triangle every visible framebuffer frame;
+- P5-T06 camera/per-frame uniform blocks driven by a fixed D-041/D-045 camera and current framebuffer aspect;
+- explicit depth testing and back-face culling through the production renderer path;
+- window-owned `GlfwWindow.present()` presentation without exposing a native window handle;
 - explicit `OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY` diagnostics, so a high-severity driver message fails at the owner-thread `pollEvents()` boundary instead of being ignored;
 - logical window size versus framebuffer pixel size notifications;
 - manual transitions among windowed, borderless fullscreen, and exclusive fullscreen on the same production window/context;
@@ -50,9 +54,9 @@ The once-per-second line is deliberately an owner diagnostic. It is not FPS, a b
 
 ## Current limitations
 
-The window is visually empty because the production renderer path does not exist yet. The sandbox does not bypass that limitation with direct OpenGL/LWJGL calls.
+The sandbox now shows one white indexed triangle on a dark development background through the public production renderer path. The sandbox itself still performs no direct OpenGL/LWJGL calls.
 
-Likewise, it does not invent controller capture/settings, gameplay camera behavior, world rendering, physics gameplay, networking integration, runtime UI, or any other future system merely to make the playground look richer. Those capabilities are added here when their real public production boundaries exist.
+This is intentionally the first bounded draw only. It does not claim sRGB-correct presentation, textures, materials, lighting, arbitrary mesh loading, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

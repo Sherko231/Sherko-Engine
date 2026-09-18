@@ -307,12 +307,23 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 
 `close()` performs terminal cleanup, including any remaining input/size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
 
+## Presentation
+
+A successfully started window exposes one owner-thread presentation boundary:
+
+```java
+window.present();
+```
+
+`present()` swaps the owned GLFW window's OpenGL buffers. It requires the same owner thread/context lifetime as `pollEvents()`; calls before successful `start()`, after `stop()`, or from another thread fail before the native swap.
+
+The API intentionally exposes no raw GLFW window handle and selects no swap-interval/vsync policy. Renderer code owns drawing; the window owns presentation.
+
 ## What is intentionally not exposed yet
 
 `GlfwWindow` still has no public API for:
 
 - raw GLFW window/monitor handle access;
-- buffer swapping;
 - choosing a non-primary monitor;
 - custom fullscreen resolution or refresh-rate selection;
 - arbitrary GLFW key/button codes;

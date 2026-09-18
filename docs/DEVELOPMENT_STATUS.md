@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T03A / Issue #221 — harden renderer cleanup suppression identity; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | None — P5-T03A / Issue #221 is accepted; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -72,6 +72,8 @@ P5-T07A / #213 is accepted. PR #214 final head `15352732cf7f93edf04f6d1059060c65
 
 P3-T04C / #216 is accepted. PR #217 final head `16b2542c8eb4c13aea68e400c070c49c912ffd8a` passed the required five-job final-candidate CI in run #374 / `35361440175`; the Windows native job was retried without changing the candidate after its first attempt was cancelled during the later P5-T06 regression, and the full retry completed successfully including P3-T04 focus-loss and P3-T05 raw/fallback native acceptance. PR #217 merged as `7b622491d150635cc0eecb844334135f2310c1d2`, and exact merged `master` passed Lightweight master verification in run #375 / `35362538577`. The repair keeps gameplay-visible cursor capture ineffective immediately on focus loss while separately retaining a private pending native cursor-normalization obligation, so explicit release, stop, and failed-stop close cleanup can retry `GLFW_CURSOR_NORMAL`; raw-mode cleanup remains independently retryable. No public API, dependency/module edge, input vocabulary, ownership model, or Phase 5 renderer scope changed.
 
+P5-T03A / #221 is accepted. PR #222 final head `e12a4114e107197614db46b509f9b798587a340d` passed the required five-job final-candidate CI in run #376 / `35364699171`. It merged as `b19a013c419831c032f871660735429eff9d163f`, and exact merged `master` passed Lightweight master verification in run #377 / `35365229833`. Renderer rollback paths now add cleanup failures as suppressed only when the cleanup Throwable is not the same object as the primary failure; same-instance self-suppression can no longer replace the original failure. Existing suppression order for independent cleanup failures, NativeResourceRegistry `CLOSE_FAILED`, at-most-once close behavior, ownership, and thread-affinity remain unchanged.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -84,4 +86,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Complete P5-T03A / #221 as a bounded renderer cleanup-defect repair before activating P5-T08. Preserve original failures when cleanup throws the same Throwable instance, retain deterministic suppression order for distinct cleanup failures, and keep P5-T03/P5-T04 ownership, CLOSE_FAILED, at-most-once close, and thread-affinity behavior unchanged. P5-T08 / #190 remains PLANNED and must not be activated in this task.
+P5-T03A / #221 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned renderer task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull materials, arbitrary meshes/assets, render packets, culling/sorting, lighting, world/ECS, performance work, or other later renderer tasks forward.

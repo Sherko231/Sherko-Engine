@@ -28,6 +28,19 @@ public GlfwWindow(
         NativeResourceRegistry nativeResources,
         WindowSizeListener sizeListener)
 ```
+Use `OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY` only for explicit development/test diagnostics. Existing constructors default to `OpenGlDebugMode.DISABLED`:
+
+```java
+public GlfwWindow(
+        int width,
+        int height,
+        String title,
+        EngineLogger logger,
+        NativeResourceRegistry nativeResources,
+        OpenGlDebugMode openGlDebugMode)
+```
+
+A corresponding overload also accepts both `WindowSizeListener` and `OpenGlDebugMode`.
 
 Construction performs no native work.
 
@@ -38,7 +51,8 @@ Validation:
 - title must be non-null and nonblank;
 - logger must be non-null;
 - registry must be non-null;
-- the explicit `WindowSizeListener` must be non-null.
+- the explicit `WindowSizeListener` must be non-null;
+- the explicit `OpenGlDebugMode` must be non-null.
 
 ## Size listener
 
@@ -153,6 +167,16 @@ A successful snapshot consumes pending press/release edges and mouse delta for t
 
 The snapshot and its `InputKey` / `InputMouseButton` vocabulary expose no GLFW/LWJGL types or integer constants. See [Renderer-frame input snapshots](INPUT.md) for the complete consumer contract.
 
+## OpenGL debug mode
+
+`OpenGlDebugMode.DISABLED` is the default and does not request a debug context or install an OpenGL debug callback.
+
+`OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY` is intended for development/test use. It requests a GLFW OpenGL debug context during `initialize()`, verifies the actual context debug flag during `start()`, and installs one callback owned by the same `GlfwWindow` lifecycle.
+
+Each driver message is normalized into engine-owned source/type/severity names and logged through `EngineLogger`. High-severity messages are staged as failures; they are not thrown from inside the native callback. The next owner-thread `pollEvents()` throws that staged failure once. Medium severity logs at WARN; low/notification logs at DEBUG.
+
+The callback is released before context detachment and LWJGL capability clearing during stop, failed start, or close. No raw OpenGL callback/handle is exposed to consumers.
+
 ## Normal lifetime
 
 ```java
@@ -210,6 +234,7 @@ The current production contract:
 - resets default hints;
 - requests OpenGL 4.6 Core;
 - requests forward compatibility;
+- when debug mode is enabled, requests a GLFW OpenGL debug context;
 - creates a hidden, resizable window;
 - registers the nonzero GLFW window handle in the supplied `NativeResourceRegistry`.
 
@@ -220,6 +245,7 @@ The current production contract:
 - verifies actual OpenGL 4.6 support;
 - queries nonblank `GL_VERSION` and `GL_RENDERER`;
 - logs both through `EngineLogger` at INFO with `subsystem=platform`;
+- when debug mode is enabled, verifies the actual debug-context flag and installs the owned OpenGL debug callback;
 - installs owned logical-window and framebuffer-size callbacks;
 - installs owned window-focus, key, mouse-button, and cursor-position callbacks;
 - queries initial native focus state;
@@ -246,9 +272,10 @@ public void pollEvents()
 
 1. verifies the initializing/owner thread;
 2. calls GLFW event polling once;
-3. propagates any staged focus/cursor/raw failure once;
-4. delivers the latest pending logical size first;
-5. delivers the latest pending framebuffer size second.
+3. propagates any staged OpenGL debug failure once;
+4. propagates any staged focus/cursor/raw failure once;
+5. delivers the latest pending logical size first;
+6. delivers the latest pending framebuffer size second.
 
 Native size callbacks do not invoke consumer code directly. They only stage the latest dimensions. Multiple native notifications in one poll may therefore coalesce to the latest value per channel. Mode changes continue to use this same delivery path for resulting logical/framebuffer notifications.
 
@@ -258,7 +285,7 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 
 ## What `stop()` / `close()` do
 
-`stop()` disables event polling/window-mode/cursor-capture/snapshot operations, clears undelivered staged sizes and saved windowed restore geometry, clears held/pending input and relative-motion state, restores a normal cursor when capture is effectively active, releases owned focus/key/mouse-button/cursor-position and size callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
+`stop()` disables event polling/window-mode/cursor-capture/snapshot operations, clears undelivered staged sizes and saved windowed restore geometry, clears held/pending input and relative-motion state, restores a normal cursor when capture is effectively active, releases owned focus/key/mouse-button/cursor-position, size, and OpenGL debug callbacks, hides the window, detaches its context, and clears thread-local OpenGL capabilities. Cleanup continues through later steps if an earlier cleanup action fails.
 
 `close()` performs terminal cleanup, including any remaining input/size-callback cleanup, window-registration close/destruction, GLFW termination, restoration of the previous GLFW error callback, and freeing only callbacks owned by this `GlfwWindow`.
 
@@ -276,7 +303,6 @@ Listener `RuntimeException` or `Error` failures propagate to the caller unchange
 - controller input/curves/dead zones;
 - tick-aligned `PlayerInputCommand` / replay input;
 - content-scale callbacks as a production API;
-- OpenGL debug callback;
 - multi-window/shared-context management;
 - restartability.
 

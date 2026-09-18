@@ -37,7 +37,7 @@ configurations.named("apiElements") {
     outgoing.artifact(publicApiJar)
 }
 
-publicApiTest.compileClasspath = files(publicApiJar) + publicApiConsumerClasspath
+publicApiTest.compileClasspath = files(publicApiJar.flatMap { it.archiveFile }) + publicApiConsumerClasspath
 publicApiTest.runtimeClasspath = publicApiTest.output + publicApiTest.compileClasspath
 
 val verifyPublicApiArtifact by tasks.registering {

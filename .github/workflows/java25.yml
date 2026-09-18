@@ -359,6 +359,21 @@ jobs:
             engine-render-opengl/build/reports/p5/p5-t05-glsl-runtime.txt
           if-no-files-found: error
 
+      - name: Verify P5-T06 uniform block ABI and reflection
+        env:
+          SHERKO_P5_T06_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.UniformBlockNativeTest" --rerun-tasks
+
+      - name: Upload P5-T06 uniform block evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t06-uniform-blocks
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.UniformBlockNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t06-uniform-blocks.txt
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

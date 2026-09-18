@@ -717,6 +717,29 @@ Review `gradle.lockfile` and `feasibility-spikes/gradle.lockfile` after `--write
 
 Also confirm no Java source remains under root `src/`, and no production Gradle project depends on `:feasibility-spikes`.
 
+## P5-T01 OpenGL debug callback verification
+
+Issue #183 adds optional production OpenGL debug diagnostics to `GlfwWindow` without adding a renderer draw/resource API. Existing constructors keep debug output disabled. The explicit `OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY` path requests a debug context, installs the owned callback after OpenGL capabilities exist, and surfaces staged high-severity failures from owner-thread `pollEvents()`.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+```
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T01_NATIVE="true"
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowDebugNativeTest" --rerun-tasks
+```
+
+The native test requires an OpenGL 4.6 debug context, issues one intentional invalid `glEnable(-1)` call, verifies the resulting callback is API / ERROR / HIGH severity, requires the owner-thread `pollEvents()` failure policy to fire once, verifies cleanup, and writes:
+
+`engine-platform-lwjgl/build/reports/p5/p5-t01-opengl-debug.txt`
+
+This is bounded debug-callback acceptance only. It is not renderer correctness, performance, soak, or release-hardware evidence.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

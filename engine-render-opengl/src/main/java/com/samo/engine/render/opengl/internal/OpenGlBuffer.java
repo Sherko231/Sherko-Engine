@@ -16,6 +16,10 @@ final class OpenGlBuffer implements AutoCloseable {
         return new OpenGlBuffer(OwnedOpenGlHandle.register("OpenGL buffer", handle, guard, registry, backend::deleteBuffer));
     }
 
+    int handle() {
+        return owned.handle();
+    }
+
     @Override
     public void close() {
         owned.close();

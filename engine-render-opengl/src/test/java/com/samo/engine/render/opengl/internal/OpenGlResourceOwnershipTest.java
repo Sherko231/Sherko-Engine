@@ -266,6 +266,31 @@ class OpenGlResourceOwnershipTest {
         }
 
         @Override
+        public void allocateDynamicBufferStorage(int handle, long capacityBytes) {
+            throw new UnsupportedOperationException("not used by P5-T03");
+        }
+
+        @Override
+        public void uploadBufferSubData(int handle, long offsetBytes, java.nio.ByteBuffer data) {
+            throw new UnsupportedOperationException("not used by P5-T03");
+        }
+
+        @Override
+        public long createFence() {
+            throw new UnsupportedOperationException("not used by P5-T03");
+        }
+
+        @Override
+        public OpenGlResourceBackend.FenceStatus fenceStatus(long fenceHandle) {
+            throw new UnsupportedOperationException("not used by P5-T03");
+        }
+
+        @Override
+        public void deleteFence(long fenceHandle) {
+            throw new UnsupportedOperationException("not used by P5-T03");
+        }
+
+        @Override
         public int createVertexArray() {
             return vertexArrayHandle;
         }

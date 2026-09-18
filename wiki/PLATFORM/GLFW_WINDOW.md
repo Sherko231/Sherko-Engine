@@ -167,6 +167,24 @@ A successful snapshot consumes pending press/release edges and mouse delta for t
 
 The snapshot and its `InputKey` / `InputMouseButton` vocabulary expose no GLFW/LWJGL types or integer constants. See [Renderer-frame input snapshots](INPUT.md) for the complete consumer contract.
 
+## OpenGL thread ownership
+
+Every `GlfwWindow` owns one stable `OpenGlThreadGuard`:
+
+```java
+OpenGlThreadGuard guard = window.openGlThreadGuard();
+```
+
+The guard is non-owning and exposes only:
+
+```java
+guard.assertOwnerThread();
+```
+
+Before `window.initialize()`, the assertion fails because no owner is bound. Initialization binds the guard once to the same thread that owns the GLFW/OpenGL lifecycle. Calls on that thread succeed; calls from any worker thread throw before the caller may enter native OpenGL. A failed worker-thread assertion does not transfer or poison ownership.
+
+Current `GlfwWindow` lifecycle operations use the same guard internally. Future renderer/OpenGL wrappers must receive this guard and assert it immediately before native OpenGL calls. The API intentionally exposes no raw owner `Thread`, GLFW/OpenGL context, handle, executor, command queue, or ownership-transfer operation.
+
 ## OpenGL debug mode
 
 `OpenGlDebugMode.DISABLED` is the default and does not request a debug context or install an OpenGL debug callback.

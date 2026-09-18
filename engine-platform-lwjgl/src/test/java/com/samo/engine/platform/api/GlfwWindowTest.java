@@ -35,7 +35,14 @@ class GlfwWindowTest {
         assertThrows(NullPointerException.class,
                 () -> new GlfwWindow(1280, 720, "window", logger, null, listener, backend));
         assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", logger, registry, null, backend));
+                () -> new GlfwWindow(
+                        1280,
+                        720,
+                        "window",
+                        logger,
+                        registry,
+                        (WindowSizeListener) null,
+                        backend));
         assertThrows(NullPointerException.class,
                 () -> new GlfwWindow(
                         1280,

@@ -121,8 +121,9 @@ server composition -> world / physics / network APIs and adapters
 
 - Product target: mainstream/mid-range Windows gaming PCs, not only the development machine.
 - Initial performance target: 1080p at 60 FPS.
-- Exact minimum CPU, GPU, driver, RAM, and VRAM values must be selected by a representative-hardware benchmark before Phase 5 renderer implementation.
-- A successful run on a high-end development GPU does not establish the minimum supported hardware.
+- The current measured development/reference machine is Intel Core Ultra 9 275HX, NVIDIA GeForce RTX 5090 Laptop GPU with 24463 MiB VRAM, 64 GiB-class system RAM, Windows 11 x64, and NVIDIA OpenGL 4.6 driver 592.02. This is a development/reference configuration only, not a minimum supported configuration.
+- Exact minimum CPU, GPU, driver floor, RAM, and VRAM values must be selected by a real representative mainstream/mid-range Windows hardware benchmark before Phase 5 is declared complete or any minimum-hardware support claim is made.
+- P5 renderer-foundation implementation may proceed on the development/reference machine while that minimum-hardware exit gate remains open, but no high-end-only dependency or mainstream-performance claim may be inferred from development-machine results.
 
 ## Perspective policy
 

@@ -26,6 +26,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlShader vertexShader;
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
+    private final boolean hardwareFramebufferSrgb;
     private final ByteBuffer cameraBytes =
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
@@ -45,7 +46,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlSampler referenceSampler,
             OpenGlShader vertexShader,
             OpenGlShader fragmentShader,
-            OpenGlProgram program) {
+            OpenGlProgram program,
+            boolean hardwareFramebufferSrgb) {
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -59,6 +61,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.program = program;
+        this.hardwareFramebufferSrgb = hardwareFramebufferSrgb;
     }
 
     public static IndexedStaticMeshPipeline createProduction(
@@ -155,6 +158,17 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             UniformBlockLayoutVerifier.verify(linkedProgram.handle(), guard, reflection);
 
+            int framebufferEncoding = draw.defaultFramebufferColorEncoding();
+            boolean hardwareSrgb;
+            if (framebufferEncoding == org.lwjgl.opengl.GL21.GL_SRGB) {
+                hardwareSrgb = true;
+            } else if (framebufferEncoding == org.lwjgl.opengl.GL11.GL_LINEAR) {
+                hardwareSrgb = false;
+            } else {
+                throw new IllegalStateException(
+                        "Unsupported default framebuffer color encoding: " + framebufferEncoding);
+            }
+
             draw.configurePositionAttribute(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
@@ -173,7 +187,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     sampler,
                     vertex,
                     fragment,
-                    linkedProgram);
+                    linkedProgram,
+                    hardwareSrgb);
         } catch (RuntimeException | Error failure) {
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);
@@ -217,9 +232,10 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
         drawBackend.setViewport(framebufferWidth, framebufferHeight);
         drawBackend.configureDepthAndBackFaceCull();
-        drawBackend.setFramebufferSrgbEnabled(true);
+        drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
         try {
-            drawBackend.clearFrame();
+            drawBackend.clearFrame(hardwareFramebufferSrgb);
+            drawBackend.setManualSrgbEncode(program.handle(), !hardwareFramebufferSrgb);
             drawBackend.bindTextureAndSampler(0, referenceTexture.handle(), referenceSampler.handle());
             drawBackend.useProgram(program.handle());
             drawBackend.bindVertexArray(vertexArray.handle());

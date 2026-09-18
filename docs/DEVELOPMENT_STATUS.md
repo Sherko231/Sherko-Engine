@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T07B / Issue #224 — implementation merged; manual IntelliJ Gradle-sync validation pending; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | None — P5-T07B / Issue #224 is accepted; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -74,7 +74,7 @@ P3-T04C / #216 is accepted. PR #217 final head `16b2542c8eb4c13aea68e400c070c49c
 
 P5-T03A / #221 is accepted. PR #222 final head `e12a4114e107197614db46b509f9b798587a340d` passed the required five-job final-candidate CI in run #376 / `35364699171`. It merged as `b19a013c419831c032f871660735429eff9d163f`, and exact merged `master` passed Lightweight master verification in run #377 / `35365229833`. Renderer rollback paths now add cleanup failures as suppressed only when the cleanup Throwable is not the same object as the primary failure; same-instance self-suppression can no longer replace the original failure. Existing suppression order for independent cleanup failures, NativeResourceRegistry `CLOSE_FAILED`, at-most-once close behavior, ownership, and thread-affinity remain unchanged.
 
-P5-T07B / #224 implementation is merged pending manual owner IDE validation. PR #225 final head `5ca1140452599bb84ae8d15889db7b6df6a37b73` passed the required five-job final-candidate CI in run #378 / `35366851105`; the Windows native job required an infrastructure-only retry on the unchanged candidate. PR #225 merged as `ce0de707651332c890253f2f540fa3b50358b28f`, and exact merged `master` passed Lightweight master verification in run #379 / `35367933268`. The sandbox's compile-only renderer dependency now explicitly targets `runtimeElements` with transitivity disabled, while D-055's default renderer `apiElements` remains API-only. Automated Gradle compilation, renderer API-boundary checks, architecture boundaries, dependency locks, and headless-server isolation are green. Final acceptance still requires the owner to reload/sync the Gradle project in IntelliJ and confirm `SandboxMain` resolves `OpenGlRenderer` without manual Project Structure edits.
+P5-T07B / #224 is accepted. PR #225 final head `5ca1140452599bb84ae8d15889db7b6df6a37b73` passed the required five-job final-candidate CI in run #378 / `35366851105`; the Windows native job required an infrastructure-only retry on the unchanged candidate. PR #225 merged as `ce0de707651332c890253f2f540fa3b50358b28f`, and exact merged `master` passed Lightweight master verification in run #379 / `35367933268`. The sandbox's compile-only renderer dependency now explicitly targets `runtimeElements` with transitivity disabled, while D-055's default renderer `apiElements` remains API-only. Automated Gradle compilation, renderer API-boundary checks, architecture boundaries, dependency locks, and headless-server isolation are green. Manual owner validation after pull plus Gradle reload/sync confirmed that IntelliJ resolves `OpenGlRenderer` in `SandboxMain` without manual Project Structure edits.
 
 ## Open gates and blockers
 
@@ -88,4 +88,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Complete P5-T07B / #224 only after manual owner validation: pull the merged `master`, reload/sync the Gradle project in IntelliJ, and confirm `SandboxMain` resolves `OpenGlRenderer` without manual Project Structure edits. If that succeeds, record acceptance/close #224; if it fails, keep #224 active and repair the IDE integration on the same Issue. P5-T08 / #190 remains PLANNED.
+P5-T07B / #224 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned renderer task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed.

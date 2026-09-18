@@ -20,6 +20,9 @@ P5-T01 extends the existing `GlfwWindow` ownership boundary with optional OpenGL
 
 P5-T02 / D-049 adds one stable public `OpenGlThreadGuard` to that same window/context boundary. `GlfwWindow.initialize()` binds the guard exactly once to the lifecycle/context owner thread, and existing `GlfwWindow` owner-thread checks delegate to it. Future renderer/OpenGL wrappers must invoke the same guard immediately before native OpenGL entry. The guard exposes no raw `Thread`, native context, handle, executor, queue, or transfer operation; stop/close never move ownership. P5-T02 therefore establishes affinity only and deliberately leaves buffer/texture/shader/program/framebuffer ownership to P5-T03.
 
+P5-T03 / D-050 begins `engine-render-opengl` production implementation with package-internal explicit wrappers for buffers, vertex arrays, textures, samplers, shaders, programs, and framebuffers. Each wrapper asserts D-049 thread affinity before native work, registers successful ownership with the existing native-resource registry, and closes deterministically. Shader/program compile/link failure paths clean only handles created by the failed operation; caller-owned shader wrappers remain independently owned. The renderer module directly reuses the scope-selected LWJGL 3.4.3 OpenGL binding. No public renderer resource API, draw submission, upload strategy, texture/material semantics, resource manager/cache, world/gameplay dependency, or new project edge is introduced.
+
+
 
 | Module | Intended responsibility | Current state | Direct project dependencies |
 | --- | --- | --- | --- |

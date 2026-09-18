@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T07 / Issue #189 is accepted; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | P5-T07A / Issue #213 — repair public renderer module boundary; P5-T08 / Issue #190 remains PLANNED |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -80,4 +80,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-P5-T07 / #189 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed. Do not pull arbitrary mesh/assets, materials, lighting, world/ECS, physics, or later renderer work forward.
+Complete P5-T07A / #213 on branch `fix/p5-t07a-renderer-public-boundary`: verify renderer-only consumer compilation, API/runtime artifact separation, existing P5-T07 renderer behavior, architecture boundaries, dependency locks, and the normal five-job final candidate. After merge, require exact merged-master Lightweight verification before closing #213. P5-T08 / #190 remains PLANNED and must not be activated in this task.

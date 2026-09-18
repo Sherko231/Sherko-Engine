@@ -740,6 +740,20 @@ The native test requires an OpenGL 4.6 debug context, issues one intentional inv
 
 This is bounded debug-callback acceptance only. It is not renderer correctness, performance, soak, or release-hardware evidence.
 
+## P5-T02 OpenGL thread-ownership verification
+
+Issue #184 adds `OpenGlThreadGuard` as the single non-owning thread-affinity authority shared by `GlfwWindow` and future renderer/OpenGL wrappers.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.OpenGlThreadGuardTest" --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+```
+
+The focused tests must prove pre-initialize rejection, one-time binding, owner-thread success, worker-thread rejection before representative backend activity, continued owner-thread usability after rejection, and delegation of the existing window lifecycle rule to the same guard.
+
+P5-T02 does not add a separate native acceptance executable because it introduces no new native OpenGL operation. The normal five-job final-candidate CI still applies, including the existing Windows native smoke and P5-T01 debug-callback acceptance.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

@@ -46,6 +46,13 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(2, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
+        assertEquals(1, resources.textureAllocations.size());
+        TextureAllocation reference = resources.textureAllocations.getFirst();
+        assertEquals(TextureColorEncoding.SRGB_COLOR, reference.colorEncoding());
+        assertEquals(1, reference.width());
+        assertEquals(1, reference.height());
+        assertEquals(List.of(128, 128, 128, 255), reference.unsignedBytes());
+        assertEquals(1, resources.configuredSamplers);
 
         draw.trace.clear();
         resources.uploads.clear();
@@ -58,12 +65,16 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(List.of(
                 "viewport:800x600",
                 "state:depth-less:cull-back:front-ccw",
+                "srgb:true",
                 "clear",
+                "texture:0:301:401",
                 "program:203",
                 "vao:101",
                 "draw:triangles:3:uint:0",
                 "vao:0",
-                "program:0"), draw.trace);
+                "program:0",
+                "texture:0:0:0",
+                "srgb:false"), draw.trace);
 
         pipeline.close();
         pipeline.close();
@@ -72,6 +83,39 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(1, resources.deletedVertexArrays);
         assertEquals(2, resources.deletedShaders);
         assertEquals(1, resources.deletedPrograms);
+        assertEquals(1, resources.deletedTextures);
+        assertEquals(1, resources.deletedSamplers);
+    }
+
+    @Test
+    void drawFailureStillDisablesFramebufferSrgbAndUnbindsTextureState() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+        draw.trace.clear();
+        draw.drawFailure = new IllegalStateException("fixture draw failure");
+
+        RuntimeException actual = assertThrows(
+                RuntimeException.class,
+                () -> pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600));
+
+        assertEquals("fixture draw failure", actual.getMessage());
+        assertEquals("srgb:false", draw.trace.getLast());
+        assertTrue(draw.trace.contains("texture:0:0:0"));
+        assertTrue(draw.trace.contains("vao:0"));
+        assertTrue(draw.trace.contains("program:0"));
+
+        pipeline.close();
+        registry.assertNoOpenResources();
     }
 
     @Test
@@ -205,6 +249,13 @@ class IndexedStaticMeshPipelineTest {
     private record Upload(int handle, long offset, byte[] bytes) {
     }
 
+    private record TextureAllocation(
+            TextureColorEncoding colorEncoding,
+            int width,
+            int height,
+            List<Integer> unsignedBytes) {
+    }
+
     private static final class FakeReflectionBackend implements OpenGlUniformBlockReflectionBackend {
         private final Map<String, Integer> indices = Map.of(
                 CameraUniformBlock.GLSL_BLOCK_NAME, 0,
@@ -228,6 +279,7 @@ class IndexedStaticMeshPipelineTest {
 
     private static final class FakeDrawBackend implements OpenGlDrawBackend {
         private final List<String> trace = new ArrayList<>();
+        private RuntimeException drawFailure;
 
         @Override
         public void configurePositionAttribute(int vertexArray, int vertexBuffer) {
@@ -255,8 +307,18 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
+        public void setFramebufferSrgbEnabled(boolean enabled) {
+            trace.add("srgb:" + enabled);
+        }
+
+        @Override
         public void clearFrame() {
             trace.add("clear");
+        }
+
+        @Override
+        public void bindTextureAndSampler(int unit, int texture, int sampler) {
+            trace.add("texture:" + unit + ":" + texture + ":" + sampler);
         }
 
         @Override
@@ -272,6 +334,9 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void drawIndexedTriangle() {
             trace.add("draw:triangles:3:uint:0");
+            if (drawFailure != null) {
+                throw drawFailure;
+            }
         }
 
         @Override
@@ -289,14 +354,20 @@ class IndexedStaticMeshPipelineTest {
         private int nextBuffer = 11;
         private int nextShader = 201;
         private int nextProgram = 203;
+        private int nextTexture = 301;
+        private int nextSampler = 401;
         private int allocationCalls;
         private int failAllocationCall;
         private int deletedBuffers;
         private int deletedVertexArrays;
         private int deletedShaders;
         private int deletedPrograms;
+        private int deletedTextures;
+        private int deletedSamplers;
+        private int configuredSamplers;
         private final List<Long> allocations = new ArrayList<>();
         private final List<Upload> uploads = new ArrayList<>();
+        private final List<TextureAllocation> textureAllocations = new ArrayList<>();
 
         @Override
         public int createBuffer() {
@@ -352,22 +423,42 @@ class IndexedStaticMeshPipelineTest {
 
         @Override
         public int createTexture() {
-            throw unsupported();
+            return nextTexture++;
         }
 
         @Override
         public void deleteTexture(int handle) {
-            throw unsupported();
+            deletedTextures++;
+        }
+
+        @Override
+        public void allocateRgba8Texture(
+                int handle,
+                TextureColorEncoding colorEncoding,
+                int width,
+                int height,
+                ByteBuffer rgbaBytes) {
+            ByteBuffer copy = rgbaBytes.duplicate();
+            List<Integer> bytes = new ArrayList<>();
+            while (copy.hasRemaining()) {
+                bytes.add(Byte.toUnsignedInt(copy.get()));
+            }
+            textureAllocations.add(new TextureAllocation(colorEncoding, width, height, List.copyOf(bytes)));
         }
 
         @Override
         public int createSampler() {
-            throw unsupported();
+            return nextSampler++;
         }
 
         @Override
         public void deleteSampler(int handle) {
-            throw unsupported();
+            deletedSamplers++;
+        }
+
+        @Override
+        public void configureLinearClampSampler(int handle) {
+            configuredSamplers++;
         }
 
         @Override

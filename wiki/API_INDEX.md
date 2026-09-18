@@ -140,7 +140,7 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 
 | Type | Purpose |
 | --- | --- |
-| `OpenGlRenderer` | First bounded production OpenGL renderer composition: owns one known indexed triangle, accepted shaders/uniform blocks, explicit depth/back-face-cull state, and one indexed draw per `render(...)` call. |
+| `OpenGlRenderer` | Bounded production OpenGL renderer composition: owns one known indexed triangle, fixed neutral-gray sRGB reference texture/sampler, accepted shaders/uniform blocks, explicit depth/back-face-cull state, and one indexed draw per `render(...)` call. |
 
 `OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources)` requires an already-started production OpenGL context on the owner thread. `render(view, projection, framebufferWidth, framebufferHeight)` consumes caller-supplied D-041/D-045 matrices and positive framebuffer pixel dimensions. The current fixed renderer path samples an internal neutral-gray sRGB reference texture, renders in linear space, and performs one hardware sRGB encode at the default framebuffer boundary. The renderer still exposes no native handles, arbitrary mesh or texture API, asset loading, materials, lighting, or world/ECS submission.
 

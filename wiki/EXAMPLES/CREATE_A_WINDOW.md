@@ -89,10 +89,10 @@ The display-mode calls target the primary monitor's current video mode. Borderle
 
 All lifecycle, polling, mode-change, and cursor-capture calls stay on the initializing owner thread.
 
-## Why the example is still not a renderer or input loop
+## Why this example is still not a renderer or input loop
 
-`GlfwWindow.pollEvents()`, `setWindowMode(...)`, and `setCursorCaptured(...)` are bounded platform operations. The public API still intentionally does not expose buffer swapping, renderer ownership, monitor selection/custom video modes, raw GLFW handles, raw mouse motion, public key/button snapshots, action mapping, or player commands.
+`GlfwWindow.pollEvents()`, `setWindowMode(...)`, `setCursorCaptured(...)`, and `present()` are bounded platform operations. `present()` now exposes the supported owner-thread buffer-swap boundary, but it does not render anything by itself. This focused example intentionally does not compose the public `OpenGlRenderer`, renderer-frame input snapshots/actions, or tick-command sampling.
 
-Adding direct LWJGL calls around `GlfwWindow` would bypass the engine abstraction boundary and pull later roadmap tasks into caller code.
+The public platform API still intentionally does not expose raw GLFW window/monitor handles, monitor selection/custom video modes, a public raw-mouse-mode toggle, or controller capture. Adding direct LWJGL calls around `GlfwWindow` would bypass the engine abstraction boundary.
 
-Use this example for the currently implemented lifecycle, size-event, window-mode, and cursor-capture API only. Later wiki pages should extend it when the corresponding production APIs actually exist.
+Use this example for the window lifecycle, size-event, window-mode, cursor-capture, and presentation boundary. For the first production draw path, use the separate [OpenGL renderer](../RENDERER/OPENGL_RENDERER.md) guidance.

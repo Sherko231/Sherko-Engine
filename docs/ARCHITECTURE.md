@@ -115,9 +115,9 @@ D-042 / P4-T03 / Issue #96 makes JOML the public spatial math type family for `e
 
 Local composition is exactly `T * R * S` using JOML column-vector semantics. A root's world matrix is its local matrix; a child's world matrix is exactly `parentWorld * local`. Non-uniform parent scale therefore affects child translation and may combine with child rotation to produce shear in the world matrix; P4-T03 keeps the matrix directly and defines no world-TRS decomposition.
 
-Local mutation and parent reassignment mark only the changed transform dirty. Until P4-T05 introduces explicit descendant propagation, each child remembers the parent world revision used for its cached matrix. A world read first brings the parent cache current and recomputes the child only when local state is dirty or the observed parent revision changed. This preserves read correctness without a child collection or descendant traversal and reuses transform-owned JOML matrices rather than creating per-read temporaries.
+Local position/rotation/scale mutation explicitly marks the changed transform and all of its descendants dirty. Successful reparent or detach updates private child membership and marks only the moved subtree dirty; ancestors and unrelated branches remain cached. A world read first brings the parent cache current, then recomputes the requested transform only when its explicit dirty flag is set. P4-T03 originally used parent-world-revision validation as an interim cache-correctness fallback; P4-T05 replaced that mechanism with explicit descendant propagation and private child tracking. The transform continues to reuse transform-owned JOML matrices rather than creating per-read temporaries.
 
-P4-T03 deliberately leaves general parent-cycle rejection to P4-T04. Callers must keep parent graphs acyclic until that later task defines rejection behavior. Zero and negative scale are allowed because P4-T03 defines forward composition only; inverse/decomposition semantics remain future work. `Transform` is mutable and externally serialized and makes no concurrent mutation/read guarantee.
+P4-T04 added synchronous cycle rejection to `Transform.setParent(...)`: self-parenting and indirect descendant cycles are rejected before hierarchy mutation, while same-parent no-op, detach, unrelated-parent reparenting, and legal reparenting to an existing ancestor remain valid. Zero and negative scale are allowed because the current transform contract defines forward composition only; inverse/decomposition semantics remain future work. `Transform` is mutable and externally serialized and makes no concurrent mutation/read guarantee.
 
 ## Single-subsystem lifecycle — P2-T01 / Issue #64
 
@@ -465,7 +465,7 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Deterministic input response settings | P3-T10 / Issue #93: core immutable response math plus evaluator mouse-response integration; completed PR #160 / merged-master acceptance |
 | Canonical world-space convention | P4-T01 / Issue #94: D-041 + `docs/SPATIAL_CONVENTIONS.md` |
 | JOML hot-loop allocation baseline | P4-T02 / Issue #95: JOML 1.10.9 plus warmed zero-byte ThreadMXBean acceptance evidence |
-| Cached hierarchical transform API | P4-T03 / Issue #96: D-042 public JOML math ownership, local TRS, parent-world composition, lazy revision-based cache validation |
+| Cached hierarchical transform API | P4-T03 through P4-T05 / Issues #96–#98: D-042 public JOML math ownership, local TRS, parent-world composition, atomic cycle rejection, private child tracking, and explicit descendant dirty propagation |
 | Persistent owner-facing sandbox playground | P3-T04A origin, Issue #165 current presentation policy: public-API cumulative playground with non-exported platform runtime and deterministic control mapping |
 | Other concrete production engine subsystems | Planned: later phases |
 

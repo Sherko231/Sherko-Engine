@@ -28,6 +28,9 @@ P5-T05 / D-052 adds a repository-controlled shader validation path without chang
 
 P5-T06 / D-053 establishes the first fixed renderer uniform-block ABI without adding a draw path. `CameraBlock` uses std140 binding 0 with 128 bytes for view/projection matrices at offsets 0/64; `PerFrameBlock` uses std140 binding 1 with one 16-byte framebuffer-size/inverse vector. Internal CPU packers write the accepted D-041/D-045 matrices in explicit column-major order, while an independent internal OpenGL reflection backend verifies both block sizes and bindings on the linked committed P5 shader program. No world/ECS camera ownership, general descriptor/reflection framework, uniform-buffer allocator, material block system, or P5-T07 draw behavior is introduced.
 
+P5-T07 / D-054 makes `engine-render-opengl` consumable through the first bounded public production composition, `com.samo.engine.render.api.OpenGlRenderer`. The public renderer owns one known indexed triangle through the accepted P5-T03 resources, P5-T05 shaders, and P5-T06 uniform ABI; internal draw setup uses one VAO, position VBO, unsigned-int EBO, camera/per-frame UBOs, depth test `GL_LESS`, back-face culling, CCW front faces, and exactly one indexed draw. `GlfwWindow.present()` remains the platform-owned buffer-swap boundary and preserves native-handle encapsulation. `game-sandbox` consumes renderer/platform APIs only through compile-only plus non-consumable runtime composition, preserving the headless server dependency boundary. No arbitrary mesh/assets/materials/world submission/lighting/sRGB policy is introduced.
+
+
 
 
 
@@ -39,7 +42,7 @@ P5-T06 / D-053 establishes the first fixed renderer uniform-block ABI without ad
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; P3-T02 logical/framebuffer size separation and owner-thread polling; P3-T03 in-place primary-monitor windowed/borderless/exclusive transitions; P3-T04 focus-loss-safe cursor capture and held-input cleanup; P3-T05 raw/fallback relative mouse acquisition; P3-T06 immutable renderer-frame `InputSnapshot` plus engine-defined key/button vocabulary; P3-T07 immutable action/binding metadata plus strict versioned JSON loading; P3-T08 caller-owned renderer-frame action aggregation/transitions; P3-T09 renderer-frame-to-tick command sampling; P3-T10 deterministic mouse response application; controller capture remains planned | `engine-core` |
 | `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
-| `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Skeleton | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
+| `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | First bounded public indexed-mesh renderer path (P5-T07) plus internal P5-T03..T06 foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
 | `engine-world` | Scene/world/component/prefab runtime | Skeleton | `engine-core`, `engine-assets` |
 | `engine-physics-jolt` | Jolt-backed physics adapter and ownership | Skeleton | `engine-core` |
 | `engine-audio-openal` | OpenAL-backed positional audio | Skeleton | `engine-core` |

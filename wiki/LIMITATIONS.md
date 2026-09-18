@@ -109,7 +109,7 @@ On systems where GLFW raw mouse motion is unavailable, the relative-motion fallb
 
 ## Rendering
 
-A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, binding metadata/loading, renderer-frame action evaluation, and the platform side of tick-command sampling, but it still does not expose buffer swapping, viewport mutation, renderer ownership, or an OpenGL debug callback.
+A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes optional OpenGL debug diagnostics, platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, binding metadata/loading, renderer-frame action evaluation, and the platform side of tick-command sampling, but it still does not expose buffer swapping, viewport mutation, renderer ownership, raw OpenGL callback ownership, or renderer resources/draw submission.
 
 ## Assets/world/physics/audio/networking/editor
 
@@ -117,7 +117,7 @@ The target modules exist according to the repository architecture, but a module'
 
 ## Native evidence limits
 
-Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, and P3-T05's bounded raw-mode/relative-motion acceptance. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, P3-T07 adds pure-Java binding metadata/JSON loading, P3-T08 adds pure-Java action evaluation, P3-T09 adds pure-Java tick-command sampling/codec/replay, and P3-T10 adds pure-Java response math/evaluator integration over those existing boundaries. These tasks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
+Current production window acceptance covers the bounded GLFW/OpenGL window lifecycle, P3-T02's logical/framebuffer size path, P3-T03's single 20-transition display-mode scenario, P3-T04's real Windows focus-transfer/cursor-release scenario, P3-T05's bounded raw-mode/relative-motion acceptance, and P5-T01's single intentional high-severity OpenGL debug-message path. P3-T06 adds a pure-Java snapshot boundary over that already-tested hardware ingestion path, P3-T07 adds pure-Java binding metadata/JSON loading, P3-T08 adds pure-Java action evaluation, P3-T09 adds pure-Java tick-command sampling/codec/replay, and P3-T10 adds pure-Java response math/evaluator integration over those existing boundaries. These tasks do not establish sustained native stability or repeated native restartability; P0-T13 and P0-T14 remain separate evidence gates.
 
 ## Stability
 

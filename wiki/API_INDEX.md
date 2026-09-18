@@ -144,6 +144,8 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 
 `OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources)` requires an already-started production OpenGL context on the owner thread. `render(view, projection, framebufferWidth, framebufferHeight)` consumes caller-supplied D-041/D-045 matrices and positive framebuffer pixel dimensions. The renderer exposes no native handles, arbitrary mesh API, asset loading, materials, lighting, world/ECS submission, or sRGB policy.
 
+A normal Gradle consumer depends on `engine-render-opengl` only. Its compile variant exposes `OpenGlRenderer` plus the required transitive signature dependencies while keeping renderer `.internal` classes out of the supported compile surface; runtime resolution still supplies the full implementation and shader resources.
+
 Presentation is separate and platform-owned: call `GlfwWindow.present()` after rendering.
 
 Usage: [OpenGL renderer](RENDERER/OPENGL_RENDERER.md).

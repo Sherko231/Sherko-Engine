@@ -109,7 +109,7 @@ On systems where GLFW raw mouse motion is unavailable, the relative-motion fallb
 
 ## Rendering
 
-A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes optional OpenGL debug diagnostics, platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, binding metadata/loading, renderer-frame action evaluation, and the platform side of tick-command sampling, but it still does not expose buffer swapping, viewport mutation, renderer ownership, raw OpenGL callback ownership, or renderer resources/draw submission.
+A production renderer API/loop is not yet available for normal engine consumers. `GlfwWindow` exposes optional OpenGL debug diagnostics and a stable `OpenGlThreadGuard` affinity contract, plus platform event polling, display-mode changes, cursor-capture policy, renderer-frame input snapshots, binding metadata/loading, renderer-frame action evaluation, and the platform side of tick-command sampling. It still does not expose buffer swapping, viewport mutation, a render worker/command queue, raw OpenGL callback/context ownership, or renderer resources/draw submission.
 
 ## Assets/world/physics/audio/networking/editor
 

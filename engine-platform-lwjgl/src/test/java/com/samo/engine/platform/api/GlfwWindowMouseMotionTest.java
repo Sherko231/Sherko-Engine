@@ -513,6 +513,10 @@ class GlfwWindowMouseMotionTest {
         }
 
         @Override
+        public void swapBuffers(long handle) {
+        }
+
+        @Override
         public void pollEvents() {
             List<Runnable> events = List.copyOf(queuedEvents);
             queuedEvents.clear();

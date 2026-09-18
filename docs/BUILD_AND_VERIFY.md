@@ -777,6 +777,29 @@ The native test creates all seven resource wrapper types on the production OpenG
 
 This evidence proves bounded resource lifetime/cleanup only. It does not prove draw correctness, upload policy, material behavior, asset loading, performance, or renderer-loop behavior.
 
+## P5-T04 bounded dynamic-buffer upload verification
+
+Issue #186 adds an internal fixed-slot ring uploader backed by one P5-T03 owned OpenGL buffer and P5-T02 thread affinity. It uses explicit slot capacity/count, bounded sub-data writes, and one registered GLsync fence per submitted slot.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderTest" --rerun-tasks
+```
+
+Real Windows x64 acceptance:
+
+```powershell
+$env:SHERKO_P5_T04_NATIVE="true"
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderNativeTest" --rerun-tasks
+```
+
+The native test uploads distinct patterns through a three-slot ring, inserts real OpenGL sync objects, forces completion only inside the test evidence path, wraps to slot zero, validates bounded buffer readback, verifies cleanup, and writes:
+
+`engine-render-opengl/build/reports/p5/p5-t04-bounded-upload.txt`
+
+This proves bounded upload correctness/synchronization only. It does not establish performance, streaming-allocator behavior, or persistent-mapping superiority.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

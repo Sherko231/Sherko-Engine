@@ -75,7 +75,7 @@ Close order at the composition root should be:
 
 ## Deliberate limitations
 
-P5-T07 does not provide:
+The current bounded renderer does not provide:
 
 - arbitrary mesh creation/submission;
 - asset import/loading;

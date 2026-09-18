@@ -28,8 +28,27 @@ final class CameraUniformBlock {
         int start = output.position();
         ByteBuffer target = output.duplicate().order(ByteOrder.nativeOrder());
         target.position(start);
-        viewMatrix.get(target);
-        projectionMatrix.get(target);
+        putMatrixColumnMajor(viewMatrix, target);
+        putMatrixColumnMajor(projectionMatrix, target);
         output.position(start + SIZE_BYTES);
+    }
+
+    private static void putMatrixColumnMajor(Matrix4fc matrix, ByteBuffer target) {
+        target.putFloat(matrix.m00());
+        target.putFloat(matrix.m01());
+        target.putFloat(matrix.m02());
+        target.putFloat(matrix.m03());
+        target.putFloat(matrix.m10());
+        target.putFloat(matrix.m11());
+        target.putFloat(matrix.m12());
+        target.putFloat(matrix.m13());
+        target.putFloat(matrix.m20());
+        target.putFloat(matrix.m21());
+        target.putFloat(matrix.m22());
+        target.putFloat(matrix.m23());
+        target.putFloat(matrix.m30());
+        target.putFloat(matrix.m31());
+        target.putFloat(matrix.m32());
+        target.putFloat(matrix.m33());
     }
 }

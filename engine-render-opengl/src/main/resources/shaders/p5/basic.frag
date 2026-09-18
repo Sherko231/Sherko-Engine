@@ -1,7 +1,6 @@
 #version 460 core
 
 layout(binding = 0) uniform sampler2D referenceTexture;
-layout(location = 0) uniform int manualSrgbEncode;
 
 layout(location = 0) out vec4 color;
 
@@ -14,7 +13,9 @@ vec3 linearToSrgb(vec3 linearColor) {
 
 void main() {
     vec4 sampled = texture(referenceTexture, vec2(0.5));
-    color = manualSrgbEncode != 0
-            ? vec4(linearToSrgb(sampled.rgb), sampled.a)
-            : sampled;
+#ifdef SHERKO_MANUAL_SRGB_ENCODE
+    color = vec4(linearToSrgb(sampled.rgb), sampled.a);
+#else
+    color = sampled;
+#endif
 }

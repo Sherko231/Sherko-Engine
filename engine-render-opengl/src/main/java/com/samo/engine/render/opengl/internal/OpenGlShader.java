@@ -44,8 +44,6 @@ final class OpenGlShader implements AutoCloseable {
             if (!backend.shaderCompileSucceeded(handle)) {
                 throw new IllegalStateException("OpenGL shader compilation failed: " + backend.shaderInfoLog(handle));
             }
-            return new OpenGlShader(OwnedOpenGlHandle.register(
-                    "OpenGL shader", handle, guard, registry, backend::deleteShader));
         } catch (RuntimeException | Error failure) {
             try {
                 backend.deleteShader(handle);
@@ -54,6 +52,9 @@ final class OpenGlShader implements AutoCloseable {
             }
             throw failure;
         }
+
+        return new OpenGlShader(OwnedOpenGlHandle.register(
+                "OpenGL shader", handle, guard, registry, backend::deleteShader));
     }
 
     int handle() {

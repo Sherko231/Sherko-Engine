@@ -3,6 +3,7 @@ package com.samo.engine.render.opengl.internal;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -21,7 +22,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
 
     @Override
     public void bindUniformBuffer(int bindingIndex, int buffer) {
-        GL30.glBindBufferBase(GL30.GL_UNIFORM_BUFFER, bindingIndex, buffer);
+        GL30.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, bindingIndex, buffer);
     }
 
     @Override

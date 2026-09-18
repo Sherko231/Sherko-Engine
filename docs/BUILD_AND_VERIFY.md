@@ -613,7 +613,7 @@ The canonical interactive owner run is:
 .\gradlew.bat :game-sandbox:runSandbox
 ```
 
-It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. Since accepted P5-T07, the sandbox renders one white indexed triangle through the public `OpenGlRenderer` and presents it through `GlfwWindow.present()`. Do not add direct OpenGL/LWJGL calls, future gameplay camera/controller/UI/world/physics/network features, or public APIs solely to make the sandbox richer.
+It runs until `Ctrl+Q`. Current controls are documented in `game-sandbox/README.md`; owner-visible interaction is manual observation, not automated acceptance. Since P5-T08, the sandbox renders the existing indexed triangle as a neutral-gray sRGB reference through the public `OpenGlRenderer` and presents it through `GlfwWindow.present()`. The sandbox still makes no direct OpenGL/LWJGL calls. Do not add future gameplay camera/controller/UI/world/physics/network features or public APIs solely to make the sandbox richer.
 
 `game-sandbox` uses `compileOnly` for `engine-platform-lwjgl`. Its renderer compile-only dependency explicitly targets `engine-render-opengl` `runtimeElements` with `isTransitive = false` so Gradle/IntelliJ model the in-repository renderer as a module dependency while D-055's default renderer `apiElements` remains API-only for ordinary consumers. The dedicated resolvable/non-consumable `sandboxRuntime` remains the runtime source for `runSandbox` and the legacy alias. These sandbox-only platform/renderer dependencies must not be published through runtime elements consumed by `game-server`; `verifyHeadlessServerRuntime` remains the explicit boundary check.
 
@@ -916,6 +916,28 @@ Owner-visible sandbox:
 ```
 
 The persistent sandbox should show one white indexed triangle on a dark background while preserving the existing controls.
+
+## P5-T08 sRGB color-path verification
+
+Issue #190 establishes the first explicit decode/encode color-space contract while keeping texture/material APIs internal.
+
+Focused verification:
+
+```powershell
+.\\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+```
+
+The deterministic tests require the window's `GLFW_SRGB_CAPABLE` hint, exact `GL_SRGB8_ALPHA8` versus `GL_RGBA8` format selection, the fixed renderer reference texture using the sRGB-color path, and `GL_FRAMEBUFFER_SRGB` enable/disable around draw work including failure cleanup.
+
+Windows native acceptance runs `SrgbColorPathNativeTest` with `SHERKO_P5_T08_NATIVE=true`. It verifies that the production default back buffer reports `GL_SRGB` color encoding, renders through public `OpenGlRenderer`, reads back the triangle center, and requires RGB bytes within ±8 of encoded gray 128. That band is deliberately far from the approximate missing-encode value (~55) and missing-decode/double-gamma value (~188). It retains:
+
+- `engine-render-opengl/build/reports/p5/p5-t08-srgb.txt`
+- `engine-render-opengl/build/reports/p5/p5-t08-srgb.png`
+
+This proves only the fixed reference texture decode plus exactly one default-framebuffer encode. It does not establish general materials, arbitrary textures, asset/cooker behavior, HDR, tonemapping, fog, or post-processing.
 
 ## P5-T07A renderer public-boundary verification
 

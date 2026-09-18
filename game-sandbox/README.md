@@ -54,7 +54,7 @@ The once-per-second line is deliberately an owner diagnostic. It is not FPS, a b
 
 ## Current limitations
 
-The sandbox now shows one neutral-gray indexed triangle on a dark development background through the public production renderer path. P5-T08 makes this fixed reference path sRGB-correct: the renderer samples an internal sRGB texture in linear space and encodes once when writing the sRGB-capable default framebuffer. The sandbox itself still performs no direct OpenGL/LWJGL calls.
+The sandbox now shows one neutral-gray indexed triangle on a dark development background through the public production renderer path. P5-T08 makes this fixed reference path sRGB-correct: the renderer samples an internal sRGB texture in linear space and encodes exactly once at presentation, using hardware when the actual default framebuffer is sRGB or a bounded fragment fallback when it is linear. The sandbox itself still performs no direct OpenGL/LWJGL calls.
 
 This remains bounded renderer-foundation content. It does not provide arbitrary/public textures, materials, lighting, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 

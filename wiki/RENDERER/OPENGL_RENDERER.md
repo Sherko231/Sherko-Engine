@@ -45,8 +45,10 @@ Every call currently:
 - enables depth testing with `GL_LESS`;
 - enables back-face culling with `GL_BACK`;
 - treats counter-clockwise winding as front-facing;
-- clears the development color/depth buffers;
-- draws exactly one engine-owned indexed triangle.
+- clears the development color/depth buffers while `GL_FRAMEBUFFER_SRGB` is enabled;
+- samples one renderer-owned 1x1 neutral-gray sRGB reference texture through an internal sampler;
+- draws exactly one engine-owned indexed triangle;
+- disables `GL_FRAMEBUFFER_SRGB` again before returning.
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 
@@ -58,11 +60,11 @@ The current renderer owns one position-only triangle around the world origin:
 - three unsigned-int indices `0, 1, 2`;
 - attribute location 0 contains three `float` position components.
 
-This mesh is renderer-owned validation content, not an asset-system format or a reusable arbitrary mesh API.
+This mesh is renderer-owned validation content, not an asset-system format or a reusable arbitrary mesh API. P5-T08 also gives the triangle one fixed internal reference texture. Display-referred color bytes use sRGB storage so OpenGL decodes them to linear shader values; linear-data textures use linear RGBA8 storage. This does not create a public texture or material API.
 
 ## Ownership and shutdown
 
-`OpenGlRenderer.close()` is idempotent. It closes the linked program, shaders, uniform buffers, index/vertex buffers, and vertex array through the production native-resource ownership path.
+`OpenGlRenderer.close()` is idempotent. It closes the linked program, shaders, reference sampler/texture, uniform buffers, index/vertex buffers, and vertex array through the production native-resource ownership path.
 
 Close order at the composition root should be:
 
@@ -77,9 +79,9 @@ P5-T07 does not provide:
 
 - arbitrary mesh creation/submission;
 - asset import/loading;
-- textures or material records;
+- arbitrary/public texture creation or material records;
 - lighting;
-- sRGB/gamma policy;
+- HDR, tonemapping, fog, post-processing, or P5-T15 presentation architecture;
 - world/ECS integration;
 - gameplay camera ownership;
 - batching, culling, sorting, or frame graphs;

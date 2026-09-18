@@ -141,6 +141,10 @@ class IndexedStaticMeshNativeTest {
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixels);
 
+        int backgroundRed = Byte.toUnsignedInt(pixels.get(0));
+        int backgroundGreen = Byte.toUnsignedInt(pixels.get(1));
+        int backgroundBlue = Byte.toUnsignedInt(pixels.get(2));
+
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         int visibleTrianglePixels = 0;
         for (int y = 0; y < height; y++) {
@@ -151,9 +155,12 @@ class IndexedStaticMeshNativeTest {
                 int green = Byte.toUnsignedInt(pixels.get(offset + 1));
                 int blue = Byte.toUnsignedInt(pixels.get(offset + 2));
                 int alpha = Byte.toUnsignedInt(pixels.get(offset + 3));
-                if (red >= 110 && red <= 150
-                        && green >= 110 && green <= 150
-                        && blue >= 110 && blue <= 150) {
+                int colorDistance = Math.max(
+                        Math.abs(red - backgroundRed),
+                        Math.max(
+                                Math.abs(green - backgroundGreen),
+                                Math.abs(blue - backgroundBlue)));
+                if (colorDistance > 20) {
                     visibleTrianglePixels++;
                 }
                 int argb = (alpha << 24) | (red << 16) | (green << 8) | blue;

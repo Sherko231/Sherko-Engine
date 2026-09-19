@@ -10,11 +10,23 @@ import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     @Override
-    public void configurePositionAttribute(int vertexArray, int vertexBuffer) {
-        GL45.glVertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, 0L, 3 * Float.BYTES);
+    public void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer) {
+        int stride = 6 * Float.BYTES;
+        GL45.glVertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, 0L, stride);
+
         GL45.glEnableVertexArrayAttrib(vertexArray, 0);
         GL45.glVertexArrayAttribFormat(vertexArray, 0, 3, GL11.GL_FLOAT, false, 0);
         GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 1);
+        GL45.glVertexArrayAttribFormat(
+                vertexArray,
+                1,
+                3,
+                GL11.GL_FLOAT,
+                false,
+                3 * Float.BYTES);
+        GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
     }
 
     @Override
@@ -108,6 +120,23 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
                 scalars.greenMultiplier(),
                 scalars.blueMultiplier(),
                 scalars.alphaMultiplier());
+    }
+
+    @Override
+    public void setDirectionalLight(int program, DirectionalLight light) {
+        GL41.glProgramUniform3f(
+                program,
+                1,
+                light.directionX(),
+                light.directionY(),
+                light.directionZ());
+        GL41.glProgramUniform3f(
+                program,
+                2,
+                light.red(),
+                light.green(),
+                light.blue());
+        GL41.glProgramUniform1f(program, 3, light.intensity());
     }
 
     @Override

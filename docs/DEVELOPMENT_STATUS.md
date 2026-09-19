@@ -104,4 +104,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T15 / Issue #197 against accepted P5-T14 and current `master` before implementation. P5-T15 is limited to completing/confirming correct gamma and sRGB presentation over the accepted linear shading path; do not pull fog, tonemapping, HDR/post-processing, bloom, color grading, or changes to accepted P5-T08 texture semantics forward without an explicit decision.
+Complete the final consistency review for P5-T15 / Issue #197 on `p5-t15-srgb-presentation`, then open the final non-draft PR. Require the exact-head five-job matrix, including retained P5-T15 native presentation evidence and the existing P5-T08 regression, before merge. Do not start P5-T16/P5-T17 or add fog, tonemapping, HDR/post-processing, bloom, exposure, color grading, offscreen framebuffer architecture, render graphs, or public presentation settings.

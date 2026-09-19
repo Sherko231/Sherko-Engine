@@ -84,6 +84,8 @@ After a successful render, `lastCullingCounters()` returns immutable `RenderCull
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 
+P5-T17 adds one internal first-person validation layer after world/debug rendering. It is not part of `RenderFramePacket` submission and exposes no new public API. The layer uses identity view with a dedicated 55-degree vertical-FOV projection, current framebuffer aspect, 0.01 m near and 10 m far. Immediately before drawing the engine-owned fixture, the renderer clears only depth, then uses `GL_LESS` with depth writes enabled, blending disabled, and culling disabled. This prevents previously rendered world depth from clipping the fixture while leaving D-041/D-045 world camera matrices untouched. The layer restores the world camera UBO binding plus default VAO/program before returning.
+
 P5-T15 finalizes the internal default-framebuffer presentation policy without adding caller configuration. Renderer creation queries the actual back-buffer color encoding once. An sRGB buffer uses linear fragment output plus hardware `GL_FRAMEBUFFER_SRGB`; a linear buffer uses the committed manual IEC sRGB shader variant and CPU-encoded clear color with framebuffer sRGB disabled. Unsupported encodings fail renderer creation. P5-T08 texture rules remain unchanged: display-referred textures are stored as `GL_SRGB8_ALPHA8` and decode to linear on sample, while linear-data textures remain `GL_RGBA8`. Lighting/material math stays linear until the one presentation conversion.
 
 ## Current fixed mesh
@@ -156,3 +158,14 @@ The OpenGL adapter expands submissions into one fixed-capacity dynamic line buff
 `DebugTextCounter` is deliberately only a bounded ASCII label plus signed integer value. The renderer does not draw glyphs. After a successful frame, `lastDebugTextCounters()` exposes the submitted immutable counter snapshot; the sandbox includes it in its existing periodic console diagnostic. A failed render leaves the previous successful counter snapshot unchanged.
 
 There is no retained debug scene, duration/lifetime system, persistent debug ID, editor object, font renderer, or ImGui/runtime-HUD ownership in this task.
+
+
+## First-person view-model validation layer
+
+P5-T17 intentionally proves only the render-layer behavior. The renderer owns one fixed six-vertex camera-relative rectangle used as a validation fixture; it is not a gameplay hand/weapon/tool and is not a public mesh/material/asset submission contract.
+
+The layer runs after the current world scene and P5-T16 debug geometry. It uses a dedicated camera UBO, VAO, VBO, shader pair, and program. Its view matrix is identity. Projection is fixed at 55 degrees vertical FOV, current framebuffer aspect, 0.01 m near and 10 m far. Before the layer, only depth is reset to 1.0; color is preserved. The fixture then depth-tests with `GL_LESS` and writes depth within its own isolated layer.
+
+The fixture color is fixed linear RGB and follows the same accepted P5-T15 exactly-once sRGB presentation policy. The pass consumes no world/local lights, texture, material, world transform, or gameplay identity.
+
+There is currently no public view-model submission API, no P6 asset/resource identity, no hands/weapons/tools, no animation/IK, no third-person presentation, no HUD/UI, and no FBO/render graph.

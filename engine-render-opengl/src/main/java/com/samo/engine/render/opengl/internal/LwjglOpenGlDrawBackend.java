@@ -1,10 +1,11 @@
 package com.samo.engine.render.opengl.internal;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -27,17 +28,37 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void setViewport(int width, int height) {
-        GL11.glViewport(0, 0, width, height);
+    public void setViewport(int x, int y, int width, int height) {
+        GL11.glViewport(x, y, width, height);
     }
 
     @Override
-    public void configureDepthAndBackFaceCull() {
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthFunc(GL11.GL_LESS);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glCullFace(GL11.GL_BACK);
-        GL11.glFrontFace(GL11.GL_CCW);
+    public void applyMaterialState(RendererMaterial material) {
+        MaterialStatePolicy policy = MaterialStatePolicy.from(material);
+
+        if (policy.blendEnabled()) {
+            GL11.glEnable(GL11.GL_BLEND);
+        } else {
+            GL11.glDisable(GL11.GL_BLEND);
+        }
+        GL14.glBlendEquation(policy.blendEquation());
+        GL11.glBlendFunc(policy.blendSourceFactor(), policy.blendDestinationFactor());
+
+        if (policy.depthTestEnabled()) {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        } else {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        GL11.glDepthFunc(policy.depthFunction());
+        GL11.glDepthMask(policy.depthWriteEnabled());
+
+        GL11.glFrontFace(policy.frontFace());
+        if (policy.cullEnabled()) {
+            GL11.glEnable(GL11.GL_CULL_FACE);
+            GL11.glCullFace(policy.cullFace());
+        } else {
+            GL11.glDisable(GL11.GL_CULL_FACE);
+        }
     }
 
     @Override
@@ -76,6 +97,17 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     public void bindTextureAndSampler(int unit, int texture, int sampler) {
         GL45.glBindTextureUnit(unit, texture);
         org.lwjgl.opengl.GL33.glBindSampler(unit, sampler);
+    }
+
+    @Override
+    public void setMaterialScalars(int program, MaterialScalars scalars) {
+        GL41.glProgramUniform4f(
+                program,
+                0,
+                scalars.redMultiplier(),
+                scalars.greenMultiplier(),
+                scalars.blueMultiplier(),
+                scalars.alphaMultiplier());
     }
 
     @Override

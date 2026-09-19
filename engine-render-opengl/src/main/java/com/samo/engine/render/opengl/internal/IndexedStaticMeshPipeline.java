@@ -26,6 +26,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlShader vertexShader;
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
+    private final RendererMaterial baselineMaterial;
+    private final RendererMaterial tintedMaterial;
     private final boolean hardwareFramebufferSrgb;
     private final ByteBuffer cameraBytes =
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
@@ -47,6 +49,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlShader vertexShader,
             OpenGlShader fragmentShader,
             OpenGlProgram program,
+            RendererMaterial baselineMaterial,
+            RendererMaterial tintedMaterial,
             boolean hardwareFramebufferSrgb) {
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
@@ -61,6 +65,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.program = program;
+        this.baselineMaterial = baselineMaterial;
+        this.tintedMaterial = tintedMaterial;
         this.hardwareFramebufferSrgb = hardwareFramebufferSrgb;
     }
 
@@ -174,6 +180,23 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
             draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
 
+            MaterialTextureBinding referenceBinding =
+                    new MaterialTextureBinding(0, texture.handle(), sampler.handle());
+            RendererMaterial baselineMaterial = new RendererMaterial(
+                    MaterialShaderVariant.TEXTURED_REFERENCE,
+                    List.of(referenceBinding),
+                    MaterialScalars.identity(),
+                    MaterialBlendMode.OPAQUE,
+                    MaterialDepthMode.TEST_WRITE,
+                    MaterialCullMode.BACK);
+            RendererMaterial tintedMaterial = new RendererMaterial(
+                    MaterialShaderVariant.TEXTURED_REFERENCE,
+                    List.of(referenceBinding),
+                    new MaterialScalars(1.0f, 0.35f, 0.35f, 0.80f),
+                    MaterialBlendMode.ALPHA_BLEND,
+                    MaterialDepthMode.TEST_NO_WRITE,
+                    MaterialCullMode.NONE);
+
             return new IndexedStaticMeshPipeline(
                     guard,
                     gl,
@@ -188,6 +211,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     vertex,
                     fragment,
                     linkedProgram,
+                    baselineMaterial,
+                    tintedMaterial,
                     hardwareSrgb);
         } catch (RuntimeException | Error failure) {
             suppressClose(failure, linkedProgram);
@@ -230,24 +255,49 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         perFrameBytes.flip();
         resourceBackend.uploadBufferSubData(perFrameBuffer.handle(), 0L, perFrameBytes);
 
-        drawBackend.setViewport(framebufferWidth, framebufferHeight);
-        drawBackend.configureDepthAndBackFaceCull();
+        int leftWidth = (framebufferWidth + 1) / 2;
+        int rightWidth = framebufferWidth / 2;
+
+        drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
         drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
         try {
             drawBackend.clearFrame(hardwareFramebufferSrgb);
-            drawBackend.bindTextureAndSampler(0, referenceTexture.handle(), referenceSampler.handle());
-            drawBackend.useProgram(program.handle());
-            drawBackend.bindVertexArray(vertexArray.handle());
-            try {
-                drawBackend.drawIndexedTriangle();
-            } finally {
-                drawBackend.bindDefaultVertexArray();
-                drawBackend.useDefaultProgram();
-                drawBackend.bindTextureAndSampler(0, 0, 0);
-            }
+            drawMaterial(baselineMaterial, 0, 0, leftWidth, framebufferHeight);
+            drawMaterial(tintedMaterial, leftWidth, 0, rightWidth, framebufferHeight);
         } finally {
+            drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
             drawBackend.setFramebufferSrgbEnabled(false);
         }
+    }
+
+    private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {
+        int programHandle = programFor(material.shaderVariant());
+        drawBackend.setViewport(x, y, width, height);
+        drawBackend.applyMaterialState(material);
+        for (MaterialTextureBinding textureBinding : material.textures()) {
+            drawBackend.bindTextureAndSampler(
+                    textureBinding.unit(),
+                    textureBinding.textureHandle(),
+                    textureBinding.samplerHandle());
+        }
+        drawBackend.setMaterialScalars(programHandle, material.scalars());
+        drawBackend.useProgram(programHandle);
+        drawBackend.bindVertexArray(vertexArray.handle());
+        try {
+            drawBackend.drawIndexedTriangle();
+        } finally {
+            drawBackend.bindDefaultVertexArray();
+            drawBackend.useDefaultProgram();
+            for (MaterialTextureBinding textureBinding : material.textures()) {
+                drawBackend.bindTextureAndSampler(textureBinding.unit(), 0, 0);
+            }
+        }
+    }
+
+    private int programFor(MaterialShaderVariant shaderVariant) {
+        return switch (shaderVariant) {
+            case TEXTURED_REFERENCE -> program.handle();
+        };
     }
 
     private void requireOpen() {

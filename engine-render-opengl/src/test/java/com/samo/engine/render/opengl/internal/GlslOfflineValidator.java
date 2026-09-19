@@ -48,6 +48,16 @@ final class GlslOfflineValidator {
             Shaderc.shaderc_compile_options_set_source_language(
                     options, Shaderc.shaderc_source_language_glsl);
 
+            // Shaderc defaults to Vulkan semantics. These are OpenGL runtime shaders,
+            // so validate against Shaderc's OpenGL SPIR-V environment explicitly.
+            Shaderc.shaderc_compile_options_set_target_env(
+                    options,
+                    Shaderc.shaderc_target_env_opengl,
+                    Shaderc.shaderc_env_version_opengl_4_5);
+            Shaderc.shaderc_compile_options_set_target_spirv(
+                    options,
+                    Shaderc.shaderc_spirv_version_1_0);
+
             result = Shaderc.shaderc_compile_into_spv(
                     compiler,
                     shaderSource,

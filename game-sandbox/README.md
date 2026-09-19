@@ -33,7 +33,7 @@ Normal input bindings remain active at the same time: W/A/S/D, mouse movement, S
 The current playground keeps these capabilities active together rather than showing them one by one:
 
 - production `GlfwWindow` / OpenGL 4.6 startup through the public engine API;
-- public `OpenGlRenderer` production composition drawing one indexed static triangle every visible framebuffer frame, now using the fixed P5-T08 neutral-gray sRGB reference texture and one default-framebuffer sRGB encode;
+- public `OpenGlRenderer` production composition drawing the same indexed static triangle twice every visible framebuffer frame through two internal P5-T09 material values, while preserving the fixed P5-T08 neutral-gray sRGB reference and one presentation encode;
 - P5-T06 camera/per-frame uniform blocks driven by a fixed D-041/D-045 camera and current framebuffer aspect;
 - explicit depth testing and back-face culling through the production renderer path;
 - window-owned `GlfwWindow.present()` presentation without exposing a native window handle;
@@ -54,9 +54,9 @@ The once-per-second line is deliberately an owner diagnostic. It is not FPS, a b
 
 ## Current limitations
 
-The sandbox now shows one neutral-gray indexed triangle on a dark development background through the public production renderer path. P5-T08 makes this fixed reference path sRGB-correct: the renderer samples an internal sRGB texture in linear space and encodes exactly once at presentation, using hardware when the actual default framebuffer is sRGB or a bounded fragment fallback when it is linear. The sandbox itself still performs no direct OpenGL/LWJGL calls.
+The sandbox now shows the same indexed reference triangle twice side by side through the unchanged public production renderer call: the left baseline material preserves the neutral-gray P5-T08 reference, while the right material is visibly tinted and uses a distinct internal blend/depth/cull policy. P5-T08 remains responsible for sRGB-correct decode/presentation. The sandbox itself still performs no direct OpenGL/LWJGL calls and cannot create arbitrary materials.
 
-This remains bounded renderer-foundation content. It does not provide arbitrary/public textures, materials, lighting, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
+This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, lighting, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

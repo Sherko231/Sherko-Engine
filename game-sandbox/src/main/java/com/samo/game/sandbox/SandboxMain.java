@@ -404,7 +404,7 @@ public final class SandboxMain {
     private static void printControls() {
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
-        System.out.println("The production renderer draws one indexed white triangle on a dark background.");
+        System.out.println("The production renderer draws the same indexed mesh with two internal reference materials.");
         System.out.println();
         System.out.println("Owner controls:");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");

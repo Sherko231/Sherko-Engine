@@ -180,6 +180,30 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             EngineLogger logger,
             int maxLocalLights,
             String vertexSource,
+            String fragmentSource) {
+        return create(
+                threadGuard,
+                registry,
+                resourceBackend,
+                drawBackend,
+                reflectionBackend,
+                logger,
+                maxLocalLights,
+                vertexSource,
+                fragmentSource,
+                "debug-vertex",
+                "debug-fragment");
+    }
+
+    static IndexedStaticMeshPipeline create(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend resourceBackend,
+            OpenGlDrawBackend drawBackend,
+            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            EngineLogger logger,
+            int maxLocalLights,
+            String vertexSource,
             String fragmentSource,
             String debugVertexSource,
             String debugFragmentSource) {

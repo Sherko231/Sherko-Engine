@@ -102,7 +102,12 @@ class SrgbPresentationNativeTest {
                     framebufferEncoding == GL21.GL_SRGB || framebufferEncoding == GL11.GL_LINEAR,
                     "Default back buffer must report GL_SRGB or GL_LINEAR");
 
-            Matrix4f view = CameraMatrices.view(
+            Matrix4f clearOnlyView = CameraMatrices.view(
+                    new Vector3f(0.0f, 0.0f, 2.0f),
+                    new Vector3f(0.0f, 0.0f, 1.0f),
+                    new Vector3f(0.0f, 1.0f, 0.0f),
+                    new Matrix4f());
+            Matrix4f roomView = CameraMatrices.view(
                     new Vector3f(0.0f, 0.0f, 2.0f),
                     new Vector3f(0.0f, 0.0f, -1.0f),
                     new Vector3f(0.0f, 1.0f, 0.0f),
@@ -116,9 +121,10 @@ class SrgbPresentationNativeTest {
 
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
-                renderer.render(view, projection, framebufferWidth, framebufferHeight);
-
+                renderer.render(clearOnlyView, projection, framebufferWidth, framebufferHeight);
                 clearPixel = readPixel(8, 8);
+
+                renderer.render(roomView, projection, framebufferWidth, framebufferHeight);
                 baselinePixel = readPixel(framebufferWidth / 4, framebufferHeight / 2);
 
                 assertByte("clear red", clearPixel[0], CLEAR_RED_EXPECTED);
@@ -264,7 +270,8 @@ class SrgbPresentationNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=known linear clear and accepted lit reference scene through exactly one IEC sRGB presentation encode; no HDR, tonemapping, fog, bloom, exposure, color grading, offscreen framebuffer, or post-processing claim"));
+                "clear.sample.controlled.camera.looks.away.from.room=true",
+                "evidence.scope=known linear clear from a controlled camera that culls the room, followed by the accepted lit room reference sample through exactly one IEC sRGB presentation encode; no HDR, tonemapping, fog, bloom, exposure, color grading, offscreen framebuffer, or post-processing claim"));
     }
 
     private static int litSrgbByte(int srgbByte, double diffuseFactor) {

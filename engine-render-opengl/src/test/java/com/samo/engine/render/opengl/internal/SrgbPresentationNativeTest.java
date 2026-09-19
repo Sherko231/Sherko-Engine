@@ -125,7 +125,7 @@ class SrgbPresentationNativeTest {
                 clearPixel = readPixel(8, 8);
 
                 renderer.render(roomView, projection, framebufferWidth, framebufferHeight);
-                baselinePixel = readPixel(framebufferWidth / 4, framebufferHeight / 2);
+                baselinePixel = readPixel(framebufferWidth / 2, framebufferHeight / 2);
 
                 assertByte("clear red", clearPixel[0], CLEAR_RED_EXPECTED);
                 assertByte("clear green", clearPixel[1], CLEAR_GREEN_EXPECTED);

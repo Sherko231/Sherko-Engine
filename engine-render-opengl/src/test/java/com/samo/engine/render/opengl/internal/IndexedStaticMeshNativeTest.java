@@ -94,9 +94,9 @@ class IndexedStaticMeshNativeTest {
 
                 window.pollEvents();
                 assertEquals(
-                        2,
+                        1,
                         renderer.lastCullingCounters().submittedDraws(),
-                        "P5-T07 world scene must preserve the two current indexed submissions");
+                        "P5-T07 world scene must preserve the single full-frame indexed submission");
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
@@ -180,7 +180,7 @@ class IndexedStaticMeshNativeTest {
                 "renderer.api=OpenGlRenderer",
                 "mesh=indexed-room-fixture",
                 "draw.elements.count=36",
-                "world.submitted.draws=2",
+                "world.submitted.draws=1",
                 "material.baseline.depth=GL_LESS-write",
                 "material.baseline.cull=GL_BACK",
                 "material.tinted.depth=GL_LESS-no-write",

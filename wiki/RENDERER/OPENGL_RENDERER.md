@@ -74,7 +74,7 @@ Every call currently:
 - detects whether the actual default back buffer is `GL_SRGB` or `GL_LINEAR`;
 - clears the full development color/depth buffers using the matching presentation-encoding path;
 - samples one renderer-owned non-uniform 4x4 sRGB validation texture through mapped UV coordinates;
-- draws the fixed indexed P5-T18 room fixture through the existing two internal immutable P5-T09 material submissions; the fixture contains multiple room surfaces plus a nearer depth-occlusion panel;
+- draws the fixed indexed P5-T18 room fixture once across the full framebuffer through the opaque baseline material; the fixture contains multiple room surfaces plus a nearer depth-occlusion panel;
 - applies blend/depth/cull state from each material instead of entity-type branches;
 - adds the fixed P5-T13 directional contribution and accepted P5-T14 point/spot Lambert-range-cone contributions in linear space, clamps bounded SDR illumination, then applies material linear color multipliers before presentation encode;
 - uses hardware `GL_FRAMEBUFFER_SRGB` encoding on an sRGB default buffer, or one bounded fragment encode on a linear default buffer;

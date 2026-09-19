@@ -74,7 +74,6 @@ class DirectionalLightNativeTest {
         boolean stopped = false;
         boolean closed = false;
         int[] baseline = null;
-        int[] tinted = null;
         try {
             window.initialize();
             window.start();
@@ -103,12 +102,11 @@ class DirectionalLightNativeTest {
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
 
                 assertEquals(
-                        2,
+                        1,
                         renderer.lastCullingCounters().submittedDraws(),
-                        "P5-T13 must preserve the two current world indexed submissions");
+                        "P5-T13 must preserve the single full-frame world indexed submission");
 
-                baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
-                tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
+                baseline = readPixel(framebufferWidth / 2, framebufferHeight / 2);
 
                 for (int channel = 0; channel < 3; channel++) {
                     assertTrue(
@@ -121,10 +119,6 @@ class DirectionalLightNativeTest {
                                     + "±"
                                     + BYTE_TOLERANCE);
                 }
-                assertTrue(
-                        tinted[0] - tinted[1] >= 15 && tinted[0] - tinted[2] >= 15,
-                        "Tinted material must remain red-biased after lighting: rgb=" + rgb(tinted));
-
                 assertFalse(
                         GL11.glIsEnabled(GL30.GL_FRAMEBUFFER_SRGB),
                         "Renderer must disable GL_FRAMEBUFFER_SRGB after render");
@@ -150,7 +144,7 @@ class DirectionalLightNativeTest {
             window.close();
             closed = true;
             registry.assertNoOpenResources();
-            writeReport(baseline, tinted);
+            writeReport(baseline);
         } finally {
             if (!closed) {
                 if (started && !stopped) {
@@ -201,7 +195,7 @@ class DirectionalLightNativeTest {
         }
     }
 
-    private static void writeReport(int[] baseline, int[] tinted) throws IOException {
+    private static void writeReport(int[] baseline) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of(
                 "task=P5-T13",
@@ -215,8 +209,7 @@ class DirectionalLightNativeTest {
                 "expected.diffuse.factor=" + EXPECTED_DIFFUSE,
                 "expected.baseline.srgb.byte=" + EXPECTED_BASELINE_SRGB_BYTE,
                 "baseline.rgb=" + rgb(baseline),
-                "tinted.rgb=" + rgb(tinted),
-                "world.submitted.draws=2",
+                "world.submitted.draws=1",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",

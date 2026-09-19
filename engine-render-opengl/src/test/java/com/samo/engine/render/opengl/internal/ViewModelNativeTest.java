@@ -156,7 +156,7 @@ class ViewModelNativeTest {
                 renderer.render(frame);
 
                 RenderCullingCounters culling = renderer.lastCullingCounters();
-                assertEquals(2, culling.submittedDraws());
+                assertEquals(1, culling.submittedDraws());
 
                 fixturePixel = findFixturePixel(sampleX, sampleY, 5);
                 assertTrue(fixturePixel != null, "Expected view-model fixture at controlled overlap sample");
@@ -326,7 +326,7 @@ class ViewModelNativeTest {
                         + ","
                         + encodedByte(COLOR_BLUE_LINEAR),
                 "fixture.actual.rgb=" + rgb(fixturePixel),
-                "scene.indexed.room.draws=2",
+                "scene.indexed.room.draws=1",
                 "debug.geometry.coexists=true",
                 "viewport.restored=true",
                 "program.unbound=true",

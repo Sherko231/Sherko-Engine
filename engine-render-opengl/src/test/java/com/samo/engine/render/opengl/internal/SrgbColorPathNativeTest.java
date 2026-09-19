@@ -118,7 +118,7 @@ class SrgbColorPathNativeTest {
                         "Renderer must not leak GL_FRAMEBUFFER_SRGB state after render");
                 window.pollEvents();
 
-                int[] baselinePixel = readPixel(framebufferWidth / 4, framebufferHeight / 2);
+                int[] baselinePixel = readPixel(framebufferWidth / 2, framebufferHeight / 2);
                 red = baselinePixel[0];
                 green = baselinePixel[1];
                 blue = baselinePixel[2];

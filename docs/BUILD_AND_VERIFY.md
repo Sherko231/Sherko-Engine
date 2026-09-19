@@ -1243,3 +1243,43 @@ Required deterministic evidence:
 
 The ordinary five-job exact-head PR CI matrix remains authoritative. P5-T13 acceptance additionally requires the retained Windows directional-light artifact above, then exact-merge Lightweight master verification after merge. The native capture is correctness evidence only; Mesa software rendering does not establish physical-GPU performance.
 
+## P5-T14 bounded local-light verification
+
+P5-T14 adds public immutable point/spot renderer submissions while preserving the existing forward-renderer/module boundaries. The per-frame combined local-light maximum is configurable from 1 through 8; shader/storage capacity is fixed at 8. Overflow preserves packet order, accepts the first configured N values, emits exactly one renderer WARN for that render call, and drops the remainder before local-light buffer upload or draw-state mutation.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderLocalLightTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.OpenGlRendererConfigurationTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightSelectionTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightUniformBlockTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Deterministic evidence must establish:
+
+- `RenderPointLight` / `RenderSpotLight` reject non-finite or out-of-contract data and spot direction is normalized once at construction;
+- `RenderFramePacket` snapshots the ordered local-light list defensively while the original four-argument constructor produces an empty list;
+- configured maximum 0 or 9 fails before native renderer-resource creation, while values 1–8 are the bounded supported domain;
+- zero and exactly-max selection emit no warning;
+- over-max selection keeps the first N values, emits exactly one WARN containing submitted/accepted/dropped/configured-max counts, and a warning-sink failure occurs before local-light upload/draw mutation;
+- the fixed std140 `LocalLightBlock` is 528 bytes at binding 2, packs eight-entry position/range, direction/type, color/intensity, cone-cosine arrays plus count, and zero-fills unused/stale entries deterministically;
+- `verifyPublicApiBoundary` compiles a consumer using the new point/spot values, local-light packet constructor, and renderer configuration overload against the API-only artifact.
+
+Windows native acceptance runs `LocalLightsNativeTest` with `SHERKO_P5_T14_NATIVE=true`. The fixture configures max=2 and submits three lights in order: one point light, one spot light whose cone alignment lies exactly halfway between the inner/outer cosine thresholds (expected smoothstep factor 0.5), and one strong red overflow point light. It requires one overflow WARN, exactly two indexed draws, neutral expected baseline brightness from the independently calculated directional + point-range + partial-spot contribution, and proves the dropped red light cannot tint that baseline. It also requires viewport/program/VAO/framebuffer-sRGB cleanup and an empty native-resource registry. Retained artifacts:
+
+- `engine-render-opengl/build/reports/p5/p5-t14-local-lights.txt`
+- `engine-render-opengl/build/reports/p5/p5-t14-local-lights.png`
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.LocalLightsNativeTest.xml`
+
+The existing P5-T08, P5-T09, and P5-T13 native regressions remain in the same Windows native job and exercise the empty-local-light compatibility path.
+
+The ordinary five-job exact-head PR CI matrix remains authoritative, followed by exact-merge Lightweight master verification after merge. Hosted Windows native evidence uses pinned Mesa llvmpipe for correctness only and does not establish physical-GPU performance.
+

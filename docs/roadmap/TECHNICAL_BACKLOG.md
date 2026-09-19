@@ -137,6 +137,8 @@ Execution rules for this phase:
 
 - Treat every P5R task as refactor/maintenance work unless its active Issue explicitly authorizes a contract change.
 - Execute exactly one bounded P5R task/Issue/branch at a time under `AGENTS.md`.
+- No broken intermediate states: every merged P5R task must independently leave the repository buildable, testable, runnable where applicable, behaviorally valid, and documentation-consistent. No task may depend on a later P5R task to restore compilation, tests, runtime behavior, contracts, ownership/lifecycle guarantees, or documentation consistency.
+- Temporary migration scaffolding may exist only inside one active bounded Issue when genuinely necessary; it must remain valid throughout the task and be removed or fully reconciled before merge rather than deferred to a later P5R task.
 - Prefer internal decomposition and internal renaming before public API renaming.
 - Review every touched class/interface/record/enum/method/field/parameter/package/test name for clarity. Rename names that do not communicate responsibility; do not churn names that are already precise.
 - Prefer responsibility-bearing suffixes such as `Renderer`, `Controller`, `Coordinator`, `Loader`, `Parser`, `Validator`, `Selector`, `Sorter`, `Factory`, `Descriptor`, and `Snapshot` where they describe the actual role. Avoid vague `Manager`, `Helper`, `Util`, or `Data` names unless they are genuinely the clearest domain term.

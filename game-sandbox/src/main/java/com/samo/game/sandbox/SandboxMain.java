@@ -156,11 +156,8 @@ public final class SandboxMain {
         InputResponseSettings responseSettings = initialResponseSettings;
         int sensitivityIndex = indexOfSensitivity(responseSettings.mouseSensitivity());
         boolean exitRequested = false;
-        Matrix4f view = CameraMatrices.view(
-                new Vector3f(0.0f, 0.0f, 2.0f),
-                new Vector3f(0.0f, 0.0f, -1.0f),
-                new Vector3f(0.0f, 1.0f, 0.0f),
-                new Matrix4f());
+        SandboxCamera camera = new SandboxCamera();
+        Matrix4f view = new Matrix4f();
         Matrix4f projection = new Matrix4f();
         List<RenderLocalLight> localLights = sandboxLocalLights();
         List<DebugPrimitive> debugPrimitives = sandboxDebugPrimitives();
@@ -233,11 +230,13 @@ public final class SandboxMain {
 
             for (long offset = 1L; offset <= dueTicks; offset++) {
                 latestCommand = commandSampler.nextCommand(cumulativeTicks + offset);
+                camera.apply(latestCommand);
             }
             cumulativeTicks += dueTicks;
 
             if (!exitRequested && framebufferSize.width() > 0 && framebufferSize.height() > 0) {
                 float aspectRatio = (float) framebufferSize.width() / framebufferSize.height();
+                camera.view(view);
                 CameraMatrices.perspective(
                         (float) Math.toRadians(70.0),
                         aspectRatio,
@@ -500,7 +499,7 @@ public final class SandboxMain {
     private static void printControls() {
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
-        System.out.println("The production renderer draws the same indexed mesh with two internal reference materials.");
+        System.out.println("The production renderer draws the internal mapped-texture Phase 5 room fixture.");
         System.out.println("The scene includes one public point light and one public spot light plus the fixed directional light.");
         System.out.println("P5-T16 adds renderer-neutral line/AABB/sphere/ray debug geometry and bounded text counters.");
         System.out.println();
@@ -511,7 +510,7 @@ public final class SandboxMain {
         System.out.println("  Right Shift + R toggle mouse Y inversion");
         System.out.println("  Ctrl + Q        exit sandbox cleanly");
         System.out.println();
-        System.out.println("Gameplay/input bindings remain active at the same time: W/A/S/D, mouse, Space, E, mouse buttons, etc.");
+        System.out.println("W/A/S/D move the rendered camera and mouse LOOK changes yaw/pitch; other input bindings remain active.");
         System.out.println();
     }
 

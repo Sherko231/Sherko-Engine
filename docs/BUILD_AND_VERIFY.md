@@ -965,6 +965,28 @@ No dependency version is selected by P5-T07A. The last command is intentionally 
 
 Sandbox impact: none — the existing sandbox uses the same public `OpenGlRenderer` calls and runtime composition. Wiki impact is limited to clarifying renderer-module consumption; no public signature or lifecycle behavior changes.
 
+## P5-T09 renderer material verification
+
+P5-T09 keeps its material value internal to `engine-render-opengl`; it adds no public material/resource API and no dependency or module edge.
+
+Focused deterministic verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RendererMaterialTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Windows native acceptance is part of `Windows native smoke` with `SHERKO_P5_T09_NATIVE=true` and runs on the hosted Windows/Mesa correctness environment. It must retain:
+
+- `engine-render-opengl/build/reports/p5/p5-t09-materials.txt`;
+- `engine-render-opengl/build/reports/p5/p5-t09-materials.png`;
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.RendererMaterialNativeTest.xml`.
+
+The native acceptance requires two primitives from the same owned indexed mesh, a baseline left material that preserves the P5-T08 encoded gray tolerance, a visibly distinct tinted right material, restored full-frame viewport, unbound program/VAO, disabled framebuffer-sRGB state after render, and an empty native-resource registry after cleanup. This evidence is renderer correctness/lifecycle evidence only; hosted software OpenGL is not physical-GPU performance or vendor-driver qualification.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

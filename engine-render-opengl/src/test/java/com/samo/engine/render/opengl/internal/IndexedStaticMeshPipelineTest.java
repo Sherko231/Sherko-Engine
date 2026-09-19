@@ -59,7 +59,7 @@ class IndexedStaticMeshPipelineTest {
                 "debug-position:102:16",
                 "ubo:0:13",
                 "view-model-position:103:17"), draw.trace);
-        assertEquals(5, resources.uploads.size());
+        assertEquals(3, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
         assertEquals(144, resources.uploads.get(2).bytes().length);
@@ -76,7 +76,7 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
-        assertEquals(3, resources.uploads.size());
+        assertEquals(4, resources.uploads.size());
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
         assertEquals(LocalLightUniformBlock.SIZE_BYTES, resources.uploads.get(2).bytes().length);

@@ -76,3 +76,25 @@ If the capability cannot yet be demonstrated without exposing internals, importi
 and integrate it later when the required public boundary exists.
 
 A separate subsystem-specific playground entry point is exceptional, not the default. Use one only when coexistence in the main sandbox would be genuinely impractical or confusing and the active Issue explicitly authorizes it.
+
+
+## Standalone renderer visual demo
+
+The normal `game-sandbox` remains the persistent public-API playground and keeps one clean full-frame renderer view.
+
+For owner-only visual inspection of already-implemented internal material state plus public local-light/debug behavior, run the separate renderer demo:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:runRendererVisualDemo
+```
+
+The dedicated window intentionally shows:
+- a left cyan panel using the existing opaque material-state policy;
+- a right cyan panel using the existing alpha-blended transparent material-state policy, allowing the rendered room behind it to remain visible;
+- a moving warm/orange point light affecting the room, visualized by a three-axis orange debug-line cross;
+- a moving cool/cyan spot light affecting the room, visualized by a three-axis cyan debug-line cross plus a cyan debug ray showing its current direction;
+- the fixed directional light from the normal Phase 5 renderer path.
+
+Press `Esc` or `Ctrl+Q` to exit.
+
+This demo is intentionally isolated from the normal sandbox because arbitrary public mesh/material submission does not exist yet. It uses renderer package internals only from the dedicated `visualDemo` source set and does not make those internals part of the public engine API.

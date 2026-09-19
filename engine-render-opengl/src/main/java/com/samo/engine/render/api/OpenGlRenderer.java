@@ -15,11 +15,11 @@ import org.joml.Matrix4fc;
 /**
  * Minimal production OpenGL renderer composition for the fixed indexed reference mesh.
  *
- * <p>The current internal path draws the same owned mesh through two renderer-internal material
- * values, samples one renderer-owned sRGB reference texture, and writes linear shader output through
- * exactly one presentation sRGB encode, using hardware when the default buffer is sRGB or an internal
- * fallback when it is linear. The material values remain implementation details until stable runtime
- * asset/resource references exist. P5-T10 adds an immutable renderer-facing frame packet that
+ * <p>The current internal path draws the fixed renderer-owned room once through the opaque baseline
+ * material, samples one renderer-owned sRGB reference texture, and writes linear shader output
+ * through exactly one presentation sRGB encode, using hardware when the default buffer is sRGB or an
+ * internal fallback when it is linear. Alternate internal material-state values remain implementation
+ * details until stable runtime asset/resource references exist. P5-T10 adds an immutable renderer-facing frame packet that
  * snapshots camera matrices and framebuffer size without retaining mutable world/gameplay objects.
  * P5-T11 derives a CPU view frustum from that snapshot, tests the fixed reference mesh world AABB
  * through the accepted Phase 4 geometry semantics, and exposes latest-successful-frame culling

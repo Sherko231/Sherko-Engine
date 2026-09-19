@@ -42,6 +42,7 @@ Every call currently:
 
 - derives the active CPU view frustum from the packet's accepted `projection * view` matrices;
 - tests the fixed reference mesh world AABB through P4 `Frustum3f.intersects(Aabb3f)` before each draw candidate;
+- sorts the remaining internal draw submissions deterministically: opaque by renderer-owned logical program/material/mesh keys, transparent back-to-front by camera-space depth with stable ties;
 - uploads the P5-T06 `CameraBlock` and `PerFrameBlock`;
 - detects whether the actual default back buffer is `GL_SRGB` or `GL_LINEAR`;
 - clears the full development color/depth buffers using the matching presentation-encoding path;
@@ -88,7 +89,7 @@ The current bounded renderer does not provide:
 - HDR, tonemapping, fog, post-processing, or P5-T15 presentation architecture;
 - world/ECS integration;
 - gameplay camera ownership;
-- batching, P5-T12 draw sorting, broad-phase/occlusion/GPU culling, or frame graphs;
+- batching, render graphs/pass scheduling, broad-phase/occlusion/GPU culling, GPU-driven sorting, order-independent transparency, or instancing;
 - render-worker or command-queue behavior;
 - raw OpenGL handles.
 

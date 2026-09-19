@@ -107,7 +107,7 @@ class Phase5ExitNativeTest {
                     new Vector3f(0.0f, 1.0f, 0.0f),
                     new Matrix4f());
             Matrix4f viewB = CameraMatrices.view(
-                    new Vector3f(1.2f, 0.0f, 2.0f),
+                    new Vector3f(1.5f, 0.0f, 2.0f),
                     new Vector3f(0.0f, 0.0f, -1.0f),
                     new Vector3f(0.0f, 1.0f, 0.0f),
                     new Matrix4f());
@@ -330,7 +330,7 @@ class Phase5ExitNativeTest {
                 "room.ceiling.rgb=" + rgb(ceiling),
                 "room.depth.occlusion.near-panel-over-back-wall=true",
                 "camera.pose.a.position=0.0,0.0,2.0",
-                "camera.pose.b.position=1.2,0.0,2.0",
+                "camera.pose.b.position=1.5,0.0,2.0",
                 "camera.shifted.center.rgb=" + rgb(shiftedCenter),
                 "camera.projected.sample.changed=true",
                 "directional.light.contribution=verified-by-neutral-panel-reference",

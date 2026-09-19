@@ -10,8 +10,8 @@ import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     @Override
-    public void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer) {
-        int stride = 6 * Float.BYTES;
+    public void configurePositionNormalUvAttributes(int vertexArray, int vertexBuffer) {
+        int stride = 8 * Float.BYTES;
         GL45.glVertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, 0L, stride);
 
         GL45.glEnableVertexArrayAttrib(vertexArray, 0);
@@ -27,6 +27,16 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
                 false,
                 3 * Float.BYTES);
         GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 2);
+        GL45.glVertexArrayAttribFormat(
+                vertexArray,
+                2,
+                2,
+                GL11.GL_FLOAT,
+                false,
+                6 * Float.BYTES);
+        GL45.glVertexArrayAttribBinding(vertexArray, 2, 0);
     }
 
     @Override
@@ -212,8 +222,11 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void drawIndexedTriangle() {
-        GL11.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_INT, 0L);
+    public void drawIndexedTriangles(int indexCount) {
+        if (indexCount <= 0 || indexCount % 3 != 0) {
+            throw new IllegalArgumentException("indexCount must be a positive multiple of three");
+        }
+        GL11.glDrawElements(GL11.GL_TRIANGLES, indexCount, GL11.GL_UNSIGNED_INT, 0L);
     }
 
     @Override

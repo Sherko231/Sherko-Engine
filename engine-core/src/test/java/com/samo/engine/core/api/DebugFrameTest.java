@@ -12,6 +12,12 @@ import org.junit.jupiter.api.Test;
 
 class DebugFrameTest {
     @Test
+    void emptyFrameCarriesNoDiagnostics() {
+        assertEquals(List.of(), DebugFrame.EMPTY.primitives());
+        assertEquals(List.of(), DebugFrame.EMPTY.textCounters());
+    }
+
+    @Test
     void snapshotsOrderedPrimitivesAndCountersAtExactMaximum() {
         DebugLine line = new DebugLine(
                 new Vector3f(0.0f, 0.0f, 0.0f),

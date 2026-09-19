@@ -2,9 +2,9 @@ package com.samo.engine.render.opengl.internal;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -27,17 +27,49 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void setViewport(int width, int height) {
-        GL11.glViewport(0, 0, width, height);
+    public void setViewport(int x, int y, int width, int height) {
+        GL11.glViewport(x, y, width, height);
     }
 
     @Override
-    public void configureDepthAndBackFaceCull() {
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthFunc(GL11.GL_LESS);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glCullFace(GL11.GL_BACK);
+    public void applyMaterialState(RendererMaterial material) {
+        switch (material.blendMode()) {
+            case OPAQUE -> GL11.glDisable(GL11.GL_BLEND);
+            case ALPHA_BLEND -> {
+                GL11.glEnable(GL11.GL_BLEND);
+                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            }
+        }
+
+        switch (material.depthMode()) {
+            case TEST_WRITE -> {
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                GL11.glDepthFunc(GL11.GL_LESS);
+                GL11.glDepthMask(true);
+            }
+            case TEST_NO_WRITE -> {
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                GL11.glDepthFunc(GL11.GL_LESS);
+                GL11.glDepthMask(false);
+            }
+            case DISABLED -> {
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GL11.glDepthMask(false);
+            }
+        }
+
         GL11.glFrontFace(GL11.GL_CCW);
+        switch (material.cullMode()) {
+            case BACK -> {
+                GL11.glEnable(GL11.GL_CULL_FACE);
+                GL11.glCullFace(GL11.GL_BACK);
+            }
+            case FRONT -> {
+                GL11.glEnable(GL11.GL_CULL_FACE);
+                GL11.glCullFace(GL11.GL_FRONT);
+            }
+            case NONE -> GL11.glDisable(GL11.GL_CULL_FACE);
+        }
     }
 
     @Override
@@ -76,6 +108,17 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     public void bindTextureAndSampler(int unit, int texture, int sampler) {
         GL45.glBindTextureUnit(unit, texture);
         org.lwjgl.opengl.GL33.glBindSampler(unit, sampler);
+    }
+
+    @Override
+    public void setMaterialScalars(int program, MaterialScalars scalars) {
+        GL41.glProgramUniform4f(
+                program,
+                0,
+                scalars.redMultiplier(),
+                scalars.greenMultiplier(),
+                scalars.blueMultiplier(),
+                scalars.alphaMultiplier());
     }
 
     @Override

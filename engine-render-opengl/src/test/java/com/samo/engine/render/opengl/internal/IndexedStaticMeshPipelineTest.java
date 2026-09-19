@@ -65,17 +65,30 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
         assertEquals(List.of(
-                "viewport:800x600",
-                "state:depth-less:cull-back:front-ccw",
+                "viewport:0:0:800x600",
                 "srgb:true",
                 "clear:true",
+                "viewport:0:0:400x600",
+                "state:blend=OPAQUE:depth=TEST_WRITE:cull=BACK",
                 "texture:0:301:401",
+                "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
                 "draw:triangles:3:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
+                "viewport:400:0:400x600",
+                "state:blend=ALPHA_BLEND:depth=TEST_NO_WRITE:cull=NONE",
+                "texture:0:301:401",
+                "scalars:203:1.0,0.35,0.35,0.8",
+                "program:203",
+                "vao:101",
+                "draw:triangles:3:uint:0",
+                "vao:0",
+                "program:0",
+                "texture:0:0:0",
+                "viewport:0:0:800x600",
                 "srgb:false"), draw.trace);
 
         pipeline.close();
@@ -110,17 +123,30 @@ class IndexedStaticMeshPipelineTest {
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
         assertEquals(List.of(
-                "viewport:800x600",
-                "state:depth-less:cull-back:front-ccw",
+                "viewport:0:0:800x600",
                 "srgb:false",
                 "clear:false",
+                "viewport:0:0:400x600",
+                "state:blend=OPAQUE:depth=TEST_WRITE:cull=BACK",
                 "texture:0:301:401",
+                "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
                 "draw:triangles:3:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
+                "viewport:400:0:400x600",
+                "state:blend=ALPHA_BLEND:depth=TEST_NO_WRITE:cull=NONE",
+                "texture:0:301:401",
+                "scalars:203:1.0,0.35,0.35,0.8",
+                "program:203",
+                "vao:101",
+                "draw:triangles:3:uint:0",
+                "vao:0",
+                "program:0",
+                "texture:0:0:0",
+                "viewport:0:0:800x600",
                 "srgb:false"), draw.trace);
 
         pipeline.close();
@@ -162,6 +188,7 @@ class IndexedStaticMeshPipelineTest {
 
         assertEquals("fixture draw failure", actual.getMessage());
         assertEquals("srgb:false", draw.trace.getLast());
+        assertTrue(draw.trace.contains("viewport:0:0:800x600"));
         assertTrue(draw.trace.contains("texture:0:0:0"));
         assertTrue(draw.trace.contains("vao:0"));
         assertTrue(draw.trace.contains("program:0"));
@@ -350,13 +377,15 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
-        public void setViewport(int width, int height) {
-            trace.add("viewport:" + width + "x" + height);
+        public void setViewport(int x, int y, int width, int height) {
+            trace.add("viewport:" + x + ":" + y + ":" + width + "x" + height);
         }
 
         @Override
-        public void configureDepthAndBackFaceCull() {
-            trace.add("state:depth-less:cull-back:front-ccw");
+        public void applyMaterialState(RendererMaterial material) {
+            trace.add("state:blend=" + material.blendMode()
+                    + ":depth=" + material.depthMode()
+                    + ":cull=" + material.cullMode());
         }
 
         @Override
@@ -377,6 +406,15 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void bindTextureAndSampler(int unit, int texture, int sampler) {
             trace.add("texture:" + unit + ":" + texture + ":" + sampler);
+        }
+
+        @Override
+        public void setMaterialScalars(int program, MaterialScalars scalars) {
+            trace.add("scalars:" + program + ":"
+                    + scalars.redMultiplier() + ","
+                    + scalars.greenMultiplier() + ","
+                    + scalars.blueMultiplier() + ","
+                    + scalars.alphaMultiplier());
         }
 
         @Override

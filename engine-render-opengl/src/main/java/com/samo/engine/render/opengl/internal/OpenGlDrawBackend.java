@@ -7,9 +7,9 @@ interface OpenGlDrawBackend {
 
     void bindUniformBuffer(int bindingIndex, int buffer);
 
-    void setViewport(int width, int height);
+    void setViewport(int x, int y, int width, int height);
 
-    void configureDepthAndBackFaceCull();
+    void applyMaterialState(RendererMaterial material);
 
     int defaultFramebufferColorEncoding();
 
@@ -17,8 +17,9 @@ interface OpenGlDrawBackend {
 
     void clearFrame(boolean hardwareSrgbEncode);
 
-
     void bindTextureAndSampler(int unit, int texture, int sampler);
+
+    void setMaterialScalars(int program, MaterialScalars scalars);
 
     void useProgram(int program);
 

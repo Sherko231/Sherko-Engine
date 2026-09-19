@@ -140,7 +140,7 @@ class DebugGeometryNativeTest {
                 renderer.render(frame);
 
                 RenderCullingCounters culling = renderer.lastCullingCounters();
-                assertEquals(2, culling.submittedDraws());
+                assertEquals(1, culling.submittedDraws());
                 assertEquals(List.of(tick, latency), renderer.lastDebugTextCounters());
 
                 greenPixel = findGreenDominantPixel(
@@ -244,7 +244,7 @@ class DebugGeometryNativeTest {
                 "debug.text.counters=tick=42,net/rtt_ms=17",
                 "debug.expected.vertex.count=124",
                 "debug.green.sample.rgb=" + rgb(greenPixel),
-                "scene.indexed.draws=2",
+                "scene.indexed.draws=1",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",

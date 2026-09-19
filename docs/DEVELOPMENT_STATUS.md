@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T01 / Issue #261 is accepted; freshly refine P5R-T02 against current `master` before implementation |
+| Active executable task | P5R-T02 / Issue #262 — public/internal/package boundary audit candidate; after acceptance, freshly refine P5R-T03 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -126,4 +126,4 @@ P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enum
 
 ## Exact next action
 
-Freshly refine **P5R-T02 / Issue #262** against current `master` before implementation. Use the accepted T01 naming standard and symbol inventory as planning input, but re-check live source/public boundaries before changing anything. Do not materialize P6-T01 yet.
+Complete review/merge of **P5R-T02 / Issue #262**. The candidate records the existing public/internal/package boundary model in `docs/refactor/BOUNDARY_AUDIT.md` and `docs/ARCHITECTURE.md` without changing Java visibility, packages, public API, module edges, or runtime behavior. After acceptance, freshly refine **P5R-T03 / Issue #263** against merged `master`. Do not materialize P6-T01 yet.

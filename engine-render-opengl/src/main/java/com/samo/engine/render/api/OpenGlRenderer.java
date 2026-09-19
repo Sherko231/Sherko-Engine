@@ -1,5 +1,6 @@
 package com.samo.engine.render.api;
 
+import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
@@ -20,8 +21,9 @@ import org.joml.Matrix4fc;
  * snapshots camera matrices and framebuffer size without retaining mutable world/gameplay objects.
  * P5-T11 derives a CPU view frustum from that snapshot, tests the fixed reference mesh world AABB
  * through the accepted Phase 4 geometry semantics, and exposes latest-successful-frame culling
- * counters. This API intentionally does not expose native handles, arbitrary meshes/textures/materials,
- * world components, or asset loading.
+ * counters. P5-T14 adds bounded point/spot light submission through `RenderFramePacket` with a
+ * configurable maximum of 1-8 local lights per frame. This API intentionally does not expose native
+ * handles, arbitrary meshes/textures/materials, world components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;
@@ -33,11 +35,29 @@ public final class OpenGlRenderer implements AutoCloseable {
     public static OpenGlRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry nativeResources) {
+        return create(
+                threadGuard,
+                nativeResources,
+                new EngineLogger(event -> { }),
+                8);
+    }
+
+    public static OpenGlRenderer create(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry nativeResources,
+            EngineLogger logger,
+            int maxLocalLights) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry registry = Objects.requireNonNull(nativeResources, "nativeResources");
+        EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
+        if (maxLocalLights < 1 || maxLocalLights > 8) {
+            throw new IllegalArgumentException("maxLocalLights must be within [1,8]");
+        }
         return new OpenGlRenderer(IndexedStaticMeshPipeline.createProduction(
                 guard,
                 registry,
+                engineLogger,
+                maxLocalLights,
                 loadShader("shaders/p5/basic.vert"),
                 loadShader("shaders/p5/basic.frag")));
     }

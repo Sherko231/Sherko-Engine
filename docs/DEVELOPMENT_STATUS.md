@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T15A / Issue #243 — restore second-frame depth clear after no-write material |
+| Active executable task | None — P5-T15A / Issue #243 accepted; P5-T16 / #198 is the next planned activation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -92,7 +92,7 @@ P5-T14 / #196 is accepted. PR #239 final head `5d3653e6238b873b5ce743d6edd91d4ab
 
 P5-T15 / #197 is accepted. PR #241 final head `6253d883a56546e34e69a43b77b33e3271d36676` passed all five required final-candidate jobs in run #424 / `35445336657`, including the existing P5-T08 regression and retained hosted-Windows P5-T15 presentation evidence. On the CI host the default back buffer reported `GL_LINEAR`, so the renderer selected `MANUAL_SRGB`; production linear clear `0.08,0.10,0.14` independently expected sRGB `80,89,105` and read back exactly `80,89,105`, while approximate missing-encode `20,26,36` and double-encode `152,160,172` remained far outside the ±5-byte tolerance. The accepted lit baseline expected byte `98` and read back `98,98,98`; viewport/program/VAO/framebuffer-sRGB cleanup succeeded and the native-resource registry was empty. PR #241 merged as `d85003c87f29b2773f30078d6e5df42a60a5a156`, and exact merged `master` passed Lightweight verification in run #425 / `35445588413`. D-063 replaces the distributed raw presentation boolean with package-internal `PresentationMode` plus bounded `SrgbTransfer`, preserves D-056 texture storage/decoding and D-061/D-062 linear shading, and guarantees exactly one IEC sRGB presentation conversion without adding any public API, dependency/module edge, HDR/tonemapping, fog, bloom, exposure, color grading, offscreen framebuffer pipeline, render graph, P5-T16, or P5-T17 behavior. Focused local Gradle execution was unavailable in the connected agent environment; the authoritative repository CI matrix executed the complete Java/GLSL/API/architecture/native verification.
 
-P5-T15A / #243 is active after owner-visible sandbox validation exposed a temporal OpenGL state leak: the final tinted material leaves `glDepthMask(false)`, causing the next frame's depth clear to be masked out before the opaque baseline draw. The bounded repair restores depth writes immediately before clearing the depth buffer and extends the retained material native acceptance to render two consecutive frames and sample the second frame. P5-T16 / #198 remains planned and must not start until this maintenance repair is accepted.
+P5-T15A / #243 is accepted. Owner-visible sandbox validation exposed a temporal OpenGL state leak: the final tinted material left `glDepthMask(false)`, so the next frame's depth clear was masked out and the opaque baseline triangle disappeared. PR #244 final head `4fc81c5e6769dc92faac8c90b227009678445787` restores `glDepthMask(true)` immediately before the frame depth clear and extends the retained P5-T09 native material regression to two consecutive frames. Run #426 / `35449275623` passed all five required jobs; retained artifact `10585647826` recorded `frames.rendered=2`, `second.frame.draws.count=2`, baseline RGB `98,98,98`, tinted RGB `94,64,67`, unchanged `TEST_WRITE`/`TEST_NO_WRITE` material depth policies, correct GL cleanup, and an empty native-resource registry. PR #244 merged as `6eedd7920a0566c6185174630c6d5342d7af3916`, and exact merged `master` passed Lightweight verification in run #427 / `35449670974`. No public API, dependency/module edge, material/light contract, draw-order policy, or P5-T16 behavior changed.
 
 ## Open gates and blockers
 
@@ -106,4 +106,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Complete P5-T15A / Issue #243 first. Require a two-frame Windows native regression proving both baseline and tinted triangles remain visible on frame two after the no-depth-write material ran on frame one. Only after acceptance return to fresh activation of P5-T16 / #198.
+Freshly activate/refine P5-T16 / Issue #198 against accepted P5-T15/P5-T15A and current `master` before implementation. P5-T16 may add only bounded renderer-neutral debug line/AABB/sphere/ray/text-counter submission through accepted renderer foundations; do not pull editor/ImGui runtime UI, physics/network implementations, retained debug-scene ownership, unbounded debug lifetimes, P5-T17 view models, or unrelated future tasks forward.

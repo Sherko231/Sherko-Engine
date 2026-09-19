@@ -100,7 +100,7 @@ class IndexedStaticMeshNativeTest {
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
-                        "Expected a visible reference-gray triangle; pixels=" + visibleTrianglePixels);
+                        "Expected visible indexed room geometry; pixels=" + visibleTrianglePixels);
 
                 window.present();
             }
@@ -178,8 +178,8 @@ class IndexedStaticMeshNativeTest {
                 "task=P5-T07",
                 "result=PASS",
                 "renderer.api=OpenGlRenderer",
-                "mesh=indexed-triangle",
-                "draw.elements.count=3",
+                "mesh=indexed-room-fixture",
+                "draw.elements.count=36",
                 "world.submitted.draws=2",
                 "material.baseline.depth=GL_LESS-write",
                 "material.baseline.cull=GL_BACK",
@@ -191,7 +191,7 @@ class IndexedStaticMeshNativeTest {
                 "capture=p5-t07-indexed-mesh.png",
                 "high.severity.debug.error=none-observed-after-poll",
                 "native.resource.registry.empty.after.cleanup=true",
-                "triangle.color=directionally-lit-reference-gray",
+                "room.reference.sample=directionally-lit-reference-gray",
                 "srgb.claim=verified-separately-by-p5-t08",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),

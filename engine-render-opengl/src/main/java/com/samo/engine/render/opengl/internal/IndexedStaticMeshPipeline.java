@@ -26,7 +26,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private static final int INDEX_BYTES = ROOM_INDEX_COUNT * Integer.BYTES;
     private static final int PROGRAM_KEY_REFERENCE = 0;
     private static final int MATERIAL_KEY_BASELINE = 0;
-    private static final int MATERIAL_KEY_TINTED = 1;
     private static final int MESH_KEY_REFERENCE = 0;
     private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT =
             new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
@@ -52,7 +51,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final DebugLineRenderer debugLineRenderer;
     private final ViewModelRenderer viewModelRenderer;
     private final RendererMaterial baselineMaterial;
-    private final RendererMaterial tintedMaterial;
     private final PresentationMode presentationMode;
     private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
     private final DrawSubmissionSorter submissionSorter = new DrawSubmissionSorter();
@@ -87,7 +85,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             DebugLineRenderer debugLineRenderer,
             ViewModelRenderer viewModelRenderer,
             RendererMaterial baselineMaterial,
-            RendererMaterial tintedMaterial,
             PresentationMode presentationMode,
             EngineLogger logger,
             int maxLocalLights) {
@@ -108,7 +105,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.debugLineRenderer = debugLineRenderer;
         this.viewModelRenderer = viewModelRenderer;
         this.baselineMaterial = baselineMaterial;
-        this.tintedMaterial = tintedMaterial;
         this.presentationMode = presentationMode;
         this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
     }
@@ -333,14 +329,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     MaterialBlendMode.OPAQUE,
                     MaterialDepthMode.TEST_WRITE,
                     MaterialCullMode.BACK);
-            RendererMaterial tintedMaterial = new RendererMaterial(
-                    MaterialShaderVariant.TEXTURED_REFERENCE,
-                    List.of(referenceBinding),
-                    new MaterialScalars(1.0f, 0.35f, 0.35f, 0.80f),
-                    MaterialBlendMode.ALPHA_BLEND,
-                    MaterialDepthMode.TEST_NO_WRITE,
-                    MaterialCullMode.NONE);
-
             debugRenderer = DebugLineRenderer.create(
                     guard,
                     resources,
@@ -381,7 +369,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     debugRenderer,
                     viewModelRenderer,
                     baselineMaterial,
-                    tintedMaterial,
                     presentationMode,
                     engineLogger,
                     maxLocalLights);

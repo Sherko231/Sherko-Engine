@@ -6,7 +6,7 @@ This split is deliberate: the large build/evidence catalog is preserved without 
 
 ## Goal
 
-Preserve the same practical merge confidence while minimizing use of the repository-scoped self-hosted Windows x64 runner. General build/test/coverage and exact-merge verification run on GitHub-hosted Windows; only the production OpenGL/native acceptance job requires the self-hosted Windows x64 environment.
+Preserve the same practical merge confidence without requiring an owner-operated runner. All CI jobs run on GitHub-hosted Windows. The native acceptance job provisions a pinned Mesa software OpenGL stack inside its ephemeral `windows-latest` VM because the stock image does not expose the required WGL context by itself.
 
 For an ordinary successful non-Markdown task, the expected runner pattern is:
 
@@ -16,7 +16,7 @@ final PR candidate:      1 heavy five-job run
 merged master commit:    1 lightweight verification job
 ```
 
-Runner allocation is intentionally hybrid: `Build and quality gates`, `Unit tests`, `Architecture tests`, `JaCoCo coverage reports`, and `Lightweight master verification` use `windows-latest`; `Windows native smoke` uses `[self-hosted, Windows, X64]`. The standard hosted Windows environment is not accepted as a substitute for the native job because the production native suite requires a real WGL OpenGL 4.6 Core context. A queued native job is not evidence; the self-hosted runner must actually execute and pass it.
+Runner allocation is fully GitHub-hosted: all heavy jobs and `Lightweight master verification` use `windows-latest`. `Windows native smoke` additionally installs the pinned Mesa Windows distribution and selects llvmpipe software rendering before executing the unchanged native suites. The suite still requests and validates the repository's OpenGL/WGL behavior; the software renderer is correctness/lifecycle evidence, not physical-GPU performance or vendor-driver qualification.
 
 Additional heavy runs are justified only when the actual candidate changes, a CI failure is corrected, the tested base becomes stale, or the active Issue explicitly requires stronger exact-merge evidence.
 
@@ -47,7 +47,7 @@ The ordinary heavy gate consists of the existing five jobs:
 4. `JaCoCo coverage reports`
 5. `Windows native smoke`
 
-These jobs run for a non-draft PR targeting `master` and for explicit `workflow_dispatch`. Jobs 1–4 execute on `windows-latest`; job 5 executes on `[self-hosted, Windows, X64]` so the retained native acceptance continues to exercise the repository's required Windows/OpenGL 4.6 path rather than a weaker software/version-override substitute.
+These jobs run for a non-draft PR targeting `master` and for explicit `workflow_dispatch`. All five execute on `windows-latest`; job 5 provisions pinned Mesa software OpenGL before running the unchanged native acceptance. No OpenGL version override or test skip is part of the hosted setup.
 
 Only a passing run for the exact current final PR candidate is authoritative. If a substantive code/config/test change or a required documentation change is committed afterward, the old run is obsolete and the new candidate requires another heavy run.
 
@@ -103,8 +103,8 @@ The existing Markdown-only exemption remains unchanged: the complete PR changed-
 - `pull_request` + non-draft candidate -> five heavy jobs;
 - `workflow_dispatch` -> five heavy jobs;
 - `push` to `master` -> `Lightweight master verification` only;
-- heavy jobs 1–4 and the lightweight `master` verifier -> `windows-latest`;
-- `Windows native smoke` -> `[self-hosted, Windows, X64]`;
+- all five heavy jobs and the lightweight `master` verifier -> `windows-latest`;
+- `Windows native smoke` additionally provisions pinned Mesa llvmpipe inside the ephemeral hosted runner;
 - Markdown-only pull requests / pushes -> ignored by automatic build/test triggers through `paths-ignore`.
 
 Repository branch protection/rulesets are separate platform configuration. If GitHub does not enforce these checks itself, the agent contract still does. Never claim platform-enforced protection without inspecting live rules.

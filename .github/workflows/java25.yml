@@ -21,10 +21,9 @@ concurrency:
 # P1-T08A keeps the expensive five-job matrix on final PR candidates (or explicit
 # manual dispatch) and uses one lightweight exact-merge verifier on ordinary
 # pushes to master. Finish code/docs/self-review before opening a non-draft PR.
-# General build/test/coverage and exact-master verification use GitHub-hosted Windows.
-# The OpenGL/native acceptance job remains on the repository-scoped Windows x64
-# self-hosted runner because the standard hosted Windows image cannot provide the
-# required production OpenGL 4.6 WGL context.
+# All CI jobs use GitHub-hosted Windows. The native acceptance job provisions a
+# pinned Mesa software OpenGL stack inside the ephemeral runner because the stock
+# windows-latest image does not expose the required WGL OpenGL context by itself.
 jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
@@ -209,8 +208,8 @@ jobs:
   windows-native-smoke:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Windows native smoke
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 5
+    runs-on: windows-latest
+    timeout-minutes: 15
     env:
       ALSOFT_DRIVERS: "null"
 
@@ -223,6 +222,58 @@ jobs:
           java-version: '25'
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Provision Mesa software OpenGL for hosted Windows
+        shell: powershell
+        run: |
+          $version = "26.1.8"
+          $expectedSha256 = "4c6d32e653e0ff9ad07796e40c0bcfabf2764d849e3ce4f3b1590112c87e42f9"
+          $archive = Join-Path $env:RUNNER_TEMP "mesa3d-$version-release-msvc.7z"
+          $extractDir = Join-Path $env:RUNNER_TEMP "mesa3d-$version"
+          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
+
+          Invoke-WebRequest -Uri $url -OutFile $archive -UseBasicParsing
+          $actualSha256 = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualSha256 -ne $expectedSha256) {
+            throw "Mesa archive SHA-256 mismatch: expected=$expectedSha256 actual=$actualSha256"
+          }
+
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+          & "C:\Program Files\7-Zip\7z.exe" x $archive "-o$extractDir" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $x64 = Join-Path $extractDir "x64"
+          $mesaOpenGl = Join-Path $x64 "opengl32.dll"
+          if (-not (Test-Path $mesaOpenGl)) {
+            throw "Mesa x64 opengl32.dll was not found after extraction"
+          }
+
+          # windows-latest has no usable OpenGL ICD for the required context.
+          # The runner VM is ephemeral, so replace its process-global WGL loader
+          # only for this job and install Mesa-only companion DLLs beside it.
+          $system32 = Join-Path $env:WINDIR "System32"
+          $systemOpenGl = Join-Path $system32 "opengl32.dll"
+          & takeown.exe /F $systemOpenGl | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & icacls.exe $systemOpenGl /grant "Administrators:(F)" | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item -Path $mesaOpenGl -Destination $systemOpenGl -Force
+
+          Get-ChildItem -Path $x64 -Filter "*.dll" | Where-Object {
+            $_.Name -ine "opengl32.dll"
+          } | ForEach-Object {
+            $destination = Join-Path $system32 $_.Name
+            if (-not (Test-Path $destination)) {
+              Copy-Item -Path $_.FullName -Destination $destination -Force
+            }
+          }
+
+          "GALLIUM_DRIVER=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "MESA_LOADER_DRIVER_OVERRIDE=llvmpipe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "LIBGL_ALWAYS_SOFTWARE=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          Write-Output "Mesa $version provisioned for hosted Windows native verification."
+          Write-Output "Renderer mode: llvmpipe software OpenGL; no physical GPU performance claim is made."
 
       - name: Run GLFW and OpenAL native lifecycle smoke
         run: .\gradlew.bat runWindowsNativeCiSmoke

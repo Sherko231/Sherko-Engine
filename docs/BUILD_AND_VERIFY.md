@@ -1,14 +1,14 @@
 # Sherko Engine Build and Verification
 
-This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when each required job actually executes on its configured runner: general build/test/coverage and exact-master verification use GitHub-hosted Windows, while production OpenGL/native acceptance uses the repository-scoped self-hosted Windows x64 runner. The current CI lifecycle is defined by `AGENTS.md`, `docs/CI_LIFECYCLE.md`, and the current `## CI gate` section below; older task-specific sections retain historical evidence language where useful.
+This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. All current CI jobs use GitHub-hosted Windows. The native acceptance job provisions a pinned Mesa software OpenGL stack inside its ephemeral runner before executing the unchanged Windows/WGL suites. The current CI lifecycle is defined by `AGENTS.md`, `docs/CI_LIFECYCLE.md`, and the current `## CI gate` section below; older task-specific sections retain historical evidence language where useful.
 
 ## Environment baseline
 
 - JDK: Temurin/OpenJDK 25 through the Gradle toolchain.
 - Build: repository Gradle Wrapper.
-- CI runners: `windows-latest` for general build/test/coverage and exact-master verification; repository-scoped `[self-hosted, Windows, X64]` for `Windows native smoke`.
-- Native runner availability: the self-hosted Windows x64 runner is manually operated and must be online before the required native job can execute; queued/unstarted jobs are not verification evidence.
-- Native graphics requirement: the self-hosted native job must provide the production WGL OpenGL 4.6 Core path required by the retained P3/P5 native acceptance; the standard hosted Windows image is not accepted as equivalent native evidence.
+- CI runner: GitHub-hosted `windows-latest` for all heavy jobs and exact-master verification.
+- Native graphics setup: `Windows native smoke` downloads the pinned Mesa 26.1.8 Windows MSVC archive, verifies its SHA-256, installs its WGL/OpenGL DLLs into the ephemeral runner, and selects llvmpipe software rendering before executing native acceptance.
+- Native evidence scope: hosted Mesa proves the exercised Windows/WGL/OpenGL correctness and lifecycle paths when the unchanged suites pass; it is not evidence of physical-GPU performance, a vendor GPU driver, or minimum hardware.
 - Runtime target: Windows x64.
 
 Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\gradlew.bat` on Windows.
@@ -1027,7 +1027,7 @@ Before interpreting or merging a non-exempt final candidate:
 8. After merge, require `Lightweight master verification` to pass on the exact resulting `master` merge SHA before closing the Issue.
 9. Do not rerun the routine heavy matrix after merge. Use `workflow_dispatch` or a task-specific exact-merge command only when the active Issue explicitly requires native/performance/protocol evidence that the lightweight verifier cannot establish.
 
-Runner allocation for the heavy matrix is hybrid: `Build and quality gates`, `Unit tests`, `Architecture tests`, and `JaCoCo coverage reports` use `windows-latest`; `Windows native smoke` uses `[self-hosted, Windows, X64]`. The lightweight exact-merge `master` verifier also uses `windows-latest`. This keeps the real OpenGL 4.6 native gate intact while limiting self-hosted use to the job that actually requires that environment.
+All heavy jobs and the lightweight exact-merge `master` verifier use `windows-latest`. `Windows native smoke` provisions pinned Mesa software OpenGL inside that hosted VM before running the unchanged native suites. The workflow does not use an OpenGL version override and does not skip native acceptance; successful context creation and the existing tests remain the gate.
 
 The heavy five-job PR/manual matrix covers:
 
@@ -1041,7 +1041,7 @@ The lightweight `master` verifier is deliberately narrower. On the exact pushed 
 
 The workflow uses top-level concurrency with `cancel-in-progress: true`, keyed by workflow/PR for pull requests and by ref for push/manual runs. A newer commit on the same PR supersedes older queued/in-progress candidate runs; stale cancelled runs neither pass nor fail the current candidate. Never cancel the current final-candidate run merely to save runner time.
 
-The self-hosted `Windows native smoke` job is not an ephemeral clean VM. `actions/checkout` checks out the requested commit into the runner work directory, but machine-level graphics drivers, native software, and caches can persist. The committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state. GitHub-hosted jobs remain separate evidence and do not replace the required native OpenGL acceptance.
+The GitHub-hosted native job is an ephemeral Windows VM. Its stock graphics environment is insufficient for the required context, so the workflow installs the pinned Mesa archive only for that job after verifying the archive SHA-256. The committed Gradle Wrapper, Java 25 setup, dependency locks, Mesa pin/hash, explicit task outputs, and repository tests are the verification contracts. Software-rendered CI acceptance does not establish physical-GPU performance or vendor-driver qualification.
 
 Whether GitHub itself blocks a merge is controlled separately by live branch-protection/ruleset settings. Regardless of platform enforcement, `AGENTS.md` forbids merging non-exempt work without the required exact-candidate heavy pass and forbids closing the Issue until the exact-merge lightweight verifier passes.
 

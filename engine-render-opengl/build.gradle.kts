@@ -126,6 +126,7 @@ tasks.register<Test>("validateGlsl") {
 tasks.named("check") {
     dependsOn(tasks.named("validateGlsl"))
     dependsOn(verifyPublicApiBoundary)
+    dependsOn(tasks.named(visualDemo.compileJavaTaskName))
 }
 
 

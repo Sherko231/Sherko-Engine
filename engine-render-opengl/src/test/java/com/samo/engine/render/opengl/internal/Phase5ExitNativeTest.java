@@ -146,12 +146,16 @@ class Phase5ExitNativeTest {
                         "Mapped texture must vary across visible room surfaces");
 
                 debugGreen = findGreenDominantPixel(
+                        framebufferWidth,
+                        framebufferHeight,
                         framebufferWidth / 2,
                         (framebufferHeight * 6) / 7,
                         8);
                 assertTrue(debugGreen != null, "Expected P5-T16 debug geometry to coexist");
 
                 viewModelOrange = findOrangePixel(
+                        framebufferWidth,
+                        framebufferHeight,
                         framebufferWidth / 2,
                         framebufferHeight / 4,
                         framebufferWidth / 3,
@@ -224,9 +228,14 @@ class Phase5ExitNativeTest {
         assertTrue(channelSpread(pixel) <= 2, "Near panel reference sample must remain neutral");
     }
 
-    private static int[] findGreenDominantPixel(int centerX, int centerY, int radius) {
-        for (int y = Math.max(0, centerY - radius); y <= Math.min(HEIGHT - 1, centerY + radius); y++) {
-            for (int x = Math.max(0, centerX - radius); x <= Math.min(WIDTH - 1, centerX + radius); x++) {
+    private static int[] findGreenDominantPixel(
+            int width,
+            int height,
+            int centerX,
+            int centerY,
+            int radius) {
+        for (int y = Math.max(0, centerY - radius); y <= Math.min(height - 1, centerY + radius); y++) {
+            for (int x = Math.max(0, centerX - radius); x <= Math.min(width - 1, centerX + radius); x++) {
                 int[] pixel = readPixel(x, y);
                 if (pixel[1] >= 180
                         && pixel[1] - pixel[0] >= 80
@@ -238,14 +247,20 @@ class Phase5ExitNativeTest {
         return null;
     }
 
-    private static int[] findOrangePixel(int centerX, int centerY, int halfWidth, int halfHeight) {
+    private static int[] findOrangePixel(
+            int width,
+            int height,
+            int centerX,
+            int centerY,
+            int halfWidth,
+            int halfHeight) {
         int expectedRed = encodedByte(0.95f);
         int expectedGreen = encodedByte(0.55f);
         int expectedBlue = encodedByte(0.15f);
         int minX = Math.max(0, centerX - halfWidth);
-        int maxX = Math.min(WIDTH - 1, centerX + halfWidth);
+        int maxX = Math.min(width - 1, centerX + halfWidth);
         int minY = Math.max(0, centerY - halfHeight);
-        int maxY = Math.min(HEIGHT - 1, centerY + halfHeight);
+        int maxY = Math.min(height - 1, centerY + halfHeight);
         for (int y = minY; y <= maxY; y += 2) {
             for (int x = minX; x <= maxX; x += 2) {
                 int[] pixel = readPixel(x, y);

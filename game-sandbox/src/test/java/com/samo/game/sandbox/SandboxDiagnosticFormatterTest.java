@@ -32,10 +32,10 @@ final class SandboxDiagnosticFormatterTest {
                 "tickCommand=42 MOVE=(-1.0,1.0) LOOK=(2.50,-3.75)",
                 4.25d,
                 -5.5d,
-                2,
-                2,
+                1,
+                1,
                 0,
-                2,
+                1,
                 "debugCounters=[simulation/tick=42,input/frame=456]"));
 
         assertEquals(

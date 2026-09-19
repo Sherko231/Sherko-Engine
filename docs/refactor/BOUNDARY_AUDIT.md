@@ -90,7 +90,7 @@ Source has not changed since the T01 inventory baseline; the intervening commits
 | `PlayerInputCommandCodec` | Explicit fixed replay/storage ByteBuffer codec. | KEEP; layout/meaning remain protocol-sensitive. |
 | `EngineConfigLoader` | Resolves supported startup config layers. | KEEP. |
 | `EngineConfigSchema` | Validates raw startup config into typed values. | KEEP. |
-| `ConfigKey<T>` | Canonical typed configuration key. | KEEP. |
+| `ConfigKey` | Canonical typed configuration key (`ConfigKey<T>` in source). | KEEP. |
 | `ConfigEntry` | Raw config value plus diagnostic source. | KEEP. |
 | `ConfigSource` | Diagnostic config-source identity. | KEEP. |
 | `ConfigError` | One source-aware config validation error. | KEEP. |

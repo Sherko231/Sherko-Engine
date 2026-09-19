@@ -3,6 +3,7 @@ package com.samo.engine.render.consumer;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.api.OpenGlRenderer;
+import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -19,6 +20,8 @@ final class RendererPublicApiConsumerFixture {
         RenderFramePacket frame = new RenderFramePacket(view, projection, 1280, 720);
         try (OpenGlRenderer renderer = OpenGlRenderer.create(threadGuard, nativeResources)) {
             renderer.render(frame);
+            RenderCullingCounters counters = renderer.lastCullingCounters();
+            counters.submittedDraws();
         }
     }
 

@@ -44,6 +44,10 @@ public final class OpenGlRenderer implements AutoCloseable {
         pipeline.render(Objects.requireNonNull(frame, "frame"));
     }
 
+    public RenderCullingCounters lastCullingCounters() {
+        return pipeline.lastCullingCounters();
+    }
+
     public void render(
             Matrix4fc view,
             Matrix4fc projection,

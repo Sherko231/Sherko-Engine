@@ -1,7 +1,10 @@
 package com.samo.engine.render.opengl.internal;
 
+import com.samo.engine.core.api.Aabb3f;
+import com.samo.engine.core.api.Frustum3f;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
+import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -10,10 +13,15 @@ import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private static final int VERTEX_BYTES = 9 * Float.BYTES;
     private static final int INDEX_BYTES = 3 * Integer.BYTES;
+    private static final Aabb3f REFERENCE_MESH_WORLD_BOUNDS =
+            new Aabb3f(
+                    new Vector3f(-0.60f, -0.50f, 0.0f),
+                    new Vector3f(0.60f, 0.60f, 0.0f));
 
     private final OpenGlThreadGuard threadGuard;
     private final OpenGlResourceBackend resourceBackend;
@@ -31,12 +39,14 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final RendererMaterial baselineMaterial;
     private final RendererMaterial tintedMaterial;
     private final boolean hardwareFramebufferSrgb;
+    private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
     private final ByteBuffer cameraBytes =
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
             ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final Matrix4f submittedView = new Matrix4f();
     private final Matrix4f submittedProjection = new Matrix4f();
+    private RenderCullingCounters lastCullingCounters = RenderCullingCounters.EMPTY;
     private boolean closeAttempted;
 
     private IndexedStaticMeshPipeline(
@@ -259,6 +269,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             Matrix4fc projectionMatrix,
             int framebufferWidth,
             int framebufferHeight) {
+        Frustum3f frustum = ViewFrustumExtractor.extract(viewMatrix, projectionMatrix);
+
         cameraBytes.clear();
         CameraUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
         cameraBytes.flip();
@@ -272,16 +284,47 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         int leftWidth = (framebufferWidth + 1) / 2;
         int rightWidth = framebufferWidth / 2;
 
+        int testedCandidates = 0;
+        int visibleCandidates = 0;
+        int culledCandidates = 0;
+        int submittedDraws = 0;
+
         drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
         drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
         try {
             drawBackend.clearFrame(hardwareFramebufferSrgb);
-            drawMaterial(baselineMaterial, 0, 0, leftWidth, framebufferHeight);
-            drawMaterial(tintedMaterial, leftWidth, 0, rightWidth, framebufferHeight);
+
+            testedCandidates++;
+            if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
+                visibleCandidates++;
+                drawMaterial(baselineMaterial, 0, 0, leftWidth, framebufferHeight);
+                submittedDraws++;
+            } else {
+                culledCandidates++;
+            }
+
+            testedCandidates++;
+            if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
+                visibleCandidates++;
+                drawMaterial(tintedMaterial, leftWidth, 0, rightWidth, framebufferHeight);
+                submittedDraws++;
+            } else {
+                culledCandidates++;
+            }
         } finally {
             drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
             drawBackend.setFramebufferSrgbEnabled(false);
         }
+
+        lastCullingCounters = new RenderCullingCounters(
+                testedCandidates,
+                visibleCandidates,
+                culledCandidates,
+                submittedDraws);
+    }
+
+    public RenderCullingCounters lastCullingCounters() {
+        return lastCullingCounters;
     }
 
     private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {

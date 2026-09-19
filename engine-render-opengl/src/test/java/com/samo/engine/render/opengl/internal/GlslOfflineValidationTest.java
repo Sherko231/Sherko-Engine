@@ -22,6 +22,15 @@ class GlslOfflineValidationTest {
     }
 
     @Test
+    void validatesManualSrgbFallbackVariant() throws Exception {
+        String source = resource("shaders/p5/basic.frag");
+        GlslOfflineValidator.validate(
+                GlslOfflineValidator.Stage.FRAGMENT,
+                "shaders/p5/basic.frag[manual-srgb]",
+                IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, false));
+    }
+
+    @Test
     void rejectsBrokenFixtureWithDiagnostics() throws Exception {
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,

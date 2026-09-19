@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T07B / Issue #224 is accepted; P5-T08 / Issue #190 remains PLANNED |
+| Active executable task | P5-T08 / Issue #190 — define sRGB framebuffer and texture sampling rules |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T07 / #189 are accepted. P5-T08 / #190 is the next planned renderer-foundation task and remains PLANNED until deliberately activated against the current repository state.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T07 / #189 are accepted. P5-T08 / #190 is now the active renderer-foundation task after live-state verification and contract refinement; P5-T09 / #191 remains future planned work.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -76,6 +76,8 @@ P5-T03A / #221 is accepted. PR #222 final head `e12a4114e107197614db46b509f9b798
 
 P5-T07B / #224 is accepted. PR #225 final head `5ca1140452599bb84ae8d15889db7b6df6a37b73` passed the required five-job final-candidate CI in run #378 / `35366851105`; the Windows native job required an infrastructure-only retry on the unchanged candidate. PR #225 merged as `ce0de707651332c890253f2f540fa3b50358b28f`, and exact merged `master` passed Lightweight master verification in run #379 / `35367933268`. The sandbox's compile-only renderer dependency now explicitly targets `runtimeElements` with transitivity disabled, while D-055's default renderer `apiElements` remains API-only. Automated Gradle compilation, renderer API-boundary checks, architecture boundaries, dependency locks, and headless-server isolation are green. Manual owner validation after pull plus Gradle reload/sync confirmed that IntelliJ resolves `OpenGlRenderer` in `SandboxMain` without manual Project Structure edits.
 
+P5-T08 / #190 implementation is complete on PR #228 and remains pending final acceptance. The candidate requests an sRGB-capable default framebuffer, distinguishes internal sRGB color storage from linear-data storage, detects the actual default framebuffer encoding, and guarantees exactly one presentation encode through hardware `GL_FRAMEBUFFER_SRGB` on `GL_SRGB` buffers or the bounded exact shader fallback on `GL_LINEAR` buffers. The fixed P5-T07 triangle remains the only production draw and uses one renderer-owned neutral-gray sRGB reference texture; no material, arbitrary texture/mesh, asset, HDR, post-processing, world/ECS, dependency/module-edge, or public renderer API expansion is introduced. CI is fully GitHub-hosted; the Windows native job provisions pinned Mesa software OpenGL inside its ephemeral runner so the unchanged native suites can execute without an owner-operated machine. Software-rendered CI is correctness/lifecycle evidence only, not physical-GPU performance or vendor-driver qualification. Final acceptance still requires one green five-job run on the exact current PR head, merge of that tested head/base, and a passing Lightweight master verification on the exact merge SHA.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -88,4 +90,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-P5-T07B / #224 is accepted and its handoff is reconciled. Treat P5-T08 / #190 as the next planned renderer task only; before activating it, re-verify live GitHub/repository state and refine its executable contract if needed.
+Finalize P5-T08 / #190 through PR #228: require the normal five-job CI to pass on the exact current PR head, confirm the tested base is still current, merge that tested candidate, then require Lightweight master verification to pass on the exact merged `master` SHA before closing the Issue. Do not start P5-T09 or any later roadmap work until that acceptance sequence is complete.

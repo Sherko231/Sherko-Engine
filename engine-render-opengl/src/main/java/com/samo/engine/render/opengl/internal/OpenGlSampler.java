@@ -17,6 +17,28 @@ final class OpenGlSampler implements AutoCloseable {
                 "OpenGL sampler", handle, guard, registry, backend::deleteSampler));
     }
 
+    static OpenGlSampler createLinearClamp(
+            OpenGlThreadGuard guard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend backend) {
+        OpenGlSampler sampler = create(guard, registry, backend);
+        try {
+            backend.configureLinearClampSampler(sampler.handle());
+            return sampler;
+        } catch (RuntimeException | Error failure) {
+            try {
+                sampler.close();
+            } catch (RuntimeException | Error cleanupFailure) {
+                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
+            }
+            throw failure;
+        }
+    }
+
+    int handle() {
+        return owned.handle();
+    }
+
     @Override
     public void close() {
         owned.close();

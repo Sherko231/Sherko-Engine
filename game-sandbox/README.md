@@ -33,7 +33,7 @@ Normal input bindings remain active at the same time: W/A/S/D, mouse movement, S
 The current playground keeps these capabilities active together rather than showing them one by one:
 
 - production `GlfwWindow` / OpenGL 4.6 startup through the public engine API;
-- public `OpenGlRenderer` production composition drawing one indexed static triangle every visible framebuffer frame;
+- public `OpenGlRenderer` production composition drawing one indexed static triangle every visible framebuffer frame, now using the fixed P5-T08 neutral-gray sRGB reference texture and one default-framebuffer sRGB encode;
 - P5-T06 camera/per-frame uniform blocks driven by a fixed D-041/D-045 camera and current framebuffer aspect;
 - explicit depth testing and back-face culling through the production renderer path;
 - window-owned `GlfwWindow.present()` presentation without exposing a native window handle;
@@ -54,9 +54,9 @@ The once-per-second line is deliberately an owner diagnostic. It is not FPS, a b
 
 ## Current limitations
 
-The sandbox now shows one white indexed triangle on a dark development background through the public production renderer path. The sandbox itself still performs no direct OpenGL/LWJGL calls.
+The sandbox now shows one neutral-gray indexed triangle on a dark development background through the public production renderer path. P5-T08 makes this fixed reference path sRGB-correct: the renderer samples an internal sRGB texture in linear space and encodes exactly once at presentation, using hardware when the actual default framebuffer is sRGB or a bounded fragment fallback when it is linear. The sandbox itself still performs no direct OpenGL/LWJGL calls.
 
-This is intentionally the first bounded draw only. It does not claim sRGB-correct presentation, textures, materials, lighting, arbitrary mesh loading, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
+This remains bounded renderer-foundation content. It does not provide arbitrary/public textures, materials, lighting, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

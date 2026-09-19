@@ -478,6 +478,22 @@ jobs:
             engine-render-opengl/build/reports/p5/p5-t09-materials.png
           if-no-files-found: error
 
+      - name: Verify P5-T13 directional light
+        env:
+          SHERKO_P5_T13_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DirectionalLightNativeTest" --rerun-tasks
+
+      - name: Upload P5-T13 directional light evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t13-directional-light
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.DirectionalLightNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t13-directional-light.txt
+            engine-render-opengl/build/reports/p5/p5-t13-directional-light.png
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

@@ -171,12 +171,12 @@ final class ViewModelRenderer implements AutoCloseable {
 
     private static ByteBuffer fixtureVertices() {
         ByteBuffer data = ByteBuffer.allocateDirect(VERTEX_BYTES).order(ByteOrder.nativeOrder());
-        putVertex(data, 0.14f, -0.23f, -0.50f);
-        putVertex(data, 0.42f, -0.23f, -0.50f);
-        putVertex(data, 0.42f, -0.06f, -0.50f);
-        putVertex(data, 0.14f, -0.23f, -0.50f);
-        putVertex(data, 0.42f, -0.06f, -0.50f);
-        putVertex(data, 0.14f, -0.06f, -0.50f);
+        putVertex(data, -0.12f, -0.23f, -0.50f);
+        putVertex(data, 0.36f, -0.23f, -0.50f);
+        putVertex(data, 0.36f, -0.06f, -0.50f);
+        putVertex(data, -0.12f, -0.23f, -0.50f);
+        putVertex(data, 0.36f, -0.06f, -0.50f);
+        putVertex(data, -0.12f, -0.06f, -0.50f);
         return data.flip();
     }
 

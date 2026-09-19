@@ -121,7 +121,7 @@ Goal: render a stable, inspectable 3D room without game or physics dependencies.
 - [ ] P5-T11 Implement CPU frustum culling using world AABBs. Acceptance: debug counters prove off-camera meshes generate no draw submission.
 - [ ] P5-T12 Sort opaque draws by program/material/mesh and transparent draws back-to-front. Acceptance: a capture confirms order for a controlled scene.
 - [ ] P5-T13 Implement one unshadowed directional light with explicit linear-space inputs. Acceptance: a reference normal/light direction produces the expected brightness without requiring the shadow pipeline.
-- [ ] P5-T14 Add point and spot lights with a strict configurable maximum per frame. Acceptance: exceeding the maximum logs one bounded warning and does not corrupt buffers.
+- [ ] P5-T14 Add point and spot lights with a strict configurable combined maximum per frame. Acceptance: the bounded first-N submission order is deterministic, point/spot attenuation semantics are explicit, and exceeding the maximum logs one warning without corrupting buffers or draw state.
 - [ ] P5-T15 Implement correct gamma/sRGB presentation only. Acceptance: reference linear colors match expected display-space output; fog, tonemapping, and general post-processing remain deferred until gameplay proves their need.
 - [ ] P5-T16 Add debug line, AABB, sphere, ray, and text counters. Acceptance: physics and networking modules can submit debug primitives through an interface without importing OpenGL.
 - [ ] P5-T17 Add a first-person view-model render layer with separate FOV/depth handling. Acceptance: held hands/tools do not clip through nearby world geometry.

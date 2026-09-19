@@ -172,9 +172,9 @@ class SrgbPresentationNativeTest {
             Math.round(CLEAR_BLUE_LINEAR * 255.0f)
         };
         int[] doubled = {
-            encodedByte(SrgbTransfer.encodeLinear(CLEAR_RED_LINEAR)),
-            encodedByte(SrgbTransfer.encodeLinear(CLEAR_GREEN_LINEAR)),
-            encodedByte(SrgbTransfer.encodeLinear(CLEAR_BLUE_LINEAR))
+            encodedByte(independentEncodedScalar(CLEAR_RED_LINEAR)),
+            encodedByte(independentEncodedScalar(CLEAR_GREEN_LINEAR)),
+            encodedByte(independentEncodedScalar(CLEAR_BLUE_LINEAR))
         };
         for (int channel = 0; channel < 3; channel++) {
             assertTrue(Math.abs(actual[channel] - missing[channel]) > BYTE_TOLERANCE);
@@ -231,9 +231,9 @@ class SrgbPresentationNativeTest {
         int missingRed = Math.round(CLEAR_RED_LINEAR * 255.0f);
         int missingGreen = Math.round(CLEAR_GREEN_LINEAR * 255.0f);
         int missingBlue = Math.round(CLEAR_BLUE_LINEAR * 255.0f);
-        int doubleRed = encodedByte(SrgbTransfer.encodeLinear(CLEAR_RED_LINEAR));
-        int doubleGreen = encodedByte(SrgbTransfer.encodeLinear(CLEAR_GREEN_LINEAR));
-        int doubleBlue = encodedByte(SrgbTransfer.encodeLinear(CLEAR_BLUE_LINEAR));
+        int doubleRed = encodedByte(independentEncodedScalar(CLEAR_RED_LINEAR));
+        int doubleGreen = encodedByte(independentEncodedScalar(CLEAR_GREEN_LINEAR));
+        int doubleBlue = encodedByte(independentEncodedScalar(CLEAR_BLUE_LINEAR));
 
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of(
@@ -276,10 +276,13 @@ class SrgbPresentationNativeTest {
     }
 
     private static int encodedByte(float linear) {
-        double encoded = linear <= 0.0031308
+        return (int) Math.round(independentEncodedScalar(linear) * 255.0);
+    }
+
+    private static float independentEncodedScalar(float linear) {
+        return (float) (linear <= 0.0031308
                 ? linear * 12.92
-                : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055;
-        return (int) Math.round(encoded * 255.0);
+                : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055);
     }
 
     private static String rgb(int[] pixel) {

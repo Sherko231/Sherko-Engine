@@ -650,13 +650,14 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 2.0f, 1.5f, 0.5f,
                 2.0f, 1.5f, -3.0f,
                 -1.0f, 0.0f, 0.0f);
-        putRoomQuad(
+        putRoomQuadUv(
                 data,
                 -0.60f, -0.40f, -1.0f,
                 0.60f, -0.40f, -1.0f,
                 0.60f, 0.40f, -1.0f,
                 -0.60f, 0.40f, -1.0f,
-                0.0f, 0.0f, 1.0f);
+                0.0f, 0.0f, 1.0f,
+                0.25f, 0.25f);
         return data.flip();
     }
 
@@ -667,10 +668,28 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             float x2, float y2, float z2,
             float x3, float y3, float z3,
             float nx, float ny, float nz) {
+        putRoomQuadUv(
+                data,
+                x0, y0, z0,
+                x1, y1, z1,
+                x2, y2, z2,
+                x3, y3, z3,
+                nx, ny, nz,
+                1.0f, 1.0f);
+    }
+
+    private static void putRoomQuadUv(
+            ByteBuffer data,
+            float x0, float y0, float z0,
+            float x1, float y1, float z1,
+            float x2, float y2, float z2,
+            float x3, float y3, float z3,
+            float nx, float ny, float nz,
+            float maxU, float maxV) {
         putRoomVertex(data, x0, y0, z0, nx, ny, nz, 0.0f, 0.0f);
-        putRoomVertex(data, x1, y1, z1, nx, ny, nz, 1.0f, 0.0f);
-        putRoomVertex(data, x2, y2, z2, nx, ny, nz, 1.0f, 1.0f);
-        putRoomVertex(data, x3, y3, z3, nx, ny, nz, 0.0f, 1.0f);
+        putRoomVertex(data, x1, y1, z1, nx, ny, nz, maxU, 0.0f);
+        putRoomVertex(data, x2, y2, z2, nx, ny, nz, maxU, maxV);
+        putRoomVertex(data, x3, y3, z3, nx, ny, nz, 0.0f, maxV);
     }
 
     private static void putRoomVertex(

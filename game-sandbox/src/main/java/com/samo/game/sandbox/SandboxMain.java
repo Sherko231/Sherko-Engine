@@ -21,6 +21,7 @@ import com.samo.engine.platform.api.PlayerInputCommandSampler;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
 import com.samo.engine.render.api.OpenGlRenderer;
+import com.samo.engine.render.api.RenderFramePacket;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -225,11 +226,12 @@ public final class SandboxMain {
                         0.1f,
                         100.0f,
                         projection);
-                renderer.render(
+                RenderFramePacket renderFrame = new RenderFramePacket(
                         view,
                         projection,
                         framebufferSize.width(),
                         framebufferSize.height());
+                renderer.render(renderFrame);
                 window.present();
             }
 

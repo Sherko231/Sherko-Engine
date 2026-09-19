@@ -8,6 +8,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
+import com.samo.engine.render.api.RenderFramePacket;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -100,6 +101,45 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(1, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
+    }
+
+    @Test
+    void packetConsumptionUsesCapturedMatricesAfterSourceMutation() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+        resources.uploads.clear();
+        draw.trace.clear();
+
+        Matrix4f sourceView = new Matrix4f().translation(1.0f, 2.0f, 3.0f);
+        Matrix4f sourceProjection = new Matrix4f().scaling(2.0f, 3.0f, 4.0f);
+        RenderFramePacket frame = new RenderFramePacket(sourceView, sourceProjection, 800, 600);
+        sourceView.identity();
+        sourceProjection.identity();
+
+        pipeline.render(frame);
+
+        ByteBuffer camera = ByteBuffer.wrap(resources.uploads.getFirst().bytes())
+                .order(ByteOrder.nativeOrder());
+        assertEquals(1.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 12 * Float.BYTES));
+        assertEquals(2.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 13 * Float.BYTES));
+        assertEquals(3.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 14 * Float.BYTES));
+        assertEquals(2.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES));
+        assertEquals(3.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 5 * Float.BYTES));
+        assertEquals(4.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 10 * Float.BYTES));
+        assertEquals("viewport:0:0:800x600", draw.trace.getFirst());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
     }
 
     @Test

@@ -3,29 +3,13 @@ package com.samo.engine.platform.api;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.EngineSubsystem;
 import com.samo.engine.core.api.NativeResourceRegistry;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWCursorPosCallback;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWErrorCallbackI;
-import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
-import org.lwjgl.glfw.GLFWKeyCallback;
-import org.lwjgl.glfw.GLFWMouseButtonCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.glfw.GLFWWindowFocusCallback;
-import org.lwjgl.glfw.GLFWWindowSizeCallback;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL43;
-import org.lwjgl.opengl.GLDebugMessageCallback;
-import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 /** Owns one GLFW window and OpenGL 4.6 Core context for one subsystem lifetime. */
@@ -50,7 +34,7 @@ public final class GlfwWindow extends EngineSubsystem {
     private final NativeResourceRegistry nativeResources;
     private final WindowSizeListener sizeListener;
     private final OpenGlDebugMode openGlDebugMode;
-    private final Backend backend;
+    private final GlfwNativeBackend backend;
     private final boolean[] heldKeys = new boolean[GLFW.GLFW_KEY_LAST + 1];
     private final boolean[] heldMouseButtons = new boolean[GLFW.GLFW_MOUSE_BUTTON_LAST + 1];
     private final boolean[] pendingPressedKeys = new boolean[InputKey.values().length];
@@ -60,11 +44,11 @@ public final class GlfwWindow extends EngineSubsystem {
 
     private final OpenGlThreadGuard openGlThreadGuard = new OpenGlThreadGuard();
 
-    private CallbackState callbackState;
-    private SizeCallbackState sizeCallbackState;
-    private InputCallbackState inputCallbackState;
-    private MotionCallbackState motionCallbackState;
-    private DebugCallbackState debugCallbackState;
+    private GlfwErrorCallbackRegistration callbackState;
+    private GlfwSizeCallbackRegistration sizeCallbackState;
+    private GlfwInputCallbackRegistration inputCallbackState;
+    private GlfwCursorPositionCallbackRegistration motionCallbackState;
+    private OpenGlDebugCallbackRegistration debugCallbackState;
     private boolean glfwInitialized;
     private long windowHandle;
     private NativeResourceRegistry.Registration windowRegistration;
@@ -130,7 +114,7 @@ public final class GlfwWindow extends EngineSubsystem {
             NativeResourceRegistry nativeResources,
             WindowSizeListener sizeListener,
             OpenGlDebugMode openGlDebugMode) {
-        this(width, height, title, logger, nativeResources, sizeListener, openGlDebugMode, new LwjglBackend());
+        this(width, height, title, logger, nativeResources, sizeListener, openGlDebugMode, new LwjglGlfwNativeBackend());
     }
 
     GlfwWindow(
@@ -139,7 +123,7 @@ public final class GlfwWindow extends EngineSubsystem {
             String title,
             EngineLogger logger,
             NativeResourceRegistry nativeResources,
-            Backend backend) {
+            GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, OpenGlDebugMode.DISABLED, backend);
     }
 
@@ -150,7 +134,7 @@ public final class GlfwWindow extends EngineSubsystem {
             EngineLogger logger,
             NativeResourceRegistry nativeResources,
             OpenGlDebugMode openGlDebugMode,
-            Backend backend) {
+            GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, openGlDebugMode, backend);
     }
 
@@ -161,7 +145,7 @@ public final class GlfwWindow extends EngineSubsystem {
             EngineLogger logger,
             NativeResourceRegistry nativeResources,
             WindowSizeListener sizeListener,
-            Backend backend) {
+            GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, sizeListener, OpenGlDebugMode.DISABLED, backend);
     }
 
@@ -173,7 +157,7 @@ public final class GlfwWindow extends EngineSubsystem {
             NativeResourceRegistry nativeResources,
             WindowSizeListener sizeListener,
             OpenGlDebugMode openGlDebugMode,
-            Backend backend) {
+            GlfwNativeBackend backend) {
         if (width <= 0) {
             throw new IllegalArgumentException("width must be positive");
         }
@@ -434,7 +418,7 @@ public final class GlfwWindow extends EngineSubsystem {
                 debugCallbackState = backend.installOpenGlDebugCallback(this::handleOpenGlDebugMessage);
             }
 
-            sizeCallbackState = backend.installSizeCallbacks(windowHandle, new SizeEventSink() {
+            sizeCallbackState = backend.installSizeCallbacks(windowHandle, new GlfwSizeEventSink() {
                 @Override
                 public void onLogicalSize(int logicalWidth, int logicalHeight) {
                     stageLogicalSize(logicalWidth, logicalHeight);
@@ -446,7 +430,7 @@ public final class GlfwWindow extends EngineSubsystem {
                 }
             });
 
-            inputCallbackState = backend.installInputCallbacks(windowHandle, new InputEventSink() {
+            inputCallbackState = backend.installInputCallbacks(windowHandle, new GlfwInputEventSink() {
                 @Override
                 public void onFocus(boolean focused) {
                     handleFocusChanged(focused);
@@ -1170,7 +1154,7 @@ public final class GlfwWindow extends EngineSubsystem {
         if (debugCallbackState == null) {
             return;
         }
-        DebugCallbackState state = debugCallbackState;
+        OpenGlDebugCallbackRegistration state = debugCallbackState;
         debugCallbackState = null;
         runCleanup(failures, () -> backend.releaseOpenGlDebugCallback(state));
     }
@@ -1179,7 +1163,7 @@ public final class GlfwWindow extends EngineSubsystem {
         if (motionCallbackState == null) {
             return;
         }
-        MotionCallbackState state = motionCallbackState;
+        GlfwCursorPositionCallbackRegistration state = motionCallbackState;
         motionCallbackState = null;
         runCleanup(failures, () -> backend.releaseCursorPositionCallback(windowHandle, state));
     }
@@ -1188,7 +1172,7 @@ public final class GlfwWindow extends EngineSubsystem {
         if (inputCallbackState == null) {
             return;
         }
-        InputCallbackState state = inputCallbackState;
+        GlfwInputCallbackRegistration state = inputCallbackState;
         inputCallbackState = null;
         runCleanup(failures, () -> backend.releaseInputCallbacks(windowHandle, state));
     }
@@ -1197,7 +1181,7 @@ public final class GlfwWindow extends EngineSubsystem {
         if (sizeCallbackState == null) {
             return;
         }
-        SizeCallbackState state = sizeCallbackState;
+        GlfwSizeCallbackRegistration state = sizeCallbackState;
         sizeCallbackState = null;
         runCleanup(failures, () -> backend.releaseSizeCallbacks(windowHandle, state));
     }
@@ -1206,7 +1190,7 @@ public final class GlfwWindow extends EngineSubsystem {
         if (callbackState == null) {
             return;
         }
-        CallbackState state = callbackState;
+        GlfwErrorCallbackRegistration state = callbackState;
         callbackState = null;
         runCleanup(failures, () -> backend.restoreErrorCallback(state));
         runCleanup(failures, () -> backend.freeOwnedErrorCallback(state));
@@ -1282,21 +1266,6 @@ public final class GlfwWindow extends EngineSubsystem {
         }
     }
 
-    record CallbackState(Object owned, Object previous) {
-    }
-
-    record SizeCallbackState(Object logical, Object framebuffer) {
-    }
-
-    record InputCallbackState(Object focus, Object key, Object mouseButton) {
-    }
-
-    record MotionCallbackState(Object cursorPosition) {
-    }
-
-    record DebugCallbackState(Object callback) {
-    }
-
     record MouseMotion(double x, double y) {
     }
 
@@ -1326,511 +1295,4 @@ public final class GlfwWindow extends EngineSubsystem {
             int refreshRate) {
     }
 
-    interface SizeEventSink {
-        void onLogicalSize(int width, int height);
-
-        void onFramebufferSize(int width, int height);
-    }
-
-    interface InputEventSink {
-        void onFocus(boolean focused);
-
-        void onKey(int key, int action);
-
-        void onMouseButton(int button, int action);
-    }
-
-    @FunctionalInterface
-    interface MotionEventSink {
-        void onCursorPosition(double x, double y);
-    }
-
-    @FunctionalInterface
-    interface DebugEventSink {
-        void onMessage(int source, int type, int id, int severity, String message);
-    }
-
-    interface Backend {
-        CallbackState installErrorCallback();
-
-        void restoreErrorCallback(CallbackState state);
-
-        void freeOwnedErrorCallback(CallbackState state);
-
-        boolean initGlfw();
-
-        void terminateGlfw();
-
-        void defaultWindowHints();
-
-        void windowHint(int hint, int value);
-
-        long createWindow(int width, int height, String title);
-
-        void destroyWindow(long handle);
-
-        void makeContextCurrent(long handle);
-
-        void createCapabilities();
-
-        void clearCapabilities();
-
-        boolean openGl46Supported();
-
-        String glVersion();
-
-        String glRenderer();
-
-        default boolean openGlDebugContext() {
-            return false;
-        }
-
-        default DebugCallbackState installOpenGlDebugCallback(DebugEventSink sink) {
-            return null;
-        }
-
-        default void releaseOpenGlDebugCallback(DebugCallbackState state) {
-        }
-
-        SizeCallbackState installSizeCallbacks(long handle, SizeEventSink sink);
-
-        void releaseSizeCallbacks(long handle, SizeCallbackState state);
-
-        default InputCallbackState installInputCallbacks(long handle, InputEventSink sink) {
-            return null;
-        }
-
-        default void releaseInputCallbacks(long handle, InputCallbackState state) {
-        }
-
-        default MotionCallbackState installCursorPositionCallback(long handle, MotionEventSink sink) {
-            return null;
-        }
-
-        default void releaseCursorPositionCallback(long handle, MotionCallbackState state) {
-        }
-
-        default boolean queryWindowFocused(long handle) {
-            return true;
-        }
-
-        default void setCursorMode(long handle, int mode) {
-        }
-
-        default boolean rawMouseMotionSupported() {
-            return false;
-        }
-
-        default void setRawMouseMotion(long handle, boolean enabled) {
-        }
-
-        Dimensions queryLogicalSize(long handle);
-
-        Dimensions queryFramebufferSize(long handle);
-
-        Position queryWindowPosition(long handle);
-
-        long primaryMonitor();
-
-        VideoMode queryVideoMode(long monitor);
-
-        Position queryMonitorPosition(long monitor);
-
-        void setDecorated(long handle, boolean decorated);
-
-        void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate);
-
-        void swapBuffers(long handle);
-
-        void pollEvents();
-
-        void showWindow(long handle);
-
-        void hideWindow(long handle);
-    }
-
-    private static final class LwjglBackend implements Backend {
-        @Override
-        public CallbackState installErrorCallback() {
-            GLFWErrorCallback owned = GLFWErrorCallback.createPrint(System.err);
-            try {
-                GLFWErrorCallback previous = GLFW.glfwSetErrorCallback(owned);
-                return new CallbackState(owned, previous);
-            } catch (RuntimeException | Error failure) {
-                try {
-                    owned.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                throw failure;
-            }
-        }
-
-        @Override
-        public void restoreErrorCallback(CallbackState state) {
-            GLFWErrorCallbackI previous = (GLFWErrorCallbackI) state.previous();
-            GLFW.glfwSetErrorCallback(previous);
-        }
-
-        @Override
-        public void freeOwnedErrorCallback(CallbackState state) {
-            ((GLFWErrorCallback) state.owned()).free();
-        }
-
-        @Override
-        public boolean initGlfw() {
-            return GLFW.glfwInit();
-        }
-
-        @Override
-        public void terminateGlfw() {
-            GLFW.glfwTerminate();
-        }
-
-        @Override
-        public void defaultWindowHints() {
-            GLFW.glfwDefaultWindowHints();
-        }
-
-        @Override
-        public void windowHint(int hint, int value) {
-            GLFW.glfwWindowHint(hint, value);
-        }
-
-        @Override
-        public long createWindow(int width, int height, String title) {
-            return GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL);
-        }
-
-        @Override
-        public void destroyWindow(long handle) {
-            GLFW.glfwDestroyWindow(handle);
-        }
-
-        @Override
-        public void makeContextCurrent(long handle) {
-            GLFW.glfwMakeContextCurrent(handle);
-        }
-
-        @Override
-        public void createCapabilities() {
-            GL.createCapabilities();
-        }
-
-        @Override
-        public void clearCapabilities() {
-            GL.setCapabilities(null);
-        }
-
-        @Override
-        public boolean openGl46Supported() {
-            GLCapabilities capabilities = GL.getCapabilities();
-            return capabilities.OpenGL46;
-        }
-
-        @Override
-        public String glVersion() {
-            return GL11.glGetString(GL11.GL_VERSION);
-        }
-
-        @Override
-        public String glRenderer() {
-            return GL11.glGetString(GL11.GL_RENDERER);
-        }
-
-        @Override
-        public boolean openGlDebugContext() {
-            return (GL11.glGetInteger(GL30.GL_CONTEXT_FLAGS) & GL43.GL_CONTEXT_FLAG_DEBUG_BIT) != 0;
-        }
-
-        @Override
-        public DebugCallbackState installOpenGlDebugCallback(DebugEventSink sink) {
-            GLDebugMessageCallback callback = GLDebugMessageCallback.create(
-                    (source, type, id, severity, length, message, userParam) ->
-                            sink.onMessage(
-                                    source,
-                                    type,
-                                    id,
-                                    severity,
-                                    GLDebugMessageCallback.getMessage(length, message)));
-            try {
-                GL11.glEnable(GL43.GL_DEBUG_OUTPUT);
-                GL11.glEnable(GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS);
-                GL43.glDebugMessageCallback(callback, MemoryUtil.NULL);
-                return new DebugCallbackState(callback);
-            } catch (RuntimeException | Error failure) {
-                try {
-                    callback.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                throw failure;
-            }
-        }
-
-        @Override
-        public void releaseOpenGlDebugCallback(DebugCallbackState state) {
-            List<Throwable> failures = new ArrayList<>();
-            runCleanup(failures, () -> GL43.glDebugMessageCallback(null, MemoryUtil.NULL));
-            runCleanup(failures, () -> GL11.glDisable(GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS));
-            runCleanup(failures, () -> GL11.glDisable(GL43.GL_DEBUG_OUTPUT));
-            runCleanup(failures, () -> ((GLDebugMessageCallback) state.callback()).free());
-            throwCleanupFailure(failures);
-        }
-
-        @Override
-        public SizeCallbackState installSizeCallbacks(long handle, SizeEventSink sink) {
-            GLFWWindowSizeCallback logical = GLFWWindowSizeCallback.create(
-                    (window, callbackWidth, callbackHeight) ->
-                            sink.onLogicalSize(callbackWidth, callbackHeight));
-            GLFWFramebufferSizeCallback framebuffer = GLFWFramebufferSizeCallback.create(
-                    (window, callbackWidth, callbackHeight) ->
-                            sink.onFramebufferSize(callbackWidth, callbackHeight));
-            boolean logicalInstalled = false;
-            try {
-                GLFW.glfwSetWindowSizeCallback(handle, logical);
-                logicalInstalled = true;
-                GLFW.glfwSetFramebufferSizeCallback(handle, framebuffer);
-                return new SizeCallbackState(logical, framebuffer);
-            } catch (RuntimeException | Error failure) {
-                if (logicalInstalled) {
-                    try {
-                        GLFW.glfwSetWindowSizeCallback(handle, null);
-                    } catch (RuntimeException | Error cleanupFailure) {
-                        addSuppressedUnlessSame(failure, cleanupFailure);
-                    }
-                }
-                try {
-                    logical.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                try {
-                    framebuffer.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                throw failure;
-            }
-        }
-
-        @Override
-        public void releaseSizeCallbacks(long handle, SizeCallbackState state) {
-            List<Throwable> failures = new ArrayList<>();
-            runCleanup(failures, () -> GLFW.glfwSetWindowSizeCallback(handle, null));
-            runCleanup(failures, () -> GLFW.glfwSetFramebufferSizeCallback(handle, null));
-            runCleanup(failures, () -> ((GLFWWindowSizeCallback) state.logical()).free());
-            runCleanup(failures, () -> ((GLFWFramebufferSizeCallback) state.framebuffer()).free());
-            throwCleanupFailure(failures);
-        }
-
-        @Override
-        public InputCallbackState installInputCallbacks(long handle, InputEventSink sink) {
-            GLFWWindowFocusCallback focus = GLFWWindowFocusCallback.create(
-                    (window, focused) -> sink.onFocus(focused));
-            GLFWKeyCallback key = GLFWKeyCallback.create(
-                    (window, callbackKey, scancode, action, mods) -> sink.onKey(callbackKey, action));
-            GLFWMouseButtonCallback mouseButton = GLFWMouseButtonCallback.create(
-                    (window, button, action, mods) -> sink.onMouseButton(button, action));
-            boolean focusInstalled = false;
-            boolean keyInstalled = false;
-            try {
-                GLFW.glfwSetWindowFocusCallback(handle, focus);
-                focusInstalled = true;
-                GLFW.glfwSetKeyCallback(handle, key);
-                keyInstalled = true;
-                GLFW.glfwSetMouseButtonCallback(handle, mouseButton);
-                return new InputCallbackState(focus, key, mouseButton);
-            } catch (RuntimeException | Error failure) {
-                if (keyInstalled) {
-                    try {
-                        GLFW.glfwSetKeyCallback(handle, null);
-                    } catch (RuntimeException | Error cleanupFailure) {
-                        addSuppressedUnlessSame(failure, cleanupFailure);
-                    }
-                }
-                if (focusInstalled) {
-                    try {
-                        GLFW.glfwSetWindowFocusCallback(handle, null);
-                    } catch (RuntimeException | Error cleanupFailure) {
-                        addSuppressedUnlessSame(failure, cleanupFailure);
-                    }
-                }
-                try {
-                    focus.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                try {
-                    key.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                try {
-                    mouseButton.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                throw failure;
-            }
-        }
-
-        @Override
-        public void releaseInputCallbacks(long handle, InputCallbackState state) {
-            List<Throwable> failures = new ArrayList<>();
-            runCleanup(failures, () -> GLFW.glfwSetWindowFocusCallback(handle, null));
-            runCleanup(failures, () -> GLFW.glfwSetKeyCallback(handle, null));
-            runCleanup(failures, () -> GLFW.glfwSetMouseButtonCallback(handle, null));
-            runCleanup(failures, () -> ((GLFWWindowFocusCallback) state.focus()).free());
-            runCleanup(failures, () -> ((GLFWKeyCallback) state.key()).free());
-            runCleanup(failures, () -> ((GLFWMouseButtonCallback) state.mouseButton()).free());
-            throwCleanupFailure(failures);
-        }
-
-        @Override
-        public MotionCallbackState installCursorPositionCallback(long handle, MotionEventSink sink) {
-            GLFWCursorPosCallback cursorPosition = GLFWCursorPosCallback.create(
-                    (window, x, y) -> sink.onCursorPosition(x, y));
-            try {
-                GLFW.glfwSetCursorPosCallback(handle, cursorPosition);
-                return new MotionCallbackState(cursorPosition);
-            } catch (RuntimeException | Error failure) {
-                try {
-                    cursorPosition.free();
-                } catch (RuntimeException | Error cleanupFailure) {
-                    addSuppressedUnlessSame(failure, cleanupFailure);
-                }
-                throw failure;
-            }
-        }
-
-        @Override
-        public void releaseCursorPositionCallback(long handle, MotionCallbackState state) {
-            List<Throwable> failures = new ArrayList<>();
-            runCleanup(failures, () -> GLFW.glfwSetCursorPosCallback(handle, null));
-            runCleanup(failures, () -> ((GLFWCursorPosCallback) state.cursorPosition()).free());
-            throwCleanupFailure(failures);
-        }
-
-        @Override
-        public boolean queryWindowFocused(long handle) {
-            return GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE;
-        }
-
-        @Override
-        public void setCursorMode(long handle, int mode) {
-            GLFW.glfwSetInputMode(handle, GLFW.GLFW_CURSOR, mode);
-        }
-
-        @Override
-        public boolean rawMouseMotionSupported() {
-            return GLFW.glfwRawMouseMotionSupported();
-        }
-
-        @Override
-        public void setRawMouseMotion(long handle, boolean enabled) {
-            GLFW.glfwSetInputMode(
-                    handle,
-                    GLFW.GLFW_RAW_MOUSE_MOTION,
-                    enabled ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
-        }
-
-        @Override
-        public Dimensions queryLogicalSize(long handle) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer sizeWidth = stack.mallocInt(1);
-                IntBuffer sizeHeight = stack.mallocInt(1);
-                GLFW.glfwGetWindowSize(handle, sizeWidth, sizeHeight);
-                return new Dimensions(sizeWidth.get(0), sizeHeight.get(0));
-            }
-        }
-
-        @Override
-        public Dimensions queryFramebufferSize(long handle) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer sizeWidth = stack.mallocInt(1);
-                IntBuffer sizeHeight = stack.mallocInt(1);
-                GLFW.glfwGetFramebufferSize(handle, sizeWidth, sizeHeight);
-                return new Dimensions(sizeWidth.get(0), sizeHeight.get(0));
-            }
-        }
-
-        @Override
-        public Position queryWindowPosition(long handle) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer x = stack.mallocInt(1);
-                IntBuffer y = stack.mallocInt(1);
-                GLFW.glfwGetWindowPos(handle, x, y);
-                return new Position(x.get(0), y.get(0));
-            }
-        }
-
-        @Override
-        public long primaryMonitor() {
-            return GLFW.glfwGetPrimaryMonitor();
-        }
-
-        @Override
-        public VideoMode queryVideoMode(long monitor) {
-            GLFWVidMode mode = GLFW.glfwGetVideoMode(monitor);
-            if (mode == null) {
-                return null;
-            }
-            return new VideoMode(mode.width(), mode.height(), mode.refreshRate());
-        }
-
-        @Override
-        public Position queryMonitorPosition(long monitor) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer x = stack.mallocInt(1);
-                IntBuffer y = stack.mallocInt(1);
-                GLFW.glfwGetMonitorPos(monitor, x, y);
-                return new Position(x.get(0), y.get(0));
-            }
-        }
-
-        @Override
-        public void setDecorated(long handle, boolean decorated) {
-            GLFW.glfwSetWindowAttrib(handle, GLFW.GLFW_DECORATED, decorated ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
-        }
-
-        @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
-            GLFW.glfwSetWindowMonitor(handle, monitor, x, y, width, height, refreshRate);
-        }
-
-        @Override
-        public void swapBuffers(long handle) {
-            GLFW.glfwSwapBuffers(handle);
-        }
-
-        @Override
-        public void pollEvents() {
-            GLFW.glfwPollEvents();
-        }
-
-        @Override
-        public void showWindow(long handle) {
-            GLFW.glfwShowWindow(handle);
-        }
-
-        @Override
-        public void hideWindow(long handle) {
-            GLFW.glfwHideWindow(handle);
-        }
-    }
 }

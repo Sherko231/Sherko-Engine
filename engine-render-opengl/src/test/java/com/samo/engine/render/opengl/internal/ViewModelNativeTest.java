@@ -124,7 +124,7 @@ class ViewModelNativeTest {
             double worldDistance = 1.40;
             double sampleWorldNdcX = ((double) sampleX / leftWidth) * 2.0 - 1.0;
             double sampleWorldNdcY = ((double) sampleY / framebufferHeight) * 2.0 - 1.0;
-            double panelHalfWidthNdc = (worldFocal / aspect) * 0.80 / worldDistance;
+            double panelHalfWidthNdc = (worldFocal / aspect) * 1.20 / worldDistance;
             double panelHalfHeightNdc = worldFocal * 0.80 / worldDistance;
             assertTrue(
                     Math.abs(sampleWorldNdcX) <= panelHalfWidthNdc

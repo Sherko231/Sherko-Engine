@@ -27,6 +27,12 @@ final class UniformBlockLayoutVerifier {
                 PerFrameUniformBlock.SIZE_BYTES,
                 PerFrameUniformBlock.BINDING,
                 reflection);
+        verifyBlock(
+                programHandle,
+                LocalLightUniformBlock.GLSL_BLOCK_NAME,
+                LocalLightUniformBlock.SIZE_BYTES,
+                LocalLightUniformBlock.BINDING,
+                reflection);
     }
 
     private static void verifyBlock(

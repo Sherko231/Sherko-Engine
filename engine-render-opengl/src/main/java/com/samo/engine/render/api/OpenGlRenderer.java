@@ -69,7 +69,9 @@ public final class OpenGlRenderer implements AutoCloseable {
                 loadShader("shaders/p5/basic.vert"),
                 loadShader("shaders/p5/basic.frag"),
                 loadShader("shaders/p5/debug-lines.vert"),
-                loadShader("shaders/p5/debug-lines.frag")));
+                loadShader("shaders/p5/debug-lines.frag"),
+                loadShader("shaders/p5/view-model.vert"),
+                loadShader("shaders/p5/view-model.frag")));
     }
 
     public void render(RenderFramePacket frame) {

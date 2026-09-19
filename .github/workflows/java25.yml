@@ -558,6 +558,23 @@ jobs:
             engine-render-opengl/build/reports/p5/p5-t17-view-model.png
           if-no-files-found: error
 
+      - name: Verify P5-T18 Phase 5 exit integration
+        env:
+          SHERKO_P5_T18_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.Phase5ExitNativeTest" --rerun-tasks
+
+      - name: Upload P5-T18 Phase 5 exit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t18-phase5-exit
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.Phase5ExitNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t18-exit.txt
+            engine-render-opengl/build/reports/p5/p5-t18-room-camera-a.png
+            engine-render-opengl/build/reports/p5/p5-t18-room-camera-b.png
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

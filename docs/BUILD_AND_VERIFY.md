@@ -989,6 +989,31 @@ Windows native acceptance is part of `Windows native smoke` with `SHERKO_P5_T09_
 
 The native acceptance requires two primitives from the same owned indexed mesh, a baseline left material that preserves the P5-T08 encoded gray tolerance, a visibly distinct tinted right material, restored full-frame viewport, unbound program/VAO, disabled framebuffer-sRGB state after render, and an empty native-resource registry after cleanup. This evidence is renderer correctness/lifecycle evidence only; hosted software OpenGL is not physical-GPU performance or vendor-driver qualification.
 
+## P5-T18 Phase 5 exit-integration verification
+
+P5-T18 keeps the public renderer and module graph unchanged. It replaces only the renderer-owned validation geometry/texture fixture and makes the persistent sandbox's existing public input/camera path affect the submitted view matrix.
+
+Focused deterministic verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxCameraTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Windows native acceptance is part of `Windows native smoke` with `SHERKO_P5_T18_NATIVE=true` and runs `Phase5ExitNativeTest`. It retains:
+
+- `engine-render-opengl/build/reports/p5/p5-t18-exit.txt`;
+- `engine-render-opengl/build/reports/p5/p5-t18-room-camera-a.png`;
+- `engine-render-opengl/build/reports/p5/p5-t18-room-camera-b.png`;
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.Phase5ExitNativeTest.xml`.
+
+The native evidence must show the fixed internal room's mapped non-uniform sRGB texture, multiple visible surfaces, the nearer depth panel occluding the farther wall at the controlled reference sample, a known camera translation changing the projected/read-back center sample, the accepted directional-light contribution, P5-T16 debug geometry and P5-T17 view-model coexistence, restored viewport/program/VAO/framebuffer-sRGB state, and an empty native-resource registry after cleanup. The sandbox camera's W/A/S/D and mouse LOOK mapping is covered separately by deterministic `SandboxCameraTest`, because the native renderer evidence intentionally does not create a reverse dependency from `engine-render-opengl` into `game-sandbox`.
+
+After P5-T18 merges and exact-merge verification passes, rerun Phase 5 exit review #250 against that exact `master`. P5-T18 task acceptance alone does not mark Phase 5 complete.
+
 ## General change verification
 
 First audit the complete changed-file set. If every changed path ends in `.md`, the change qualifies for the Markdown-only CI exemption: do not run the Gradle build/test matrix solely for that change, and do not require automatic PR-head or merged-`master` build/test CI. Instead, verify the requested documentation content, links/references that matter to the task, consistency with authoritative repository state, and the complete diff audit. Record that no CI run was required by policy; do not call the absence of a run a pass.

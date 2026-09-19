@@ -1,7 +1,7 @@
 package com.samo.engine.render.opengl.internal;
 
 interface OpenGlDrawBackend {
-    void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer);
+    void configurePositionNormalUvAttributes(int vertexArray, int vertexBuffer);
 
     void configureDebugLineAttributes(int vertexArray, int vertexBuffer);
 
@@ -37,7 +37,7 @@ interface OpenGlDrawBackend {
 
     void bindVertexArray(int vertexArray);
 
-    void drawIndexedTriangle();
+    void drawIndexedTriangles(int indexCount);
 
     void drawDebugLines(int vertexCount);
 

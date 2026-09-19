@@ -131,7 +131,7 @@ class LocalLightsNativeTest {
             RenderPointLight point = new RenderPointLight(
                     0.0f,
                     0.0f,
-                    1.0f,
+                    0.0f,
                     1.0f,
                     1.0f,
                     1.0f,
@@ -140,7 +140,7 @@ class LocalLightsNativeTest {
             RenderSpotLight spot = new RenderSpotLight(
                     0.0f,
                     0.0f,
-                    1.0f,
+                    0.0f,
                     SPOT_DIRECTION_X,
                     0.0f,
                     SPOT_DIRECTION_Z,
@@ -154,7 +154,7 @@ class LocalLightsNativeTest {
             RenderPointLight overflowRed = new RenderPointLight(
                     0.0f,
                     0.0f,
-                    1.0f,
+                    0.0f,
                     1.0f,
                     0.0f,
                     0.0f,

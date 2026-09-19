@@ -16,6 +16,7 @@ layout(std140, binding = 2) uniform LocalLightBlock {
 
 layout(location = 0) in vec3 worldNormal;
 layout(location = 1) in vec3 worldPosition;
+layout(location = 2) in vec2 roomTexCoord;
 layout(location = 0) out vec4 color;
 
 vec3 linearToSrgb(vec3 linearColor) {
@@ -61,7 +62,7 @@ vec3 localLightContribution(int index, vec3 normal) {
 }
 
 void main() {
-    vec4 sampled = texture(referenceTexture, vec2(0.5));
+    vec4 sampled = texture(referenceTexture, roomTexCoord);
     vec4 materialColor = sampled * materialColorMultiplier;
     vec3 normal = normalize(worldNormal);
     float directionalDiffuse = max(

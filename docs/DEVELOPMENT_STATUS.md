@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — Phase 5 exit review #250 failed; P5-T18 / #251 is planned and requires fresh activation before implementation |
+| Active executable task | P5-T18 / #251 — active against `master` `3d7f288012b428aeb7e24512a01bef6be412a294`; candidate branch `p5-t18-textured-room-camera` |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -100,7 +100,7 @@ P5-T17 / #199 is accepted. Initial candidate run #431 / `35455023387` was reject
 
 ### Phase 5 exit review — Issue #250
 
-Phase 5 is **not complete**. Review #250 checked the authoritative gate — a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry without gameplay code — against current `master`, accepted task evidence, the production renderer, and the persistent sandbox. Depth, the accepted fixed directional light, D-063/P5-T15 presentation, P5-T16 debug geometry, and the no-gameplay integration boundary are present. Two explicit gate behaviors are missing: the renderer still draws the same fixed reference triangle twice with a 1x1 gray texture sampled at fixed coordinates rather than a textured room, and `SandboxMain` keeps one fixed view matrix while W/A/S/D/mouse input is used only for diagnostics/tick commands rather than rendered camera movement. P5-T18 / #251 is the planned bounded follow-up; Phase 6 remains inactive until #250 is rerun and passes.
+Phase 5 is **not complete** because exit review #250 is still the authoritative phase result until it is rerun. P5-T18 / #251 is now active to close exactly its two failed findings. The current task branch replaces the fixed triangle fixture with a renderer-owned mapped-UV room containing multiple surfaces plus a nearer depth panel and changes the persistent sandbox so tick-aligned MOVE/LOOK input rebuilds the actual submitted D-041/D-045 view matrix. The public renderer API, module graph, asset/resource identity, world/ECS ownership, gameplay, physics, HUD, and Phase 6 scope remain unchanged. This branch is not accepted evidence yet; final five-job PR CI, retained hosted-Windows P5-T18 evidence, exact-merge verification, and a successful rerun of #250 are still required.
 
 ## Open gates and blockers
 
@@ -114,4 +114,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T18 / Issue #251 against current `master`, then implement only the bounded textured-room and movable-sandbox-camera integration needed to close the two failed Phase 5 exit findings. After P5-T18 acceptance, rerun Phase 5 exit review #250 before activating P6-T01.
+Complete P5-T18 / Issue #251 verification on the current candidate branch, open the final PR only after the implementation/docs/self-review are complete, require the exact-head five-job matrix including retained P5-T18 Windows evidence, merge only if the tested base/head remain current, verify the exact merge, then rerun Phase 5 exit review #250 before activating P6-T01.

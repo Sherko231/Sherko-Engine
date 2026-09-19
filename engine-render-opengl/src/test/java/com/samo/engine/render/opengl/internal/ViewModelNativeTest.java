@@ -121,15 +121,15 @@ class ViewModelNativeTest {
             assertTrue(sampleY >= 0 && sampleY < framebufferHeight);
 
             double worldFocal = 1.0 / Math.tan(Math.toRadians(70.0) * 0.5);
-            double worldDistance = 0.40;
+            double worldDistance = 1.40;
             double sampleWorldNdcX = ((double) sampleX / leftWidth) * 2.0 - 1.0;
             double sampleWorldNdcY = ((double) sampleY / framebufferHeight) * 2.0 - 1.0;
-            double[] a = worldNdc(-0.60, -0.50, worldDistance, worldFocal, aspect);
-            double[] b = worldNdc(0.60, -0.50, worldDistance, worldFocal, aspect);
-            double[] c = worldNdc(0.0, 0.60, worldDistance, worldFocal, aspect);
+            double panelHalfWidthNdc = (worldFocal / aspect) * 1.20 / worldDistance;
+            double panelHalfHeightNdc = worldFocal * 0.80 / worldDistance;
             assertTrue(
-                    pointInTriangle(sampleWorldNdcX, sampleWorldNdcY, a, b, c),
-                    "Controlled sample must overlap the depth-writing world baseline triangle");
+                    Math.abs(sampleWorldNdcX) <= panelHalfWidthNdc
+                            && Math.abs(sampleWorldNdcY) <= panelHalfHeightNdc,
+                    "Controlled sample must overlap the depth-writing room panel");
 
             worldWindowDepth = windowDepth(worldDistance, 0.1, 100.0);
             viewModelWindowDepth = windowDepth(-SAMPLE_VIEW_Z, 0.01, 10.0);
@@ -314,7 +314,7 @@ class ViewModelNativeTest {
                 "view.model.depth.reset.before.draw=true",
                 "view.model.depth.test=GL_LESS",
                 "view.model.depth.write=true",
-                "world.sample.overlap=true",
+                "world.room.panel.sample.overlap=true",
                 "world.sample.window.depth=" + worldWindowDepth,
                 "view.model.sample.window.depth=" + viewModelWindowDepth,
                 "world.depth.would.occlude.without.reset=true",
@@ -326,7 +326,7 @@ class ViewModelNativeTest {
                         + ","
                         + encodedByte(COLOR_BLUE_LINEAR),
                 "fixture.actual.rgb=" + rgb(fixturePixel),
-                "scene.indexed.draws=2",
+                "scene.indexed.room.draws=2",
                 "debug.geometry.coexists=true",
                 "viewport.restored=true",
                 "program.unbound=true",
@@ -338,7 +338,7 @@ class ViewModelNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=fixed engine-owned first-person view-model validation layer with independent projection and depth reset; no public asset submission, gameplay weapon/hand/tool, animation/IK, third-person system, HUD/UI, FBO, render graph, or performance claim"));
+                "evidence.scope=fixed engine-owned first-person view-model validation layer with independent projection and depth reset over the P5-T18 room depth panel; no public asset submission, gameplay weapon/hand/tool, animation/IK, third-person system, HUD/UI, FBO, render graph, or performance claim"));
     }
 
     private static int encodedByte(float linear) {

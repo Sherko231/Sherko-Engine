@@ -16,8 +16,10 @@ import org.joml.Matrix4fc;
  * values, samples one renderer-owned sRGB reference texture, and writes linear shader output through
  * exactly one presentation sRGB encode, using hardware when the default buffer is sRGB or an internal
  * fallback when it is linear. The material values remain implementation details until stable runtime
- * asset/resource references exist. This API intentionally does not expose native handles, arbitrary
- * meshes/textures/materials, world submission, or asset loading.
+ * asset/resource references exist. P5-T10 adds an immutable renderer-facing frame packet that
+ * snapshots camera matrices and framebuffer size without retaining mutable world/gameplay objects.
+ * This API intentionally does not expose native handles, arbitrary meshes/textures/materials, world
+ * components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;
@@ -38,12 +40,16 @@ public final class OpenGlRenderer implements AutoCloseable {
                 loadShader("shaders/p5/basic.frag")));
     }
 
+    public void render(RenderFramePacket frame) {
+        pipeline.render(Objects.requireNonNull(frame, "frame"));
+    }
+
     public void render(
             Matrix4fc view,
             Matrix4fc projection,
             int framebufferWidth,
             int framebufferHeight) {
-        pipeline.render(view, projection, framebufferWidth, framebufferHeight);
+        render(new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight));
     }
 
     @Override

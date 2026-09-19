@@ -2,11 +2,13 @@ package com.samo.engine.render.opengl.internal;
 
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
+import com.samo.engine.render.api.RenderFramePacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
@@ -33,6 +35,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
             ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final Matrix4f submittedView = new Matrix4f();
+    private final Matrix4f submittedProjection = new Matrix4f();
     private boolean closeAttempted;
 
     private IndexedStaticMeshPipeline(
@@ -229,22 +233,32 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         }
     }
 
+    public void render(RenderFramePacket frame) {
+        threadGuard.assertOwnerThread();
+        requireOpen();
+        RenderFramePacket snapshot = Objects.requireNonNull(frame, "frame");
+        snapshot.copyViewTo(submittedView);
+        snapshot.copyProjectionTo(submittedProjection);
+        renderSnapshot(
+                submittedView,
+                submittedProjection,
+                snapshot.framebufferWidth(),
+                snapshot.framebufferHeight());
+    }
+
     public void render(
             Matrix4fc view,
             Matrix4fc projection,
             int framebufferWidth,
             int framebufferHeight) {
-        threadGuard.assertOwnerThread();
-        requireOpen();
-        Matrix4fc viewMatrix = Objects.requireNonNull(view, "view");
-        Matrix4fc projectionMatrix = Objects.requireNonNull(projection, "projection");
-        if (framebufferWidth <= 0) {
-            throw new IllegalArgumentException("framebufferWidth must be positive");
-        }
-        if (framebufferHeight <= 0) {
-            throw new IllegalArgumentException("framebufferHeight must be positive");
-        }
+        render(new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight));
+    }
 
+    private void renderSnapshot(
+            Matrix4fc viewMatrix,
+            Matrix4fc projectionMatrix,
+            int framebufferWidth,
+            int framebufferHeight) {
         cameraBytes.clear();
         CameraUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
         cameraBytes.flip();

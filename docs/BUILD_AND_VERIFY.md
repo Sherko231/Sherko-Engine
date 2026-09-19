@@ -1142,3 +1142,25 @@ Wiki consistency is documentation verification, not evidence that production cod
 Do not reintroduce a fixed-duration timeline, automatic feature tour, disposable per-task executable, or one-feature showcase as the default sandbox model. Prefer owner-controlled interaction and coexistence. A separate subsystem-specific playground is exceptional and requires explicit Issue authorization.
 
 Never weaken a production boundary or add a public API solely to satisfy the sandbox. `game-sandbox/README.md` owns the current manual controls/run instructions and limitations; this file owns the distinction between manual observation and verification evidence.
+
+
+## P5-T10 immutable frame-submission verification
+
+P5-T10 adds public `RenderFramePacket` without adding a project dependency, production dependency, native handle, public mesh/material handle, asset identity, queue, or cleanup lifecycle. The packet is a complete immutable snapshot of the renderer-facing frame data available at this stage: view matrix, projection matrix, and framebuffer pixel dimensions.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+`RenderFramePacketTest` must prove constructor validation, defensive copies of mutable source matrices, and non-aliasing of matrices copied back out. `IndexedStaticMeshPipelineTest` must prove controlled consumption uses the captured packet values after caller source mutation while preserving established P5 draw/state behavior.
+
+The existing P5-T09 Windows native acceptance remains a regression over the same production `OpenGlRenderer` path because the compatibility overload constructs a `RenderFramePacket` before entering the pipeline. P5-T10 adds no new native behavior or visual requirement, so no separate native artifact is required beyond the ordinary heavy matrix.
+
+Ordering/lifetime contract: packet construction creates one complete frame snapshot; renderer consumption is synchronous in caller invocation order; the renderer does not retain packets after `render(...)` returns. Packets own no native resources and require no `close()`. This is not an async queue or network snapshot contract.

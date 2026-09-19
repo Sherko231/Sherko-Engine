@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T09 / Issue #191 accepted; P5-T10 / #192 is the next planned activation |
+| Active executable task | P5-T10 / Issue #192 — immutable per-frame render submission packets |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T09 / #191 are accepted. P5-T10 / #192 is the next planned renderer-foundation task and must be freshly activated/refined against the accepted P5-T09 state before implementation.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T09 / #191 are accepted. P5-T10 / #192 is active on `p5-t10-render-submission-packets` against accepted P5-T09 and `master` `7fad5cfebf4238a7ef4024e76a987b2aafac15e8`.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -80,6 +80,8 @@ P5-T08 / #190 is accepted. PR #228 final head `a69ff3e095b1e89026a04253566c7bd67
 
 P5-T09 / #191 is accepted. PR #229 final head `67b14fe1dfdb5c5405530673c7deb84660b370f1` passed all five required final-candidate jobs in run #412 / `35438757871`. The retained P5-T09 native evidence records two draws of the same owned indexed mesh, baseline RGB `128,128,128`, tinted RGB `118,80,83`, restored viewport/program/VAO/framebuffer-sRGB state, and an empty native-resource registry after cleanup. PR #229 merged as `3f2937ecd5c91e24d5cbca645538f178d28a8be5`, and exact merged `master` passed Lightweight verification in run #413 / `35438962304`. D-057 keeps `RendererMaterial` internal until P6 defines stable resource references; it carries explicit shader/textures/scalars/blend/depth/cull data, covers every fixed state mapping deterministically, and renders the same mesh through baseline/tinted materials without changing the public `OpenGlRenderer` signature or adding a project dependency, production dependency, asset format, P5-T10 submission contract, lighting, or gameplay/world coupling. Offline Shaderc validation is explicitly targeted at the OpenGL SPIR-V environment rather than Shaderc's default Vulkan semantics; runtime OpenGL 4.6 compile/link remains authoritative.
 
+P5-T10 / #192 implementation candidate is complete on branch `p5-t10-render-submission-packets` pending final PR verification. Public `RenderFramePacket` snapshots finite view/projection matrices and positive framebuffer pixel dimensions, owns no native resources, exposes no mesh/material/asset/native handles, and is consumed synchronously without retention through `OpenGlRenderer.render(RenderFramePacket)`. The existing matrix/size overload remains compatible by constructing the same packet. The sandbox and public consumer fixture use the packet boundary. Focused tests cover validation, source/copy alias isolation, and controlled pipeline consumption after caller mutation. No project dependency, production dependency, ECS/world object, queue, culling/sorting behavior, lighting, or P6 resource identity is introduced. Final acceptance requires the normal exact-head five-job CI, merge, and exact-merge Lightweight verification.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -92,4 +94,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T10 / Issue #192 against accepted P5-T09 and current `master` before implementation. P5-T10 may introduce only the bounded immutable per-frame render submission contract authorized by its Issue; do not pull P5-T11+ culling/sorting, P6 asset/resource handles, lighting, or gameplay-specific renderer coupling forward.
+Open the final non-draft PR for P5-T10 / Issue #192 from `p5-t10-render-submission-packets`, require all five heavy jobs to pass on the exact current head/base candidate, then merge only if the tested candidate remains current. After merge, require Lightweight master verification on the exact merge SHA before closing #192. Do not start P5-T11 or introduce P6 resource identities, culling/sorting, lighting, async queues, or gameplay/world coupling.

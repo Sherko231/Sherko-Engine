@@ -106,6 +106,38 @@ class ModulePackageBoundaryTest {
     }
 
     @Test
+    void rendererSubmissionBoundaryDoesNotReferenceWorldOrGamePackages() throws IOException {
+        Path sourceRoot = repositoryRoot().resolve("engine-render-opengl/src/main/java");
+        List<String> violations = new ArrayList<>();
+
+        try (var files = Files.walk(sourceRoot)) {
+            files.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".java"))
+                    .sorted()
+                    .forEach(sourceFile -> {
+                        try {
+                            ParsedSource source = parseSource(sourceFile);
+                            source.references().stream()
+                                    .map(SourceReference::name)
+                                    .filter(name -> name.equals("com.samo.engine.world")
+                                            || name.startsWith("com.samo.engine.world.")
+                                            || name.equals("com.samo.game")
+                                            || name.startsWith("com.samo.game."))
+                                    .forEach(name -> violations.add(
+                                            displayPath(sourceFile) + " -> " + name));
+                        } catch (IOException failure) {
+                            throw new IllegalStateException(
+                                    "Failed to inspect renderer submission boundary", failure);
+                        }
+                    });
+        }
+
+        assertTrue(
+                violations.isEmpty(),
+                () -> "Renderer production source must not depend on world/game packages:\n"
+                        + String.join("\n", violations));
+    }
+
+    @Test
     void fullyQualifiedImplementationReferenceIsRejected(@TempDir Path tempDirectory) throws IOException {
         Path sourceFile = tempDirectory.resolve("FullyQualifiedShortcut.java");
         Files.writeString(sourceFile, """

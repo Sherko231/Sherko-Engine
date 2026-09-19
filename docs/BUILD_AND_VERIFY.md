@@ -1312,3 +1312,41 @@ Retained artifacts:
 
 The earlier P5-T08 sRGB native acceptance stays in the same Windows job and remains a required regression. The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative.
 
+## P5-T16 renderer-neutral debug geometry verification
+
+P5-T16 adds bounded per-frame debug diagnostics without adding a module edge or production dependency. Public debug values live in `engine-core`; OpenGL adaptation remains internal to `engine-render-opengl`.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.DebugFrameTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DebugLineVertexPackerTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Deterministic fixtures establish:
+
+- `DebugFrame` accepts zero and exact-capacity snapshots, rejects more than 64 primitives or 16 counters, rejects null elements, and defensively snapshots caller lists;
+- debug colors/lines/ray lengths and ASCII counter labels reject non-finite/out-of-contract values;
+- accepted P4 `Aabb3f`, `Sphere3f`, and `Ray3f` values are wrapped rather than redefined;
+- line expansion is deterministic: line=1 segment, AABB=12 segments, sphere=3 x 16 segments, ray=1 segment; the worst-case 64-sphere frame exactly fills the fixed 6144-vertex / 147456-byte buffer;
+- the pipeline uploads/draws debug geometry after the current scene, uses the dedicated debug draw state/program/VAO, publishes text counters only after a successful full render, and leaves prior debug/culling snapshots unchanged when the debug draw fails;
+- the public API consumer compiles using `DebugFrame`, the packet debug constructor, and `lastDebugTextCounters()` without importing renderer internals;
+- committed debug-line shaders and the manual-sRGB fallback variant pass locked Shaderc validation.
+
+Windows native acceptance runs `DebugGeometryNativeTest` with `SHERKO_P5_T16_NATIVE=true`. It submits one line, AABB, sphere, ray, and two text counters through public production APIs. A closer green line crosses a small controlled region around framebuffer center; at least one pixel in that region must be strongly green-dominant. The renderer-published counter list must exactly match submitted order/values, current scene culling diagnostics must still report two indexed submissions, and viewport/program/VAO/framebuffer-sRGB cleanup plus an empty native-resource registry remain required.
+
+Retained artifacts:
+
+- `engine-render-opengl/build/reports/p5/p5-t16-debug-geometry.txt`
+- `engine-render-opengl/build/reports/p5/p5-t16-debug-geometry.png`
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.DebugGeometryNativeTest.xml`
+
+The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative. Native evidence is correctness-only and does not establish GPU performance.
+

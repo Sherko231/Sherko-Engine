@@ -50,6 +50,26 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
+    public void configureViewModelAttributes(int vertexArray, int vertexBuffer) {
+        int stride = 6 * Float.BYTES;
+        GL45.glVertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, 0L, stride);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 0);
+        GL45.glVertexArrayAttribFormat(vertexArray, 0, 3, GL11.GL_FLOAT, false, 0);
+        GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 1);
+        GL45.glVertexArrayAttribFormat(
+                vertexArray,
+                1,
+                3,
+                GL11.GL_FLOAT,
+                false,
+                3 * Float.BYTES);
+        GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
+    }
+
+    @Override
     public void bindElementBuffer(int vertexArray, int indexBuffer) {
         GL45.glVertexArrayElementBuffer(vertexArray, indexBuffer);
     }
@@ -99,6 +119,22 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LESS);
         GL11.glDepthMask(false);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+    }
+
+    @Override
+    public void clearDepthOnly() {
+        GL11.glDepthMask(true);
+        GL11.glClearDepth(1.0d);
+        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+    }
+
+    @Override
+    public void applyViewModelState() {
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LESS);
+        GL11.glDepthMask(true);
         GL11.glDisable(GL11.GL_CULL_FACE);
     }
 
@@ -183,6 +219,11 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     @Override
     public void drawDebugLines(int vertexCount) {
         GL11.glDrawArrays(GL11.GL_LINES, 0, vertexCount);
+    }
+
+    @Override
+    public void drawViewModelTriangles(int vertexCount) {
+        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, vertexCount);
     }
 
     @Override

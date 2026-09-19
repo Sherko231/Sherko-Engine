@@ -157,10 +157,10 @@ final class ViewModelRenderer implements AutoCloseable {
         drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
         drawBackend.clearDepthOnly();
         drawBackend.applyViewModelState();
-        drawBackend.bindUniformBuffer(CameraUniformBlock.BINDING, cameraBuffer.handle());
-        drawBackend.useProgram(program.handle());
-        drawBackend.bindVertexArray(vertexArray.handle());
         try {
+            drawBackend.bindUniformBuffer(CameraUniformBlock.BINDING, cameraBuffer.handle());
+            drawBackend.useProgram(program.handle());
+            drawBackend.bindVertexArray(vertexArray.handle());
             drawBackend.drawViewModelTriangles(VERTEX_COUNT);
         } finally {
             drawBackend.bindDefaultVertexArray();

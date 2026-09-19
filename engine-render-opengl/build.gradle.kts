@@ -8,6 +8,12 @@ val publicApiTest by sourceSets.creating {
     java.srcDir("src/publicApiTest/java")
 }
 
+val visualDemo by sourceSets.creating {
+    java.srcDir("src/visualDemo/java")
+    compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+    runtimeClasspath += output + sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+}
+
 val publicApiConsumerClasspath by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -120,4 +126,13 @@ tasks.register<Test>("validateGlsl") {
 tasks.named("check") {
     dependsOn(tasks.named("validateGlsl"))
     dependsOn(verifyPublicApiBoundary)
+}
+
+
+tasks.register<JavaExec>("runRendererVisualDemo") {
+    description = "Runs the standalone opaque/transparent and moving-light visual demo."
+    group = "application"
+    dependsOn(tasks.named(visualDemo.classesTaskName))
+    classpath = visualDemo.runtimeClasspath
+    mainClass.set("com.samo.engine.render.opengl.internal.RendererVisualDemo")
 }

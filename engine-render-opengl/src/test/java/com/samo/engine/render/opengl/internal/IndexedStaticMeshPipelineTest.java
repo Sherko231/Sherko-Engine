@@ -48,7 +48,7 @@ class IndexedStaticMeshPipelineTest {
                 "fragment");
 
         assertEquals(
-                List.of(72L, 12L, 128L, 16L, 528L, 147456L, 144L, 128L),
+                List.of(640L, 120L, 128L, 16L, 528L, 147456L, 144L, 128L),
                 resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
@@ -66,9 +66,12 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(1, resources.textureAllocations.size());
         TextureAllocation reference = resources.textureAllocations.getFirst();
         assertEquals(TextureColorEncoding.SRGB_COLOR, reference.colorEncoding());
-        assertEquals(1, reference.width());
-        assertEquals(1, reference.height());
-        assertEquals(List.of(128, 128, 128, 255), reference.unsignedBytes());
+        assertEquals(4, reference.width());
+        assertEquals(4, reference.height());
+        assertEquals(64, reference.unsignedBytes().size());
+        assertTrue(reference.unsignedBytes().contains(210));
+        assertTrue(reference.unsignedBytes().contains(70));
+        assertTrue(reference.unsignedBytes().contains(150));
         assertEquals(1, resources.configuredSamplers);
 
         draw.trace.clear();
@@ -96,7 +99,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
-                "draw:triangles:3:uint:0",
+                "draw:triangles:30:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -106,7 +109,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
-                "draw:triangles:3:uint:0",
+                "draw:triangles:30:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -463,7 +466,7 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(
                 new RenderCullingCounters(2, 0, 2, 0),
                 pipeline.lastCullingCounters());
-        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:3:uint:0")));
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:30:uint:0")));
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));
         assertTrue(draw.trace.contains("depth-clear"));
         assertTrue(draw.trace.contains("view-model-state"));
@@ -562,7 +565,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
-                "draw:triangles:3:uint:0",
+                "draw:triangles:30:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -572,7 +575,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
-                "draw:triangles:3:uint:0",
+                "draw:triangles:30:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -727,25 +730,40 @@ class IndexedStaticMeshPipelineTest {
 
     private static void assertVertexData(byte[] bytes) {
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-        assertReferenceVertex(data, -0.60f, -0.50f, 0.0f);
-        assertReferenceVertex(data, 0.60f, -0.50f, 0.0f);
-        assertReferenceVertex(data, 0.0f, 0.60f, 0.0f);
+        assertRoomVertex(data, -2.0f, -1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+        assertRoomVertex(data, 2.0f, -1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f);
+        assertRoomVertex(data, 2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+        assertRoomVertex(data, -2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+        assertEquals(16 * 8 * Float.BYTES, data.remaining());
     }
 
-    private static void assertReferenceVertex(ByteBuffer data, float x, float y, float z) {
+    private static void assertRoomVertex(
+            ByteBuffer data,
+            float x, float y, float z,
+            float nx, float ny, float nz,
+            float u, float v) {
         assertEquals(x, data.getFloat());
         assertEquals(y, data.getFloat());
         assertEquals(z, data.getFloat());
-        assertEquals(0.0f, data.getFloat());
-        assertEquals(0.0f, data.getFloat());
-        assertEquals(1.0f, data.getFloat());
+        assertEquals(nx, data.getFloat());
+        assertEquals(ny, data.getFloat());
+        assertEquals(nz, data.getFloat());
+        assertEquals(u, data.getFloat());
+        assertEquals(v, data.getFloat());
     }
 
     private static void assertIndexData(byte[] bytes) {
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-        assertEquals(0, data.getInt());
-        assertEquals(1, data.getInt());
-        assertEquals(2, data.getInt());
+        for (int quad = 0; quad < 5; quad++) {
+            int base = quad * 4;
+            assertEquals(base, data.getInt());
+            assertEquals(base + 1, data.getInt());
+            assertEquals(base + 2, data.getInt());
+            assertEquals(base, data.getInt());
+            assertEquals(base + 2, data.getInt());
+            assertEquals(base + 3, data.getInt());
+        }
+        assertEquals(0, data.remaining());
     }
 
     private static OpenGlThreadGuard boundGuard() {
@@ -819,7 +837,7 @@ class IndexedStaticMeshPipelineTest {
         private DirectionalLight lastDirectionalLight;
 
         @Override
-        public void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer) {
+        public void configurePositionNormalUvAttributes(int vertexArray, int vertexBuffer) {
             trace.add("position:" + vertexArray + ":" + vertexBuffer);
         }
 
@@ -915,8 +933,8 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
-        public void drawIndexedTriangle() {
-            trace.add("draw:triangles:3:uint:0");
+        public void drawIndexedTriangles(int indexCount) {
+            trace.add("draw:triangles:" + indexCount + ":uint:0");
             if (drawFailure != null) {
                 throw drawFailure;
             }

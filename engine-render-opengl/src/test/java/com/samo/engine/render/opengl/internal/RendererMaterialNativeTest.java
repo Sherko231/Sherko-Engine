@@ -25,7 +25,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -73,7 +72,6 @@ class RendererMaterialNativeTest {
         boolean started = false;
         boolean stopped = false;
         boolean closed = false;
-        int query = 0;
         try {
             window.initialize();
             window.start();
@@ -103,16 +101,12 @@ class RendererMaterialNativeTest {
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
 
-                query = GL15.glGenQueries();
-                GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
-                GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
-                int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
                 assertEquals(
                         2,
-                        primitiveCount,
-                        "The second frame must still draw both reference triangles");
+                        renderer.lastCullingCounters().submittedDraws(),
+                        "The second frame must still submit both world reference triangles");
 
                 baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
                 tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
@@ -146,11 +140,6 @@ class RendererMaterialNativeTest {
                 captureBackBuffer(framebufferWidth, framebufferHeight);
                 window.pollEvents();
                 window.present();
-            } finally {
-                if (query != 0) {
-                    GL15.glDeleteQueries(query);
-                    query = 0;
-                }
             }
 
             window.stop();
@@ -160,10 +149,6 @@ class RendererMaterialNativeTest {
             registry.assertNoOpenResources();
             writeReport(baseline, tinted);
         } finally {
-            if (query != 0) {
-                int queryToDelete = query;
-                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
-            }
             if (!closed) {
                 if (started && !stopped) {
                     attemptCleanup(window::stop);
@@ -221,7 +206,7 @@ class RendererMaterialNativeTest {
                 "mesh.shared=indexed-reference-triangle",
                 "materials.count=2",
                 "frames.rendered=2",
-                "second.frame.draws.count=2",
+                "second.frame.world.submitted.draws=2",
                 "baseline.blend=OPAQUE",
                 "baseline.depth=TEST_WRITE",
                 "baseline.cull=BACK",

@@ -20,8 +20,8 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
-    private static final int ROOM_VERTEX_COUNT = 20;
-    private static final int ROOM_INDEX_COUNT = 30;
+    private static final int ROOM_VERTEX_COUNT = 24;
+    private static final int ROOM_INDEX_COUNT = 36;
     private static final int VERTEX_BYTES = ROOM_VERTEX_COUNT * 8 * Float.BYTES;
     private static final int INDEX_BYTES = ROOM_INDEX_COUNT * Integer.BYTES;
     private static final int PROGRAM_KEY_REFERENCE = 0;
@@ -650,6 +650,13 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 2.0f, 1.5f, 0.5f,
                 2.0f, 1.5f, -3.0f,
                 -1.0f, 0.0f, 0.0f);
+        putRoomQuad(
+                data,
+                -0.60f, -0.40f, -1.0f,
+                0.60f, -0.40f, -1.0f,
+                0.60f, 0.40f, -1.0f,
+                -0.60f, 0.40f, -1.0f,
+                0.0f, 0.0f, 1.0f);
         return data.flip();
     }
 
@@ -678,7 +685,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
     private static ByteBuffer roomIndices() {
         ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
-        for (int quad = 0; quad < 5; quad++) {
+        for (int quad = 0; quad < 6; quad++) {
             int base = quad * 4;
             data.putInt(base);
             data.putInt(base + 1);

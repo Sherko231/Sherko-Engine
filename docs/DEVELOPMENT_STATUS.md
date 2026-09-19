@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T12 / Issue #194 — deterministic opaque/transparent draw ordering |
+| Active executable task | None — P5-T12 / Issue #194 accepted; P5-T13 / #195 is the next planned activation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -84,7 +84,7 @@ P5-T10 / #192 is accepted. PR #231 final head `bb213eaca0d59df42f59388db60401382
 
 P5-T11 / #193 is accepted. PR #233 final head `f88b11b7c589b7a0c2e5bb175f3986996aa961b3` passed all five required final-candidate jobs in run #416 / `35440588185`. PR #233 merged as `dce15efb42f78283b4678aa2f054bc14619e1bd9`, and exact merged `master` passed Lightweight verification in run #417 / `35440823379`. Administrative handoff PR #234 merged as `0318338494d5f517b5f639f7c89ea0642d437fda`. D-059 derives a world-space frustum from the accepted OpenGL `projection * view` convention, constructs the existing P4 `Plane3f`/`Frustum3f` values, and delegates visibility to inclusive `Frustum3f.intersects(Aabb3f)`. The fixed reference mesh has one immutable renderer-owned world AABB; off-camera candidates are rejected before material/draw-state submission. Public immutable `RenderCullingCounters` expose tested/visible/culled/submitted counts from the latest successful frame, failed renders retain previous counters, and the persistent sandbox includes those values in its existing periodic diagnostic. No project dependency, production dependency, P5-T12 sorting, P6 resource identity, world/ECS ownership, broad phase, occlusion, or GPU culling was added.
 
-P5-T12 / #194 implementation candidate is complete on branch `p5-t12-draw-ordering` pending final PR verification. D-060 introduces package-internal immutable `DrawSubmission` values and a deterministic sorter over the visible candidate list produced after P5-T11 culling. Opaque submissions sort by stable logical program/material/mesh keys plus original sequence; transparent submissions sort back-to-front by camera-space depth and then use the same stable keys/sequence as deterministic ties. Sorting copies the source list and does not mutate submissions, materials, or the public P5-T10 frame packet. The current fixed scene remains opaque baseline first and transparent tinted second. No public renderer signature, project dependency, production dependency, batching, render graph, P6 resource identity, world/ECS extraction, GPU-driven sorting, or OIT is introduced. Final acceptance requires exact-head five-job CI, merge, and exact-merge Lightweight verification.
+P5-T12 / #194 is accepted. PR #235 final head `a2e22616ae7fd34d03226360e428858c1048f716` passed all five required final-candidate jobs in run #418 / `35441362542`. PR #235 merged as `5cb9f3e7702c5e6eebb2895de00b2c8c40b49133`, and exact merged `master` passed Lightweight verification in run #419 / `35441572126`. D-060 adds deterministic package-internal draw ordering after P5-T11 culling: opaque submissions use stable logical program/material/mesh keys plus original sequence, while transparent submissions sort back-to-front by camera-space depth with stable key/sequence ties. Sorting copies its source list and does not mutate submissions, materials, or the public P5-T10 frame packet. No public renderer signature, project dependency, production dependency, batching, render graph, P6 resource identity, world/ECS extraction, GPU-driven sorting, or OIT was added.
 
 ## Open gates and blockers
 
@@ -98,4 +98,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Open the final non-draft PR for P5-T12 / Issue #194 from `p5-t12-draw-ordering`, require all five heavy jobs to pass on the exact current head/base candidate, then merge only if the tested candidate remains current. After merge, require Lightweight master verification on the exact merge SHA before closing #194. Do not start P5-T13 or add batching, render graph/pass scheduling, P6 resource identities, world/ECS extraction, GPU-driven sorting, OIT, or gameplay-specific ordering.
+Freshly activate/refine P5-T13 / Issue #195 against accepted P5-T12 and current `master` before implementation. P5-T13 may add only one bounded unshadowed directional light with explicit linear-space semantics through existing material/submission foundations; do not pull shadows, HDR/tonemapping, fog, PBR/IBL, local lights, world/ECS light ownership, or P6 asset/resource contracts forward.

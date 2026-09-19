@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 5 complete — Phase 6 not yet activated |
+| Active phase | Phase 5 complete — Phase 5R refactor hardening is next; Phase 6 is blocked until P5R exit PASS |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — Phase 5 exit gate passed; P6-T01 may now be freshly materialized/refined before implementation |
+| Active executable task | None — freshly materialize/refine P5R-T01 before implementation; do not activate P6-T01 until the Phase 5R exit gate passes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -112,8 +112,16 @@ Rerun #250 records PASS for the authoritative gate: the integrated renderer/sand
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-The P0 follow-up gates did not block Phase 5 renderer-foundation completion and do not block Phase 6 asset-pipeline planning, but their unproven claims must remain narrow.
+The P0 follow-up gates did not block Phase 5 renderer-foundation completion and do not block Phase 5R refactor planning or later Phase 6 asset-pipeline planning, but their unproven claims must remain narrow.
+
+## Phase 5R readiness
+
+Phase 5R is a mandatory inserted hardening phase between completed Phase 5 and planned Phase 6. It exists to comprehensively review and improve naming, responsibility boundaries, internal decomposition, package organization, public/internal API clarity, and justified scalability patterns while preserving accepted behavior and architecture contracts.
+
+The stable P5R task catalog lives in `docs/roadmap/TECHNICAL_BACKLOG.md`. Execute one bounded P5R task/Issue/branch at a time. Internal decomposition/renaming should precede public API renaming where possible. Public API renames require synchronized consumer/wiki updates and independent review. Do not pull P6 asset/resource work forward merely to make a refactor cleaner.
+
+Phase 6 remains blocked until P5R-T26 records a passing Phase 5R exit review.
 
 ## Exact next action
 
-Freshly materialize/refine P6-T01 from the current `master` baseline before implementation. Re-read the Phase 6 backlog and relevant architecture/decision/build contracts, then create one bounded executable Issue for stable path-independent `AssetId`; do not pull P6-T02+ cooker/metadata/import work into that first task.
+Freshly materialize/refine **P5R-T01** from the current `master` baseline before implementation. P5R-T01 must define the naming/refactor standard and repository-wide symbol inventory before any Java rename/decomposition begins. Do not materialize P6-T01 yet.

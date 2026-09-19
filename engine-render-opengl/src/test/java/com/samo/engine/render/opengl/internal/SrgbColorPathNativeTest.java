@@ -31,7 +31,11 @@ class SrgbColorPathNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T08_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final int REFERENCE_SRGB_BYTE = 128;
+    private static final int REFERENCE_INPUT_SRGB_BYTE = 128;
+    private static final float REFERENCE_DIFFUSE_FACTOR =
+            0.8f * (float) (1.0 / Math.sqrt(2.0));
+    private static final int REFERENCE_OUTPUT_SRGB_BYTE =
+            litSrgbByte(REFERENCE_INPUT_SRGB_BYTE, REFERENCE_DIFFUSE_FACTOR);
     private static final int BYTE_TOLERANCE = 8;
     private static final Path REPORT_PATH =
             Path.of("build", "reports", "p5", "p5-t08-srgb.txt");
@@ -150,8 +154,8 @@ class SrgbColorPathNativeTest {
 
     private static void assertReferenceByte(String channel, int actual) {
         assertTrue(
-                Math.abs(actual - REFERENCE_SRGB_BYTE) <= BYTE_TOLERANCE,
-                channel + " expected " + REFERENCE_SRGB_BYTE + "±" + BYTE_TOLERANCE + " but was " + actual);
+                Math.abs(actual - REFERENCE_OUTPUT_SRGB_BYTE) <= BYTE_TOLERANCE,
+                channel + " expected " + REFERENCE_OUTPUT_SRGB_BYTE + "±" + BYTE_TOLERANCE + " but was " + actual);
     }
 
     private static int[] readPixel(int x, int y) {
@@ -202,8 +206,10 @@ class SrgbColorPathNativeTest {
 
     private static void writeReport(int framebufferEncoding, int red, int green, int blue)
             throws IOException {
-        int missingEncode = linearByteAfterSrgbDecode(REFERENCE_SRGB_BYTE);
-        int missingDecodeOrDoubleGamma = srgbByteFromLinear(REFERENCE_SRGB_BYTE / 255.0);
+        double litLinear = srgbToLinear(REFERENCE_INPUT_SRGB_BYTE / 255.0) * REFERENCE_DIFFUSE_FACTOR;
+        int missingEncode = (int) Math.round(litLinear * 255.0);
+        int missingDecodeOrDoubleGamma = srgbByteFromLinear(
+                (REFERENCE_INPUT_SRGB_BYTE / 255.0) * REFERENCE_DIFFUSE_FACTOR);
 
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of(
@@ -215,7 +221,9 @@ class SrgbColorPathNativeTest {
                 "presentation.encode.mode="
                         + (framebufferEncoding == GL21.GL_SRGB ? "hardware-framebuffer" : "manual-fragment"),
                 "texture.encoding=GL_SRGB8_ALPHA8",
-                "reference.input.srgb.byte=" + REFERENCE_SRGB_BYTE,
+                "reference.input.srgb.byte=" + REFERENCE_INPUT_SRGB_BYTE,
+                "reference.directional.diffuse.factor=" + REFERENCE_DIFFUSE_FACTOR,
+                "reference.expected.output.srgb.byte=" + REFERENCE_OUTPUT_SRGB_BYTE,
                 "reference.output.rgb=" + red + "," + green + "," + blue,
                 "reference.tolerance.bytes=" + BYTE_TOLERANCE,
                 "wrong.missing.encode.approx.byte=" + missingEncode,
@@ -226,15 +234,18 @@ class SrgbColorPathNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=fixed renderer reference texture decode plus exactly one presentation sRGB encode; hardware on GL_SRGB default buffers, fragment fallback on GL_LINEAR default buffers; no HDR, tonemapping, materials, assets, or post-processing claim"));
+                "evidence.scope=fixed renderer reference texture decode, known P5-T13 linear diffuse multiplication, plus exactly one presentation sRGB encode; hardware on GL_SRGB default buffers, fragment fallback on GL_LINEAR default buffers; no HDR, tonemapping, arbitrary materials, assets, or post-processing claim"));
     }
 
-    private static int linearByteAfterSrgbDecode(int srgbByte) {
-        double encoded = srgbByte / 255.0;
-        double linear = encoded <= 0.04045
+    private static int litSrgbByte(int srgbByte, double diffuseFactor) {
+        double linear = srgbToLinear(srgbByte / 255.0) * diffuseFactor;
+        return srgbByteFromLinear(linear);
+    }
+
+    private static double srgbToLinear(double encoded) {
+        return encoded <= 0.04045
                 ? encoded / 12.92
                 : Math.pow((encoded + 0.055) / 1.055, 2.4);
-        return (int) Math.round(linear * 255.0);
     }
 
     private static int srgbByteFromLinear(double linear) {

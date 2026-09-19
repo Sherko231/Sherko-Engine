@@ -101,13 +101,18 @@ class RendererMaterialNativeTest {
             int[] tinted;
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
+                renderer.render(view, projection, framebufferWidth, framebufferHeight);
+
                 query = GL15.glGenQueries();
                 GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
                 GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
                 int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
-                assertEquals(2, primitiveCount, "The same indexed reference mesh must be drawn twice");
+                assertEquals(
+                        2,
+                        primitiveCount,
+                        "The second frame must still draw both reference triangles");
 
                 baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
                 tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
@@ -215,7 +220,8 @@ class RendererMaterialNativeTest {
                 "result=PASS",
                 "mesh.shared=indexed-reference-triangle",
                 "materials.count=2",
-                "draws.count=2",
+                "frames.rendered=2",
+                "second.frame.draws.count=2",
                 "baseline.blend=OPAQUE",
                 "baseline.depth=TEST_WRITE",
                 "baseline.cull=BACK",
@@ -234,7 +240,7 @@ class RendererMaterialNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=two internal material values drive shader/scalar/blend/depth/cull state for the same owned mesh under the accepted fixed P5-T13 directional light; no public material/light API, asset pipeline, submission resource identity, or performance claim"));
+                "evidence.scope=two consecutive production frames preserve both internal material draws after the transparent no-depth-write draw; second-frame baseline/tinted pixels verify depth clear state does not leak across frames; no public material/light API, asset pipeline, submission resource identity, or performance claim"));
     }
 
     private static String rgb(int[] pixel) {

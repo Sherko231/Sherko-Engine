@@ -1,5 +1,14 @@
 package com.samo.game.sandbox;
 
+import com.samo.engine.core.api.Aabb3f;
+import com.samo.engine.core.api.DebugAabb;
+import com.samo.engine.core.api.DebugColor;
+import com.samo.engine.core.api.DebugFrame;
+import com.samo.engine.core.api.DebugLine;
+import com.samo.engine.core.api.DebugPrimitive;
+import com.samo.engine.core.api.DebugRay;
+import com.samo.engine.core.api.DebugSphere;
+import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineClock;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.FixedStepAccumulator;
@@ -8,6 +17,8 @@ import com.samo.engine.core.api.InputResponseSettings;
 import com.samo.engine.core.api.CameraMatrices;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.core.api.PlayerInputCommand;
+import com.samo.engine.core.api.Ray3f;
+import com.samo.engine.core.api.Sphere3f;
 import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.OpenGlDebugMode;
 import com.samo.engine.platform.api.InputAction;
@@ -152,6 +163,7 @@ public final class SandboxMain {
                 new Matrix4f());
         Matrix4f projection = new Matrix4f();
         List<RenderLocalLight> localLights = sandboxLocalLights();
+        List<DebugPrimitive> debugPrimitives = sandboxDebugPrimitives();
 
         clock.sampleElapsedNanos();
         while (!exitRequested) {
@@ -232,12 +244,18 @@ public final class SandboxMain {
                         0.1f,
                         100.0f,
                         projection);
+                DebugFrame debugFrame = new DebugFrame(
+                        debugPrimitives,
+                        List.of(
+                                new DebugTextCounter("simulation/tick", cumulativeTicks),
+                                new DebugTextCounter("input/frame", latestInput.frameId())));
                 RenderFramePacket renderFrame = new RenderFramePacket(
                         view,
                         projection,
                         framebufferSize.width(),
                         framebufferSize.height(),
-                        localLights);
+                        localLights,
+                        debugFrame);
                 renderer.render(renderFrame);
                 window.present();
             }
@@ -256,6 +274,8 @@ public final class SandboxMain {
                                         latestCommand.lookX(),
                                         latestCommand.lookY());
                 RenderCullingCounters renderCounters = renderer.lastCullingCounters();
+                String debugCounterDiagnostic =
+                        formatDebugCounters(renderer.lastDebugTextCounters());
                 String diagnosticMessage = SandboxDiagnosticFormatter.format(
                         new SandboxDiagnosticFormatter.DiagnosticValues(
                                 elapsedSandboxNanos / 1_000_000_000.0,
@@ -284,7 +304,8 @@ public final class SandboxMain {
                                 renderCounters.testedCandidates(),
                                 renderCounters.visibleCandidates(),
                                 renderCounters.culledCandidates(),
-                                renderCounters.submittedDraws()));
+                                renderCounters.submittedDraws(),
+                                debugCounterDiagnostic));
                 log(logger, EngineLogger.Level.DEBUG, diagnosticMessage, cumulativeTicks);
                 diagnosticMouseDeltaX = 0.0d;
                 diagnosticMouseDeltaY = 0.0d;
@@ -298,6 +319,40 @@ public final class SandboxMain {
             }
         }
         log(logger, EngineLogger.Level.INFO, "Sandbox exit requested by Ctrl+Q", cumulativeTicks);
+    }
+
+    private static List<DebugPrimitive> sandboxDebugPrimitives() {
+        return List.of(
+                new DebugLine(
+                        -0.9f, 0.75f, 0.4f,
+                        0.9f, 0.75f, 0.4f,
+                        new DebugColor(0.0f, 1.0f, 0.0f)),
+                new DebugAabb(
+                        new Aabb3f(
+                                new Vector3f(-0.90f, -0.80f, 0.20f),
+                                new Vector3f(-0.50f, -0.40f, 0.60f)),
+                        new DebugColor(1.0f, 0.85f, 0.0f)),
+                new DebugSphere(
+                        new Sphere3f(new Vector3f(0.0f, 0.60f, 0.30f), 0.18f),
+                        new DebugColor(0.0f, 0.85f, 1.0f)),
+                new DebugRay(
+                        new Ray3f(
+                                new Vector3f(0.35f, -0.65f, 0.40f),
+                                new Vector3f(1.0f, 0.0f, 0.0f)),
+                        0.60f,
+                        new DebugColor(1.0f, 0.0f, 1.0f)));
+    }
+
+    private static String formatDebugCounters(List<DebugTextCounter> counters) {
+        StringBuilder result = new StringBuilder("debugCounters=[");
+        for (int index = 0; index < counters.size(); index++) {
+            if (index > 0) {
+                result.append(',');
+            }
+            DebugTextCounter counter = counters.get(index);
+            result.append(counter.label()).append('=').append(counter.value());
+        }
+        return result.append(']').toString();
     }
 
     private static List<RenderLocalLight> sandboxLocalLights() {
@@ -447,6 +502,7 @@ public final class SandboxMain {
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
         System.out.println("The production renderer draws the same indexed mesh with two internal reference materials.");
         System.out.println("The scene includes one public point light and one public spot light plus the fixed directional light.");
+        System.out.println("P5-T16 adds renderer-neutral line/AABB/sphere/ray debug geometry and bounded text counters.");
         System.out.println();
         System.out.println("Owner controls:");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");

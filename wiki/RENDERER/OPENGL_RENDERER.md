@@ -76,6 +76,8 @@ After a successful render, `lastCullingCounters()` returns immutable `RenderCull
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 
+P5-T15 finalizes the internal default-framebuffer presentation policy without adding caller configuration. Renderer creation queries the actual back-buffer color encoding once. An sRGB buffer uses linear fragment output plus hardware `GL_FRAMEBUFFER_SRGB`; a linear buffer uses the committed manual IEC sRGB shader variant and CPU-encoded clear color with framebuffer sRGB disabled. Unsupported encodings fail renderer creation. P5-T08 texture rules remain unchanged: display-referred textures are stored as `GL_SRGB8_ALPHA8` and decode to linear on sample, while linear-data textures remain `GL_RGBA8`. Lighting/material math stays linear until the one presentation conversion.
+
 ## Current fixed mesh
 
 The current renderer owns one fixed position+normal triangle around the world origin:
@@ -108,7 +110,7 @@ The current bounded renderer does not provide:
 - more than eight local lights in one frame or unbounded local-light storage;
 - replacing/submitting the internal directional light;
 - shadows, PBR/IBL, clustered/Forward+ lighting;
-- HDR, tonemapping, fog, post-processing, or P5-T15 presentation architecture;
+- HDR, tonemapping, fog, bloom, exposure, color grading, or general post-processing;
 - world/ECS integration;
 - gameplay camera ownership;
 - batching, render graphs/pass scheduling, broad-phase/occlusion/GPU culling, GPU-driven sorting, order-independent transparency, or instancing;

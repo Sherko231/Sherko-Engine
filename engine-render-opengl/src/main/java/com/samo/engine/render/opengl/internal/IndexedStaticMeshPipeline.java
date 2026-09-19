@@ -47,7 +47,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlProgram program;
     private final RendererMaterial baselineMaterial;
     private final RendererMaterial tintedMaterial;
-    private final boolean hardwareFramebufferSrgb;
+    private final PresentationMode presentationMode;
     private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
     private final DrawSubmissionSorter submissionSorter = new DrawSubmissionSorter();
     private final LocalLightSelection localLightSelection;
@@ -79,7 +79,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlProgram program,
             RendererMaterial baselineMaterial,
             RendererMaterial tintedMaterial,
-            boolean hardwareFramebufferSrgb,
+            PresentationMode presentationMode,
             EngineLogger logger,
             int maxLocalLights) {
         this.threadGuard = threadGuard;
@@ -98,7 +98,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.program = program;
         this.baselineMaterial = baselineMaterial;
         this.tintedMaterial = tintedMaterial;
-        this.hardwareFramebufferSrgb = hardwareFramebufferSrgb;
+        this.presentationMode = presentationMode;
         this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
     }
 
@@ -228,21 +228,14 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     guard,
                     resources,
                     gl);
-            int framebufferEncoding = draw.defaultFramebufferColorEncoding();
-            boolean hardwareSrgb;
-            if (framebufferEncoding == org.lwjgl.opengl.GL21.GL_SRGB) {
-                hardwareSrgb = true;
-            } else if (framebufferEncoding == org.lwjgl.opengl.GL11.GL_LINEAR) {
-                hardwareSrgb = false;
-            } else {
-                throw new IllegalStateException(
-                        "Unsupported default framebuffer color encoding: " + framebufferEncoding);
-            }
+            PresentationMode presentationMode =
+                    PresentationMode.fromDefaultFramebufferEncoding(
+                            draw.defaultFramebufferColorEncoding());
 
             fragment = OpenGlShader.compile(
                     OpenGlShader.Stage.FRAGMENT,
                     "shaders/p5/basic.frag",
-                    fragmentSourceForPresentation(fragSource, hardwareSrgb),
+                    presentationMode.fragmentSource(fragSource),
                     guard,
                     resources,
                     gl);
@@ -296,7 +289,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     linkedProgram,
                     baselineMaterial,
                     tintedMaterial,
-                    hardwareSrgb,
+                    presentationMode,
                     engineLogger,
                     maxLocalLights);
         } catch (RuntimeException | Error failure) {
@@ -410,9 +403,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         List<DrawSubmission> orderedSubmissions = submissionSorter.sort(visibleSubmissions);
 
         drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
-        drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
+        drawBackend.setFramebufferSrgbEnabled(presentationMode.framebufferSrgbEnabled());
         try {
-            drawBackend.clearFrame(hardwareFramebufferSrgb);
+            drawBackend.clearFrame(presentationMode);
             for (DrawSubmission submission : orderedSubmissions) {
                 drawMaterial(
                         submission.material(),
@@ -530,22 +523,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
         data.putInt(0).putInt(1).putInt(2);
         return data.flip();
-    }
-
-    static String fragmentSourceForPresentation(String fragmentSource, boolean hardwareFramebufferSrgb) {
-        String source = Objects.requireNonNull(fragmentSource, "fragmentSource");
-        if (hardwareFramebufferSrgb) {
-            return source;
-        }
-        String version = "#version 460 core";
-        if (!source.startsWith(version)) {
-            throw new IllegalArgumentException(
-                    "Fragment shader must start with '" + version + "' for P5-T08 variant injection");
-        }
-        return version
-                + System.lineSeparator()
-                + "#define SHERKO_MANUAL_SRGB_ENCODE 1"
-                + source.substring(version.length());
     }
 
     private static ByteBuffer referenceGrayTexture() {

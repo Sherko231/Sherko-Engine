@@ -36,6 +36,7 @@ The current playground keeps these capabilities active together rather than show
 - public `RenderFramePacket` construction each visible frame, snapshotting the current camera matrices and framebuffer pixel size before synchronous `OpenGlRenderer.render(frame)` consumption;
 - P5-T14 public local-light submission on that packet: one warm point light and one cool spot light, with the renderer configured for a maximum of four local lights through the structured sandbox `EngineLogger`;
 - public `OpenGlRenderer` production composition drawing the same indexed static triangle twice every visible framebuffer frame through two internal P5-T09 material values, while preserving the fixed P5-T08 neutral-gray sRGB reference and one presentation encode;
+- P5-T15 finalizes the renderer's sRGB presentation policy used automatically by this same sandbox path, with no new sandbox control or renderer-internal import;
 - P5-T06 camera/per-frame uniform blocks driven by a fixed D-041/D-045 camera and current framebuffer aspect;
 - explicit depth testing and back-face culling through the production renderer path;
 - window-owned `GlfwWindow.present()` presentation without exposing a native window handle;
@@ -58,7 +59,7 @@ The once-per-second line is deliberately an owner diagnostic. P5-T11 appends `re
 
 The sandbox submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T11 derives the active view frustum and tests the fixed reference mesh world AABB before both current draw candidates. P5-T12 orders the visible renderer-owned candidates deterministically. P5-T13 contributes the fixed renderer-owned directional light, and P5-T14 now adds one public warm point light plus one public cool spot light to the same packet. Their position/range/direction/color data uses the production public render API; the sandbox still performs no direct OpenGL/LWJGL calls and does not import renderer internals. The left baseline and right tinted material are therefore illuminated by the same bounded directional + local-light path.
 
-This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, more than eight local lights per frame, world/ECS light ownership, directional-light replacement, shadows, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, PBR/IBL, clustered/Forward+ lighting, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
+This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, more than eight local lights per frame, world/ECS light ownership, directional-light replacement, shadows, arbitrary mesh loading, HDR, tonemapping, fog, bloom, exposure, color grading, general post-processing, offscreen framebuffer pipelines, PBR/IBL, clustered/Forward+ lighting, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

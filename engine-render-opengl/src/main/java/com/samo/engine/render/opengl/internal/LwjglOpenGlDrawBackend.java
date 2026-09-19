@@ -91,16 +91,12 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void clearFrame(boolean hardwareSrgbEncode) {
-        if (hardwareSrgbEncode) {
-            GL11.glClearColor(0.08f, 0.10f, 0.14f, 1.0f);
-        } else {
-            GL11.glClearColor(
-                    linearToSrgb(0.08f),
-                    linearToSrgb(0.10f),
-                    linearToSrgb(0.14f),
-                    1.0f);
-        }
+    public void clearFrame(PresentationMode presentationMode) {
+        GL11.glClearColor(
+                presentationMode.clearComponent(0.08f),
+                presentationMode.clearComponent(0.10f),
+                presentationMode.clearComponent(0.14f),
+                1.0f);
         GL11.glClearDepth(1.0d);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
@@ -164,9 +160,4 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         GL20.glUseProgram(0);
     }
 
-    private static float linearToSrgb(float linear) {
-        return linear <= 0.0031308f
-                ? linear * 12.92f
-                : 1.055f * (float) Math.pow(linear, 1.0 / 2.4) - 0.055f;
-    }
 }

@@ -1283,3 +1283,32 @@ The existing P5-T08, P5-T09, and P5-T13 native regressions remain in the same Wi
 
 The ordinary five-job exact-head PR CI matrix remains authoritative, followed by exact-merge Lightweight master verification after merge. Hosted Windows native evidence uses pinned Mesa llvmpipe for correctness only and does not establish physical-GPU performance.
 
+## P5-T15 finalized gamma/sRGB presentation verification
+
+P5-T15 does not replace P5-T08 texture decode semantics. It finalizes the default-framebuffer presentation policy around one package-internal mode selected from the actual back-buffer encoding.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbTransferTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.PresentationModeTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+The deterministic fixtures require the exact IEC sRGB lower/upper branches, threshold behavior, finite `[0,1]` input rejection, mapping of actual `GL_SRGB` and `GL_LINEAR` default-buffer encodings to one presentation mode, rejection of unsupported encodings, unchanged shader source for hardware encoding, and exactly one injected manual-encode define for the linear-default-buffer fallback. Existing `GL_SRGB8_ALPHA8` versus `GL_RGBA8` texture-format tests remain authoritative for D-056 sampling semantics.
+
+Windows native acceptance runs `SrgbPresentationNativeTest` with `SHERKO_P5_T15_NATIVE=true`. It renders through public `OpenGlRenderer`, reads a background pixel outside the reference geometry, and compares production linear clear RGB `0.08/0.10/0.14` with independently calculated IEC sRGB bytes. The expected bytes are approximately `80/89/105`; approximate missing-encode bytes are `20/26/36`, and double-encode bytes are approximately `152/160/172`. The written tolerance is ±5 bytes, deliberately far from both wrong paths. The same fixture reads the current baseline lit reference pixel to preserve D-056/D-061 composition and verifies framebuffer-sRGB/program/VAO/viewport cleanup plus an empty native-resource registry.
+
+Retained artifacts:
+
+- `engine-render-opengl/build/reports/p5/p5-t15-srgb-presentation.txt`
+- `engine-render-opengl/build/reports/p5/p5-t15-srgb-presentation.png`
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.SrgbPresentationNativeTest.xml`
+
+The earlier P5-T08 sRGB native acceptance stays in the same Windows job and remains a required regression. The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative.
+

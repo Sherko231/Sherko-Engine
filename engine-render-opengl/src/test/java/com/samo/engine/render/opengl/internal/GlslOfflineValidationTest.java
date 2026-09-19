@@ -27,7 +27,7 @@ class GlslOfflineValidationTest {
         GlslOfflineValidator.validate(
                 GlslOfflineValidator.Stage.FRAGMENT,
                 "shaders/p5/basic.frag[manual-srgb]",
-                IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, false));
+                PresentationMode.MANUAL_SRGB.fragmentSource(source));
     }
 
     @Test

@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5R-T01 / Issue #261 — naming standard and repository-wide symbol inventory candidate prepared on `p5r-t01-naming-standard-inventory`; after acceptance, activate P5R-T02 |
+| Active executable task | None — P5R-T01 / Issue #261 is accepted; freshly refine P5R-T02 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -122,8 +122,8 @@ The stable P5R task catalog lives in `docs/roadmap/TECHNICAL_BACKLOG.md`. Execut
 
 Phase 6 remains blocked until P5R-T26 records a passing Phase 5R exit review.
 
-P5R-T01 / Issue #261 is the active documentation-only candidate. The repository-wide audit enumerated 214 Java files and classified 107 current production/runtime top-level Java files plus relevant nested/package-level types. Feasibility-spike Java remains deliberately deferred to P5R-T20. No source/runtime behavior, public API, module edge, native ownership, spatial semantics, persisted/config/wire format, or shader ABI changes are authorized by T01.
+P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enumerated 214 Java files and classified 107 current production/runtime top-level Java files plus relevant nested/package-level types. Feasibility-spike Java remains deliberately deferred to P5R-T20. No source/runtime behavior, public API, module edge, native ownership, spatial semantics, persisted/config/wire format, or shader ABI changed in T01.
 
 ## Exact next action
 
-Complete review/merge of **P5R-T01 / Issue #261**. The candidate defines `docs/refactor/NAMING_STANDARD.md` and `docs/refactor/SYMBOL_INVENTORY.md`, classifying the current production/runtime Java surface without changing Java behavior. After P5R-T01 is accepted, freshly refine **P5R-T02** against merged `master`. Do not materialize P6-T01 yet.
+Freshly refine **P5R-T02 / Issue #262** against current `master` before implementation. Use the accepted T01 naming standard and symbol inventory as planning input, but re-check live source/public boundaries before changing anything. Do not materialize P6-T01 yet.

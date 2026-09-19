@@ -167,8 +167,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 LocalLightSelection.SHADER_CAPACITY,
                 vertexSource,
                 fragmentSource,
-                "debug-vertex",
-                "debug-fragment");
+                "#version 460 core\nvoid main() {}",
+                "#version 460 core\nvoid main() {}");
     }
 
     static IndexedStaticMeshPipeline create(
@@ -191,8 +191,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 maxLocalLights,
                 vertexSource,
                 fragmentSource,
-                "debug-vertex",
-                "debug-fragment");
+                "#version 460 core\nvoid main() {}",
+                "#version 460 core\nvoid main() {}");
     }
 
     static IndexedStaticMeshPipeline create(

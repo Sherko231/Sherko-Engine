@@ -21,6 +21,7 @@ import com.samo.engine.platform.api.PlayerInputCommandSampler;
 import com.samo.engine.platform.api.WindowMode;
 import com.samo.engine.platform.api.WindowSizeListener;
 import com.samo.engine.render.api.OpenGlRenderer;
+import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
 import java.io.IOException;
 import java.io.InputStream;
@@ -248,6 +249,7 @@ public final class SandboxMain {
                                         latestCommand.moveY(),
                                         latestCommand.lookX(),
                                         latestCommand.lookY());
+                RenderCullingCounters renderCounters = renderer.lastCullingCounters();
                 String diagnosticMessage = SandboxDiagnosticFormatter.format(
                         new SandboxDiagnosticFormatter.DiagnosticValues(
                                 elapsedSandboxNanos / 1_000_000_000.0,
@@ -272,7 +274,11 @@ public final class SandboxMain {
                                 interact.released(),
                                 commandDiagnostic,
                                 diagnosticMouseDeltaX,
-                                diagnosticMouseDeltaY));
+                                diagnosticMouseDeltaY,
+                                renderCounters.testedCandidates(),
+                                renderCounters.visibleCandidates(),
+                                renderCounters.culledCandidates(),
+                                renderCounters.submittedDraws()));
                 log(logger, EngineLogger.Level.DEBUG, diagnosticMessage, cumulativeTicks);
                 diagnosticMouseDeltaX = 0.0d;
                 diagnosticMouseDeltaY = 0.0d;

@@ -8,6 +8,7 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
+import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -137,6 +138,76 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(3.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 5 * Float.BYTES));
         assertEquals(4.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 10 * Float.BYTES));
         assertEquals("viewport:0:0:800x600", draw.trace.getFirst());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void offCameraReferenceCandidatesProduceNoDrawSubmission() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+        resources.uploads.clear();
+        draw.trace.clear();
+
+        pipeline.render(
+                new Matrix4f().translation(-10.0f, 0.0f, 0.0f),
+                new Matrix4f(),
+                800,
+                600);
+
+        assertEquals(
+                new RenderCullingCounters(2, 0, 2, 0),
+                pipeline.lastCullingCounters());
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("draw:")));
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));
+        assertEquals(List.of(
+                "viewport:0:0:800x600",
+                "srgb:true",
+                "clear:true",
+                "viewport:0:0:800x600",
+                "srgb:false"), draw.trace);
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void failedRenderDoesNotPublishPartialCullingCounters() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+
+        pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
+        RenderCullingCounters accepted =
+                new RenderCullingCounters(2, 2, 0, 2);
+        assertEquals(accepted, pipeline.lastCullingCounters());
+
+        draw.drawFailure = new IllegalStateException("fixture draw failure");
+        assertThrows(
+                IllegalStateException.class,
+                () -> pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600));
+
+        assertEquals(accepted, pipeline.lastCullingCounters());
 
         pipeline.close();
         registry.assertNoOpenResources();

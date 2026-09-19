@@ -44,9 +44,7 @@ class PresentationModeTest {
                 "#version 460 core"
                         + System.lineSeparator()
                         + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
-        assertEquals(
-                SrgbTransfer.encodeLinear(0.10f),
-                PresentationMode.MANUAL_SRGB.clearComponent(0.10f));
+        assertEquals(0.34919024f, PresentationMode.MANUAL_SRGB.clearComponent(0.10f), 1.0e-6f);
     }
 
     private static int occurrences(String value, String token) {

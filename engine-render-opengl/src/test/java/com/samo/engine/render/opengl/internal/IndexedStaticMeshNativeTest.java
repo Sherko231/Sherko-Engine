@@ -36,7 +36,7 @@ class IndexedStaticMeshNativeTest {
             Path.of("build", "reports", "p5", "p5-t07-indexed-mesh.png");
 
     @Test
-    void rendersExactlyOneVisibleIndexedTriangleThroughPublicRenderer() throws Exception {
+    void rendersTwoMaterialInstancesOfTheIndexedReferenceMeshThroughPublicRenderer() throws Exception {
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
                 () -> "Set " + ENABLE_ENV + "=true to run the P5-T07 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
@@ -99,7 +99,7 @@ class IndexedStaticMeshNativeTest {
 
                 window.pollEvents();
                 int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
-                assertEquals(1, primitiveCount);
+                assertEquals(2, primitiveCount);
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
@@ -192,9 +192,11 @@ class IndexedStaticMeshNativeTest {
                 "renderer.api=OpenGlRenderer",
                 "mesh=indexed-triangle",
                 "draw.elements.count=3",
-                "pipeline.primitives.generated=1",
-                "depth.test=GL_LESS",
-                "cull.face=GL_BACK",
+                "pipeline.primitives.generated=2",
+                "material.baseline.depth=GL_LESS-write",
+                "material.baseline.cull=GL_BACK",
+                "material.tinted.depth=GL_LESS-no-write",
+                "material.tinted.cull=disabled",
                 "front.face=GL_CCW",
                 "camera.uniform.binding=0",
                 "perframe.uniform.binding=1",
@@ -207,7 +209,7 @@ class IndexedStaticMeshNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=first indexed production draw only; sRGB correctness is asserted separately by P5-T08; no asset, material, lighting, world, or performance claim"));
+                "evidence.scope=indexed production draw regression after P5-T09 two-material reference scene; material correctness is asserted separately by P5-T09; sRGB correctness remains P5-T08; no asset, lighting, world, or performance claim"));
     }
 
     private static String environmentOr(String key, String fallback) {

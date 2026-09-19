@@ -15,6 +15,7 @@ import com.samo.engine.render.api.OpenGlRenderer;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -24,26 +25,27 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-class SrgbColorPathNativeTest {
-    private static final String ENABLE_ENV = "SHERKO_P5_T08_NATIVE";
+class RendererMaterialNativeTest {
+    private static final String ENABLE_ENV = "SHERKO_P5_T09_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final int REFERENCE_SRGB_BYTE = 128;
-    private static final int BYTE_TOLERANCE = 8;
+    private static final int BASELINE_SRGB_BYTE = 128;
+    private static final int BASELINE_TOLERANCE = 8;
     private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p5", "p5-t08-srgb.txt");
+            Path.of("build", "reports", "p5", "p5-t09-materials.txt");
     private static final Path CAPTURE_PATH =
-            Path.of("build", "reports", "p5", "p5-t08-srgb.png");
+            Path.of("build", "reports", "p5", "p5-t09-materials.png");
 
     @Test
-    void decodesSrgbTextureAndEncodesDefaultFramebufferExactlyOnce() throws Exception {
+    void sameMeshRendersThroughTwoMaterialValuesWithoutLeakingDrawBindings() throws Exception {
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P5-T08 native acceptance");
+                () -> "Set " + ENABLE_ENV + "=true to run the P5-T09 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P5-T08 native acceptance targets Windows x64");
+                "P5-T09 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
         int[] framebufferSize = {WIDTH, HEIGHT};
@@ -62,7 +64,7 @@ class SrgbColorPathNativeTest {
         GlfwWindow window = new GlfwWindow(
                 WIDTH,
                 HEIGHT,
-                "Sherko Engine P5-T08 sRGB Acceptance",
+                "Sherko Engine P5-T09 Material Acceptance",
                 new EngineLogger(event -> { }),
                 registry,
                 sizeListener,
@@ -71,6 +73,7 @@ class SrgbColorPathNativeTest {
         boolean started = false;
         boolean stopped = false;
         boolean closed = false;
+        int query = 0;
         try {
             window.initialize();
             window.start();
@@ -81,15 +84,6 @@ class SrgbColorPathNativeTest {
             int framebufferHeight = framebufferSize[1];
             assertTrue(framebufferWidth > 0 && framebufferHeight > 0,
                     "Native acceptance requires a visible non-zero framebuffer");
-
-            int framebufferEncoding = GL30.glGetFramebufferAttachmentParameteri(
-                    GL30.GL_FRAMEBUFFER,
-                    GL11.GL_BACK_LEFT,
-                    GL30.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
-            assertTrue(
-                    framebufferEncoding == GL21.GL_SRGB || framebufferEncoding == GL11.GL_LINEAR,
-                    "Default back buffer must report GL_SRGB or GL_LINEAR color encoding, but was "
-                            + framebufferEncoding);
 
             Matrix4f view = CameraMatrices.view(
                     new Vector3f(0.0f, 0.0f, 2.0f),
@@ -103,30 +97,55 @@ class SrgbColorPathNativeTest {
                     100.0f,
                     new Matrix4f());
 
-            int red;
-            int green;
-            int blue;
+            int[] baseline;
+            int[] tinted;
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
+                query = GL15.glGenQueries();
+                GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
+                GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
+
+                int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
+                assertEquals(2, primitiveCount, "The same indexed reference mesh must be drawn twice");
+
+                baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
+                tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
+
+                for (int channel = 0; channel < 3; channel++) {
+                    assertTrue(
+                            Math.abs(baseline[channel] - BASELINE_SRGB_BYTE) <= BASELINE_TOLERANCE,
+                            "Baseline material must preserve P5-T08 gray; rgb="
+                                    + baseline[0] + "," + baseline[1] + "," + baseline[2]);
+                }
+                assertTrue(
+                        tinted[0] - tinted[1] >= 20 && tinted[0] - tinted[2] >= 20,
+                        "Tinted material must be visibly red-biased; rgb="
+                                + tinted[0] + "," + tinted[1] + "," + tinted[2]);
+
                 assertFalse(
                         GL11.glIsEnabled(GL30.GL_FRAMEBUFFER_SRGB),
-                        "Renderer must not leak GL_FRAMEBUFFER_SRGB state after render");
-                window.pollEvents();
+                        "Renderer must disable GL_FRAMEBUFFER_SRGB after render");
+                assertEquals(0, GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM));
+                assertEquals(0, GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING));
 
-                int[] baselinePixel = readPixel(framebufferWidth / 4, framebufferHeight / 2);
-                red = baselinePixel[0];
-                green = baselinePixel[1];
-                blue = baselinePixel[2];
-
-                assertReferenceByte("red", red);
-                assertReferenceByte("green", green);
-                assertReferenceByte("blue", blue);
-                assertTrue(Math.abs(red - green) <= 2 && Math.abs(red - blue) <= 2,
-                        "Reference texture must remain neutral gray: rgb=" + red + "," + green + "," + blue);
+                IntBuffer viewport = ByteBuffer.allocateDirect(4 * Integer.BYTES)
+                        .order(java.nio.ByteOrder.nativeOrder())
+                        .asIntBuffer();
+                GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
+                assertEquals(0, viewport.get(0));
+                assertEquals(0, viewport.get(1));
+                assertEquals(framebufferWidth, viewport.get(2));
+                assertEquals(framebufferHeight, viewport.get(3));
 
                 captureBackBuffer(framebufferWidth, framebufferHeight);
+                window.pollEvents();
                 window.present();
+            } finally {
+                if (query != 0) {
+                    GL15.glDeleteQueries(query);
+                    query = 0;
+                }
             }
 
             window.stop();
@@ -134,9 +153,12 @@ class SrgbColorPathNativeTest {
             window.close();
             closed = true;
             registry.assertNoOpenResources();
-
-            writeReport(framebufferEncoding, red, green, blue);
+            writeReport(baseline, tinted);
         } finally {
+            if (query != 0) {
+                int queryToDelete = query;
+                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
+            }
             if (!closed) {
                 if (started && !stopped) {
                     attemptCleanup(window::stop);
@@ -148,24 +170,11 @@ class SrgbColorPathNativeTest {
         registry.assertNoOpenResources();
     }
 
-    private static void assertReferenceByte(String channel, int actual) {
-        assertTrue(
-                Math.abs(actual - REFERENCE_SRGB_BYTE) <= BYTE_TOLERANCE,
-                channel + " expected " + REFERENCE_SRGB_BYTE + "±" + BYTE_TOLERANCE + " but was " + actual);
-    }
-
     private static int[] readPixel(int x, int y) {
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
-        GL11.glReadPixels(
-                x,
-                y,
-                1,
-                1,
-                GL11.GL_RGBA,
-                GL11.GL_UNSIGNED_BYTE,
-                pixel);
+        GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[] {
             Byte.toUnsignedInt(pixel.get(0)),
             Byte.toUnsignedInt(pixel.get(1)),
@@ -189,8 +198,7 @@ class SrgbColorPathNativeTest {
                 int green = Byte.toUnsignedInt(pixels.get(offset + 1));
                 int blue = Byte.toUnsignedInt(pixels.get(offset + 2));
                 int alpha = Byte.toUnsignedInt(pixels.get(offset + 3));
-                int argb = (alpha << 24) | (red << 16) | (green << 8) | blue;
-                image.setRGB(x, y, argb);
+                image.setRGB(x, y, (alpha << 24) | (red << 16) | (green << 8) | blue);
             }
         }
 
@@ -200,48 +208,37 @@ class SrgbColorPathNativeTest {
         }
     }
 
-    private static void writeReport(int framebufferEncoding, int red, int green, int blue)
-            throws IOException {
-        int missingEncode = linearByteAfterSrgbDecode(REFERENCE_SRGB_BYTE);
-        int missingDecodeOrDoubleGamma = srgbByteFromLinear(REFERENCE_SRGB_BYTE / 255.0);
-
+    private static void writeReport(int[] baseline, int[] tinted) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of(
-                "task=P5-T08",
+                "task=P5-T09",
                 "result=PASS",
-                "default.framebuffer.encoding=" + framebufferEncoding,
-                "framebuffer.encoding.mode="
-                        + (framebufferEncoding == GL21.GL_SRGB ? "GL_SRGB" : "GL_LINEAR"),
-                "presentation.encode.mode="
-                        + (framebufferEncoding == GL21.GL_SRGB ? "hardware-framebuffer" : "manual-fragment"),
-                "texture.encoding=GL_SRGB8_ALPHA8",
-                "reference.input.srgb.byte=" + REFERENCE_SRGB_BYTE,
-                "reference.output.rgb=" + red + "," + green + "," + blue,
-                "reference.tolerance.bytes=" + BYTE_TOLERANCE,
-                "wrong.missing.encode.approx.byte=" + missingEncode,
-                "wrong.missing.decode.or.double.gamma.approx.byte=" + missingDecodeOrDoubleGamma,
-                "capture=p5-t08-srgb.png",
+                "mesh.shared=indexed-reference-triangle",
+                "materials.count=2",
+                "draws.count=2",
+                "baseline.blend=OPAQUE",
+                "baseline.depth=TEST_WRITE",
+                "baseline.cull=BACK",
+                "baseline.rgb=" + rgb(baseline),
+                "tinted.blend=ALPHA_BLEND",
+                "tinted.depth=TEST_NO_WRITE",
+                "tinted.cull=NONE",
+                "tinted.rgb=" + rgb(tinted),
+                "viewport.restored=true",
+                "program.unbound=true",
+                "vertex.array.unbound=true",
+                "framebuffer.srgb.disabled.after.render=true",
+                "capture=p5-t09-materials.png",
                 "native.resource.registry.empty.after.cleanup=true",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=fixed renderer reference texture decode plus exactly one presentation sRGB encode; hardware on GL_SRGB default buffers, fragment fallback on GL_LINEAR default buffers; no HDR, tonemapping, materials, assets, or post-processing claim"));
+                "evidence.scope=two internal material values drive shader/scalar/blend/depth/cull state for the same owned mesh; no public material API, asset pipeline, lighting, submission packet, or performance claim"));
     }
 
-    private static int linearByteAfterSrgbDecode(int srgbByte) {
-        double encoded = srgbByte / 255.0;
-        double linear = encoded <= 0.04045
-                ? encoded / 12.92
-                : Math.pow((encoded + 0.055) / 1.055, 2.4);
-        return (int) Math.round(linear * 255.0);
-    }
-
-    private static int srgbByteFromLinear(double linear) {
-        double encoded = linear <= 0.0031308
-                ? linear * 12.92
-                : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055;
-        return (int) Math.round(encoded * 255.0);
+    private static String rgb(int[] pixel) {
+        return pixel[0] + "," + pixel[1] + "," + pixel[2];
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {

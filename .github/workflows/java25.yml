@@ -223,6 +223,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # Mesa is CI-only correctness infrastructure; it does not change the engine's
+      # Windows/OpenGL 4.6 production target or qualify physical GPU performance.
       - name: Provision Mesa software OpenGL for hosted Windows
         shell: powershell
         run: |

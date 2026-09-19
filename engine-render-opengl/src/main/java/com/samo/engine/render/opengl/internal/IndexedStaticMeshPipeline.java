@@ -20,8 +20,10 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
-    private static final int VERTEX_BYTES = 18 * Float.BYTES;
-    private static final int INDEX_BYTES = 3 * Integer.BYTES;
+    private static final int ROOM_VERTEX_COUNT = 20;
+    private static final int ROOM_INDEX_COUNT = 30;
+    private static final int VERTEX_BYTES = ROOM_VERTEX_COUNT * 8 * Float.BYTES;
+    private static final int INDEX_BYTES = ROOM_INDEX_COUNT * Integer.BYTES;
     private static final int PROGRAM_KEY_REFERENCE = 0;
     private static final int MATERIAL_KEY_BASELINE = 0;
     private static final int MATERIAL_KEY_TINTED = 1;
@@ -30,8 +32,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
     private static final Aabb3f REFERENCE_MESH_WORLD_BOUNDS =
             new Aabb3f(
-                    new Vector3f(-0.60f, -0.50f, 0.0f),
-                    new Vector3f(0.60f, 0.60f, 0.0f));
+                    new Vector3f(-2.0f, -1.5f, -3.0f),
+                    new Vector3f(2.0f, 1.5f, 0.5f));
 
     private final OpenGlThreadGuard threadGuard;
     private final OpenGlResourceBackend resourceBackend;
@@ -263,11 +265,11 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             vertices = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(vertices.handle(), VERTEX_BYTES);
-            gl.uploadBufferSubData(vertices.handle(), 0L, triangleVertices());
+            gl.uploadBufferSubData(vertices.handle(), 0L, roomVertices());
 
             indices = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(indices.handle(), INDEX_BYTES);
-            gl.uploadBufferSubData(indices.handle(), 0L, triangleIndices());
+            gl.uploadBufferSubData(indices.handle(), 0L, roomIndices());
 
             camera = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(camera.handle(), CameraUniformBlock.SIZE_BYTES);
@@ -283,9 +285,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     resources,
                     gl,
                     TextureColorEncoding.SRGB_COLOR,
-                    1,
-                    1,
-                    referenceGrayTexture());
+                    4,
+                    4,
+                    referenceRoomTexture());
             sampler = OpenGlSampler.createLinearClamp(guard, resources, gl);
 
             vertex = OpenGlShader.compile(
@@ -316,7 +318,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             UniformBlockLayoutVerifier.verify(linkedProgram.handle(), guard, reflection);
 
-            draw.configurePositionAndNormalAttributes(vao.handle(), vertices.handle());
+            draw.configurePositionNormalUvAttributes(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
             draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
@@ -563,7 +565,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         drawBackend.useProgram(programHandle);
         drawBackend.bindVertexArray(vertexArray.handle());
         try {
-            drawBackend.drawIndexedTriangle();
+            drawBackend.drawIndexedTriangles(ROOM_INDEX_COUNT);
         } finally {
             drawBackend.bindDefaultVertexArray();
             drawBackend.useDefaultProgram();
@@ -610,28 +612,95 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         throwCleanupFailure(failures);
     }
 
-    private static ByteBuffer triangleVertices() {
+    private static ByteBuffer roomVertices() {
         ByteBuffer data = ByteBuffer.allocateDirect(VERTEX_BYTES).order(ByteOrder.nativeOrder());
-        putReferenceVertex(data, -0.60f, -0.50f, 0.0f);
-        putReferenceVertex(data, 0.60f, -0.50f, 0.0f);
-        putReferenceVertex(data, 0.0f, 0.60f, 0.0f);
+
+        putRoomQuad(
+                data,
+                -2.0f, -1.5f, -3.0f,
+                2.0f, -1.5f, -3.0f,
+                2.0f, 1.5f, -3.0f,
+                -2.0f, 1.5f, -3.0f,
+                0.0f, 0.0f, 1.0f);
+        putRoomQuad(
+                data,
+                -2.0f, -1.5f, 0.5f,
+                2.0f, -1.5f, 0.5f,
+                2.0f, -1.5f, -3.0f,
+                -2.0f, -1.5f, -3.0f,
+                0.0f, 1.0f, 0.0f);
+        putRoomQuad(
+                data,
+                -2.0f, 1.5f, -3.0f,
+                2.0f, 1.5f, -3.0f,
+                2.0f, 1.5f, 0.5f,
+                -2.0f, 1.5f, 0.5f,
+                0.0f, -1.0f, 0.0f);
+        putRoomQuad(
+                data,
+                -2.0f, -1.5f, 0.5f,
+                -2.0f, -1.5f, -3.0f,
+                -2.0f, 1.5f, -3.0f,
+                -2.0f, 1.5f, 0.5f,
+                1.0f, 0.0f, 0.0f);
+        putRoomQuad(
+                data,
+                2.0f, -1.5f, -3.0f,
+                2.0f, -1.5f, 0.5f,
+                2.0f, 1.5f, 0.5f,
+                2.0f, 1.5f, -3.0f,
+                -1.0f, 0.0f, 0.0f);
         return data.flip();
     }
 
-    private static void putReferenceVertex(ByteBuffer data, float x, float y, float z) {
+    private static void putRoomQuad(
+            ByteBuffer data,
+            float x0, float y0, float z0,
+            float x1, float y1, float z1,
+            float x2, float y2, float z2,
+            float x3, float y3, float z3,
+            float nx, float ny, float nz) {
+        putRoomVertex(data, x0, y0, z0, nx, ny, nz, 0.0f, 0.0f);
+        putRoomVertex(data, x1, y1, z1, nx, ny, nz, 1.0f, 0.0f);
+        putRoomVertex(data, x2, y2, z2, nx, ny, nz, 1.0f, 1.0f);
+        putRoomVertex(data, x3, y3, z3, nx, ny, nz, 0.0f, 1.0f);
+    }
+
+    private static void putRoomVertex(
+            ByteBuffer data,
+            float x, float y, float z,
+            float nx, float ny, float nz,
+            float u, float v) {
         data.putFloat(x).putFloat(y).putFloat(z);
-        data.putFloat(0.0f).putFloat(0.0f).putFloat(1.0f);
+        data.putFloat(nx).putFloat(ny).putFloat(nz);
+        data.putFloat(u).putFloat(v);
     }
 
-    private static ByteBuffer triangleIndices() {
+    private static ByteBuffer roomIndices() {
         ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
-        data.putInt(0).putInt(1).putInt(2);
+        for (int quad = 0; quad < 5; quad++) {
+            int base = quad * 4;
+            data.putInt(base);
+            data.putInt(base + 1);
+            data.putInt(base + 2);
+            data.putInt(base);
+            data.putInt(base + 2);
+            data.putInt(base + 3);
+        }
         return data.flip();
     }
 
-    private static ByteBuffer referenceGrayTexture() {
-        ByteBuffer data = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
-        data.put((byte) 128).put((byte) 128).put((byte) 128).put((byte) 255);
+    private static ByteBuffer referenceRoomTexture() {
+        int[] rgba = {
+            210, 110, 70, 255,   70, 150, 210, 255,  210, 110, 70, 255,   70, 150, 210, 255,
+             70, 150, 210, 255, 210, 110, 70, 255,    70, 150, 210, 255, 210, 110, 70, 255,
+            210, 110, 70, 255,   70, 150, 210, 255,  210, 110, 70, 255,   70, 150, 210, 255,
+             70, 150, 210, 255, 210, 110, 70, 255,    70, 150, 210, 255, 210, 110, 70, 255
+        };
+        ByteBuffer data = ByteBuffer.allocateDirect(rgba.length).order(ByteOrder.nativeOrder());
+        for (int component : rgba) {
+            data.put((byte) component);
+        }
         return data.flip();
     }
 

@@ -47,7 +47,9 @@ class IndexedStaticMeshPipelineTest {
                 "vertex",
                 "fragment");
 
-        assertEquals(List.of(72L, 12L, 128L, 16L, 528L, 147456L), resources.allocations);
+        assertEquals(
+                List.of(72L, 12L, 128L, 16L, 528L, 147456L, 144L, 128L),
+                resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
                 "element:101:12",
@@ -55,10 +57,12 @@ class IndexedStaticMeshPipelineTest {
                 "ubo:1:14",
                 "ubo:2:15",
                 "debug-position:102:16",
-                "ubo:0:13"), draw.trace);
-        assertEquals(2, resources.uploads.size());
+                "ubo:0:13",
+                "view-model-position:103:17"), draw.trace);
+        assertEquals(3, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
+        assertEquals(144, resources.uploads.get(2).bytes().length);
         assertEquals(1, resources.textureAllocations.size());
         TextureAllocation reference = resources.textureAllocations.getFirst();
         assertEquals(TextureColorEncoding.SRGB_COLOR, reference.colorEncoding());
@@ -72,7 +76,7 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
-        assertEquals(3, resources.uploads.size());
+        assertEquals(4, resources.uploads.size());
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
         assertEquals(LocalLightUniformBlock.SIZE_BYTES, resources.uploads.get(2).bytes().length);
@@ -107,15 +111,25 @@ class IndexedStaticMeshPipelineTest {
                 "program:0",
                 "texture:0:0:0",
                 "viewport:0:0:800x600",
+                "depth-clear",
+                "view-model-state",
+                "ubo:0:18",
+                "program:205",
+                "vao:103",
+                "draw:view-model:6",
+                "vao:0",
+                "program:0",
+                "ubo:0:13",
+                "viewport:0:0:800x600",
                 "srgb:false"), draw.trace);
 
         pipeline.close();
         pipeline.close();
         registry.assertNoOpenResources();
-        assertEquals(6, resources.deletedBuffers);
-        assertEquals(2, resources.deletedVertexArrays);
-        assertEquals(4, resources.deletedShaders);
-        assertEquals(2, resources.deletedPrograms);
+        assertEquals(8, resources.deletedBuffers);
+        assertEquals(3, resources.deletedVertexArrays);
+        assertEquals(6, resources.deletedShaders);
+        assertEquals(3, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
     }
@@ -262,14 +276,18 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(frame);
 
-        assertEquals(4, resources.uploads.size());
+        assertEquals(5, resources.uploads.size());
         assertEquals(
                 2 * DebugLineVertexPacker.VERTEX_STRIDE_BYTES,
                 resources.uploads.get(3).bytes().length);
+        assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(4).bytes().length);
         assertTrue(draw.trace.contains("debug-state"));
         assertTrue(draw.trace.contains("program:204"));
         assertTrue(draw.trace.contains("vao:102"));
         assertTrue(draw.trace.contains("draw:lines:2"));
+        assertTrue(draw.trace.contains("depth-clear"));
+        assertTrue(draw.trace.contains("view-model-state"));
+        assertTrue(draw.trace.contains("draw:view-model:6"));
         assertEquals(List.of(first, second), pipeline.lastDebugTextCounters());
         assertEquals(new RenderCullingCounters(2, 2, 0, 2), pipeline.lastCullingCounters());
 
@@ -321,6 +339,60 @@ class IndexedStaticMeshPipelineTest {
 
         assertEquals(List.of(acceptedCounter), pipeline.lastDebugTextCounters());
         assertEquals(acceptedCulling, pipeline.lastCullingCounters());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void viewModelFailureDoesNotPublishNewDiagnosticsAndRestoresWorldCameraBinding() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+
+        DebugTextCounter acceptedCounter = new DebugTextCounter("tick", 1L);
+        RenderFramePacket accepted = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                new DebugFrame(List.of(), List.of(acceptedCounter)));
+        pipeline.render(accepted);
+        RenderCullingCounters acceptedCulling = pipeline.lastCullingCounters();
+
+        draw.trace.clear();
+        draw.viewModelDrawFailure = new IllegalStateException("view-model draw failure");
+        RenderFramePacket failing = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                new DebugFrame(
+                        List.of(),
+                        List.of(new DebugTextCounter("tick", 2L))));
+
+        IllegalStateException failure =
+                assertThrows(IllegalStateException.class, () -> pipeline.render(failing));
+
+        assertEquals("view-model draw failure", failure.getMessage());
+        assertEquals(List.of(acceptedCounter), pipeline.lastDebugTextCounters());
+        assertEquals(acceptedCulling, pipeline.lastCullingCounters());
+        assertTrue(draw.trace.contains("ubo:0:18"));
+        assertEquals("srgb:false", draw.trace.getLast());
+        assertTrue(draw.trace.contains("ubo:0:13"));
+        assertTrue(draw.trace.contains("vao:0"));
+        assertTrue(draw.trace.contains("program:0"));
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -391,14 +463,11 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(
                 new RenderCullingCounters(2, 0, 2, 0),
                 pipeline.lastCullingCounters());
-        assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("draw:")));
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:3:uint:0")));
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));
-        assertEquals(List.of(
-                "viewport:0:0:800x600",
-                "srgb:true",
-                "clear:true",
-                "viewport:0:0:800x600",
-                "srgb:false"), draw.trace);
+        assertTrue(draw.trace.contains("depth-clear"));
+        assertTrue(draw.trace.contains("view-model-state"));
+        assertTrue(draw.trace.contains("draw:view-model:6"));
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -507,6 +576,16 @@ class IndexedStaticMeshPipelineTest {
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
+                "viewport:0:0:800x600",
+                "depth-clear",
+                "view-model-state",
+                "ubo:0:18",
+                "program:205",
+                "vao:103",
+                "draw:view-model:6",
+                "vao:0",
+                "program:0",
+                "ubo:0:13",
                 "viewport:0:0:800x600",
                 "srgb:false"), draw.trace);
 
@@ -735,6 +814,7 @@ class IndexedStaticMeshPipelineTest {
         private final List<String> trace = new ArrayList<>();
         private RuntimeException drawFailure;
         private RuntimeException debugDrawFailure;
+        private RuntimeException viewModelDrawFailure;
         private int defaultFramebufferEncoding = GL21.GL_SRGB;
         private DirectionalLight lastDirectionalLight;
 
@@ -746,6 +826,11 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void configureDebugLineAttributes(int vertexArray, int vertexBuffer) {
             trace.add("debug-position:" + vertexArray + ":" + vertexBuffer);
+        }
+
+        @Override
+        public void configureViewModelAttributes(int vertexArray, int vertexBuffer) {
+            trace.add("view-model-position:" + vertexArray + ":" + vertexBuffer);
         }
 
         @Override
@@ -773,6 +858,16 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void applyDebugLineState() {
             trace.add("debug-state");
+        }
+
+        @Override
+        public void clearDepthOnly() {
+            trace.add("depth-clear");
+        }
+
+        @Override
+        public void applyViewModelState() {
+            trace.add("view-model-state");
         }
 
         @Override
@@ -832,6 +927,14 @@ class IndexedStaticMeshPipelineTest {
             trace.add("draw:lines:" + vertexCount);
             if (debugDrawFailure != null) {
                 throw debugDrawFailure;
+            }
+        }
+
+        @Override
+        public void drawViewModelTriangles(int vertexCount) {
+            trace.add("draw:view-model:" + vertexCount);
+            if (viewModelDrawFailure != null) {
+                throw viewModelDrawFailure;
             }
         }
 

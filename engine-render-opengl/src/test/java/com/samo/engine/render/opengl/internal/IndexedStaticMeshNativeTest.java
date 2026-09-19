@@ -23,7 +23,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 
 class IndexedStaticMeshNativeTest {
@@ -67,7 +66,6 @@ class IndexedStaticMeshNativeTest {
         boolean started = false;
         boolean stopped = false;
         boolean closed = false;
-        int query = 0;
         try {
             window.initialize();
             window.start();
@@ -92,25 +90,19 @@ class IndexedStaticMeshNativeTest {
 
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
-                query = GL15.glGenQueries();
-                GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
-                GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
                 window.pollEvents();
-                int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
-                assertEquals(2, primitiveCount);
+                assertEquals(
+                        2,
+                        renderer.lastCullingCounters().submittedDraws(),
+                        "P5-T07 world scene must preserve the two current indexed submissions");
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
                 assertTrue(visibleTrianglePixels > 1_000,
                         "Expected a visible reference-gray triangle; pixels=" + visibleTrianglePixels);
 
                 window.present();
-            } finally {
-                if (query != 0) {
-                    GL15.glDeleteQueries(query);
-                    query = 0;
-                }
             }
 
             window.stop();
@@ -119,10 +111,6 @@ class IndexedStaticMeshNativeTest {
             closed = true;
             registry.assertNoOpenResources();
         } finally {
-            if (query != 0) {
-                int queryToDelete = query;
-                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
-            }
             if (!closed) {
                 if (started && !stopped) {
                     attemptCleanup(window::stop);
@@ -192,7 +180,7 @@ class IndexedStaticMeshNativeTest {
                 "renderer.api=OpenGlRenderer",
                 "mesh=indexed-triangle",
                 "draw.elements.count=3",
-                "pipeline.primitives.generated=2",
+                "world.submitted.draws=2",
                 "material.baseline.depth=GL_LESS-write",
                 "material.baseline.cull=GL_BACK",
                 "material.tinted.depth=GL_LESS-no-write",
@@ -209,7 +197,7 @@ class IndexedStaticMeshNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=indexed production draw regression after P5-T13 fixed directional-light integration; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
+                "evidence.scope=indexed world-submission regression uses latest-success culling diagnostics so later render layers do not invalidate the two-world-draw contract; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
     }
 
     private static String environmentOr(String key, String fallback) {

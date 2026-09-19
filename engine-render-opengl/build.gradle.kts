@@ -88,8 +88,10 @@ val verifyPublicApiArtifact by tasks.registering {
             check("shaders/p5/basic.vert" in entries
                     && "shaders/p5/basic.frag" in entries
                     && "shaders/p5/debug-lines.vert" in entries
-                    && "shaders/p5/debug-lines.frag" in entries) {
-                "Renderer runtime artifact must retain committed scene/debug shader resources"
+                    && "shaders/p5/debug-lines.frag" in entries
+                    && "shaders/p5/view-model.vert" in entries
+                    && "shaders/p5/view-model.frag" in entries) {
+                "Renderer runtime artifact must retain committed scene/debug/view-model shader resources"
             }
         }
     }

@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T16 / Issue #198 accepted; P5-T17 / #199 is the next planned activation |
+| Active executable task | P5-T17 / Issue #199 — bounded first-person view-model render layer |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -96,6 +96,8 @@ P5-T15A / #243 is accepted. Owner-visible sandbox validation exposed a temporal 
 
 P5-T16 / #198 is accepted. The first candidate run #428 / `35451065875` was rejected after the unit job exposed an invalid internal fake debug-fragment placeholder in the legacy `GL_LINEAR` fixture; production behavior was unaffected. Corrected PR #246 final head `01be7cfe812dea4cf43f028e9debedb24c7e667e` passed all five required final-candidate jobs in authoritative run #429 / `35451159353`. Retained hosted-Windows artifact `10586816459` recorded `result=PASS`, all four primitive families (line/AABB/sphere/ray), two published counters (`tick=42`, `net/rtt_ms=17`), expected packed vertex count `124`, a strongly green sampled debug-line pixel `0,255,0`, the accepted two indexed scene draws, restored viewport/program/VAO/framebuffer-sRGB state, and an empty native-resource registry. The retained capture visibly shows both accepted scene triangles plus a green line, yellow AABB, cyan sphere, and magenta ray. PR #246 merged as `b40c5efcdcbc291c6f39b92eb1620416792b53d8`, and exact merged `master` passed Lightweight verification in run #430 / `35451468863`. D-064 keeps debug submission values renderer-neutral in `engine-core`, bounds each `DebugFrame` to 64 geometry primitives and 16 text counters, adapts geometry through one fixed-capacity internal line renderer, and publishes text counters only from the latest successful frame. No new module edge/dependency, editor/ImGui runtime UI, font/glyph renderer, physics/network implementation, retained debug scene, duration/lifetime model, or P5-T17 behavior was added.
 
+P5-T17 / #199 is active on branch `p5-t17-view-model-layer` against accepted P5-T16. The candidate adds one package-internal `ViewModelRenderer` that is intentionally separate from world `DrawSubmission` sorting/culling. It owns a fixed engine-only six-vertex validation rectangle, dedicated VAO/VBO/camera UBO/shaders/program, and an explicit camera-relative projection policy: identity view, 55-degree vertical FOV, current framebuffer aspect, 0.01 m near, and 10 m far. After the accepted world scene and P5-T16 debug geometry, the layer enables depth writes, clears only depth, applies `GL_LESS` with depth writes enabled/no blend/no cull, binds its camera UBO, renders the fixture, and restores the world camera UBO/default VAO/program before final pipeline cleanup. The fixture uses fixed linear color through the accepted P5-T15 single presentation encode. No public API/signature, module edge, dependency, P6 asset/resource identity, gameplay weapon/hand/tool, animation/IK, third-person presentation, HUD/runtime UI, FBO/render graph, or world-camera convention change is introduced. Final acceptance remains pending exact-head CI and retained hosted-Windows overlap evidence.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -108,4 +110,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T17 / Issue #199 against accepted P5-T16 and current `master` before implementation. P5-T17 may add only a bounded first-person view-model render layer with explicit separate FOV/projection/depth policy and a minimal engine-owned fixture; do not pull gameplay weapons/hands, skeletal animation/IK, third-person presentation, asset import, HUD/runtime UI, or unrelated future tasks forward.
+Complete final consistency review for P5-T17 / Issue #199 on `p5-t17-view-model-layer`, then open the final non-draft PR. Require all five exact-head jobs, including retained Windows overlap/depth-isolation evidence, before merge. Do not add public view-model asset submission, P6 resource identities, gameplay weapons/hands/tools, animation/IK, third-person presentation, runtime HUD/UI, FBO/render graph architecture, or unrelated future work.

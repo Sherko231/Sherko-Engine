@@ -25,7 +25,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -74,7 +73,6 @@ class DirectionalLightNativeTest {
         boolean started = false;
         boolean stopped = false;
         boolean closed = false;
-        int query = 0;
         int[] baseline = null;
         int[] tinted = null;
         try {
@@ -102,15 +100,12 @@ class DirectionalLightNativeTest {
 
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
-                query = GL15.glGenQueries();
-                GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
-                GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
                 assertEquals(
                         2,
-                        GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT),
-                        "P5-T13 must preserve the two current indexed draws");
+                        renderer.lastCullingCounters().submittedDraws(),
+                        "P5-T13 must preserve the two current world indexed submissions");
 
                 baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
                 tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
@@ -148,11 +143,6 @@ class DirectionalLightNativeTest {
                 captureBackBuffer(framebufferWidth, framebufferHeight);
                 window.pollEvents();
                 window.present();
-            } finally {
-                if (query != 0) {
-                    GL15.glDeleteQueries(query);
-                    query = 0;
-                }
             }
 
             window.stop();
@@ -162,10 +152,6 @@ class DirectionalLightNativeTest {
             registry.assertNoOpenResources();
             writeReport(baseline, tinted);
         } finally {
-            if (query != 0) {
-                int queryToDelete = query;
-                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
-            }
             if (!closed) {
                 if (started && !stopped) {
                     attemptCleanup(window::stop);
@@ -230,7 +216,7 @@ class DirectionalLightNativeTest {
                 "expected.baseline.srgb.byte=" + EXPECTED_BASELINE_SRGB_BYTE,
                 "baseline.rgb=" + rgb(baseline),
                 "tinted.rgb=" + rgb(tinted),
-                "draws.count=2",
+                "world.submitted.draws=2",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",

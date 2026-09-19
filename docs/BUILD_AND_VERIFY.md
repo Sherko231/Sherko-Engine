@@ -1350,3 +1350,40 @@ Retained artifacts:
 
 The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative. Native evidence is correctness-only and does not establish GPU performance.
 
+## P5-T17 first-person view-model verification
+
+P5-T17 adds one bounded internal view-model validation layer after the accepted world/debug stages. It does not change the public renderer submission surface or D-041/D-045 world-camera semantics.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelProjectionTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Deterministic fixtures establish:
+
+- view-model projection uses identity view, exactly 55° vertical FOV, current framebuffer aspect, 0.01 m near and 10 m far with independent expected matrix terms;
+- the view-model stage remains outside world draw sorting/culling and executes after world/debug work;
+- the pass performs a depth-only reset, then applies depth test `GL_LESS`, depth writes enabled, blending/culling disabled;
+- dedicated camera binding/program/VAO are restored to world/default state even when the view-model draw fails;
+- failed view-model rendering does not publish new P5-T11 culling or P5-T16 text-counter snapshots;
+- dedicated view-model VAO/VBO/camera-UBO/shaders/program participate in normal rollback/close/native-registry ownership;
+- committed view-model shaders plus the P5-T15 manual-sRGB fallback variant pass locked Shaderc validation;
+- the runtime artifact retains the committed view-model shader resources.
+
+Windows native acceptance runs `ViewModelNativeTest` with `SHERKO_P5_T17_NATIVE=true`. A controlled world camera places the current depth-writing baseline triangle over a known sample inside the camera-relative fixture. Independent geometry math proves the sample lies inside the world triangle, and independent projection math proves world window depth is closer than the view-model depth, so the fixture would fail `GL_LESS` without depth isolation. After the production render, the same region must contain the expected fixed orange fixture color within ±8 bytes. One P5-T16 debug line also coexists in the frame, current world culling diagnostics still report two indexed scene draws, and viewport/program/VAO/framebuffer-sRGB cleanup plus an empty native-resource registry remain required.
+
+Retained artifacts:
+
+- `engine-render-opengl/build/reports/p5/p5-t17-view-model.txt`
+- `engine-render-opengl/build/reports/p5/p5-t17-view-model.png`
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.ViewModelNativeTest.xml`
+
+The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative. Native evidence is correctness-only and establishes no performance or gameplay claim.
+

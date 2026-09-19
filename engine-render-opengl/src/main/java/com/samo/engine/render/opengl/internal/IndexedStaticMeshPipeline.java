@@ -652,10 +652,10 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 -1.0f, 0.0f, 0.0f);
         putRoomQuadUv(
                 data,
-                -0.60f, -0.40f, -1.0f,
-                0.60f, -0.40f, -1.0f,
-                0.60f, 0.40f, -1.0f,
-                -0.60f, 0.40f, -1.0f,
+                -0.80f, -0.80f, -1.0f,
+                0.80f, -0.80f, -1.0f,
+                0.80f, 0.80f, -1.0f,
+                -0.80f, 0.80f, -1.0f,
                 0.0f, 0.0f, 1.0f,
                 0.25f, 0.25f);
         return data.flip();

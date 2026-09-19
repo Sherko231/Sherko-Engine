@@ -24,8 +24,10 @@ import org.joml.Matrix4fc;
  * P5-T11 derives a CPU view frustum from that snapshot, tests the fixed reference mesh world AABB
  * through the accepted Phase 4 geometry semantics, and exposes latest-successful-frame culling
  * counters. P5-T14 adds bounded point/spot light submission through `RenderFramePacket` with a
- * configurable maximum of 1-8 local lights per frame. This API intentionally does not expose native
- * handles, arbitrary meshes/textures/materials, world components, or asset loading.
+ * configurable maximum of 1-8 local lights per frame. P5-T16 adds bounded renderer-neutral per-frame
+ * debug geometry plus latest-successful text-counter diagnostics without creating a retained debug
+ * scene or font/UI renderer. This API intentionally does not expose native handles, arbitrary
+ * meshes/textures/materials, world components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;

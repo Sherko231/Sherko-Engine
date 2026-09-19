@@ -38,7 +38,11 @@ public final class OpenGlRenderer implements AutoCloseable {
         return create(
                 threadGuard,
                 nativeResources,
-                new EngineLogger(event -> { }),
+                new EngineLogger(event -> System.err.printf(
+                        "[%s] [%s] %s%n",
+                        event.level(),
+                        event.context().subsystem(),
+                        event.message())),
                 8);
     }
 

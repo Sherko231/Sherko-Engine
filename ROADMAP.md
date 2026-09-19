@@ -85,9 +85,9 @@ The Phase 4 exit gate also passes. The accepted candidate and merged master shar
 
 Phase 5 is ready to proceed because its required platform and spatial inputs are accepted.
 
-P5-T01 is the first executable renderer-foundation task. P5-T01 through P5-T17 should each be freshly activated/refined against then-current `master` before implementation.
+P5-T01 through P5-T17 are accepted. Exit review #250 found the phase gate still open because the integrated sandbox does not yet render a real textured room and its input path does not move the rendered camera. P5-T18 / #251 is the planned bounded follow-up and must be freshly activated/refined against then-current `master` before implementation.
 
-The phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, and the first-person view-model layer.
+The phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, the first-person view-model layer, and the final P5-T18 integrated textured-room/movable-camera gate closure.
 
 Phase 5 exit gate remains the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish are deliberately not Phase 5 exit blockers.
 

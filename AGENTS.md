@@ -119,6 +119,8 @@ Task completion does not establish phase completion. Follow the phase verificati
 
 Inserted inter-phase gates in `ROADMAP.md` / `docs/roadmap/TECHNICAL_BACKLOG.md` are mandatory ordering constraints. In particular, after Phase 5, complete **Phase 5R — Architecture & Refactor Hardening** and record its exit PASS before materializing or implementing P6-T01. Do not skip P5R because Phase 6 tasks already exist in the backlog.
 
+During Phase 5R, **no broken intermediate states are allowed**. Every merged P5R task must independently leave the repository buildable, testable, runnable where applicable, behaviorally valid, and documentation-consistent. A task must not rely on a later P5R task to restore compilation, tests, runtime behavior, public contracts, ownership/lifecycle guarantees, or documentation consistency. Temporary migration scaffolding is permitted only inside the active bounded Issue when genuinely necessary, and it must itself be valid and removed or fully reconciled before merge.
+
 A phase exit, release gate, native soak, protocol evidence task, or other Issue may explicitly require stronger exact-merge verification than the ordinary lightweight `master` verifier. That stronger requirement remains authoritative for that specific task and should be invoked deliberately, usually through the task-specific command or `workflow_dispatch` full CI.
 
 ## Stop conditions

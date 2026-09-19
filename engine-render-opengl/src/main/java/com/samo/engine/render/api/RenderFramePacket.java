@@ -1,5 +1,6 @@
 package com.samo.engine.render.api;
 
+import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -16,14 +17,26 @@ public final class RenderFramePacket {
     private final Matrix4f projection;
     private final int framebufferWidth;
     private final int framebufferHeight;
+    private final List<RenderLocalLight> localLights;
 
     public RenderFramePacket(
             Matrix4fc view,
             Matrix4fc projection,
             int framebufferWidth,
             int framebufferHeight) {
+        this(view, projection, framebufferWidth, framebufferHeight, List.of());
+    }
+
+    public RenderFramePacket(
+            Matrix4fc view,
+            Matrix4fc projection,
+            int framebufferWidth,
+            int framebufferHeight,
+            List<? extends RenderLocalLight> localLights) {
         Matrix4fc viewMatrix = Objects.requireNonNull(view, "view");
         Matrix4fc projectionMatrix = Objects.requireNonNull(projection, "projection");
+        List<? extends RenderLocalLight> submittedLights =
+                Objects.requireNonNull(localLights, "localLights");
         if (framebufferWidth <= 0) {
             throw new IllegalArgumentException("framebufferWidth must be positive");
         }
@@ -37,6 +50,10 @@ public final class RenderFramePacket {
         this.projection = new Matrix4f(projectionMatrix);
         this.framebufferWidth = framebufferWidth;
         this.framebufferHeight = framebufferHeight;
+        for (RenderLocalLight light : submittedLights) {
+            Objects.requireNonNull(light, "localLights must not contain null");
+        }
+        this.localLights = List.copyOf(submittedLights);
     }
 
     public int framebufferWidth() {
@@ -45,6 +62,10 @@ public final class RenderFramePacket {
 
     public int framebufferHeight() {
         return framebufferHeight;
+    }
+
+    public List<RenderLocalLight> localLights() {
+        return localLights;
     }
 
     public Matrix4f copyViewTo(Matrix4f destination) {

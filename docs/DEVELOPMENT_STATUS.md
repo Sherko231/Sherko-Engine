@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T12 / Issue #194 accepted; P5-T13 / #195 is the next planned activation |
+| Active executable task | P5-T13 / Issue #195 — one bounded unshadowed directional light |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -86,6 +86,8 @@ P5-T11 / #193 is accepted. PR #233 final head `f88b11b7c589b7a0c2e5bb175f3986996
 
 P5-T12 / #194 is accepted. PR #235 final head `a2e22616ae7fd34d03226360e428858c1048f716` passed all five required final-candidate jobs in run #418 / `35441362542`. PR #235 merged as `5cb9f3e7702c5e6eebb2895de00b2c8c40b49133`, and exact merged `master` passed Lightweight verification in run #419 / `35441572126`. D-060 adds deterministic package-internal draw ordering after P5-T11 culling: opaque submissions use stable logical program/material/mesh keys plus original sequence, while transparent submissions sort back-to-front by camera-space depth with stable key/sequence ties. Sorting copies its source list and does not mutate submissions, materials, or the public P5-T10 frame packet. No public renderer signature, project dependency, production dependency, batching, render graph, P6 resource identity, world/ECS extraction, GPU-driven sorting, or OIT was added.
 
+P5-T13 / #195 is active on branch `p5-t13-directional-light`. The candidate adds package-internal immutable `DirectionalLight` data with normalized D-041 world-space ray-travel direction, linear RGB, and bounded SDR intensity; the fixed reference mesh now carries renderer-owned +Z normals, and the existing shader applies Lambert diffuse lighting in linear space before the accepted P5-T08 presentation encode. The public `OpenGlRenderer` and `RenderFramePacket` signatures remain unchanged; no project/production dependency, public light/resource identity, world/ECS light ownership, shadows, local lights, PBR/IBL, HDR/tonemapping, or fog is introduced. Acceptance remains pending focused verification, the normal five-job exact-head PR CI matrix including retained Windows P5-T13 evidence, merge, and exact-merge Lightweight verification.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -98,4 +100,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T13 / Issue #195 against accepted P5-T12 and current `master` before implementation. P5-T13 may add only one bounded unshadowed directional light with explicit linear-space semantics through existing material/submission foundations; do not pull shadows, HDR/tonemapping, fog, PBR/IBL, local lights, world/ECS light ownership, or P6 asset/resource contracts forward.
+Complete focused verification for P5-T13 / Issue #195 on `p5-t13-directional-light`, inspect the final diff, then open the final non-draft PR only if the candidate remains within the refined Issue contract. Require all five heavy jobs to pass on the exact current PR head/base candidate, including retained Windows directional-light evidence, before merge. Do not start P5-T14 or add shadows, HDR/tonemapping, fog, PBR/IBL, public light/resource identities, or world/ECS light ownership.

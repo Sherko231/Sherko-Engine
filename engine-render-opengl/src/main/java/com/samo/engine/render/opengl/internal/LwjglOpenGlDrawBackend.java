@@ -98,6 +98,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
                 presentationMode.clearComponent(0.14f),
                 1.0f);
         GL11.glClearDepth(1.0d);
+        GL11.glDepthMask(true);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 

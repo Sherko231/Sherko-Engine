@@ -181,8 +181,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 "#version 460 core\nvoid main() {}",
                 "#version 460 core\nvoid main() {}",
                 "#version 460 core\nvoid main() {}",
-                "#version 460 core\nvoid main() {}",
-                "#version 460 core\nvoid main() {}",
                 "#version 460 core\nvoid main() {}");
     }
 
@@ -206,6 +204,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 maxLocalLights,
                 vertexSource,
                 fragmentSource,
+                "#version 460 core\nvoid main() {}",
+                "#version 460 core\nvoid main() {}",
                 "#version 460 core\nvoid main() {}",
                 "#version 460 core\nvoid main() {}");
     }

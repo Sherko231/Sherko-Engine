@@ -8,9 +8,9 @@ import org.joml.Matrix4fc;
 /**
  * Immutable renderer-facing snapshot for one frame.
  *
- * <p>The packet copies caller-owned camera matrices during construction and owns no native resources.
- * Later mutation of the source matrices or of matrices copied out of this packet cannot change the
- * captured frame.
+ * <p>The packet copies caller-owned camera matrices and the ordered local-light submission list
+ * during construction and owns no native resources. Later mutation of source matrices, copied-out
+ * matrices, or the source list cannot change the captured frame.
  */
 public final class RenderFramePacket {
     private final Matrix4f view;

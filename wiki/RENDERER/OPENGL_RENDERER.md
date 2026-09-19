@@ -26,17 +26,17 @@ The renderer owns its GPU resources and must be closed before the window/context
 ## Render
 
 ```java
-renderer.render(view, projection, framebufferWidth, framebufferHeight);
+RenderFramePacket frame =
+        new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight);
+renderer.render(frame);
 window.present();
 ```
 
-`render(...)` requires:
+`RenderFramePacket` construction requires non-null finite JOML view/projection matrices plus positive framebuffer pixel dimensions. Construction copies both matrices immediately. Later mutation of the caller's source matrices cannot change the packet, and matrix reads copy into caller-owned destinations rather than exposing the packet's internal mutable storage.
 
-- the OpenGL owner thread;
-- non-null caller-supplied JOML view/projection matrices;
-- positive framebuffer pixel dimensions.
+`render(RenderFramePacket)` requires the OpenGL owner thread and consumes the packet synchronously without retaining it. Packets own no native resources and require no cleanup. The matrices follow the accepted D-041/D-045 contract. The renderer does not create or own a gameplay/world camera.
 
-The matrices follow the accepted D-041/D-045 contract. The renderer does not create or own a gameplay/world camera.
+The previous `render(view, projection, width, height)` overload remains as a compatibility convenience and constructs the same immutable packet internally.
 
 Every call currently:
 
@@ -77,7 +77,7 @@ Close order at the composition root should be:
 
 The current bounded renderer does not provide:
 
-- arbitrary mesh creation/submission;
+- arbitrary mesh creation/submission or public mesh/material/resource identities inside `RenderFramePacket`;
 - asset import/loading;
 - arbitrary/public texture creation or public material records;
 - lighting;

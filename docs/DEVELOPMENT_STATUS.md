@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T17 / Issue #199 accepted; Phase 5 exit-gate review required before Phase 6 activation |
+| Active executable task | None — Phase 5 exit review #250 failed; P5-T18 / #251 is planned and requires fresh activation before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -98,6 +98,10 @@ P5-T16 / #198 is accepted. The first candidate run #428 / `35451065875` was reje
 
 P5-T17 / #199 is accepted. Initial candidate run #431 / `35455023387` was rejected after P5-T07 exposed a legacy test assumption: four older native regressions treated `GL_PRIMITIVES_GENERATED` around the entire `renderer.render()` call as a stable count of world submissions. P5-T17 legitimately adds a second two-triangle render layer, so those regressions were corrected to assert the intended world-scene contract through `lastCullingCounters().submittedDraws() == 2` while preserving all pixel/color/state checks; production renderer behavior did not change. Corrected final candidate head `b75c22336dff426dd4e1ec611bfdc6b84f43f0a5` passed all five required jobs in authoritative run #435 / `35455657347`. Retained hosted-Windows artifact `10588032621` recorded identity view, 55-degree FOV, near/far `0.01/10.0 m`, depth-only reset before the view-model pass, `GL_LESS` with depth writes enabled, confirmed world/sample overlap, world window depth `0.7507507507507507`, view-model window depth `0.980980980980981`, expected and actual fixture RGB `249,196,108`, two accepted world indexed submissions, P5-T16 debug coexistence, restored GL state, and an empty native-resource registry. PR #248 merged as `9506ce09b9bfb1ebbb5e1966c624f43f41b65275`, and exact merged `master` passed Lightweight verification in run #436 / `35455960146`. D-065 keeps the view-model layer package-internal with independent projection/depth isolation while preserving D-041/D-045 world-camera semantics and adding no public asset/gameplay/HUD/render-graph surface.
 
+### Phase 5 exit review — Issue #250
+
+Phase 5 is **not complete**. Review #250 checked the authoritative gate — a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry without gameplay code — against current `master`, accepted task evidence, the production renderer, and the persistent sandbox. Depth, the accepted fixed directional light, D-063/P5-T15 presentation, P5-T16 debug geometry, and the no-gameplay integration boundary are present. Two explicit gate behaviors are missing: the renderer still draws the same fixed reference triangle twice with a 1x1 gray texture sampled at fixed coordinates rather than a textured room, and `SandboxMain` keeps one fixed view matrix while W/A/S/D/mouse input is used only for diagnostics/tick commands rather than rendered camera movement. P5-T18 / #251 is the planned bounded follow-up; Phase 6 remains inactive until #250 is rerun and passes.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -110,4 +114,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Run a separate Phase 5 exit-gate/readiness review against current `master`. Verify the documented exit condition — a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry without gameplay code — using accepted repository evidence and the persistent sandbox. Do not activate P6-T01 or claim Phase 5 complete until that review is explicitly recorded.
+Freshly activate/refine P5-T18 / Issue #251 against current `master`, then implement only the bounded textured-room and movable-sandbox-camera integration needed to close the two failed Phase 5 exit findings. After P5-T18 acceptance, rerun Phase 5 exit review #250 before activating P6-T01.

@@ -2,7 +2,10 @@ package com.samo.engine.render.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
@@ -56,6 +59,44 @@ class RenderFramePacketTest {
     }
 
     @Test
+    void snapshotsOrderedLocalLightsWithoutRetainingCallerList() {
+        RenderPointLight first =
+                new RenderPointLight(1.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.25f, 0.5f, 5.0f);
+        RenderSpotLight second = new RenderSpotLight(
+                -1.0f,
+                0.0f,
+                1.0f,
+                0.0f,
+                0.0f,
+                -1.0f,
+                0.25f,
+                0.5f,
+                1.0f,
+                0.75f,
+                6.0f,
+                0.2f,
+                0.5f);
+        ArrayList<RenderLocalLight> source = new ArrayList<>(List.of(first, second));
+
+        RenderFramePacket packet =
+                new RenderFramePacket(new Matrix4f(), new Matrix4f(), 800, 600, source);
+        source.clear();
+
+        assertEquals(List.of(first, second), packet.localLights());
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> packet.localLights().add(first));
+    }
+
+    @Test
+    void legacyConstructorProducesEmptyLocalLightList() {
+        RenderFramePacket packet =
+                new RenderFramePacket(new Matrix4f(), new Matrix4f(), 800, 600);
+
+        assertTrue(packet.localLights().isEmpty());
+    }
+
+    @Test
     void rejectsInvalidRequiredValues() {
         Matrix4f valid = new Matrix4f();
 
@@ -63,6 +104,17 @@ class RenderFramePacketTest {
         assertThrows(NullPointerException.class, () -> new RenderFramePacket(valid, null, 800, 600));
         assertThrows(IllegalArgumentException.class, () -> new RenderFramePacket(valid, valid, 0, 600));
         assertThrows(IllegalArgumentException.class, () -> new RenderFramePacket(valid, valid, 800, -1));
+        assertThrows(
+                NullPointerException.class,
+                () -> new RenderFramePacket(valid, valid, 800, 600, null));
+        assertThrows(
+                NullPointerException.class,
+                () -> new RenderFramePacket(
+                        valid,
+                        valid,
+                        800,
+                        600,
+                        java.util.Arrays.asList((RenderLocalLight) null)));
 
         Matrix4f nonFinite = new Matrix4f();
         nonFinite.m00(Float.NaN);

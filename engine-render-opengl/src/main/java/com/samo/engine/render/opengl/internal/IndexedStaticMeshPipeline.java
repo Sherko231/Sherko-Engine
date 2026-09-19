@@ -451,14 +451,11 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         localLightBytes.flip();
         resourceBackend.uploadBufferSubData(localLightBuffer.handle(), 0L, localLightBytes);
 
-        int leftWidth = (framebufferWidth + 1) / 2;
-        int rightWidth = framebufferWidth / 2;
-
         int testedCandidates = 0;
         int visibleCandidates = 0;
         int culledCandidates = 0;
         int submittedDraws = 0;
-        ArrayList<DrawSubmission> visibleSubmissions = new ArrayList<>(2);
+        ArrayList<DrawSubmission> visibleSubmissions = new ArrayList<>(1);
         float referenceDepth = cameraDepth(viewMatrix, REFERENCE_MESH_WORLD_BOUNDS);
 
         testedCandidates++;
@@ -473,25 +470,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     0,
                     0,
                     0,
-                    leftWidth,
-                    framebufferHeight));
-        } else {
-            culledCandidates++;
-        }
-
-        testedCandidates++;
-        if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
-            visibleCandidates++;
-            visibleSubmissions.add(new DrawSubmission(
-                    tintedMaterial,
-                    PROGRAM_KEY_REFERENCE,
-                    MATERIAL_KEY_TINTED,
-                    MESH_KEY_REFERENCE,
-                    referenceDepth,
-                    1,
-                    leftWidth,
-                    0,
-                    rightWidth,
+                    framebufferWidth,
                     framebufferHeight));
         } else {
             culledCandidates++;

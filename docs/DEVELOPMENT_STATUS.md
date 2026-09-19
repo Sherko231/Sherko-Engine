@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T14 / Issue #196 accepted; P5-T15 / #197 is the next planned activation |
+| Active executable task | P5-T15 / Issue #197 — finalize gamma/sRGB presentation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T14 / #196 are accepted. P5-T15 / #197 is the next planned renderer-foundation task and must be freshly activated/refined against accepted P5-T14 before implementation.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T14 / #196 are accepted. P5-T15 / #197 is active on `p5-t15-srgb-presentation` against accepted P5-T14.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -89,6 +89,8 @@ P5-T12 / #194 is accepted. PR #235 final head `a2e22616ae7fd34d03226360e428858c1
 P5-T13 / #195 is accepted. PR #237 final head `0b03b7283793e28f1484c6269c8140d4448e3d3f` passed all five required final-candidate jobs in run #420 / `35442695720`, including retained hosted-Windows P5-T13 evidence. The native report recorded diffuse `0.56568545`, baseline RGB `98,98,98`, tinted RGB `94,64,67`, exactly two indexed draws, restored viewport/program/VAO/framebuffer-sRGB state, and an empty native-resource registry after cleanup. PR #237 merged as `081ea62af94aa911b1c9e35a66a97efe764d1c5a`, and exact merged `master` passed Lightweight verification in run #421 / `35442963503`. D-061 keeps `DirectionalLight` package-internal with normalized D-041 ray-travel direction, linear RGB, and bounded SDR intensity; the fixed reference normals and Lambert diffuse path execute in linear space before D-056 presentation encoding. No public renderer signature, project/production dependency, public light/resource identity, world/ECS ownership, shadows, local lights, PBR/IBL, HDR/tonemapping, or fog was added.
 
 P5-T14 / #196 is accepted. PR #239 final head `5d3653e6238b873b5ce743d6edd91d4ab9d095f2` passed all five required final-candidate jobs in run #422 / `35444203701`. Retained hosted-Windows P5-T14 evidence used configured max 2 with 3 submitted local lights, accepted the first 2, dropped 1, emitted exactly one WARN, measured point range attenuation `0.98010004` and partial spot cone attenuation `0.5`, expected baseline sRGB byte `109`, observed neutral baseline RGB `110,110,110`, preserved the tinted material at `104,71,74`, issued exactly two indexed draws, restored viewport/program/VAO/framebuffer-sRGB state, and left the native-resource registry empty. PR #239 merged as `c7c5ff13df640de6cdf54cec940893014c900f89`, and exact merged `master` passed Lightweight verification in run #423 / `35444404520`. D-062 defines the public bounded point/spot submission, deterministic first-N overflow policy, and independent 528-byte LocalLightBlock while preserving the locked forward-renderer, D-041 spatial, D-056 color, D-058 packet, culling/ordering, and native ownership contracts. No project/production dependency, P6 resource identity, world/ECS light ownership, shadows, clustered/Forward+, PBR/IBL, HDR/tonemapping, or fog was added. Local focused Gradle commands were not run in the agent container because outbound DNS was unavailable; the authoritative repository CI matrix executed the complete Java/GLSL/API/architecture/native verification.
+
+P5-T15 / #197 is active on branch `p5-t15-srgb-presentation`. P5-T08 / D-056 already established correct sRGB texture storage/decoding and hardware/manual default-framebuffer encode selection, so this task does not duplicate that path. The candidate replaces the distributed raw framebuffer-sRGB boolean with package-internal `PresentationMode`, centralizes bounded CPU IEC sRGB transfer for linear clear/reference values in `SrgbTransfer`, keeps the committed GLSL manual fallback equivalent, and adds direct known-linear clear readback evidence plus accepted lit-scene regression. No public API, project/production dependency, texture semantic, asset/resource identity, HDR/tonemapping, fog, bloom, exposure, color grading, offscreen framebuffer pipeline, render graph, P5-T16, or P5-T17 work is introduced. Final acceptance remains pending focused/CI verification and retained hosted-Windows P5-T15 evidence.
 
 ## Open gates and blockers
 

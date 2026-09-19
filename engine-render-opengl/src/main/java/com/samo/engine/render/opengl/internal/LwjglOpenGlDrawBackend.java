@@ -1,6 +1,7 @@
 package com.samo.engine.render.opengl.internal;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
@@ -33,42 +34,30 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
 
     @Override
     public void applyMaterialState(RendererMaterial material) {
-        switch (material.blendMode()) {
-            case OPAQUE -> GL11.glDisable(GL11.GL_BLEND);
-            case ALPHA_BLEND -> {
-                GL11.glEnable(GL11.GL_BLEND);
-                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            }
-        }
+        MaterialStatePolicy policy = MaterialStatePolicy.from(material);
 
-        switch (material.depthMode()) {
-            case TEST_WRITE -> {
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-                GL11.glDepthFunc(GL11.GL_LESS);
-                GL11.glDepthMask(true);
-            }
-            case TEST_NO_WRITE -> {
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-                GL11.glDepthFunc(GL11.GL_LESS);
-                GL11.glDepthMask(false);
-            }
-            case DISABLED -> {
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
-                GL11.glDepthMask(false);
-            }
+        if (policy.blendEnabled()) {
+            GL11.glEnable(GL11.GL_BLEND);
+        } else {
+            GL11.glDisable(GL11.GL_BLEND);
         }
+        GL14.glBlendEquation(policy.blendEquation());
+        GL11.glBlendFunc(policy.blendSourceFactor(), policy.blendDestinationFactor());
 
-        GL11.glFrontFace(GL11.GL_CCW);
-        switch (material.cullMode()) {
-            case BACK -> {
-                GL11.glEnable(GL11.GL_CULL_FACE);
-                GL11.glCullFace(GL11.GL_BACK);
-            }
-            case FRONT -> {
-                GL11.glEnable(GL11.GL_CULL_FACE);
-                GL11.glCullFace(GL11.GL_FRONT);
-            }
-            case NONE -> GL11.glDisable(GL11.GL_CULL_FACE);
+        if (policy.depthTestEnabled()) {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        } else {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        GL11.glDepthFunc(policy.depthFunction());
+        GL11.glDepthMask(policy.depthWriteEnabled());
+
+        GL11.glFrontFace(policy.frontFace());
+        if (policy.cullEnabled()) {
+            GL11.glEnable(GL11.GL_CULL_FACE);
+            GL11.glCullFace(policy.cullFace());
+        } else {
+            GL11.glDisable(GL11.GL_CULL_FACE);
         }
     }
 

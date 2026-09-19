@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 
 class RendererMaterialTest {
     @Test
@@ -25,6 +27,58 @@ class RendererMaterialTest {
         assertEquals(MaterialBlendMode.ALPHA_BLEND, material.blendMode());
         assertEquals(MaterialDepthMode.TEST_NO_WRITE, material.depthMode());
         assertEquals(MaterialCullMode.NONE, material.cullMode());
+    }
+
+    @Test
+    void mapsEveryMaterialStateModeDeterministically() {
+        MaterialTextureBinding binding = new MaterialTextureBinding(0, 31, 41);
+
+        RendererMaterial opaqueBack = new RendererMaterial(
+                MaterialShaderVariant.TEXTURED_REFERENCE,
+                List.of(binding),
+                MaterialScalars.identity(),
+                MaterialBlendMode.OPAQUE,
+                MaterialDepthMode.TEST_WRITE,
+                MaterialCullMode.BACK);
+        MaterialStatePolicy opaqueBackPolicy = MaterialStatePolicy.from(opaqueBack);
+        assertEquals(false, opaqueBackPolicy.blendEnabled());
+        assertEquals(GL14.GL_FUNC_ADD, opaqueBackPolicy.blendEquation());
+        assertEquals(GL11.GL_ONE, opaqueBackPolicy.blendSourceFactor());
+        assertEquals(GL11.GL_ZERO, opaqueBackPolicy.blendDestinationFactor());
+        assertEquals(true, opaqueBackPolicy.depthTestEnabled());
+        assertEquals(true, opaqueBackPolicy.depthWriteEnabled());
+        assertEquals(GL11.GL_LESS, opaqueBackPolicy.depthFunction());
+        assertEquals(true, opaqueBackPolicy.cullEnabled());
+        assertEquals(GL11.GL_BACK, opaqueBackPolicy.cullFace());
+        assertEquals(GL11.GL_CCW, opaqueBackPolicy.frontFace());
+
+        RendererMaterial alphaFront = new RendererMaterial(
+                MaterialShaderVariant.TEXTURED_REFERENCE,
+                List.of(binding),
+                MaterialScalars.identity(),
+                MaterialBlendMode.ALPHA_BLEND,
+                MaterialDepthMode.TEST_NO_WRITE,
+                MaterialCullMode.FRONT);
+        MaterialStatePolicy alphaFrontPolicy = MaterialStatePolicy.from(alphaFront);
+        assertEquals(true, alphaFrontPolicy.blendEnabled());
+        assertEquals(GL11.GL_SRC_ALPHA, alphaFrontPolicy.blendSourceFactor());
+        assertEquals(GL11.GL_ONE_MINUS_SRC_ALPHA, alphaFrontPolicy.blendDestinationFactor());
+        assertEquals(true, alphaFrontPolicy.depthTestEnabled());
+        assertEquals(false, alphaFrontPolicy.depthWriteEnabled());
+        assertEquals(true, alphaFrontPolicy.cullEnabled());
+        assertEquals(GL11.GL_FRONT, alphaFrontPolicy.cullFace());
+
+        RendererMaterial disabled = new RendererMaterial(
+                MaterialShaderVariant.TEXTURED_REFERENCE,
+                List.of(binding),
+                MaterialScalars.identity(),
+                MaterialBlendMode.OPAQUE,
+                MaterialDepthMode.DISABLED,
+                MaterialCullMode.NONE);
+        MaterialStatePolicy disabledPolicy = MaterialStatePolicy.from(disabled);
+        assertEquals(false, disabledPolicy.depthTestEnabled());
+        assertEquals(false, disabledPolicy.depthWriteEnabled());
+        assertEquals(false, disabledPolicy.cullEnabled());
     }
 
     @Test

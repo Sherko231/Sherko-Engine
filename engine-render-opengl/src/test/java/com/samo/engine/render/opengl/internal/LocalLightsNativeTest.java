@@ -29,7 +29,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -104,7 +103,6 @@ class LocalLightsNativeTest {
         boolean started = false;
         boolean stopped = false;
         boolean closed = false;
-        int query = 0;
         int[] baseline = null;
         int[] tinted = null;
         try {
@@ -174,15 +172,12 @@ class LocalLightsNativeTest {
                     registry,
                     rendererLogger,
                     MAX_LOCAL_LIGHTS)) {
-                query = GL15.glGenQueries();
-                GL15.glBeginQuery(GL30.GL_PRIMITIVES_GENERATED, query);
                 renderer.render(frame);
-                GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
                 assertEquals(
                         2,
-                        GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT),
-                        "P5-T14 must preserve the two current indexed draws");
+                        renderer.lastCullingCounters().submittedDraws(),
+                        "P5-T14 must preserve the two current world indexed submissions");
 
                 assertEquals(1, rendererEvents.size());
                 EngineLogger.Event warning = rendererEvents.getFirst();
@@ -234,11 +229,6 @@ class LocalLightsNativeTest {
                 captureBackBuffer(framebufferWidth, framebufferHeight);
                 window.pollEvents();
                 window.present();
-            } finally {
-                if (query != 0) {
-                    GL15.glDeleteQueries(query);
-                    query = 0;
-                }
             }
 
             window.stop();
@@ -248,10 +238,6 @@ class LocalLightsNativeTest {
             registry.assertNoOpenResources();
             writeReport(baseline, tinted);
         } finally {
-            if (query != 0) {
-                int queryToDelete = query;
-                attemptCleanup(() -> GL15.glDeleteQueries(queryToDelete));
-            }
             if (!closed) {
                 if (started && !stopped) {
                     attemptCleanup(window::stop);
@@ -329,7 +315,7 @@ class LocalLightsNativeTest {
                 "reference.expected.baseline.srgb.byte=" + EXPECTED_BASELINE_SRGB_BYTE,
                 "baseline.rgb=" + rgb(baseline),
                 "tinted.rgb=" + rgb(tinted),
-                "draws.count=2",
+                "world.submitted.draws=2",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",

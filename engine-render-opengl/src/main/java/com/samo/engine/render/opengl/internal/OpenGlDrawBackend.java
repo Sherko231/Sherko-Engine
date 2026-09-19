@@ -5,6 +5,8 @@ interface OpenGlDrawBackend {
 
     void configureDebugLineAttributes(int vertexArray, int vertexBuffer);
 
+    void configureViewModelAttributes(int vertexArray, int vertexBuffer);
+
     void bindElementBuffer(int vertexArray, int indexBuffer);
 
     void bindUniformBuffer(int bindingIndex, int buffer);
@@ -14,6 +16,10 @@ interface OpenGlDrawBackend {
     void applyMaterialState(RendererMaterial material);
 
     void applyDebugLineState();
+
+    void clearDepthOnly();
+
+    void applyViewModelState();
 
     int defaultFramebufferColorEncoding();
 
@@ -34,6 +40,8 @@ interface OpenGlDrawBackend {
     void drawIndexedTriangle();
 
     void drawDebugLines(int vertexCount);
+
+    void drawViewModelTriangles(int vertexCount);
 
     void bindDefaultVertexArray();
 

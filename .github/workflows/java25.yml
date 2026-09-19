@@ -21,7 +21,10 @@ concurrency:
 # P1-T08A keeps the expensive five-job matrix on final PR candidates (or explicit
 # manual dispatch) and uses one lightweight exact-merge verifier on ordinary
 # pushes to master. Finish code/docs/self-review before opening a non-draft PR.
-# CI currently uses the repository-scoped Windows x64 self-hosted runner.
+# General build/test/coverage and exact-master verification use GitHub-hosted Windows.
+# The OpenGL/native acceptance job remains on the repository-scoped Windows x64
+# self-hosted runner because the standard hosted Windows image cannot provide the
+# required production OpenGL 4.6 WGL context.
 jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
@@ -206,7 +209,7 @@ jobs:
   windows-native-smoke:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Windows native smoke
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 5
     env:
       ALSOFT_DRIVERS: "null"

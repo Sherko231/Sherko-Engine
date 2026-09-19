@@ -1,13 +1,14 @@
 # Sherko Engine Build and Verification
 
-This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when the configured repository self-hosted Windows x64 runner actually executes the jobs. The current CI lifecycle is defined by `AGENTS.md`, `docs/CI_LIFECYCLE.md`, and the current `## CI gate` section below; older task-specific sections retain historical evidence language where useful.
+This file centralizes repeatable commands and the evidence expected from them. Run Windows commands on Windows x64 when native libraries are involved. CI is authoritative only when each required job actually executes on its configured runner: general build/test/coverage and exact-master verification use GitHub-hosted Windows, while production OpenGL/native acceptance uses the repository-scoped self-hosted Windows x64 runner. The current CI lifecycle is defined by `AGENTS.md`, `docs/CI_LIFECYCLE.md`, and the current `## CI gate` section below; older task-specific sections retain historical evidence language where useful.
 
 ## Environment baseline
 
 - JDK: Temurin/OpenJDK 25 through the Gradle toolchain.
 - Build: repository Gradle Wrapper.
-- CI runner: repository-scoped self-hosted Windows x64 runner selected by `[self-hosted, Windows, X64]`.
-- Runner availability: the runner is manually operated and must be online before required CI can execute; queued/unstarted jobs are not verification evidence.
+- CI runners: `windows-latest` for general build/test/coverage and exact-master verification; repository-scoped `[self-hosted, Windows, X64]` for `Windows native smoke`.
+- Native runner availability: the self-hosted Windows x64 runner is manually operated and must be online before the required native job can execute; queued/unstarted jobs are not verification evidence.
+- Native graphics requirement: the self-hosted native job must provide the production WGL OpenGL 4.6 Core path required by the retained P3/P5 native acceptance; the standard hosted Windows image is not accepted as equivalent native evidence.
 - Runtime target: Windows x64.
 
 Use `./gradlew` on Unix-like shells for non-native configuration checks and `.\gradlew.bat` on Windows.
@@ -1026,6 +1027,8 @@ Before interpreting or merging a non-exempt final candidate:
 8. After merge, require `Lightweight master verification` to pass on the exact resulting `master` merge SHA before closing the Issue.
 9. Do not rerun the routine heavy matrix after merge. Use `workflow_dispatch` or a task-specific exact-merge command only when the active Issue explicitly requires native/performance/protocol evidence that the lightweight verifier cannot establish.
 
+Runner allocation for the heavy matrix is hybrid: `Build and quality gates`, `Unit tests`, `Architecture tests`, and `JaCoCo coverage reports` use `windows-latest`; `Windows native smoke` uses `[self-hosted, Windows, X64]`. The lightweight exact-merge `master` verifier also uses `windows-latest`. This keeps the real OpenGL 4.6 native gate intact while limiting self-hosted use to the job that actually requires that environment.
+
 The heavy five-job PR/manual matrix covers:
 
 - `Build and quality gates`: Java/toolchain reporting, project inventory, committed dependency-lock resolution, all-module build/quality gates, client/server entry points, headless-server runtime boundary, and client/server version compatibility;
@@ -1038,7 +1041,7 @@ The lightweight `master` verifier is deliberately narrower. On the exact pushed 
 
 The workflow uses top-level concurrency with `cancel-in-progress: true`, keyed by workflow/PR for pull requests and by ref for push/manual runs. A newer commit on the same PR supersedes older queued/in-progress candidate runs; stale cancelled runs neither pass nor fail the current candidate. Never cancel the current final-candidate run merely to save runner time.
 
-A self-hosted run is not an ephemeral clean VM. `actions/checkout` checks out the requested commit into the runner work directory, but machine-level software and caches can persist. The committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state.
+The self-hosted `Windows native smoke` job is not an ephemeral clean VM. `actions/checkout` checks out the requested commit into the runner work directory, but machine-level graphics drivers, native software, and caches can persist. The committed Gradle Wrapper, Java 25 setup, dependency locks, explicit task outputs, and repository tests remain the verification contracts; do not infer reproducibility merely from machine state. GitHub-hosted jobs remain separate evidence and do not replace the required native OpenGL acceptance.
 
 Whether GitHub itself blocks a merge is controlled separately by live branch-protection/ruleset settings. Regardless of platform enforcement, `AGENTS.md` forbids merging non-exempt work without the required exact-candidate heavy pass and forbids closing the Issue until the exact-merge lightweight verifier passes.
 

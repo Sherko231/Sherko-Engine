@@ -44,11 +44,23 @@ class LocalLightsNativeTest {
     private static final float LOCAL_RANGE_METERS = 100.0f;
     private static final float LOCAL_DISTANCE_METERS = 1.0f;
     private static final float LOCAL_INTENSITY = 0.1f;
+    private static final float SPOT_INNER_RADIANS = 0.2f;
+    private static final float SPOT_OUTER_RADIANS = 0.5f;
+    private static final float SPOT_INNER_COSINE = (float) Math.cos(SPOT_INNER_RADIANS);
+    private static final float SPOT_OUTER_COSINE = (float) Math.cos(SPOT_OUTER_RADIANS);
+    private static final float SPOT_ALIGNMENT =
+            (SPOT_INNER_COSINE + SPOT_OUTER_COSINE) * 0.5f;
+    private static final float SPOT_DIRECTION_X =
+            (float) Math.sqrt(1.0f - SPOT_ALIGNMENT * SPOT_ALIGNMENT);
+    private static final float SPOT_DIRECTION_Z = -SPOT_ALIGNMENT;
+    private static final float SPOT_CONE_ATTENUATION = 0.5f;
     private static final float LOCAL_RANGE_ATTENUATION =
             (1.0f - LOCAL_DISTANCE_METERS / LOCAL_RANGE_METERS)
                     * (1.0f - LOCAL_DISTANCE_METERS / LOCAL_RANGE_METERS);
     private static final float EXPECTED_ILLUMINATION =
-            DIRECTIONAL_DIFFUSE + 2.0f * LOCAL_INTENSITY * LOCAL_RANGE_ATTENUATION;
+            DIRECTIONAL_DIFFUSE
+                    + LOCAL_INTENSITY * LOCAL_RANGE_ATTENUATION
+                    + LOCAL_INTENSITY * LOCAL_RANGE_ATTENUATION * SPOT_CONE_ATTENUATION;
     private static final int EXPECTED_BASELINE_SRGB_BYTE =
             litSrgbByte(INPUT_SRGB_BYTE, EXPECTED_ILLUMINATION);
     private static final int BYTE_TOLERANCE = 8;
@@ -131,16 +143,16 @@ class LocalLightsNativeTest {
                     0.0f,
                     0.0f,
                     1.0f,
+                    SPOT_DIRECTION_X,
                     0.0f,
-                    0.0f,
-                    -1.0f,
+                    SPOT_DIRECTION_Z,
                     1.0f,
                     1.0f,
                     1.0f,
                     LOCAL_INTENSITY,
                     LOCAL_RANGE_METERS,
-                    0.2f,
-                    0.5f);
+                    SPOT_INNER_RADIANS,
+                    SPOT_OUTER_RADIANS);
             RenderPointLight overflowRed = new RenderPointLight(
                     0.0f,
                     0.0f,
@@ -303,9 +315,11 @@ class LocalLightsNativeTest {
                 "point.range.meters=" + LOCAL_RANGE_METERS,
                 "point.intensity=" + LOCAL_INTENSITY,
                 "spot.position=0.0,0.0,1.0",
-                "spot.direction=0.0,0.0,-1.0",
-                "spot.inner.radians=0.2",
-                "spot.outer.radians=0.5",
+                "spot.direction=" + SPOT_DIRECTION_X + ",0.0," + SPOT_DIRECTION_Z,
+                "spot.inner.radians=" + SPOT_INNER_RADIANS,
+                "spot.outer.radians=" + SPOT_OUTER_RADIANS,
+                "spot.alignment=" + SPOT_ALIGNMENT,
+                "spot.cone.attenuation=" + SPOT_CONE_ATTENUATION,
                 "spot.range.meters=" + LOCAL_RANGE_METERS,
                 "spot.intensity=" + LOCAL_INTENSITY,
                 "reference.distance.meters=" + LOCAL_DISTANCE_METERS,

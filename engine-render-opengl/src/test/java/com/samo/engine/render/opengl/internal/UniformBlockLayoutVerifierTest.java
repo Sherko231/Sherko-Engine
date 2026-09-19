@@ -65,10 +65,13 @@ class UniformBlockLayoutVerifierTest {
         FakeReflectionBackend backend = new FakeReflectionBackend();
         backend.indices.put(CameraUniformBlock.GLSL_BLOCK_NAME, 0);
         backend.indices.put(PerFrameUniformBlock.GLSL_BLOCK_NAME, 1);
+        backend.indices.put(LocalLightUniformBlock.GLSL_BLOCK_NAME, 2);
         backend.sizes.put(0, CameraUniformBlock.SIZE_BYTES);
         backend.sizes.put(1, PerFrameUniformBlock.SIZE_BYTES);
+        backend.sizes.put(2, LocalLightUniformBlock.SIZE_BYTES);
         backend.bindings.put(0, CameraUniformBlock.BINDING);
         backend.bindings.put(1, PerFrameUniformBlock.BINDING);
+        backend.bindings.put(2, LocalLightUniformBlock.BINDING);
         return backend;
     }
 

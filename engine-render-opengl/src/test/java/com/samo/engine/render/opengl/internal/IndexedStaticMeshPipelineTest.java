@@ -385,9 +385,9 @@ class IndexedStaticMeshPipelineTest {
     void fragmentVariantInjectsManualEncodeOnlyForLinearDefaultFramebuffer() {
         String source = "#version 460 core\nvoid main() {}";
 
-        assertEquals(source, IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, true));
+        assertEquals(source, PresentationMode.HARDWARE_SRGB.fragmentSource(source));
 
-        String fallback = IndexedStaticMeshPipeline.fragmentSourceForPresentation(source, false);
+        String fallback = PresentationMode.MANUAL_SRGB.fragmentSource(source);
         assertTrue(fallback.startsWith(
                 "#version 460 core" + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
         assertTrue(fallback.endsWith("\nvoid main() {}"));
@@ -642,8 +642,8 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
-        public void clearFrame(boolean hardwareSrgbEncode) {
-            trace.add("clear:" + hardwareSrgbEncode);
+        public void clearFrame(PresentationMode presentationMode) {
+            trace.add("clear:" + presentationMode.framebufferSrgbEnabled());
         }
 
         @Override

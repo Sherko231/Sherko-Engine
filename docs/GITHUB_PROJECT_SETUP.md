@@ -24,7 +24,7 @@ Repository milestones:
 
 - `M0 — Feasibility` — P0
 - `M1 — Engine Foundation` — P1-P4
-- `M2 — Local Playable Runtime` — P5-P9
+- `M2 — Local Playable Runtime` — P5, P5R, P6-P9
 - `M3 — Multiplayer Core` — P10-P13
 - `M4 — Genre Systems` — P14
 - `M5 — Tools` — P15
@@ -37,6 +37,7 @@ Do not assign arbitrary due dates. Add dates only when they represent a real pla
 Issues represent executable tasks only.
 
 - Materialize tasks as Issues only when their phase is near execution.
+- Treat inserted phases such as `P5R` as first-class ordered phases; do not activate the following numbered phase until the inserted phase exit gate passes.
 - Keep permanent task IDs from `TECHNICAL_BACKLOG.md` in Issue titles.
 - The Issue becomes the task's execution contract once work is activated.
 - Do not mirror Ready/In Progress/Done state back into roadmap/backlog documents.
@@ -114,7 +115,7 @@ Create the following as **Project draft items**, not Issues:
 ### Project fields
 
 - `Status`: Backlog / Ready / In Progress / In Review / Blocked / Done
-- `Phase`: P0-P16
+- `Phase`: P0-P16 plus inserted `P5R`
 - `Priority`: P0 Critical / P1 High / P2 Normal / P3 Low
 - `Subsystem`: Build / CI, Core, Platform, Input, Math, Rendering, Runtime UI, Assets, World, Physics, Gameplay, Networking, Steam, Audio, Animation, AI / Navigation, Editor / Tools, Release, Documentation
 - `Effort`: XS / S / M / L

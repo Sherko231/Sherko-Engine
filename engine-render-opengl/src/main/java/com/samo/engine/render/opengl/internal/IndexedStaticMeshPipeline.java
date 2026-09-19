@@ -112,7 +112,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             String vertexSource,
-            String fragmentSource) {
+            String fragmentSource,
+            String debugVertexSource,
+            String debugFragmentSource) {
         return createProduction(
                 threadGuard,
                 registry,
@@ -120,8 +122,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 LocalLightSelection.SHADER_CAPACITY,
                 vertexSource,
                 fragmentSource,
-                "debug-vertex",
-                "debug-fragment");
+                debugVertexSource,
+                debugFragmentSource);
     }
 
     public static IndexedStaticMeshPipeline createProduction(
@@ -164,7 +166,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 new EngineLogger(event -> { }),
                 LocalLightSelection.SHADER_CAPACITY,
                 vertexSource,
-                fragmentSource);
+                fragmentSource,
+                "debug-vertex",
+                "debug-fragment");
     }
 
     static IndexedStaticMeshPipeline create(

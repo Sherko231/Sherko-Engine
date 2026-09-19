@@ -19,6 +19,8 @@ interface OpenGlDrawBackend {
 
     void bindTextureAndSampler(int unit, int texture, int sampler);
 
+    void setMaterialScalars(int program, MaterialScalars scalars);
+
     void useProgram(int program);
 
     void bindVertexArray(int vertexArray);

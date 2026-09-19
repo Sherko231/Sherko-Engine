@@ -969,6 +969,8 @@ Sandbox impact: none — the existing sandbox uses the same public `OpenGlRender
 
 P5-T09 keeps its material value internal to `engine-render-opengl`; it adds no public material/resource API and no dependency or module edge.
 
+The committed P5 GLSL validator uses Shaderc with an explicit OpenGL target environment (`shaderc_target_env_opengl`, OpenGL 4.5 SPIR-V environment, SPIR-V 1.0) rather than Shaderc's default Vulkan target. This keeps offline validation aligned with the repository's OpenGL runtime contract; runtime OpenGL 4.6 compile/link verification remains authoritative for the actual driver path.
+
 Focused deterministic verification:
 
 ```powershell

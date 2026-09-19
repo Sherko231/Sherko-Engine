@@ -21,7 +21,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlBuffer indexBuffer;
     private final OpenGlBuffer cameraBuffer;
     private final OpenGlBuffer perFrameBuffer;
-    private final OpenGlBuffer materialBuffer;
     private final OpenGlTexture referenceTexture;
     private final OpenGlSampler referenceSampler;
     private final OpenGlShader vertexShader;
@@ -34,8 +33,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
             ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
-    private final ByteBuffer materialBytes =
-            ByteBuffer.allocateDirect(MaterialUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private boolean closeAttempted;
 
     private IndexedStaticMeshPipeline(
@@ -47,7 +44,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlBuffer indexBuffer,
             OpenGlBuffer cameraBuffer,
             OpenGlBuffer perFrameBuffer,
-            OpenGlBuffer materialBuffer,
             OpenGlTexture referenceTexture,
             OpenGlSampler referenceSampler,
             OpenGlShader vertexShader,
@@ -64,7 +60,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.indexBuffer = indexBuffer;
         this.cameraBuffer = cameraBuffer;
         this.perFrameBuffer = perFrameBuffer;
-        this.materialBuffer = materialBuffer;
         this.referenceTexture = referenceTexture;
         this.referenceSampler = referenceSampler;
         this.vertexShader = vertexShader;
@@ -113,7 +108,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         OpenGlBuffer indices = null;
         OpenGlBuffer camera = null;
         OpenGlBuffer perFrame = null;
-        OpenGlBuffer material = null;
         OpenGlTexture texture = null;
         OpenGlSampler sampler = null;
         OpenGlShader vertex = null;
@@ -135,9 +129,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             perFrame = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(perFrame.handle(), PerFrameUniformBlock.SIZE_BYTES);
-
-            material = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(material.handle(), MaterialUniformBlock.SIZE_BYTES);
 
             texture = OpenGlTexture.createRgba8(
                     guard,
@@ -188,7 +179,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             draw.bindElementBuffer(vao.handle(), indices.handle());
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
             draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
-            draw.bindUniformBuffer(MaterialUniformBlock.BINDING, material.handle());
 
             MaterialTextureBinding referenceBinding =
                     new MaterialTextureBinding(0, texture.handle(), sampler.handle());
@@ -216,7 +206,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     indices,
                     camera,
                     perFrame,
-                    material,
                     texture,
                     sampler,
                     vertex,
@@ -231,7 +220,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             suppressClose(failure, vertex);
             suppressClose(failure, sampler);
             suppressClose(failure, texture);
-            suppressClose(failure, material);
             suppressClose(failure, perFrame);
             suppressClose(failure, camera);
             suppressClose(failure, indices);
@@ -284,11 +272,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
     private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {
         int programHandle = programFor(material.shaderVariant());
-        materialBytes.clear();
-        MaterialUniformBlock.write(material.scalars(), materialBytes);
-        materialBytes.flip();
-        resourceBackend.uploadBufferSubData(materialBuffer.handle(), 0L, materialBytes);
-
         drawBackend.setViewport(x, y, width, height);
         drawBackend.applyMaterialState(material);
         for (MaterialTextureBinding textureBinding : material.textures()) {
@@ -297,6 +280,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     textureBinding.textureHandle(),
                     textureBinding.samplerHandle());
         }
+        drawBackend.setMaterialScalars(programHandle, material.scalars());
         drawBackend.useProgram(programHandle);
         drawBackend.bindVertexArray(vertexArray.handle());
         try {
@@ -336,7 +320,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         closeInto(failures, vertexShader);
         closeInto(failures, referenceSampler);
         closeInto(failures, referenceTexture);
-        closeInto(failures, materialBuffer);
         closeInto(failures, perFrameBuffer);
         closeInto(failures, cameraBuffer);
         closeInto(failures, indexBuffer);

@@ -3,8 +3,6 @@ package com.samo.engine.render.opengl.internal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
@@ -81,22 +79,6 @@ class RendererMaterialTest {
         assertEquals(false, disabledPolicy.depthTestEnabled());
         assertEquals(false, disabledPolicy.depthWriteEnabled());
         assertEquals(false, disabledPolicy.cullEnabled());
-    }
-
-    @Test
-    void packsMaterialScalarsAsStd140Vec4() {
-        ByteBuffer bytes = ByteBuffer.allocateDirect(MaterialUniformBlock.SIZE_BYTES)
-                .order(ByteOrder.nativeOrder());
-
-        MaterialUniformBlock.write(
-                new MaterialScalars(1.0f, 0.5f, 0.25f, 0.75f),
-                bytes);
-
-        assertEquals(MaterialUniformBlock.SIZE_BYTES, bytes.position());
-        assertEquals(1.0f, bytes.getFloat(0));
-        assertEquals(0.5f, bytes.getFloat(4));
-        assertEquals(0.25f, bytes.getFloat(8));
-        assertEquals(0.75f, bytes.getFloat(12));
     }
 
     @Test

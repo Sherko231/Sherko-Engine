@@ -15,7 +15,7 @@ final class SandboxDiagnosticFormatter {
                 "sandboxTime=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
                         + "mode=%s, sensitivity=%.2f, invertY=%s, WASD=[%s,%s,%s,%s], frameMOVE=(%.1f,%.1f), "
                         + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], %s, mouseDelta=(%.2f,%.2f), "
-                        + "renderCull[tested=%d,visible=%d,culled=%d,draws=%d] "
+                        + "renderCull[tested=%d,visible=%d,culled=%d,draws=%d], %s "
                         + "(sandbox diagnostic; not FPS/benchmark/replay acceptance evidence)",
                 values.sandboxTimeSeconds(),
                 values.interpolationAlpha(),
@@ -43,7 +43,8 @@ final class SandboxDiagnosticFormatter {
                 values.testedCandidates(),
                 values.visibleCandidates(),
                 values.culledCandidates(),
-                values.submittedDraws());
+                values.submittedDraws(),
+                values.debugCounters());
     }
 
     record DiagnosticValues(
@@ -73,10 +74,12 @@ final class SandboxDiagnosticFormatter {
             int testedCandidates,
             int visibleCandidates,
             int culledCandidates,
-            int submittedDraws) {
+            int submittedDraws,
+            String debugCounters) {
         DiagnosticValues {
             Objects.requireNonNull(mode, "mode");
             Objects.requireNonNull(commandDiagnostic, "commandDiagnostic");
+            Objects.requireNonNull(debugCounters, "debugCounters");
             if (testedCandidates < 0
                     || visibleCandidates < 0
                     || culledCandidates < 0

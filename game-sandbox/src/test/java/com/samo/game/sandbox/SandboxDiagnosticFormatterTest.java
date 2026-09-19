@@ -43,7 +43,7 @@ final class SandboxDiagnosticFormatterTest {
                         + "mode=WINDOWED, sensitivity=1.00, invertY=true, WASD=[true,false,false,true], "
                         + "frameMOVE=(-1.0,1.0), JUMP[p=true,h=false,r=true], INTERACT[p=false,h=true,r=false], "
                         + "tickCommand=42 MOVE=(-1.0,1.0) LOOK=(2.50,-3.75), mouseDelta=(4.25,-5.50), "
-                        + "renderCull[tested=2,visible=2,culled=0,draws=2], "
+                        + "renderCull[tested=1,visible=1,culled=0,draws=1], "
                         + "debugCounters=[simulation/tick=42,input/frame=456] "
                         + "(sandbox diagnostic; not FPS/benchmark/replay acceptance evidence)",
                 message);

@@ -18,6 +18,10 @@ import org.joml.Vector3f;
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private static final int VERTEX_BYTES = 9 * Float.BYTES;
     private static final int INDEX_BYTES = 3 * Integer.BYTES;
+    private static final int PROGRAM_KEY_REFERENCE = 0;
+    private static final int MATERIAL_KEY_BASELINE = 0;
+    private static final int MATERIAL_KEY_TINTED = 1;
+    private static final int MESH_KEY_REFERENCE = 0;
     private static final Aabb3f REFERENCE_MESH_WORLD_BOUNDS =
             new Aabb3f(
                     new Vector3f(-0.60f, -0.50f, 0.0f),
@@ -40,6 +44,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final RendererMaterial tintedMaterial;
     private final boolean hardwareFramebufferSrgb;
     private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
+    private final DrawSubmissionSorter submissionSorter = new DrawSubmissionSorter();
     private final ByteBuffer cameraBytes =
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
@@ -288,28 +293,59 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         int visibleCandidates = 0;
         int culledCandidates = 0;
         int submittedDraws = 0;
+        ArrayList<DrawSubmission> visibleSubmissions = new ArrayList<>(2);
+        float referenceDepth = cameraDepth(viewMatrix, REFERENCE_MESH_WORLD_BOUNDS);
+
+        testedCandidates++;
+        if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
+            visibleCandidates++;
+            visibleSubmissions.add(new DrawSubmission(
+                    baselineMaterial,
+                    PROGRAM_KEY_REFERENCE,
+                    MATERIAL_KEY_BASELINE,
+                    MESH_KEY_REFERENCE,
+                    referenceDepth,
+                    0,
+                    0,
+                    0,
+                    leftWidth,
+                    framebufferHeight));
+        } else {
+            culledCandidates++;
+        }
+
+        testedCandidates++;
+        if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
+            visibleCandidates++;
+            visibleSubmissions.add(new DrawSubmission(
+                    tintedMaterial,
+                    PROGRAM_KEY_REFERENCE,
+                    MATERIAL_KEY_TINTED,
+                    MESH_KEY_REFERENCE,
+                    referenceDepth,
+                    1,
+                    leftWidth,
+                    0,
+                    rightWidth,
+                    framebufferHeight));
+        } else {
+            culledCandidates++;
+        }
+
+        List<DrawSubmission> orderedSubmissions = submissionSorter.sort(visibleSubmissions);
 
         drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
         drawBackend.setFramebufferSrgbEnabled(hardwareFramebufferSrgb);
         try {
             drawBackend.clearFrame(hardwareFramebufferSrgb);
-
-            testedCandidates++;
-            if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
-                visibleCandidates++;
-                drawMaterial(baselineMaterial, 0, 0, leftWidth, framebufferHeight);
+            for (DrawSubmission submission : orderedSubmissions) {
+                drawMaterial(
+                        submission.material(),
+                        submission.viewportX(),
+                        submission.viewportY(),
+                        submission.viewportWidth(),
+                        submission.viewportHeight());
                 submittedDraws++;
-            } else {
-                culledCandidates++;
-            }
-
-            testedCandidates++;
-            if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
-                visibleCandidates++;
-                drawMaterial(tintedMaterial, leftWidth, 0, rightWidth, framebufferHeight);
-                submittedDraws++;
-            } else {
-                culledCandidates++;
             }
         } finally {
             drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
@@ -325,6 +361,21 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
     public RenderCullingCounters lastCullingCounters() {
         return lastCullingCounters;
+    }
+
+    private static float cameraDepth(Matrix4fc viewMatrix, Aabb3f worldBounds) {
+        Vector3f minimum = worldBounds.minimum(new Vector3f());
+        Vector3f maximum = worldBounds.maximum(new Vector3f());
+        Vector3f center = new Vector3f(
+                (minimum.x() + maximum.x()) * 0.5f,
+                (minimum.y() + maximum.y()) * 0.5f,
+                (minimum.z() + maximum.z()) * 0.5f);
+        viewMatrix.transformPosition(center);
+        float depth = -center.z();
+        if (!Float.isFinite(depth)) {
+            throw new IllegalArgumentException("camera-space submission depth must be finite");
+        }
+        return depth;
     }
 
     private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {

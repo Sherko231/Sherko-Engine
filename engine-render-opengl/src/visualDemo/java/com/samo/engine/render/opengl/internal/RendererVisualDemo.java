@@ -291,7 +291,6 @@ public final class RendererVisualDemo {
                 """;
 
         private final OpenGlDrawBackend draw;
-        private final OpenGlResourceBackend resources;
         private final OpenGlVertexArray vertexArray;
         private final OpenGlBuffer vertexBuffer;
         private final OpenGlBuffer indexBuffer;
@@ -307,7 +306,6 @@ public final class RendererVisualDemo {
 
         private MaterialComparisonOverlay(
                 OpenGlDrawBackend draw,
-                OpenGlResourceBackend resources,
                 OpenGlVertexArray vertexArray,
                 OpenGlBuffer vertexBuffer,
                 OpenGlBuffer indexBuffer,
@@ -320,7 +318,6 @@ public final class RendererVisualDemo {
                 RendererMaterial transparent,
                 PresentationMode presentationMode) {
             this.draw = draw;
-            this.resources = resources;
             this.vertexArray = vertexArray;
             this.vertexBuffer = vertexBuffer;
             this.indexBuffer = indexBuffer;
@@ -421,7 +418,6 @@ public final class RendererVisualDemo {
 
                 return new MaterialComparisonOverlay(
                         draw,
-                        resources,
                         vao,
                         vertices,
                         indices,

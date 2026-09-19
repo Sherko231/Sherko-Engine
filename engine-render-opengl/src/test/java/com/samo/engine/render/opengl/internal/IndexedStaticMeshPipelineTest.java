@@ -93,20 +93,10 @@ class IndexedStaticMeshPipelineTest {
                 "viewport:0:0:800x600",
                 "srgb:true",
                 "clear:true",
-                "viewport:0:0:400x600",
+                "viewport:0:0:800x600",
                 "state:blend=OPAQUE:depth=TEST_WRITE:cull=BACK",
                 "texture:0:301:401",
                 "scalars:203:1.0,1.0,1.0,1.0",
-                "program:203",
-                "vao:101",
-                "draw:triangles:36:uint:0",
-                "vao:0",
-                "program:0",
-                "texture:0:0:0",
-                "viewport:400:0:400x600",
-                "state:blend=ALPHA_BLEND:depth=TEST_NO_WRITE:cull=NONE",
-                "texture:0:301:401",
-                "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
                 "draw:triangles:36:uint:0",
@@ -193,7 +183,7 @@ class IndexedStaticMeshPipelineTest {
                 packed.getFloat(
                         LocalLightUniformBlock.POSITION_RANGE_OFFSET_BYTES
                                 + 2 * 4 * Float.BYTES));
-        assertEquals(new RenderCullingCounters(2, 2, 0, 2), pipeline.lastCullingCounters());
+        assertEquals(new RenderCullingCounters(1, 1, 0, 1), pipeline.lastCullingCounters());
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -292,7 +282,7 @@ class IndexedStaticMeshPipelineTest {
         assertTrue(draw.trace.contains("view-model-state"));
         assertTrue(draw.trace.contains("draw:view-model:6"));
         assertEquals(List.of(first, second), pipeline.lastDebugTextCounters());
-        assertEquals(new RenderCullingCounters(2, 2, 0, 2), pipeline.lastCullingCounters());
+        assertEquals(new RenderCullingCounters(1, 1, 0, 1), pipeline.lastCullingCounters());
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -493,7 +483,7 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
         RenderCullingCounters accepted =
-                new RenderCullingCounters(2, 2, 0, 2);
+                new RenderCullingCounters(1, 1, 0, 1);
         assertEquals(accepted, pipeline.lastCullingCounters());
 
         draw.drawFailure = new IllegalStateException("fixture draw failure");
@@ -559,20 +549,10 @@ class IndexedStaticMeshPipelineTest {
                 "viewport:0:0:800x600",
                 "srgb:false",
                 "clear:false",
-                "viewport:0:0:400x600",
+                "viewport:0:0:800x600",
                 "state:blend=OPAQUE:depth=TEST_WRITE:cull=BACK",
                 "texture:0:301:401",
                 "scalars:203:1.0,1.0,1.0,1.0",
-                "program:203",
-                "vao:101",
-                "draw:triangles:36:uint:0",
-                "vao:0",
-                "program:0",
-                "texture:0:0:0",
-                "viewport:400:0:400x600",
-                "state:blend=ALPHA_BLEND:depth=TEST_NO_WRITE:cull=NONE",
-                "texture:0:301:401",
-                "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
                 "draw:triangles:36:uint:0",

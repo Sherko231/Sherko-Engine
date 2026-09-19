@@ -331,6 +331,34 @@ class IndexedStaticMeshPipelineTest {
     }
 
     @Test
+    void unsupportedDefaultFramebufferEncodingFailsBeforeFragmentOrProgramCreation() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        draw.defaultFramebufferEncoding = 0x7fffffff;
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> IndexedStaticMeshPipeline.create(
+                        guard,
+                        registry,
+                        resources,
+                        draw,
+                        new FakeReflectionBackend(),
+                        "vertex",
+                        "#version 460 core\nvoid main() {}"));
+
+        registry.assertNoOpenResources();
+        assertEquals(1, resources.deletedShaders);
+        assertEquals(0, resources.deletedPrograms);
+        assertEquals(1, resources.deletedTextures);
+        assertEquals(1, resources.deletedSamplers);
+        assertEquals(5, resources.deletedBuffers);
+        assertEquals(1, resources.deletedVertexArrays);
+    }
+
+    @Test
     void linearDefaultFramebufferUsesSingleManualSrgbEncode() {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();

@@ -10,7 +10,7 @@ val publicApiTest by sourceSets.creating {
 
 val visualDemo by sourceSets.creating {
     java.srcDir("src/visualDemo/java")
-    compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+    compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
     runtimeClasspath += output + sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
 }
 

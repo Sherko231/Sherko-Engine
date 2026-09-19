@@ -117,6 +117,8 @@ The author's second pass is self-review, not independent review. If independent 
 
 Task completion does not establish phase completion. Follow the phase verification procedure in `docs/BUILD_AND_VERIFY.md`: demonstrate the existing backlog exit gate through the relevant integrated runtime/test path, record evidence, and review the next phase before materializing its executable Issues. Use a small integration scenario within an authorized task when its behavior becomes testable; do not add future systems merely to create a demo. Keep the backlog's numeric thresholds, scope, and native evidence limits unchanged unless a separate Issue explicitly authorizes changing them.
 
+Inserted inter-phase gates in `ROADMAP.md` / `docs/roadmap/TECHNICAL_BACKLOG.md` are mandatory ordering constraints. In particular, after Phase 5, complete **Phase 5R — Architecture & Refactor Hardening** and record its exit PASS before materializing or implementing P6-T01. Do not skip P5R because Phase 6 tasks already exist in the backlog.
+
 A phase exit, release gate, native soak, protocol evidence task, or other Issue may explicitly require stronger exact-merge verification than the ordinary lightweight `master` verifier. That stronger requirement remains authoritative for that specific task and should be invoked deliberately, usually through the task-specific command or `workflow_dispatch` full CI.
 
 ## Stop conditions

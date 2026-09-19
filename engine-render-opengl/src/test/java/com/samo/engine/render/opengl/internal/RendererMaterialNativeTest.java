@@ -33,7 +33,7 @@ class RendererMaterialNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T09_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final int BASELINE_SRGB_BYTE = 128;
+    private static final int BASELINE_SRGB_BYTE = 98;
     private static final int BASELINE_TOLERANCE = 8;
     private static final Path REPORT_PATH =
             Path.of("build", "reports", "p5", "p5-t09-materials.txt");
@@ -115,7 +115,7 @@ class RendererMaterialNativeTest {
                 for (int channel = 0; channel < 3; channel++) {
                     assertTrue(
                             Math.abs(baseline[channel] - BASELINE_SRGB_BYTE) <= BASELINE_TOLERANCE,
-                            "Baseline material must preserve P5-T08 gray; rgb="
+                            "Baseline material must preserve neutral gray after P5-T13 lighting; rgb="
                                     + baseline[0] + "," + baseline[1] + "," + baseline[2]);
                 }
                 assertTrue(
@@ -234,7 +234,7 @@ class RendererMaterialNativeTest {
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=two internal material values drive shader/scalar/blend/depth/cull state for the same owned mesh; no public material API, asset pipeline, lighting, submission packet, or performance claim"));
+                "evidence.scope=two internal material values drive shader/scalar/blend/depth/cull state for the same owned mesh under the accepted fixed P5-T13 directional light; no public material/light API, asset pipeline, submission resource identity, or performance claim"));
     }
 
     private static String rgb(int[] pixel) {

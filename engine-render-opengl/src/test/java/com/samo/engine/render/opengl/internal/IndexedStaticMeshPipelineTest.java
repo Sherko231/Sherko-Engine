@@ -276,7 +276,7 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(frame);
 
-        assertEquals(4, resources.uploads.size());
+        assertEquals(5, resources.uploads.size());
         assertEquals(
                 2 * DebugLineVertexPacker.VERTEX_STRIDE_BYTES,
                 resources.uploads.get(3).bytes().length);
@@ -463,14 +463,11 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(
                 new RenderCullingCounters(2, 0, 2, 0),
                 pipeline.lastCullingCounters());
-        assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("draw:")));
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:3:uint:0")));
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));
-        assertEquals(List.of(
-                "viewport:0:0:800x600",
-                "srgb:true",
-                "clear:true",
-                "viewport:0:0:800x600",
-                "srgb:false"), draw.trace);
+        assertTrue(draw.trace.contains("depth-clear"));
+        assertTrue(draw.trace.contains("view-model-state"));
+        assertTrue(draw.trace.contains("draw:view-model:6"));
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -579,6 +576,16 @@ class IndexedStaticMeshPipelineTest {
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
+                "viewport:0:0:800x600",
+                "depth-clear",
+                "view-model-state",
+                "ubo:0:18",
+                "program:205",
+                "vao:103",
+                "draw:view-model:6",
+                "vao:0",
+                "program:0",
+                "ubo:0:13",
                 "viewport:0:0:800x600",
                 "srgb:false"), draw.trace);
 
@@ -827,6 +834,11 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
+        public void configureViewModelAttributes(int vertexArray, int vertexBuffer) {
+            trace.add("view-model-position:" + vertexArray + ":" + vertexBuffer);
+        }
+
+        @Override
         public void bindElementBuffer(int vertexArray, int indexBuffer) {
             trace.add("element:" + vertexArray + ":" + indexBuffer);
         }
@@ -851,6 +863,16 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void applyDebugLineState() {
             trace.add("debug-state");
+        }
+
+        @Override
+        public void clearDepthOnly() {
+            trace.add("depth-clear");
+        }
+
+        @Override
+        public void applyViewModelState() {
+            trace.add("view-model-state");
         }
 
         @Override
@@ -920,6 +942,14 @@ class IndexedStaticMeshPipelineTest {
             trace.add("draw:lines:" + vertexCount);
             if (debugDrawFailure != null) {
                 throw debugDrawFailure;
+            }
+        }
+
+        @Override
+        public void drawViewModelTriangles(int vertexCount) {
+            trace.add("draw:view-model:" + vertexCount);
+            if (viewModelDrawFailure != null) {
+                throw viewModelDrawFailure;
             }
         }
 

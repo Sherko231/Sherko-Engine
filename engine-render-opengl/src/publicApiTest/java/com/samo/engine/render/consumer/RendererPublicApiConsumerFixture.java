@@ -1,10 +1,15 @@
 package com.samo.engine.render.consumer;
 
+import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.api.OpenGlRenderer;
 import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
+import com.samo.engine.render.api.RenderLocalLight;
+import com.samo.engine.render.api.RenderPointLight;
+import com.samo.engine.render.api.RenderSpotLight;
+import java.util.List;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -17,8 +22,27 @@ final class RendererPublicApiConsumerFixture {
             NativeResourceRegistry nativeResources,
             Matrix4fc view,
             Matrix4fc projection) {
-        RenderFramePacket frame = new RenderFramePacket(view, projection, 1280, 720);
-        try (OpenGlRenderer renderer = OpenGlRenderer.create(threadGuard, nativeResources)) {
+        RenderLocalLight point =
+                new RenderPointLight(0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.25f, 0.5f, 4.0f);
+        RenderLocalLight spot = new RenderSpotLight(
+                0.0f,
+                0.0f,
+                1.0f,
+                0.0f,
+                0.0f,
+                -1.0f,
+                0.25f,
+                0.5f,
+                1.0f,
+                0.5f,
+                5.0f,
+                0.2f,
+                0.5f);
+        RenderFramePacket frame =
+                new RenderFramePacket(view, projection, 1280, 720, List.of(point, spot));
+        EngineLogger logger = new EngineLogger(event -> { });
+        try (OpenGlRenderer renderer =
+                OpenGlRenderer.create(threadGuard, nativeResources, logger, 4)) {
             renderer.render(frame);
             RenderCullingCounters counters = renderer.lastCullingCounters();
             counters.submittedDraws();

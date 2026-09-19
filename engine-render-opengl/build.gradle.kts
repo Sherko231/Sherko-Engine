@@ -60,8 +60,15 @@ val verifyPublicApiArtifact by tasks.registering {
 
         ZipFile(apiArtifact).use { archive ->
             val entries = archive.entries().asSequence().map { it.name }.toList()
-            check("com/samo/engine/render/api/OpenGlRenderer.class" in entries) {
-                "Renderer API artifact must contain OpenGlRenderer"
+            val requiredPublicClasses = listOf(
+                "com/samo/engine/render/api/OpenGlRenderer.class",
+                "com/samo/engine/render/api/RenderFramePacket.class",
+                "com/samo/engine/render/api/RenderLocalLight.class",
+                "com/samo/engine/render/api/RenderPointLight.class",
+                "com/samo/engine/render/api/RenderSpotLight.class"
+            )
+            check(requiredPublicClasses.all(entries::contains)) {
+                "Renderer API artifact must contain the supported renderer and local-light API classes"
             }
             check(entries.none { it.startsWith("com/samo/engine/render/opengl/internal/") }) {
                 "Renderer API artifact must not expose internal renderer implementation classes"
@@ -70,8 +77,10 @@ val verifyPublicApiArtifact by tasks.registering {
 
         ZipFile(runtimeArtifact).use { archive ->
             val entries = archive.entries().asSequence().map { it.name }.toList()
-            check("com/samo/engine/render/api/OpenGlRenderer.class" in entries) {
-                "Renderer runtime artifact must contain OpenGlRenderer"
+            check("com/samo/engine/render/api/OpenGlRenderer.class" in entries
+                    && "com/samo/engine/render/api/RenderPointLight.class" in entries
+                    && "com/samo/engine/render/api/RenderSpotLight.class" in entries) {
+                "Renderer runtime artifact must contain the supported renderer/local-light API"
             }
             check("com/samo/engine/render/opengl/internal/IndexedStaticMeshPipeline.class" in entries) {
                 "Renderer runtime artifact must retain the indexed-mesh implementation"

@@ -10,6 +10,8 @@ import com.samo.engine.platform.api.GlfwWindow;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
+import com.samo.engine.render.api.RenderLocalLight;
+import com.samo.engine.render.api.RenderPointLight;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -41,12 +43,13 @@ class IndexedStaticMeshPipelineTest {
                 "vertex",
                 "fragment");
 
-        assertEquals(List.of(72L, 12L, 128L, 16L), resources.allocations);
+        assertEquals(List.of(72L, 12L, 128L, 16L, 528L), resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
                 "element:101:12",
                 "ubo:0:13",
-                "ubo:1:14"), draw.trace);
+                "ubo:1:14",
+                "ubo:2:15"), draw.trace);
         assertEquals(2, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
@@ -63,9 +66,13 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
-        assertEquals(2, resources.uploads.size());
+        assertEquals(3, resources.uploads.size());
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
+        assertEquals(LocalLightUniformBlock.SIZE_BYTES, resources.uploads.get(2).bytes().length);
+        ByteBuffer localLights = ByteBuffer.wrap(resources.uploads.get(2).bytes())
+                .order(ByteOrder.nativeOrder());
+        assertEquals(0, localLights.getInt(LocalLightUniformBlock.META_OFFSET_BYTES));
         assertEquals(
                 new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f),
                 draw.lastDirectionalLight);
@@ -99,12 +106,119 @@ class IndexedStaticMeshPipelineTest {
         pipeline.close();
         pipeline.close();
         registry.assertNoOpenResources();
-        assertEquals(4, resources.deletedBuffers);
+        assertEquals(5, resources.deletedBuffers);
         assertEquals(1, resources.deletedVertexArrays);
         assertEquals(2, resources.deletedShaders);
         assertEquals(1, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
+    }
+
+    @Test
+    void overMaxPacketWarnsOnceAndUploadsOnlyFirstConfiguredLights() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        List<EngineLogger.Event> events = new ArrayList<>();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                new EngineLogger(events::add),
+                2,
+                "vertex",
+                "fragment");
+        resources.uploads.clear();
+        draw.trace.clear();
+
+        RenderLocalLight first =
+                new RenderPointLight(1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f, 10.0f);
+        RenderLocalLight second =
+                new RenderPointLight(2.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.5f, 10.0f);
+        RenderLocalLight third =
+                new RenderPointLight(3.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 10.0f);
+        RenderFramePacket frame = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(first, second, third));
+
+        pipeline.render(frame);
+
+        assertEquals(1, events.size());
+        assertEquals(EngineLogger.Level.WARN, events.getFirst().level());
+        assertEquals(
+                "Local light limit exceeded: submitted=3 accepted=2 dropped=1 configuredMax=2",
+                events.getFirst().message());
+        ByteBuffer packed = ByteBuffer.wrap(resources.uploads.get(2).bytes())
+                .order(ByteOrder.nativeOrder());
+        assertEquals(2, packed.getInt(LocalLightUniformBlock.META_OFFSET_BYTES));
+        assertEquals(
+                1.0f,
+                packed.getFloat(LocalLightUniformBlock.POSITION_RANGE_OFFSET_BYTES));
+        assertEquals(
+                2.0f,
+                packed.getFloat(
+                        LocalLightUniformBlock.POSITION_RANGE_OFFSET_BYTES
+                                + 4 * Float.BYTES));
+        assertEquals(
+                0.0f,
+                packed.getFloat(
+                        LocalLightUniformBlock.POSITION_RANGE_OFFSET_BYTES
+                                + 2 * 4 * Float.BYTES));
+        assertEquals(new RenderCullingCounters(2, 2, 0, 2), pipeline.lastCullingCounters());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void overflowLoggerFailureHappensBeforeUploadOrDrawMutation() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        EngineLogger failingLogger = new EngineLogger(event -> {
+            throw new IllegalStateException("fixture logger failure");
+        });
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                failingLogger,
+                1,
+                "vertex",
+                "fragment");
+        resources.uploads.clear();
+        draw.trace.clear();
+
+        RenderFramePacket frame = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(
+                        new RenderPointLight(
+                                0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 10.0f),
+                        new RenderPointLight(
+                                1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 10.0f)));
+
+        IllegalStateException failure =
+                assertThrows(IllegalStateException.class, () -> pipeline.render(frame));
+
+        assertEquals("fixture logger failure", failure.getMessage());
+        assertTrue(resources.uploads.isEmpty());
+        assertTrue(draw.trace.isEmpty());
+        assertEquals(RenderCullingCounters.EMPTY, pipeline.lastCullingCounters());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
     }
 
     @Test
@@ -455,7 +569,8 @@ class IndexedStaticMeshPipelineTest {
     private static final class FakeReflectionBackend implements OpenGlUniformBlockReflectionBackend {
         private final Map<String, Integer> indices = Map.of(
                 CameraUniformBlock.GLSL_BLOCK_NAME, 0,
-                PerFrameUniformBlock.GLSL_BLOCK_NAME, 1);
+                PerFrameUniformBlock.GLSL_BLOCK_NAME, 1,
+                LocalLightUniformBlock.GLSL_BLOCK_NAME, 2);
 
         @Override
         public int uniformBlockIndex(int programHandle, String blockName) {
@@ -464,12 +579,22 @@ class IndexedStaticMeshPipelineTest {
 
         @Override
         public int uniformBlockDataSize(int programHandle, int blockIndex) {
-            return blockIndex == 0 ? CameraUniformBlock.SIZE_BYTES : PerFrameUniformBlock.SIZE_BYTES;
+            return switch (blockIndex) {
+                case 0 -> CameraUniformBlock.SIZE_BYTES;
+                case 1 -> PerFrameUniformBlock.SIZE_BYTES;
+                case 2 -> LocalLightUniformBlock.SIZE_BYTES;
+                default -> -1;
+            };
         }
 
         @Override
         public int uniformBlockBinding(int programHandle, int blockIndex) {
-            return blockIndex == 0 ? CameraUniformBlock.BINDING : PerFrameUniformBlock.BINDING;
+            return switch (blockIndex) {
+                case 0 -> CameraUniformBlock.BINDING;
+                case 1 -> PerFrameUniformBlock.BINDING;
+                case 2 -> LocalLightUniformBlock.BINDING;
+                default -> -1;
+            };
         }
     }
 

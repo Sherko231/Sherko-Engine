@@ -23,12 +23,16 @@ import com.samo.engine.platform.api.WindowSizeListener;
 import com.samo.engine.render.api.OpenGlRenderer;
 import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
+import com.samo.engine.render.api.RenderLocalLight;
+import com.samo.engine.render.api.RenderPointLight;
+import com.samo.engine.render.api.RenderSpotLight;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -97,7 +101,7 @@ public final class SandboxMain {
             window.initialize();
             window.start();
             started = true;
-            renderer = OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources);
+            renderer = OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources, logger, 4);
             runSandbox(
                     window,
                     renderer,
@@ -147,6 +151,7 @@ public final class SandboxMain {
                 new Vector3f(0.0f, 1.0f, 0.0f),
                 new Matrix4f());
         Matrix4f projection = new Matrix4f();
+        List<RenderLocalLight> localLights = sandboxLocalLights();
 
         clock.sampleElapsedNanos();
         while (!exitRequested) {
@@ -231,7 +236,8 @@ public final class SandboxMain {
                         view,
                         projection,
                         framebufferSize.width(),
-                        framebufferSize.height());
+                        framebufferSize.height(),
+                        localLights);
                 renderer.render(renderFrame);
                 window.present();
             }
@@ -292,6 +298,33 @@ public final class SandboxMain {
             }
         }
         log(logger, EngineLogger.Level.INFO, "Sandbox exit requested by Ctrl+Q", cumulativeTicks);
+    }
+
+    private static List<RenderLocalLight> sandboxLocalLights() {
+        RenderPointLight point = new RenderPointLight(
+                0.40f,
+                0.30f,
+                1.20f,
+                1.0f,
+                0.45f,
+                0.20f,
+                0.35f,
+                4.0f);
+        RenderSpotLight spot = new RenderSpotLight(
+                -0.40f,
+                0.20f,
+                1.50f,
+                0.40f,
+                -0.20f,
+                -1.50f,
+                0.20f,
+                0.45f,
+                1.0f,
+                0.30f,
+                5.0f,
+                0.25f,
+                0.60f);
+        return List.of(point, spot);
     }
 
     private static int indexOfSensitivity(double sensitivity) {
@@ -413,6 +446,7 @@ public final class SandboxMain {
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
         System.out.println("The production renderer draws the same indexed mesh with two internal reference materials.");
+        System.out.println("The scene includes one public point light and one public spot light plus the fixed directional light.");
         System.out.println();
         System.out.println("Owner controls:");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");

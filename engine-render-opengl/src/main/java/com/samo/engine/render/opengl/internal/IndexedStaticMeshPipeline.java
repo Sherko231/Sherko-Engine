@@ -1,11 +1,13 @@
 package com.samo.engine.render.opengl.internal;
 
 import com.samo.engine.core.api.Aabb3f;
+import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.Frustum3f;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
+import com.samo.engine.render.api.RenderLocalLight;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlBuffer indexBuffer;
     private final OpenGlBuffer cameraBuffer;
     private final OpenGlBuffer perFrameBuffer;
+    private final OpenGlBuffer localLightBuffer;
     private final OpenGlTexture referenceTexture;
     private final OpenGlSampler referenceSampler;
     private final OpenGlShader vertexShader;
@@ -47,10 +50,13 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final boolean hardwareFramebufferSrgb;
     private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
     private final DrawSubmissionSorter submissionSorter = new DrawSubmissionSorter();
+    private final LocalLightSelection localLightSelection;
     private final ByteBuffer cameraBytes =
             ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
             ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer localLightBytes =
+            ByteBuffer.allocateDirect(LocalLightUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final Matrix4f submittedView = new Matrix4f();
     private final Matrix4f submittedProjection = new Matrix4f();
     private RenderCullingCounters lastCullingCounters = RenderCullingCounters.EMPTY;
@@ -65,6 +71,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlBuffer indexBuffer,
             OpenGlBuffer cameraBuffer,
             OpenGlBuffer perFrameBuffer,
+            OpenGlBuffer localLightBuffer,
             OpenGlTexture referenceTexture,
             OpenGlSampler referenceSampler,
             OpenGlShader vertexShader,
@@ -72,7 +79,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlProgram program,
             RendererMaterial baselineMaterial,
             RendererMaterial tintedMaterial,
-            boolean hardwareFramebufferSrgb) {
+            boolean hardwareFramebufferSrgb,
+            EngineLogger logger,
+            int maxLocalLights) {
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -81,6 +90,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.indexBuffer = indexBuffer;
         this.cameraBuffer = cameraBuffer;
         this.perFrameBuffer = perFrameBuffer;
+        this.localLightBuffer = localLightBuffer;
         this.referenceTexture = referenceTexture;
         this.referenceSampler = referenceSampler;
         this.vertexShader = vertexShader;
@@ -89,11 +99,28 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.baselineMaterial = baselineMaterial;
         this.tintedMaterial = tintedMaterial;
         this.hardwareFramebufferSrgb = hardwareFramebufferSrgb;
+        this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
     }
 
     public static IndexedStaticMeshPipeline createProduction(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
+            String vertexSource,
+            String fragmentSource) {
+        return createProduction(
+                threadGuard,
+                registry,
+                new EngineLogger(event -> { }),
+                LocalLightSelection.SHADER_CAPACITY,
+                vertexSource,
+                fragmentSource);
+    }
+
+    public static IndexedStaticMeshPipeline createProduction(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry registry,
+            EngineLogger logger,
+            int maxLocalLights,
             String vertexSource,
             String fragmentSource) {
         return create(
@@ -102,6 +129,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 new LwjglOpenGlResourceBackend(),
                 new LwjglOpenGlDrawBackend(),
                 new LwjglOpenGlUniformBlockReflectionBackend(),
+                logger,
+                maxLocalLights,
                 vertexSource,
                 fragmentSource);
     }
@@ -114,12 +143,39 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlUniformBlockReflectionBackend reflectionBackend,
             String vertexSource,
             String fragmentSource) {
+        return create(
+                threadGuard,
+                registry,
+                resourceBackend,
+                drawBackend,
+                reflectionBackend,
+                new EngineLogger(event -> { }),
+                LocalLightSelection.SHADER_CAPACITY,
+                vertexSource,
+                fragmentSource);
+    }
+
+    static IndexedStaticMeshPipeline create(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend resourceBackend,
+            OpenGlDrawBackend drawBackend,
+            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            EngineLogger logger,
+            int maxLocalLights,
+            String vertexSource,
+            String fragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlResourceBackend gl = Objects.requireNonNull(resourceBackend, "resourceBackend");
         OpenGlDrawBackend draw = Objects.requireNonNull(drawBackend, "drawBackend");
         OpenGlUniformBlockReflectionBackend reflection =
                 Objects.requireNonNull(reflectionBackend, "reflectionBackend");
+        EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
+        if (maxLocalLights < 1 || maxLocalLights > LocalLightSelection.SHADER_CAPACITY) {
+            throw new IllegalArgumentException(
+                    "maxLocalLights must be within [1," + LocalLightSelection.SHADER_CAPACITY + "]");
+        }
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");
         guard.assertOwnerThread();
@@ -129,6 +185,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         OpenGlBuffer indices = null;
         OpenGlBuffer camera = null;
         OpenGlBuffer perFrame = null;
+        OpenGlBuffer localLights = null;
         OpenGlTexture texture = null;
         OpenGlSampler sampler = null;
         OpenGlShader vertex = null;
@@ -150,6 +207,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             perFrame = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(perFrame.handle(), PerFrameUniformBlock.SIZE_BYTES);
+
+            localLights = OpenGlBuffer.create(guard, resources, gl);
+            gl.allocateDynamicBufferStorage(localLights.handle(), LocalLightUniformBlock.SIZE_BYTES);
 
             texture = OpenGlTexture.createRgba8(
                     guard,
@@ -200,6 +260,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             draw.bindElementBuffer(vao.handle(), indices.handle());
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
             draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
+            draw.bindUniformBuffer(LocalLightUniformBlock.BINDING, localLights.handle());
 
             MaterialTextureBinding referenceBinding =
                     new MaterialTextureBinding(0, texture.handle(), sampler.handle());
@@ -227,6 +288,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     indices,
                     camera,
                     perFrame,
+                    localLights,
                     texture,
                     sampler,
                     vertex,
@@ -234,13 +296,16 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     linkedProgram,
                     baselineMaterial,
                     tintedMaterial,
-                    hardwareSrgb);
+                    hardwareSrgb,
+                    engineLogger,
+                    maxLocalLights);
         } catch (RuntimeException | Error failure) {
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);
             suppressClose(failure, vertex);
             suppressClose(failure, sampler);
             suppressClose(failure, texture);
+            suppressClose(failure, localLights);
             suppressClose(failure, perFrame);
             suppressClose(failure, camera);
             suppressClose(failure, indices);
@@ -254,13 +319,15 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         threadGuard.assertOwnerThread();
         requireOpen();
         RenderFramePacket snapshot = Objects.requireNonNull(frame, "frame");
+        List<RenderLocalLight> selectedLights = localLightSelection.select(snapshot.localLights());
         snapshot.copyViewTo(submittedView);
         snapshot.copyProjectionTo(submittedProjection);
         renderSnapshot(
                 submittedView,
                 submittedProjection,
                 snapshot.framebufferWidth(),
-                snapshot.framebufferHeight());
+                snapshot.framebufferHeight(),
+                selectedLights);
     }
 
     public void render(
@@ -275,7 +342,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             Matrix4fc viewMatrix,
             Matrix4fc projectionMatrix,
             int framebufferWidth,
-            int framebufferHeight) {
+            int framebufferHeight,
+            List<RenderLocalLight> localLights) {
         Frustum3f frustum = ViewFrustumExtractor.extract(viewMatrix, projectionMatrix);
 
         cameraBytes.clear();
@@ -287,6 +355,11 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         PerFrameUniformBlock.write(framebufferWidth, framebufferHeight, perFrameBytes);
         perFrameBytes.flip();
         resourceBackend.uploadBufferSubData(perFrameBuffer.handle(), 0L, perFrameBytes);
+
+        localLightBytes.clear();
+        LocalLightUniformBlock.write(localLights, localLightBytes);
+        localLightBytes.flip();
+        resourceBackend.uploadBufferSubData(localLightBuffer.handle(), 0L, localLightBytes);
 
         int leftWidth = (framebufferWidth + 1) / 2;
         int rightWidth = framebufferWidth / 2;
@@ -431,6 +504,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         closeInto(failures, vertexShader);
         closeInto(failures, referenceSampler);
         closeInto(failures, referenceTexture);
+        closeInto(failures, localLightBuffer);
         closeInto(failures, perFrameBuffer);
         closeInto(failures, cameraBuffer);
         closeInto(failures, indexBuffer);

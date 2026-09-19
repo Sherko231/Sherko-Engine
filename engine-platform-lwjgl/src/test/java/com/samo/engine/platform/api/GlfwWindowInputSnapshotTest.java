@@ -267,10 +267,10 @@ class GlfwWindowInputSnapshotTest {
         registry.assertNoOpenResources();
     }
 
-    private static final class SnapshotBackend implements GlfwWindow.Backend {
+    private static final class SnapshotBackend implements GlfwNativeBackend {
         private final List<Runnable> queuedEvents = new ArrayList<>();
-        private GlfwWindow.InputEventSink inputSink;
-        private GlfwWindow.MotionEventSink motionSink;
+        private GlfwInputEventSink inputSink;
+        private GlfwCursorPositionEventSink motionSink;
         private boolean focused = true;
         private int pollCount;
 
@@ -294,16 +294,16 @@ class GlfwWindowInputSnapshotTest {
         }
 
         @Override
-        public GlfwWindow.CallbackState installErrorCallback() {
-            return new GlfwWindow.CallbackState(new Object(), new Object());
+        public GlfwErrorCallbackRegistration installErrorCallback() {
+            return new GlfwErrorCallbackRegistration(new Object(), new Object());
         }
 
         @Override
-        public void restoreErrorCallback(GlfwWindow.CallbackState state) {
+        public void restoreErrorCallback(GlfwErrorCallbackRegistration state) {
         }
 
         @Override
-        public void freeOwnedErrorCallback(GlfwWindow.CallbackState state) {
+        public void freeOwnedErrorCallback(GlfwErrorCallbackRegistration state) {
         }
 
         @Override
@@ -360,35 +360,35 @@ class GlfwWindowInputSnapshotTest {
         }
 
         @Override
-        public GlfwWindow.SizeCallbackState installSizeCallbacks(long handle, GlfwWindow.SizeEventSink sink) {
-            return new GlfwWindow.SizeCallbackState(new Object(), new Object());
+        public GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink) {
+            return new GlfwSizeCallbackRegistration(new Object(), new Object());
         }
 
         @Override
-        public void releaseSizeCallbacks(long handle, GlfwWindow.SizeCallbackState state) {
+        public void releaseSizeCallbacks(long handle, GlfwSizeCallbackRegistration state) {
         }
 
         @Override
-        public GlfwWindow.InputCallbackState installInputCallbacks(long handle, GlfwWindow.InputEventSink sink) {
+        public GlfwInputCallbackRegistration installInputCallbacks(long handle, GlfwInputEventSink sink) {
             inputSink = sink;
-            return new GlfwWindow.InputCallbackState(new Object(), new Object(), new Object());
+            return new GlfwInputCallbackRegistration(new Object(), new Object(), new Object());
         }
 
         @Override
-        public void releaseInputCallbacks(long handle, GlfwWindow.InputCallbackState state) {
+        public void releaseInputCallbacks(long handle, GlfwInputCallbackRegistration state) {
             inputSink = null;
         }
 
         @Override
-        public GlfwWindow.MotionCallbackState installCursorPositionCallback(
+        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
                 long handle,
-                GlfwWindow.MotionEventSink sink) {
+                GlfwCursorPositionEventSink sink) {
             motionSink = sink;
-            return new GlfwWindow.MotionCallbackState(new Object());
+            return new GlfwCursorPositionCallbackRegistration(new Object());
         }
 
         @Override
-        public void releaseCursorPositionCallback(long handle, GlfwWindow.MotionCallbackState state) {
+        public void releaseCursorPositionCallback(long handle, GlfwCursorPositionCallbackRegistration state) {
             motionSink = null;
         }
 

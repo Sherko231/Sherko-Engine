@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T11 / Issue #193 — CPU frustum culling for render submissions |
+| Active executable task | None — P5-T11 / Issue #193 accepted; P5-T12 / #194 is the next planned activation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T10 / #192 are accepted. P5-T11 / #193 is active on `p5-t11-cpu-frustum-culling` against accepted P5-T10 and `master` `90fc14a22bfba9754d02b4eee9b4857cff70a603`.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T11 / #193 are accepted. P5-T12 / #194 is the next planned renderer-foundation task and must be freshly activated/refined against accepted P5-T11 before implementation.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -82,7 +82,7 @@ P5-T09 / #191 is accepted. PR #229 final head `67b14fe1dfdb5c5405530673c7deb8466
 
 P5-T10 / #192 is accepted. PR #231 final head `bb213eaca0d59df42f59388db60401382269907b` passed all five required final-candidate jobs in run #414 / `35439734052`. PR #231 merged as `7345b511983aeb7b860e090f72ca79ef87382a76`, and exact merged `master` passed Lightweight verification in run #415 / `35439972794`. D-058 adds public immutable `RenderFramePacket` snapshots for finite view/projection matrices plus positive framebuffer pixel dimensions, with defensive copies, no native-resource ownership, synchronous non-retained consumption, and no temporary public mesh/material/asset/native handle contract. The prior matrix/size render overload remains as a compatibility wrapper over the packet path. The sandbox consumes the packet API, architecture tests explicitly forbid renderer production references to world/game packages, and no project dependency, production dependency, ECS/world implementation, culling/sorting, async queue, lighting, or P6 resource identity was added.
 
-P5-T11 / #193 implementation candidate is complete on branch `p5-t11-cpu-frustum-culling` pending final PR verification. D-059 derives a world-space frustum from the accepted OpenGL `projection * view` convention, constructs the existing P4 `Plane3f`/`Frustum3f` values, and delegates visibility to inclusive `Frustum3f.intersects(Aabb3f)`. The fixed reference mesh has one immutable renderer-owned world AABB; each of the two existing material draw candidates is tested before material/draw-state mutation. Public immutable `RenderCullingCounters` expose tested/visible/culled/submitted counts from the latest successful frame, while failed renders retain the previous counters. The persistent sandbox reports those counters through its existing periodic diagnostic. No project dependency, production dependency, P5-T12 sorting, P6 resource identity, world/ECS ownership, broad phase, occlusion, or GPU culling is introduced. Final acceptance requires the normal exact-head five-job CI, merge, and exact-merge Lightweight verification.
+P5-T11 / #193 is accepted. PR #233 final head `f88b11b7c589b7a0c2e5bb175f3986996aa961b3` passed all five required final-candidate jobs in run #416 / `35440588185`. PR #233 merged as `dce15efb42f78283b4678aa2f054bc14619e1bd9`, and exact merged `master` passed Lightweight verification in run #417 / `35440823379`. D-059 derives a world-space frustum from the accepted OpenGL `projection * view` convention, constructs the existing P4 `Plane3f`/`Frustum3f` values, and delegates visibility to inclusive `Frustum3f.intersects(Aabb3f)`. The fixed reference mesh has one immutable renderer-owned world AABB; off-camera candidates are rejected before material/draw-state submission. Public immutable `RenderCullingCounters` expose tested/visible/culled/submitted counts from the latest successful frame, failed renders retain previous counters, and the persistent sandbox includes those values in its existing periodic diagnostic. No project dependency, production dependency, P5-T12 sorting, P6 resource identity, world/ECS ownership, broad phase, occlusion, or GPU culling was added.
 
 ## Open gates and blockers
 
@@ -96,4 +96,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Open the final non-draft PR for P5-T11 / Issue #193 from `p5-t11-cpu-frustum-culling`, require all five heavy jobs to pass on the exact current head/base candidate, then merge only if the tested candidate remains current. After merge, require Lightweight master verification on the exact merge SHA before closing #193. Do not start P5-T12 or add P6 resource identities, world/ECS ownership, broad-phase structures, occlusion/GPU culling, or gameplay-specific renderer coupling.
+Freshly activate/refine P5-T12 / Issue #194 against accepted P5-T11 and current `master` before implementation. P5-T12 may add only deterministic opaque/transparent draw ordering over the accepted renderer submission/culling foundations; do not pull P6 resource identities, world/ECS ownership, batching, lighting, or frame-graph work forward.

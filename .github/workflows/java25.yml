@@ -26,7 +26,7 @@ jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Build and quality gates
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +115,7 @@ jobs:
   unit-tests:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Unit tests
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -163,7 +163,7 @@ jobs:
   architecture-tests:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Architecture tests
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -181,7 +181,7 @@ jobs:
   coverage:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: JaCoCo coverage reports
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -206,7 +206,7 @@ jobs:
   windows-native-smoke:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Windows native smoke
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
     timeout-minutes: 5
     env:
       ALSOFT_DRIVERS: "null"
@@ -396,7 +396,7 @@ jobs:
   master-verify:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     name: Lightweight master verification
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4

@@ -1,5 +1,6 @@
 package com.samo.engine.render.api;
 
+import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
@@ -7,6 +8,7 @@ import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4fc;
 
@@ -63,7 +65,9 @@ public final class OpenGlRenderer implements AutoCloseable {
                 engineLogger,
                 maxLocalLights,
                 loadShader("shaders/p5/basic.vert"),
-                loadShader("shaders/p5/basic.frag")));
+                loadShader("shaders/p5/basic.frag"),
+                loadShader("shaders/p5/debug-lines.vert"),
+                loadShader("shaders/p5/debug-lines.frag")));
     }
 
     public void render(RenderFramePacket frame) {
@@ -77,6 +81,15 @@ public final class OpenGlRenderer implements AutoCloseable {
      */
     public RenderCullingCounters lastCullingCounters() {
         return pipeline.lastCullingCounters();
+    }
+
+    /**
+     * Returns the bounded text-counter snapshot from the latest successfully completed render call.
+     *
+     * <p>A failed render leaves the previously published snapshot unchanged.
+     */
+    public List<DebugTextCounter> lastDebugTextCounters() {
+        return pipeline.lastDebugTextCounters();
     }
 
     public void render(

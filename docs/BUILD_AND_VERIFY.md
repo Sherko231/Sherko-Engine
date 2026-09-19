@@ -1191,3 +1191,28 @@ Required deterministic evidence:
 - all-culled frames still restore the full framebuffer viewport and disable framebuffer-sRGB state.
 
 The ordinary five-job final-candidate CI remains the authoritative repository verification. The existing Windows native P5 regression remains applicable because the normal sandbox/reference camera keeps the committed fixed mesh visible; P5-T11 adds no new native API or required capture artifact.
+
+
+## P5-T12 deterministic draw-ordering verification
+
+P5-T12 adds no project dependency, production dependency, public renderer signature, resource identity, or native ownership change. Ordering is package-internal and runs only after accepted P5-T11 culling.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DrawSubmissionSorterTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Required deterministic evidence:
+- opaque fixtures order by logical program key, material key, mesh key, then original sequence;
+- transparent fixtures order by descending camera-space depth, then stable logical keys and sequence;
+- mixed fixtures always place opaque submissions before transparent submissions;
+- empty/singleton inputs remain deterministic;
+- source collections and material identities remain unchanged by sorting;
+- the existing controlled renderer trace still consumes the opaque baseline candidate before the transparent tinted candidate after P5-T11 culling.
+
+The ordinary five-job final-candidate CI remains authoritative. Existing Windows native P5 evidence remains applicable because P5-T12 changes only CPU ordering of the already-visible fixed scene and adds no new native API or visual content.

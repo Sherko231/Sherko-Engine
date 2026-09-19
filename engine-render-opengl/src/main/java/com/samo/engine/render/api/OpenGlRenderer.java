@@ -26,8 +26,10 @@ import org.joml.Matrix4fc;
  * counters. P5-T14 adds bounded point/spot light submission through `RenderFramePacket` with a
  * configurable maximum of 1-8 local lights per frame. P5-T16 adds bounded renderer-neutral per-frame
  * debug geometry plus latest-successful text-counter diagnostics without creating a retained debug
- * scene or font/UI renderer. This API intentionally does not expose native handles, arbitrary
- * meshes/textures/materials, world components, or asset loading.
+ * scene or font/UI renderer. P5-T17 adds one renderer-owned first-person validation fixture through
+ * an internal projection/depth-isolated stage; it does not add a public view-model submission API.
+ * This API intentionally does not expose native handles, arbitrary meshes/textures/materials, world
+ * components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;

@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.samo.engine.core.api.DebugFrame;
+import com.samo.engine.core.api.DebugLine;
+import com.samo.engine.core.api.DebugColor;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
@@ -89,6 +92,32 @@ class RenderFramePacketTest {
     }
 
     @Test
+    void carriesImmutableDebugFrameAndLegacyPathsUseEmptyDebugFrame() {
+        DebugFrame debugFrame = new DebugFrame(
+                List.of(new DebugLine(
+                        0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f,
+                        new DebugColor(0.0f, 1.0f, 0.0f))),
+                List.of());
+        RenderFramePacket packet = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                debugFrame);
+
+        assertEquals(debugFrame, packet.debugFrame());
+        assertEquals(
+                DebugFrame.EMPTY,
+                new RenderFramePacket(new Matrix4f(), new Matrix4f(), 800, 600).debugFrame());
+        assertEquals(
+                DebugFrame.EMPTY,
+                new RenderFramePacket(
+                        new Matrix4f(), new Matrix4f(), 800, 600, List.of()).debugFrame());
+    }
+
+    @Test
     void legacyConstructorProducesEmptyLocalLightList() {
         RenderFramePacket packet =
                 new RenderFramePacket(new Matrix4f(), new Matrix4f(), 800, 600);
@@ -115,6 +144,9 @@ class RenderFramePacketTest {
                         800,
                         600,
                         java.util.Arrays.asList((RenderLocalLight) null)));
+        assertThrows(
+                NullPointerException.class,
+                () -> new RenderFramePacket(valid, valid, 800, 600, List.of(), null));
 
         Matrix4f nonFinite = new Matrix4f();
         nonFinite.m00(Float.NaN);

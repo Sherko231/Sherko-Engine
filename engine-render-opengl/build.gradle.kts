@@ -14,6 +14,9 @@ val visualDemo by sourceSets.creating {
     runtimeClasspath += output + sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
 }
 
+sourceSets.test.get().compileClasspath += visualDemo.output
+sourceSets.test.get().runtimeClasspath += visualDemo.output
+
 val publicApiConsumerClasspath by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true

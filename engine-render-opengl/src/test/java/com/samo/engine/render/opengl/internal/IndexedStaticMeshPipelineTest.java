@@ -39,12 +39,13 @@ class IndexedStaticMeshPipelineTest {
                 "vertex",
                 "fragment");
 
-        assertEquals(List.of(36L, 12L, 128L, 16L), resources.allocations);
+        assertEquals(List.of(36L, 12L, 128L, 16L, 16L), resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
                 "element:101:12",
                 "ubo:0:13",
-                "ubo:1:14"), draw.trace);
+                "ubo:1:14",
+                "ubo:2:15"), draw.trace);
         assertEquals(2, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
@@ -61,9 +62,11 @@ class IndexedStaticMeshPipelineTest {
 
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
-        assertEquals(2, resources.uploads.size());
+        assertEquals(4, resources.uploads.size());
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
+        assertMaterialScalars(resources.uploads.get(2).bytes(), 1.0f, 1.0f, 1.0f, 1.0f);
+        assertMaterialScalars(resources.uploads.get(3).bytes(), 1.0f, 0.35f, 0.35f, 0.80f);
         assertEquals(List.of(
                 "viewport:0:0:800x600",
                 "srgb:true",
@@ -71,7 +74,6 @@ class IndexedStaticMeshPipelineTest {
                 "viewport:0:0:400x600",
                 "state:blend=OPAQUE:depth=TEST_WRITE:cull=BACK",
                 "texture:0:301:401",
-                "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
                 "draw:triangles:3:uint:0",
@@ -81,7 +83,6 @@ class IndexedStaticMeshPipelineTest {
                 "viewport:400:0:400x600",
                 "state:blend=ALPHA_BLEND:depth=TEST_NO_WRITE:cull=NONE",
                 "texture:0:301:401",
-                "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
                 "draw:triangles:3:uint:0",
@@ -94,7 +95,7 @@ class IndexedStaticMeshPipelineTest {
         pipeline.close();
         pipeline.close();
         registry.assertNoOpenResources();
-        assertEquals(4, resources.deletedBuffers);
+        assertEquals(5, resources.deletedBuffers);
         assertEquals(1, resources.deletedVertexArrays);
         assertEquals(2, resources.deletedShaders);
         assertEquals(1, resources.deletedPrograms);
@@ -305,6 +306,19 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(2, data.getInt());
     }
 
+    private static void assertMaterialScalars(
+            byte[] bytes,
+            float red,
+            float green,
+            float blue,
+            float alpha) {
+        ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
+        assertEquals(red, data.getFloat());
+        assertEquals(green, data.getFloat());
+        assertEquals(blue, data.getFloat());
+        assertEquals(alpha, data.getFloat());
+    }
+
     private static OpenGlThreadGuard boundGuard() {
         GlfwWindow window = new GlfwWindow(
                 1,
@@ -406,15 +420,6 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void bindTextureAndSampler(int unit, int texture, int sampler) {
             trace.add("texture:" + unit + ":" + texture + ":" + sampler);
-        }
-
-        @Override
-        public void setMaterialScalars(int program, MaterialScalars scalars) {
-            trace.add("scalars:" + program + ":"
-                    + scalars.redMultiplier() + ","
-                    + scalars.greenMultiplier() + ","
-                    + scalars.blueMultiplier() + ","
-                    + scalars.alphaMultiplier());
         }
 
         @Override

@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
-import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL45;
 
 final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
@@ -97,17 +96,6 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     public void bindTextureAndSampler(int unit, int texture, int sampler) {
         GL45.glBindTextureUnit(unit, texture);
         org.lwjgl.opengl.GL33.glBindSampler(unit, sampler);
-    }
-
-    @Override
-    public void setMaterialScalars(int program, MaterialScalars scalars) {
-        GL41.glProgramUniform4f(
-                program,
-                0,
-                scalars.redMultiplier(),
-                scalars.greenMultiplier(),
-                scalars.blueMultiplier(),
-                scalars.alphaMultiplier());
     }
 
     @Override

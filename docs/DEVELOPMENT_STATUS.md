@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T18 / #251 are accepted. Phase 5 exit review #250 passed on merged `master` `96dcd56ac56a3a968b789163e440c7684afbc44d`; Phase 6 may now be materialized/refined, but no Phase 6 task is activated by this checkpoint.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T18 / #251 are accepted. Phase 5 exit review #250 passed on merged `master` `96dcd56ac56a3a968b789163e440c7684afbc44d`; the repository now proceeds through mandatory Phase 5R hardening before any Phase 6 task may be materialized.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -102,7 +102,7 @@ P5-T17 / #199 is accepted. Initial candidate run #431 / `35455023387` was reject
 
 Phase 5 is **complete**. P5-T18 / #251 final candidate `8e61764fda7cd845dc86062ab1d3000067ddf8c5` passed all five required PR jobs in run #441 / `35460986757`, including retained hosted-Windows artifact `p5-t18-phase5-exit` / `10589069189`. PR #253 merged as `96dcd56ac56a3a968b789163e440c7684afbc44d`, and exact-merge Lightweight verification passed in run #442 / `35461897536`.
 
-Rerun #250 records PASS for the authoritative gate: the integrated renderer/sandbox now demonstrates a mapped non-uniform sRGB textured room, real depth/occlusion, owner-controlled rendered camera movement/look, the accepted directional light, correct sRGB/gamma presentation, P5-T16 debug geometry, and P5-T17 view-model coexistence without gameplay/world/ECS/physics ownership. P6-T01 may now be freshly materialized/refined, but no Phase 6 implementation is active yet.
+Rerun #250 records PASS for the authoritative gate: the integrated renderer/sandbox now demonstrates a mapped non-uniform sRGB textured room, real depth/occlusion, owner-controlled rendered camera movement/look, the accepted directional light, correct sRGB/gamma presentation, P5-T16 debug geometry, and P5-T17 view-model coexistence without gameplay/world/ECS/physics ownership. That PASS completes Phase 5; it no longer authorizes direct P6 activation because Phase 5R is now the mandatory intervening gate.
 
 ## Open gates and blockers
 

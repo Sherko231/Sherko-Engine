@@ -36,7 +36,7 @@ The current M2 focus is now **Phase 5R — Architecture & Refactor Hardening**. 
 
 `game-sandbox` is a persistent cumulative playground rather than a disposable feature demo. Capabilities that are meaningfully usable through already-authorized public production APIs should be integrated into that same sandbox experience as they land; features that cannot yet be exposed honestly remain out until their required public boundary exists.
 
-Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence. They do not block Phase 5 renderer-foundation work, but they still limit the claims they were created to prove.
+Phase 0 follow-up gates remain separate: P0-T09A / #42 for end-to-end SteamNetworkingSockets, P0-T13 / #43 for sustained native stability, and P0-T14 / #44 for repeated native lifecycle evidence. They do not block Phase 5R refactor hardening or later Phase 6 asset-pipeline planning, but they still limit the claims they were created to prove.
 
 ## Default contribution / CI lifecycle
 

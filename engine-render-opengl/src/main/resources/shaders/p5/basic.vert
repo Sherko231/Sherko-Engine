@@ -10,8 +10,12 @@ layout(std140, binding = 1) uniform PerFrameBlock {
 };
 
 layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+
+layout(location = 0) out vec3 worldNormal;
 
 void main() {
+    worldNormal = normal;
     gl_Position = projection * view * vec4(position, 1.0);
     gl_PointSize = max(1.0, framebufferSizeAndInverse.x * framebufferSizeAndInverse.z);
 }

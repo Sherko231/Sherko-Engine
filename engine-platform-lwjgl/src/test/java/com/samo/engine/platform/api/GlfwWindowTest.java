@@ -927,7 +927,7 @@ class GlfwWindowTest {
         }
     }
 
-    private static final class FakeBackend implements GlfwWindow.Backend {
+    private static final class FakeBackend implements GlfwNativeBackend {
         private final List<String> trace = new ArrayList<>();
         private final List<Runnable> queuedEvents = new ArrayList<>();
         private final List<RuntimeException> transitionFailures = new ArrayList<>();
@@ -946,8 +946,8 @@ class GlfwWindowTest {
         private RuntimeException sizeInstallFailure;
         private RuntimeException sizeReleaseFailure;
         private RuntimeException hideFailure;
-        private GlfwWindow.SizeEventSink sizeEventSink;
-        private GlfwWindow.DebugEventSink debugEventSink;
+        private GlfwSizeEventSink sizeEventSink;
+        private OpenGlDebugEventSink debugEventSink;
         private boolean debugContext = true;
         private int debugInstallCount;
         private int debugReleaseCount;
@@ -973,18 +973,18 @@ class GlfwWindowTest {
         }
 
         @Override
-        public GlfwWindow.CallbackState installErrorCallback() {
+        public GlfwErrorCallbackRegistration installErrorCallback() {
             trace.add("callback-install");
-            return new GlfwWindow.CallbackState(new Object(), new Object());
+            return new GlfwErrorCallbackRegistration(new Object(), new Object());
         }
 
         @Override
-        public void restoreErrorCallback(GlfwWindow.CallbackState state) {
+        public void restoreErrorCallback(GlfwErrorCallbackRegistration state) {
             trace.add("callback-restore");
         }
 
         @Override
-        public void freeOwnedErrorCallback(GlfwWindow.CallbackState state) {
+        public void freeOwnedErrorCallback(GlfwErrorCallbackRegistration state) {
             trace.add("callback-free");
         }
 
@@ -1059,32 +1059,32 @@ class GlfwWindowTest {
         }
 
         @Override
-        public GlfwWindow.DebugCallbackState installOpenGlDebugCallback(GlfwWindow.DebugEventSink sink) {
+        public OpenGlDebugCallbackRegistration installOpenGlDebugCallback(OpenGlDebugEventSink sink) {
             trace.add("debug-callback-install");
             debugInstallCount++;
             debugEventSink = sink;
-            return new GlfwWindow.DebugCallbackState(new Object());
+            return new OpenGlDebugCallbackRegistration(new Object());
         }
 
         @Override
-        public void releaseOpenGlDebugCallback(GlfwWindow.DebugCallbackState state) {
+        public void releaseOpenGlDebugCallback(OpenGlDebugCallbackRegistration state) {
             trace.add("debug-callback-release");
             debugReleaseCount++;
             debugEventSink = null;
         }
 
         @Override
-        public GlfwWindow.SizeCallbackState installSizeCallbacks(long handle, GlfwWindow.SizeEventSink sink) {
+        public GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink) {
             trace.add("size-callbacks-install:" + handle);
             if (sizeInstallFailure != null) {
                 throw sizeInstallFailure;
             }
             sizeEventSink = sink;
-            return new GlfwWindow.SizeCallbackState(new Object(), new Object());
+            return new GlfwSizeCallbackRegistration(new Object(), new Object());
         }
 
         @Override
-        public void releaseSizeCallbacks(long handle, GlfwWindow.SizeCallbackState state) {
+        public void releaseSizeCallbacks(long handle, GlfwSizeCallbackRegistration state) {
             trace.add("size-callbacks-release:" + handle);
             sizeReleaseCount++;
             if (sizeReleaseFailure != null) {

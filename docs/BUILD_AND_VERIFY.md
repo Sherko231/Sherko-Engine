@@ -361,6 +361,26 @@ P3-T01 also changes dependency ownership: after adding the existing LWJGL core/G
 
 CI keeps the deterministic suite in ordinary aggregate `test` with the native test skipped. The existing Windows native job enables `GlfwWindowNativeTest` exactly once, after the historical GLFW/OpenAL smoke, and uploads its JUnit XML plus `p3-t01-glfw-window.txt` as artifact `p3-t01-glfw-window`. This section records the P3-T01 evidence contract; current task merge/closure mechanics are governed by the current CI gate below.
 
+## P5R-T03 GLFW native backend decomposition verification
+
+Issue #263 refactors only the production platform native seam: public `GlfwWindow` remains the facade, while package-private `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and callback registration/sink types own the extracted backend/native plumbing.
+
+Run the complete deterministic platform suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --rerun-tasks
+```
+
+Run the architecture boundary regression:
+
+```powershell
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+```
+
+The deterministic fake-backend tests must preserve their existing scenarios/assertions; only the package-private seam names change. Repository/source review must also confirm that the public `GlfwWindow` declarations are unchanged, no extracted backend/helper is `public`, and no stale nested `GlfwWindow.Backend` or callback-seam references remain in the T03 branch.
+
+The task is non-Markdown. The exact final PR head therefore requires the normal five-job heavy CI matrix, including the existing hosted-Windows native platform regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #263 can close. These checks preserve the already accepted P3 window/input/native behavior; T03 adds no new native acceptance scenario.
+
 ## P3-T02 logical/framebuffer sizing verification
 
 Issue #85 extends the production `GlfwWindow` boundary with `WindowSizeListener` and owner-thread `pollEvents()` while keeping logical window units distinct from framebuffer pixels. It adds no dependency, renderer, fullscreen/input behavior, raw handle, or content-scale callback API.

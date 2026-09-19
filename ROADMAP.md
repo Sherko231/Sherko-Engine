@@ -93,7 +93,7 @@ Phase 5 is complete. Before any Phase 6 implementation begins, the repository mu
 
 Phase 5R exists to make the completed P1-P5 codebase easier to read, maintain, test, and scale before the asset/world layers multiply dependencies. It emphasizes responsibility-driven class decomposition, comprehensive naming review, descriptive class/method/field/package names, explicit public/internal boundaries, removal of stale compatibility/dead code where safe, and adoption of proven patterns only when they solve an observed coupling/responsibility/testability problem. Behavior, module direction, native ownership, spatial conventions, persisted formats, protocol layouts, and accepted public semantics must remain unchanged unless a bounded P5R Issue explicitly authorizes a contract change.
 
-P5R-T01 is accepted and establishes the Phase 5R naming/refactor standard and repository-wide symbol inventory. P5R-T02 audits the existing public/internal/package boundaries before implementation refactors begin; after its acceptance, the next executable work must be freshly refined from **P5R-T03**, not P6-T01. Only after the Phase 5R exit review passes may P6-T01 be materialized. Exact task definitions and acceptance criteria remain in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md).
+P5R-T01 and P5R-T02 are accepted, establishing the Phase 5R naming/refactor standard, repository-wide symbol inventory, and public/internal/package boundary audit. The next executable work must be freshly refined from **P5R-T03**, not P6-T01. Only after the Phase 5R exit review passes may P6-T01 be materialized. Exact task definitions and acceptance criteria remain in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md).
 
 ## Milestone exit outcomes
 

@@ -454,7 +454,7 @@ class IndexedStaticMeshPipelineTest {
                 600);
 
         assertEquals(
-                new RenderCullingCounters(2, 0, 2, 0),
+                new RenderCullingCounters(1, 0, 1, 0),
                 pipeline.lastCullingCounters());
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:36:uint:0")));
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));

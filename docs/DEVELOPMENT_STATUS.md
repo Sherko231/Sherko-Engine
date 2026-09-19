@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5-T09 / Issue #191 — add renderer material record and fixed render-state policy |
+| Active executable task | None — P5-T09 / Issue #191 accepted; P5-T10 / #192 is the next planned activation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T08 / #190 are accepted. P5-T09 / #191 is now the active renderer-foundation task after fresh activation against accepted P5-T08; P5-T10 / #192 remains future planned work.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T09 / #191 are accepted. P5-T10 / #192 is the next planned renderer-foundation task and must be freshly activated/refined against the accepted P5-T09 state before implementation.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -78,7 +78,7 @@ P5-T07B / #224 is accepted. PR #225 final head `5ca1140452599bb84ae8d15889db7b6d
 
 P5-T08 / #190 is accepted. PR #228 final head `a69ff3e095b1e89026a04253566c7bd67a0c2b35` passed all five required final-candidate jobs in run #407 / `35437129726`, including hosted Windows native OpenGL verification with pinned Mesa software rendering. It merged as `b1f7ee9fc84c1122912655c1a1ea89fdd319e6e5`, and exact merged `master` passed Lightweight verification in run #408 / `35437421179`. D-056 now distinguishes sRGB color storage from linear data, negotiates actual default-framebuffer encoding, and guarantees exactly one presentation encode without introducing a public texture/material API.
 
-P5-T09 / #191 implementation and handoff candidate are complete on branch `p5-t09-material-record` pending final PR verification. The candidate keeps `RendererMaterial` internal until P6 defines stable resource references, carries explicit shader/textures/scalars/blend/depth/cull data, covers every fixed blend/depth/cull mapping deterministically, and reuses the same fixed indexed mesh twice with a baseline and tinted material through the unchanged public `OpenGlRenderer.render(...)` call. The Windows native contract adds retained two-material text/PNG evidence while preserving P5-T07 and P5-T08 regressions. No project dependency, production dependency, public signature, asset format, world/gameplay coupling, P5-T10 submission contract, or lighting behavior is added. Authoring-environment Gradle commands were not executed locally because this agent has repository/API access but no checked-out Java 25 build workspace; exact-candidate GitHub CI remains required evidence.
+P5-T09 / #191 is accepted. PR #229 final head `67b14fe1dfdb5c5405530673c7deb84660b370f1` passed all five required final-candidate jobs in run #412 / `35438757871`. The retained P5-T09 native evidence records two draws of the same owned indexed mesh, baseline RGB `128,128,128`, tinted RGB `118,80,83`, restored viewport/program/VAO/framebuffer-sRGB state, and an empty native-resource registry after cleanup. PR #229 merged as `3f2937ecd5c91e24d5cbca645538f178d28a8be5`, and exact merged `master` passed Lightweight verification in run #413 / `35438962304`. D-057 keeps `RendererMaterial` internal until P6 defines stable resource references; it carries explicit shader/textures/scalars/blend/depth/cull data, covers every fixed state mapping deterministically, and renders the same mesh through baseline/tinted materials without changing the public `OpenGlRenderer` signature or adding a project dependency, production dependency, asset format, P5-T10 submission contract, lighting, or gameplay/world coupling. Offline Shaderc validation is explicitly targeted at the OpenGL SPIR-V environment rather than Shaderc's default Vulkan semantics; runtime OpenGL 4.6 compile/link remains authoritative.
 
 ## Open gates and blockers
 
@@ -92,4 +92,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Open the final non-draft PR for P5-T09 / #191 from `p5-t09-material-record`, require all five heavy jobs to pass on the exact current head/base candidate, inspect the retained P5-T09 material evidence, then merge only if the candidate remains current. After merge, require Lightweight master verification on the exact merge SHA before closing #191. Stop before P5-T10 submission packets, P6 public asset/resource handles, lighting, or public arbitrary material/texture APIs.
+Freshly activate/refine P5-T10 / Issue #192 against accepted P5-T09 and current `master` before implementation. P5-T10 may introduce only the bounded immutable per-frame render submission contract authorized by its Issue; do not pull P5-T11+ culling/sorting, P6 asset/resource handles, lighting, or gameplay-specific renderer coupling forward.

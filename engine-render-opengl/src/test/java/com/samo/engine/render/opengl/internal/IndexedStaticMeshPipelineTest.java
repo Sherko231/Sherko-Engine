@@ -48,7 +48,7 @@ class IndexedStaticMeshPipelineTest {
                 "fragment");
 
         assertEquals(
-                List.of(640L, 120L, 128L, 16L, 528L, 147456L, 144L, 128L),
+                List.of(768L, 144L, 128L, 16L, 528L, 147456L, 144L, 128L),
                 resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
@@ -99,7 +99,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
-                "draw:triangles:30:uint:0",
+                "draw:triangles:36:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -109,7 +109,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
-                "draw:triangles:30:uint:0",
+                "draw:triangles:36:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -466,7 +466,7 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(
                 new RenderCullingCounters(2, 0, 2, 0),
                 pipeline.lastCullingCounters());
-        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:30:uint:0")));
+        assertTrue(draw.trace.stream().noneMatch(entry -> entry.equals("draw:triangles:36:uint:0")));
         assertTrue(draw.trace.stream().noneMatch(entry -> entry.startsWith("state:")));
         assertTrue(draw.trace.contains("depth-clear"));
         assertTrue(draw.trace.contains("view-model-state"));
@@ -565,7 +565,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,1.0,1.0,1.0",
                 "program:203",
                 "vao:101",
-                "draw:triangles:30:uint:0",
+                "draw:triangles:36:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -575,7 +575,7 @@ class IndexedStaticMeshPipelineTest {
                 "scalars:203:1.0,0.35,0.35,0.8",
                 "program:203",
                 "vao:101",
-                "draw:triangles:30:uint:0",
+                "draw:triangles:36:uint:0",
                 "vao:0",
                 "program:0",
                 "texture:0:0:0",
@@ -734,7 +734,7 @@ class IndexedStaticMeshPipelineTest {
         assertRoomVertex(data, 2.0f, -1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f);
         assertRoomVertex(data, 2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
         assertRoomVertex(data, -2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-        assertEquals(16 * 8 * Float.BYTES, data.remaining());
+        assertEquals(20 * 8 * Float.BYTES, data.remaining());
     }
 
     private static void assertRoomVertex(
@@ -754,7 +754,7 @@ class IndexedStaticMeshPipelineTest {
 
     private static void assertIndexData(byte[] bytes) {
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-        for (int quad = 0; quad < 5; quad++) {
+        for (int quad = 0; quad < 6; quad++) {
             int base = quad * 4;
             assertEquals(base, data.getInt());
             assertEquals(base + 1, data.getInt());

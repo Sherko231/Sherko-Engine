@@ -16,12 +16,14 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 
 public final class IndexedStaticMeshPipeline implements AutoCloseable {
-    private static final int VERTEX_BYTES = 9 * Float.BYTES;
+    private static final int VERTEX_BYTES = 18 * Float.BYTES;
     private static final int INDEX_BYTES = 3 * Integer.BYTES;
     private static final int PROGRAM_KEY_REFERENCE = 0;
     private static final int MATERIAL_KEY_BASELINE = 0;
     private static final int MATERIAL_KEY_TINTED = 1;
     private static final int MESH_KEY_REFERENCE = 0;
+    private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT =
+            new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
     private static final Aabb3f REFERENCE_MESH_WORLD_BOUNDS =
             new Aabb3f(
                     new Vector3f(-0.60f, -0.50f, 0.0f),
@@ -194,7 +196,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
             UniformBlockLayoutVerifier.verify(linkedProgram.handle(), guard, reflection);
 
-            draw.configurePositionAttribute(vao.handle(), vertices.handle());
+            draw.configurePositionAndNormalAttributes(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
             draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
             draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
@@ -389,6 +391,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     textureBinding.samplerHandle());
         }
         drawBackend.setMaterialScalars(programHandle, material.scalars());
+        drawBackend.setDirectionalLight(programHandle, REFERENCE_DIRECTIONAL_LIGHT);
         drawBackend.useProgram(programHandle);
         drawBackend.bindVertexArray(vertexArray.handle());
         try {
@@ -438,10 +441,15 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
 
     private static ByteBuffer triangleVertices() {
         ByteBuffer data = ByteBuffer.allocateDirect(VERTEX_BYTES).order(ByteOrder.nativeOrder());
-        data.putFloat(-0.60f).putFloat(-0.50f).putFloat(0.0f);
-        data.putFloat(0.60f).putFloat(-0.50f).putFloat(0.0f);
-        data.putFloat(0.0f).putFloat(0.60f).putFloat(0.0f);
+        putReferenceVertex(data, -0.60f, -0.50f, 0.0f);
+        putReferenceVertex(data, 0.60f, -0.50f, 0.0f);
+        putReferenceVertex(data, 0.0f, 0.60f, 0.0f);
         return data.flip();
+    }
+
+    private static void putReferenceVertex(ByteBuffer data, float x, float y, float z) {
+        data.putFloat(x).putFloat(y).putFloat(z);
+        data.putFloat(0.0f).putFloat(0.0f).putFloat(1.0f);
     }
 
     private static ByteBuffer triangleIndices() {

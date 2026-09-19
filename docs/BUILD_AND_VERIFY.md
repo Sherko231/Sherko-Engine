@@ -1216,3 +1216,30 @@ Required deterministic evidence:
 - the existing controlled renderer trace still consumes the opaque baseline candidate before the transparent tinted candidate after P5-T11 culling.
 
 The ordinary five-job final-candidate CI remains authoritative. Existing Windows native P5 evidence remains applicable because P5-T12 changes only CPU ordering of the already-visible fixed scene and adds no new native API or visual content.
+
+## P5-T13 directional-light verification
+
+P5-T13 adds one package-internal renderer-owned unshadowed directional light. It adds no project dependency, production dependency, public renderer signature, public resource identity, or native-resource owner. The fixed light stores normalized D-041 world-space ray-travel direction, linear RGB, and bounded SDR intensity. Lighting multiplication occurs in linear space before the existing P5-T08 single presentation encode.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DirectionalLightTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Required deterministic evidence:
+- `DirectionalLightTest` independently verifies normalization and the handwritten Lambert response for front/angled/perpendicular/back-facing normals plus invalid inputs;
+- the pipeline fixture verifies the renderer uploads one fixed normalized light while preserving two-material draw ordering, culling counters, material state, and cleanup;
+- the existing P5-T08 regression now includes the known linear diffuse multiplier before exactly one sRGB presentation encode rather than assuming an unlit final pixel;
+- the existing P5-T09 regression retains its two-material/state assertions using the light-adjusted neutral baseline;
+- Windows native acceptance runs `DirectionalLightNativeTest` with `SHERKO_P5_T13_NATIVE=true`, preserves two indexed draws and state/native-resource cleanup, and retains:
+  - `engine-render-opengl/build/reports/p5/p5-t13-directional-light.txt`;
+  - `engine-render-opengl/build/reports/p5/p5-t13-directional-light.png`.
+
+The ordinary five-job exact-head PR CI matrix remains authoritative. P5-T13 acceptance additionally requires the retained Windows directional-light artifact above, then exact-merge Lightweight master verification after merge. The native capture is correctness evidence only; Mesa software rendering does not establish physical-GPU performance.
+

@@ -203,13 +203,13 @@ class IndexedStaticMeshNativeTest {
                 "capture=p5-t07-indexed-mesh.png",
                 "high.severity.debug.error=none-observed-after-poll",
                 "native.resource.registry.empty.after.cleanup=true",
-                "triangle.color=reference-gray",
+                "triangle.color=directionally-lit-reference-gray",
                 "srgb.claim=verified-separately-by-p5-t08",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=indexed production draw regression after P5-T09 two-material reference scene; material correctness is asserted separately by P5-T09; sRGB correctness remains P5-T08; no asset, lighting, world, or performance claim"));
+                "evidence.scope=indexed production draw regression after P5-T13 fixed directional-light integration; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
     }
 
     private static String environmentOr(String key, String fallback) {

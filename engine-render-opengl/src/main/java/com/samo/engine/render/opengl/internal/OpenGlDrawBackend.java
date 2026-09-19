@@ -1,7 +1,7 @@
 package com.samo.engine.render.opengl.internal;
 
 interface OpenGlDrawBackend {
-    void configurePositionAttribute(int vertexArray, int vertexBuffer);
+    void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer);
 
     void bindElementBuffer(int vertexArray, int indexBuffer);
 
@@ -20,6 +20,8 @@ interface OpenGlDrawBackend {
     void bindTextureAndSampler(int unit, int texture, int sampler);
 
     void setMaterialScalars(int program, MaterialScalars scalars);
+
+    void setDirectionalLight(int program, DirectionalLight light);
 
     void useProgram(int program);
 

@@ -29,23 +29,24 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-class RendererMaterialNativeTest {
-    private static final String ENABLE_ENV = "SHERKO_P5_T09_NATIVE";
+class DirectionalLightNativeTest {
+    private static final String ENABLE_ENV = "SHERKO_P5_T13_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final int BASELINE_SRGB_BYTE = 98;
-    private static final int BASELINE_TOLERANCE = 8;
+    private static final float EXPECTED_DIFFUSE = 0.8f * (float) (1.0 / Math.sqrt(2.0));
+    private static final int EXPECTED_BASELINE_SRGB_BYTE = 98;
+    private static final int BYTE_TOLERANCE = 8;
     private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p5", "p5-t09-materials.txt");
+            Path.of("build", "reports", "p5", "p5-t13-directional-light.txt");
     private static final Path CAPTURE_PATH =
-            Path.of("build", "reports", "p5", "p5-t09-materials.png");
+            Path.of("build", "reports", "p5", "p5-t13-directional-light.png");
 
     @Test
-    void sameMeshRendersThroughTwoMaterialValuesWithoutLeakingDrawBindings() throws Exception {
+    void shadesControlledSceneWithOneUnshadowedDirectionalLight() throws Exception {
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P5-T09 native acceptance");
+                () -> "Set " + ENABLE_ENV + "=true to run the P5-T13 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P5-T09 native acceptance targets Windows x64");
+                "P5-T13 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
         int[] framebufferSize = {WIDTH, HEIGHT};
@@ -64,7 +65,7 @@ class RendererMaterialNativeTest {
         GlfwWindow window = new GlfwWindow(
                 WIDTH,
                 HEIGHT,
-                "Sherko Engine P5-T09 Material Acceptance",
+                "Sherko Engine P5-T13 Directional Light Acceptance",
                 new EngineLogger(event -> { }),
                 registry,
                 sizeListener,
@@ -74,6 +75,8 @@ class RendererMaterialNativeTest {
         boolean stopped = false;
         boolean closed = false;
         int query = 0;
+        int[] baseline = null;
+        int[] tinted = null;
         try {
             window.initialize();
             window.start();
@@ -97,8 +100,6 @@ class RendererMaterialNativeTest {
                     100.0f,
                     new Matrix4f());
 
-            int[] baseline;
-            int[] tinted;
             try (OpenGlRenderer renderer =
                     OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 query = GL15.glGenQueries();
@@ -106,22 +107,28 @@ class RendererMaterialNativeTest {
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
                 GL15.glEndQuery(GL30.GL_PRIMITIVES_GENERATED);
 
-                int primitiveCount = GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT);
-                assertEquals(2, primitiveCount, "The same indexed reference mesh must be drawn twice");
+                assertEquals(
+                        2,
+                        GL15.glGetQueryObjecti(query, GL15.GL_QUERY_RESULT),
+                        "P5-T13 must preserve the two current indexed draws");
 
                 baseline = readPixel(framebufferWidth / 4, framebufferHeight / 2);
                 tinted = readPixel((framebufferWidth * 3) / 4, framebufferHeight / 2);
 
                 for (int channel = 0; channel < 3; channel++) {
                     assertTrue(
-                            Math.abs(baseline[channel] - BASELINE_SRGB_BYTE) <= BASELINE_TOLERANCE,
-                            "Baseline material must preserve neutral gray after P5-T13 lighting; rgb="
-                                    + baseline[0] + "," + baseline[1] + "," + baseline[2]);
+                            Math.abs(baseline[channel] - EXPECTED_BASELINE_SRGB_BYTE)
+                                    <= BYTE_TOLERANCE,
+                            "Directional light baseline mismatch: rgb="
+                                    + rgb(baseline)
+                                    + " expected="
+                                    + EXPECTED_BASELINE_SRGB_BYTE
+                                    + "±"
+                                    + BYTE_TOLERANCE);
                 }
                 assertTrue(
-                        tinted[0] - tinted[1] >= 20 && tinted[0] - tinted[2] >= 20,
-                        "Tinted material must be visibly red-biased; rgb="
-                                + tinted[0] + "," + tinted[1] + "," + tinted[2]);
+                        tinted[0] - tinted[1] >= 15 && tinted[0] - tinted[2] >= 15,
+                        "Tinted material must remain red-biased after lighting: rgb=" + rgb(tinted));
 
                 assertFalse(
                         GL11.glIsEnabled(GL30.GL_FRAMEBUFFER_SRGB),
@@ -211,30 +218,30 @@ class RendererMaterialNativeTest {
     private static void writeReport(int[] baseline, int[] tinted) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of(
-                "task=P5-T09",
+                "task=P5-T13",
                 "result=PASS",
-                "mesh.shared=indexed-reference-triangle",
-                "materials.count=2",
-                "draws.count=2",
-                "baseline.blend=OPAQUE",
-                "baseline.depth=TEST_WRITE",
-                "baseline.cull=BACK",
+                "light.type=directional-unshadowed",
+                "light.direction.semantic=world-space-ray-travel-direction",
+                "light.direction.normalized=0.0,-0.70710677,-0.70710677",
+                "light.color.linear=1.0,1.0,1.0",
+                "light.intensity=0.8",
+                "surface.normal=0.0,0.0,1.0",
+                "expected.diffuse.factor=" + EXPECTED_DIFFUSE,
+                "expected.baseline.srgb.byte=" + EXPECTED_BASELINE_SRGB_BYTE,
                 "baseline.rgb=" + rgb(baseline),
-                "tinted.blend=ALPHA_BLEND",
-                "tinted.depth=TEST_NO_WRITE",
-                "tinted.cull=NONE",
                 "tinted.rgb=" + rgb(tinted),
+                "draws.count=2",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",
                 "framebuffer.srgb.disabled.after.render=true",
-                "capture=p5-t09-materials.png",
+                "capture=p5-t13-directional-light.png",
                 "native.resource.registry.empty.after.cleanup=true",
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
                 "java.version=" + System.getProperty("java.version"),
                 "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=two internal material values drive shader/scalar/blend/depth/cull state for the same owned mesh under the accepted fixed P5-T13 directional light; no public material/light API, asset pipeline, submission resource identity, or performance claim"));
+                "evidence.scope=one fixed renderer-owned unshadowed directional light shades the current two-material reference scene in linear space before the existing P5-T08 presentation encode; no shadows, local lights, HDR, PBR, public light API, world ownership, asset pipeline, or performance claim"));
     }
 
     private static String rgb(int[] pixel) {

@@ -41,7 +41,7 @@ class IndexedStaticMeshPipelineTest {
                 "vertex",
                 "fragment");
 
-        assertEquals(List.of(36L, 12L, 128L, 16L), resources.allocations);
+        assertEquals(List.of(72L, 12L, 128L, 16L), resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
                 "element:101:12",
@@ -66,6 +66,9 @@ class IndexedStaticMeshPipelineTest {
         assertEquals(2, resources.uploads.size());
         assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
         assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
+        assertEquals(
+                new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f),
+                draw.lastDirectionalLight);
         assertEquals(List.of(
                 "viewport:0:0:800x600",
                 "srgb:true",
@@ -398,15 +401,18 @@ class IndexedStaticMeshPipelineTest {
 
     private static void assertVertexData(byte[] bytes) {
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-        assertEquals(-0.60f, data.getFloat());
-        assertEquals(-0.50f, data.getFloat());
+        assertReferenceVertex(data, -0.60f, -0.50f, 0.0f);
+        assertReferenceVertex(data, 0.60f, -0.50f, 0.0f);
+        assertReferenceVertex(data, 0.0f, 0.60f, 0.0f);
+    }
+
+    private static void assertReferenceVertex(ByteBuffer data, float x, float y, float z) {
+        assertEquals(x, data.getFloat());
+        assertEquals(y, data.getFloat());
+        assertEquals(z, data.getFloat());
         assertEquals(0.0f, data.getFloat());
-        assertEquals(0.60f, data.getFloat());
-        assertEquals(-0.50f, data.getFloat());
         assertEquals(0.0f, data.getFloat());
-        assertEquals(0.0f, data.getFloat());
-        assertEquals(0.60f, data.getFloat());
-        assertEquals(0.0f, data.getFloat());
+        assertEquals(1.0f, data.getFloat());
     }
 
     private static void assertIndexData(byte[] bytes) {
@@ -471,9 +477,10 @@ class IndexedStaticMeshPipelineTest {
         private final List<String> trace = new ArrayList<>();
         private RuntimeException drawFailure;
         private int defaultFramebufferEncoding = GL21.GL_SRGB;
+        private DirectionalLight lastDirectionalLight;
 
         @Override
-        public void configurePositionAttribute(int vertexArray, int vertexBuffer) {
+        public void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer) {
             trace.add("position:" + vertexArray + ":" + vertexBuffer);
         }
 
@@ -526,6 +533,11 @@ class IndexedStaticMeshPipelineTest {
                     + scalars.greenMultiplier() + ","
                     + scalars.blueMultiplier() + ","
                     + scalars.alphaMultiplier());
+        }
+
+        @Override
+        public void setDirectionalLight(int program, DirectionalLight light) {
+            lastDirectionalLight = light;
         }
 
         @Override

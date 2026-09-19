@@ -70,6 +70,9 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 
 `feasibility-spikes` is not a seventeenth production engine module. It is deliberately outside the locked 16-module runtime target in `ENGINE_SCOPE.md`, and no production client/server module depends on it.
 
+P5-T13 / D-061 adds exactly one renderer-owned unshadowed directional light without changing the public renderer boundary. Package-internal `DirectionalLight` stores normalized D-041 world-space ray-travel direction, linear RGB color, and bounded SDR intensity. The fixed reference vertex stream now contains +Z normals, and the P5 shader computes Lambert diffuse as `max(dot(normal, -direction), 0)` in linear space before the accepted D-056 presentation encode. The same light applies to the existing opaque baseline and transparent tinted material submissions after P5-T11 culling/P5-T12 ordering. No new native resource is owned, no project or production dependency is added, and `OpenGlRenderer` / `RenderFramePacket` remain unchanged. Public light submission, world/ECS ownership, local lights, shadows, PBR/IBL, HDR/tonemapping, and fog remain outside this bounded path.
+
+
 ## Package/API boundary contract
 
 `config/architecture/module-boundaries.properties` is the machine-readable registry for all 17 declared Gradle subprojects. Every declared subproject, including the experimental feasibility module, declares:

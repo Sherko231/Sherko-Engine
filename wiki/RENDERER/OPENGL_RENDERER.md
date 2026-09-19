@@ -94,3 +94,9 @@ The current bounded renderer does not provide:
 - raw OpenGL handles.
 
 Those remain separate roadmap tasks.
+
+## Directional lighting
+
+P5-T13 adds one fixed renderer-owned unshadowed directional light to the current reference scene. Its direction is the normalized D-041 world-space direction in which light rays travel, so the shader uses `max(dot(normal, -direction), 0)`. Light RGB and intensity are linear bounded values, and diffuse multiplication occurs before the existing P5-T08 single sRGB presentation encode.
+
+This is intentionally not a public lighting API. `OpenGlRenderer` and `RenderFramePacket` are unchanged, the current light cannot be replaced or submitted by game/world code, and there are no point/spot lights, shadows, PBR/IBL, HDR/tonemapping, fog, or world/ECS light components yet.

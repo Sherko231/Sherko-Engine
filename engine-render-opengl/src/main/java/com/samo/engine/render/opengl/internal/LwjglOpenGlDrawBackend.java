@@ -30,6 +30,26 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
+    public void configureDebugLineAttributes(int vertexArray, int vertexBuffer) {
+        int stride = 6 * Float.BYTES;
+        GL45.glVertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, 0L, stride);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 0);
+        GL45.glVertexArrayAttribFormat(vertexArray, 0, 3, GL11.GL_FLOAT, false, 0);
+        GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
+
+        GL45.glEnableVertexArrayAttrib(vertexArray, 1);
+        GL45.glVertexArrayAttribFormat(
+                vertexArray,
+                1,
+                3,
+                GL11.GL_FLOAT,
+                false,
+                3 * Float.BYTES);
+        GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
+    }
+
+    @Override
     public void bindElementBuffer(int vertexArray, int indexBuffer) {
         GL45.glVertexArrayElementBuffer(vertexArray, indexBuffer);
     }
@@ -71,6 +91,15 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         } else {
             GL11.glDisable(GL11.GL_CULL_FACE);
         }
+    }
+
+    @Override
+    public void applyDebugLineState() {
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LESS);
+        GL11.glDepthMask(false);
+        GL11.glDisable(GL11.GL_CULL_FACE);
     }
 
     @Override
@@ -149,6 +178,11 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     @Override
     public void drawIndexedTriangle() {
         GL11.glDrawElements(GL11.GL_TRIANGLES, 3, GL11.GL_UNSIGNED_INT, 0L);
+    }
+
+    @Override
+    public void drawDebugLines(int vertexCount) {
+        GL11.glDrawArrays(GL11.GL_LINES, 0, vertexCount);
     }
 
     @Override

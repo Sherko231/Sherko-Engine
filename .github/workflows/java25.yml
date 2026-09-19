@@ -526,6 +526,22 @@ jobs:
             engine-render-opengl/build/reports/p5/p5-t15-srgb-presentation.png
           if-no-files-found: error
 
+      - name: Verify P5-T16 debug geometry
+        env:
+          SHERKO_P5_T16_NATIVE: "true"
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DebugGeometryNativeTest" --rerun-tasks
+
+      - name: Upload P5-T16 debug geometry evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-t16-debug-geometry
+          path: |
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.DebugGeometryNativeTest.xml
+            engine-render-opengl/build/reports/p5/p5-t16-debug-geometry.txt
+            engine-render-opengl/build/reports/p5/p5-t16-debug-geometry.png
+          if-no-files-found: error
+
       - name: Run Jolt JNI lifecycle smoke
         run: .\gradlew.bat runJoltLifecycleSpike -PjoltSpikeCycles=1
 

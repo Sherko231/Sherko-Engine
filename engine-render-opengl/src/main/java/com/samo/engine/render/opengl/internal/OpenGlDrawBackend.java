@@ -3,6 +3,8 @@ package com.samo.engine.render.opengl.internal;
 interface OpenGlDrawBackend {
     void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer);
 
+    void configureDebugLineAttributes(int vertexArray, int vertexBuffer);
+
     void bindElementBuffer(int vertexArray, int indexBuffer);
 
     void bindUniformBuffer(int bindingIndex, int buffer);
@@ -10,6 +12,8 @@ interface OpenGlDrawBackend {
     void setViewport(int x, int y, int width, int height);
 
     void applyMaterialState(RendererMaterial material);
+
+    void applyDebugLineState();
 
     int defaultFramebufferColorEncoding();
 
@@ -28,6 +32,8 @@ interface OpenGlDrawBackend {
     void bindVertexArray(int vertexArray);
 
     void drawIndexedTriangle();
+
+    void drawDebugLines(int vertexCount);
 
     void bindDefaultVertexArray();
 

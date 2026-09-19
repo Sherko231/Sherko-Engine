@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5-T15A / Issue #243 accepted; P5-T16 / #198 is the next planned activation |
+| Active executable task | P5-T16 / Issue #198 — renderer-neutral debug geometry and text counters |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -94,6 +94,8 @@ P5-T15 / #197 is accepted. PR #241 final head `6253d883a56546e34e69a43b77b33e327
 
 P5-T15A / #243 is accepted. Owner-visible sandbox validation exposed a temporal OpenGL state leak: the final tinted material left `glDepthMask(false)`, so the next frame's depth clear was masked out and the opaque baseline triangle disappeared. PR #244 final head `4fc81c5e6769dc92faac8c90b227009678445787` restores `glDepthMask(true)` immediately before the frame depth clear and extends the retained P5-T09 native material regression to two consecutive frames. Run #426 / `35449275623` passed all five required jobs; retained artifact `10585647826` recorded `frames.rendered=2`, `second.frame.draws.count=2`, baseline RGB `98,98,98`, tinted RGB `94,64,67`, unchanged `TEST_WRITE`/`TEST_NO_WRITE` material depth policies, correct GL cleanup, and an empty native-resource registry. PR #244 merged as `6eedd7920a0566c6185174630c6d5342d7af3916`, and exact merged `master` passed Lightweight verification in run #427 / `35449670974`. No public API, dependency/module edge, material/light contract, draw-order policy, or P5-T16 behavior changed.
 
+P5-T16 / #198 is active on branch `p5-t16-debug-geometry` against accepted P5-T15/P5-T15A. The candidate adds bounded immutable debug submission values in `engine-core` (`DebugLine`, `DebugAabb`, `DebugSphere`, `DebugRay`, `DebugTextCounter`, `DebugFrame`) so lower physics/network-capable modules can produce diagnostics without importing renderer/OpenGL code. `RenderFramePacket` carries one immutable debug snapshot while preserving all accepted constructors. The renderer expands geometry into one fixed-capacity dynamic world-space line path with its own VAO/VBO/shaders/program, depth-tests without depth writes, bypasses material/lighting, and uses the accepted P5-T15 presentation encoding. Successful frames publish bounded text counters through `OpenGlRenderer.lastDebugTextCounters()`; failed frames leave prior debug/culling diagnostics unchanged. The sandbox submits all four geometry families plus tick/input counters through public production APIs only. No module edge, dependency, editor/ImGui runtime UI, font/text glyph renderer, physics/network implementation, retained debug scene, lifetime/duration system, or P5-T17 behavior is introduced. Final acceptance remains pending focused/CI verification and retained hosted-Windows P5-T16 evidence.
+
 ## Open gates and blockers
 
 | Gate | Blocks | Current evidence gap |
@@ -106,4 +108,4 @@ The P0 follow-up gates do not block Phase 5 renderer-foundation work, but their 
 
 ## Exact next action
 
-Freshly activate/refine P5-T16 / Issue #198 against accepted P5-T15/P5-T15A and current `master` before implementation. P5-T16 may add only bounded renderer-neutral debug line/AABB/sphere/ray/text-counter submission through accepted renderer foundations; do not pull editor/ImGui runtime UI, physics/network implementations, retained debug-scene ownership, unbounded debug lifetimes, P5-T17 view models, or unrelated future tasks forward.
+Complete final consistency review for P5-T16 / Issue #198 on `p5-t16-debug-geometry`, then open the final non-draft PR. Require all five exact-head jobs, including retained Windows P5-T16 debug geometry/counter evidence, before merge. Do not start P5-T17 or add editor/ImGui runtime UI, font rendering, physics/network implementations, retained debug-scene ownership, duration/lifetime semantics, unbounded debug submissions, or unrelated future work.

@@ -1,6 +1,8 @@
 package com.samo.engine.render.opengl.internal;
 
 import com.samo.engine.core.api.Aabb3f;
+import com.samo.engine.core.api.DebugFrame;
+import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.Frustum3f;
 import com.samo.engine.core.api.NativeResourceRegistry;
@@ -45,6 +47,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final OpenGlShader vertexShader;
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
+    private final DebugLineRenderer debugLineRenderer;
     private final RendererMaterial baselineMaterial;
     private final RendererMaterial tintedMaterial;
     private final PresentationMode presentationMode;
@@ -60,6 +63,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private final Matrix4f submittedView = new Matrix4f();
     private final Matrix4f submittedProjection = new Matrix4f();
     private RenderCullingCounters lastCullingCounters = RenderCullingCounters.EMPTY;
+    private List<DebugTextCounter> lastDebugTextCounters = List.of();
     private boolean closeAttempted;
 
     private IndexedStaticMeshPipeline(
@@ -77,6 +81,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlShader vertexShader,
             OpenGlShader fragmentShader,
             OpenGlProgram program,
+            DebugLineRenderer debugLineRenderer,
             RendererMaterial baselineMaterial,
             RendererMaterial tintedMaterial,
             PresentationMode presentationMode,
@@ -96,6 +101,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.program = program;
+        this.debugLineRenderer = debugLineRenderer;
         this.baselineMaterial = baselineMaterial;
         this.tintedMaterial = tintedMaterial;
         this.presentationMode = presentationMode;
@@ -106,14 +112,18 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             String vertexSource,
-            String fragmentSource) {
+            String fragmentSource,
+            String debugVertexSource,
+            String debugFragmentSource) {
         return createProduction(
                 threadGuard,
                 registry,
                 new EngineLogger(event -> { }),
                 LocalLightSelection.SHADER_CAPACITY,
                 vertexSource,
-                fragmentSource);
+                fragmentSource,
+                debugVertexSource,
+                debugFragmentSource);
     }
 
     public static IndexedStaticMeshPipeline createProduction(
@@ -122,7 +132,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             EngineLogger logger,
             int maxLocalLights,
             String vertexSource,
-            String fragmentSource) {
+            String fragmentSource,
+            String debugVertexSource,
+            String debugFragmentSource) {
         return create(
                 threadGuard,
                 registry,
@@ -132,7 +144,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 logger,
                 maxLocalLights,
                 vertexSource,
-                fragmentSource);
+                fragmentSource,
+                debugVertexSource,
+                debugFragmentSource);
     }
 
     static IndexedStaticMeshPipeline create(
@@ -152,7 +166,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 new EngineLogger(event -> { }),
                 LocalLightSelection.SHADER_CAPACITY,
                 vertexSource,
-                fragmentSource);
+                fragmentSource,
+                "#version 460 core\nvoid main() {}",
+                "#version 460 core\nvoid main() {}");
     }
 
     static IndexedStaticMeshPipeline create(
@@ -165,6 +181,32 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             int maxLocalLights,
             String vertexSource,
             String fragmentSource) {
+        return create(
+                threadGuard,
+                registry,
+                resourceBackend,
+                drawBackend,
+                reflectionBackend,
+                logger,
+                maxLocalLights,
+                vertexSource,
+                fragmentSource,
+                "#version 460 core\nvoid main() {}",
+                "#version 460 core\nvoid main() {}");
+    }
+
+    static IndexedStaticMeshPipeline create(
+            OpenGlThreadGuard threadGuard,
+            NativeResourceRegistry registry,
+            OpenGlResourceBackend resourceBackend,
+            OpenGlDrawBackend drawBackend,
+            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            EngineLogger logger,
+            int maxLocalLights,
+            String vertexSource,
+            String fragmentSource,
+            String debugVertexSource,
+            String debugFragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlResourceBackend gl = Objects.requireNonNull(resourceBackend, "resourceBackend");
@@ -178,6 +220,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         }
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");
+        String debugVertSource = Objects.requireNonNull(debugVertexSource, "debugVertexSource");
+        String debugFragSource = Objects.requireNonNull(debugFragmentSource, "debugFragmentSource");
         guard.assertOwnerThread();
 
         OpenGlVertexArray vao = null;
@@ -191,6 +235,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         OpenGlShader vertex = null;
         OpenGlShader fragment = null;
         OpenGlProgram linkedProgram = null;
+        DebugLineRenderer debugRenderer = null;
         try {
             vao = OpenGlVertexArray.create(guard, resources, gl);
 
@@ -272,6 +317,17 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     MaterialDepthMode.TEST_NO_WRITE,
                     MaterialCullMode.NONE);
 
+            debugRenderer = DebugLineRenderer.create(
+                    guard,
+                    resources,
+                    gl,
+                    draw,
+                    reflection,
+                    camera.handle(),
+                    presentationMode,
+                    debugVertSource,
+                    debugFragSource);
+
             return new IndexedStaticMeshPipeline(
                     guard,
                     gl,
@@ -287,12 +343,14 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     vertex,
                     fragment,
                     linkedProgram,
+                    debugRenderer,
                     baselineMaterial,
                     tintedMaterial,
                     presentationMode,
                     engineLogger,
                     maxLocalLights);
         } catch (RuntimeException | Error failure) {
+            suppressClose(failure, debugRenderer);
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);
             suppressClose(failure, vertex);
@@ -320,7 +378,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 submittedProjection,
                 snapshot.framebufferWidth(),
                 snapshot.framebufferHeight(),
-                selectedLights);
+                selectedLights,
+                snapshot.debugFrame());
     }
 
     public void render(
@@ -336,7 +395,8 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             Matrix4fc projectionMatrix,
             int framebufferWidth,
             int framebufferHeight,
-            List<RenderLocalLight> localLights) {
+            List<RenderLocalLight> localLights,
+            DebugFrame debugFrame) {
         Frustum3f frustum = ViewFrustumExtractor.extract(viewMatrix, projectionMatrix);
 
         cameraBytes.clear();
@@ -415,6 +475,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                         submission.viewportHeight());
                 submittedDraws++;
             }
+            debugLineRenderer.render(debugFrame, framebufferWidth, framebufferHeight);
         } finally {
             drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
             drawBackend.setFramebufferSrgbEnabled(false);
@@ -425,10 +486,15 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 visibleCandidates,
                 culledCandidates,
                 submittedDraws);
+        lastDebugTextCounters = debugFrame.textCounters();
     }
 
     public RenderCullingCounters lastCullingCounters() {
         return lastCullingCounters;
+    }
+
+    public List<DebugTextCounter> lastDebugTextCounters() {
+        return lastDebugTextCounters;
     }
 
     private static float cameraDepth(Matrix4fc viewMatrix, Aabb3f worldBounds) {
@@ -492,6 +558,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         closeAttempted = true;
 
         List<Throwable> failures = new ArrayList<>();
+        closeInto(failures, debugLineRenderer);
         closeInto(failures, program);
         closeInto(failures, fragmentShader);
         closeInto(failures, vertexShader);

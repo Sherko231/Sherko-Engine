@@ -41,17 +41,25 @@ RenderSpotLight spot = new RenderSpotLight(
         0.5f, 5.0f,
         0.2f, 0.5f);
 
+DebugFrame debugFrame = new DebugFrame(
+        List.of(new DebugLine(
+                -1.0f, 0.0f, 0.0f,
+                 1.0f, 0.0f, 0.0f,
+                 new DebugColor(0.0f, 1.0f, 0.0f))),
+        List.of(new DebugTextCounter("simulation/tick", 42L)));
+
 RenderFramePacket frame = new RenderFramePacket(
         view,
         projection,
         framebufferWidth,
         framebufferHeight,
-        List.of(point, spot));
+        List.of(point, spot),
+        debugFrame);
 renderer.render(frame);
 window.present();
 ```
 
-`RenderFramePacket` requires non-null finite JOML view/projection matrices plus positive framebuffer pixel dimensions. The legacy four-argument constructor creates an empty-local-light packet. The local-light constructor also snapshots an ordered list of immutable `RenderPointLight` / `RenderSpotLight` values. Construction copies both matrices and the list immediately, so later mutation of caller-owned matrices or the source list cannot change the packet.
+`RenderFramePacket` requires non-null finite JOML view/projection matrices plus positive framebuffer pixel dimensions. The legacy four-argument constructor creates empty local-light/debug submissions. The local-light constructor snapshots an ordered list of immutable `RenderPointLight` / `RenderSpotLight` values. P5-T16 adds a constructor carrying one immutable bounded `DebugFrame`. Construction copies both matrices and the light list immediately; debug values are themselves immutable snapshots, so later caller mutation cannot change the submitted frame.
 
 `render(RenderFramePacket)` requires the OpenGL owner thread and consumes the packet synchronously without retaining it. Packets own no native resources and require no cleanup. The matrices follow the accepted D-041/D-045 contract. The renderer does not create or own a gameplay/world camera.
 
@@ -72,7 +80,7 @@ Every call currently:
 - uses hardware `GL_FRAMEBUFFER_SRGB` encoding on an sRGB default buffer, or one bounded fragment encode on a linear default buffer;
 - restores the full framebuffer viewport, unbinds program/VAO/texture state, and disables `GL_FRAMEBUFFER_SRGB` before returning.
 
-After a successful render, `lastCullingCounters()` returns immutable `RenderCullingCounters` for that frame: tested candidates, visible candidates, culled candidates, and submitted draws. Failed renders leave the prior successful counters unchanged. These are correctness/diagnostic counters, not a performance benchmark.
+After a successful render, `lastCullingCounters()` returns immutable `RenderCullingCounters` for that frame, and `lastDebugTextCounters()` returns the accepted bounded `DebugTextCounter` list in submission order. Failed renders leave both prior successful snapshots unchanged. These are correctness/diagnostic data, not a performance benchmark.
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 
@@ -115,6 +123,8 @@ The current bounded renderer does not provide:
 - gameplay camera ownership;
 - batching, render graphs/pass scheduling, broad-phase/occlusion/GPU culling, GPU-driven sorting, order-independent transparency, or instancing;
 - render-worker or command-queue behavior;
+- retained/persistent debug scenes, debug IDs or multi-frame primitive lifetimes;
+- font/glyph debug text rendering or an ImGui/runtime-HUD dependency;
 - raw OpenGL handles.
 
 Those remain separate roadmap tasks.
@@ -135,3 +145,14 @@ Positions and ranges are D-041 world-space meters. Point attenuation is zero at 
 The renderer stores accepted local lights in one internal 528-byte std140 block with capacity eight. A caller selects a stricter maximum through `OpenGlRenderer.create(..., EngineLogger, maxLocalLights)`; valid values are 1 through 8. If a packet exceeds the configured maximum, the renderer preserves packet order, accepts the first N entries, drops the remainder, and emits exactly one WARN before local-light upload or draw-state mutation. The compatibility `create(...)` path uses maximum eight and reports overflow to stderr.
 
 Local contributions are additive with the fixed directional light in linear space. The current foundation path deliberately clamps accumulated illumination to `[0,1]` before material multiplication. That is a bounded SDR policy, not HDR exposure or tonemapping.
+
+
+## Debug geometry and counters
+
+P5-T16 defines the submission vocabulary in `engine-core`, not in the OpenGL module. `DebugFrame` is a per-frame immutable snapshot with at most 64 geometry primitives and 16 text counters. Geometry supports `DebugLine`, `DebugAabb`, `DebugSphere`, and finite `DebugRay` values using D-041 world-space meters and linear `DebugColor` RGB.
+
+The OpenGL adapter expands submissions into one fixed-capacity dynamic line buffer. AABB contributes 12 edges; sphere contributes three orthogonal 16-segment great circles; ray contributes one finite segment. Lines are drawn after the current scene over the full viewport with `GL_LESS` depth testing, depth writes disabled, blending/culling disabled, and no material/light evaluation. Debug colors remain linear until the same accepted P5-T15 presentation encode.
+
+`DebugTextCounter` is deliberately only a bounded ASCII label plus signed integer value. The renderer does not draw glyphs. After a successful frame, `lastDebugTextCounters()` exposes the submitted immutable counter snapshot; the sandbox includes it in its existing periodic console diagnostic. A failed render leaves the previous successful counter snapshot unchanged.
+
+There is no retained debug scene, duration/lifetime system, persistent debug ID, editor object, font renderer, or ImGui/runtime-HUD ownership in this task.

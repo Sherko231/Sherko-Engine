@@ -35,6 +35,21 @@ final class UniformBlockLayoutVerifier {
                 reflection);
     }
 
+    static void verifyCameraOnly(
+            int programHandle,
+            OpenGlThreadGuard threadGuard,
+            OpenGlUniformBlockReflectionBackend backend) {
+        OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
+        OpenGlUniformBlockReflectionBackend reflection = Objects.requireNonNull(backend, "backend");
+        guard.assertOwnerThread();
+        verifyBlock(
+                programHandle,
+                CameraUniformBlock.GLSL_BLOCK_NAME,
+                CameraUniformBlock.SIZE_BYTES,
+                CameraUniformBlock.BINDING,
+                reflection);
+    }
+
     private static void verifyBlock(
             int programHandle,
             String blockName,

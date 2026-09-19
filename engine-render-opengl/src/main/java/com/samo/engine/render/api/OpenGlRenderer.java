@@ -1,5 +1,6 @@
 package com.samo.engine.render.api;
 
+import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
@@ -7,6 +8,7 @@ import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4fc;
 
@@ -22,8 +24,10 @@ import org.joml.Matrix4fc;
  * P5-T11 derives a CPU view frustum from that snapshot, tests the fixed reference mesh world AABB
  * through the accepted Phase 4 geometry semantics, and exposes latest-successful-frame culling
  * counters. P5-T14 adds bounded point/spot light submission through `RenderFramePacket` with a
- * configurable maximum of 1-8 local lights per frame. This API intentionally does not expose native
- * handles, arbitrary meshes/textures/materials, world components, or asset loading.
+ * configurable maximum of 1-8 local lights per frame. P5-T16 adds bounded renderer-neutral per-frame
+ * debug geometry plus latest-successful text-counter diagnostics without creating a retained debug
+ * scene or font/UI renderer. This API intentionally does not expose native handles, arbitrary
+ * meshes/textures/materials, world components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;
@@ -63,7 +67,9 @@ public final class OpenGlRenderer implements AutoCloseable {
                 engineLogger,
                 maxLocalLights,
                 loadShader("shaders/p5/basic.vert"),
-                loadShader("shaders/p5/basic.frag")));
+                loadShader("shaders/p5/basic.frag"),
+                loadShader("shaders/p5/debug-lines.vert"),
+                loadShader("shaders/p5/debug-lines.frag")));
     }
 
     public void render(RenderFramePacket frame) {
@@ -77,6 +83,15 @@ public final class OpenGlRenderer implements AutoCloseable {
      */
     public RenderCullingCounters lastCullingCounters() {
         return pipeline.lastCullingCounters();
+    }
+
+    /**
+     * Returns the bounded text-counter snapshot from the latest successfully completed render call.
+     *
+     * <p>A failed render leaves the previously published snapshot unchanged.
+     */
+    public List<DebugTextCounter> lastDebugTextCounters() {
+        return pipeline.lastDebugTextCounters();
     }
 
     public void render(

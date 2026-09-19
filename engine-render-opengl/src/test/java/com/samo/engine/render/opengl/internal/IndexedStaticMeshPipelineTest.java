@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.samo.engine.core.api.DebugColor;
+import com.samo.engine.core.api.DebugFrame;
+import com.samo.engine.core.api.DebugLine;
+import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.GlfwWindow;
@@ -43,13 +47,15 @@ class IndexedStaticMeshPipelineTest {
                 "vertex",
                 "fragment");
 
-        assertEquals(List.of(72L, 12L, 128L, 16L, 528L), resources.allocations);
+        assertEquals(List.of(72L, 12L, 128L, 16L, 528L, 147456L), resources.allocations);
         assertEquals(List.of(
                 "position:101:11",
                 "element:101:12",
                 "ubo:0:13",
                 "ubo:1:14",
-                "ubo:2:15"), draw.trace);
+                "ubo:2:15",
+                "debug-position:102:16",
+                "ubo:0:13"), draw.trace);
         assertEquals(2, resources.uploads.size());
         assertVertexData(resources.uploads.get(0).bytes());
         assertIndexData(resources.uploads.get(1).bytes());
@@ -106,10 +112,10 @@ class IndexedStaticMeshPipelineTest {
         pipeline.close();
         pipeline.close();
         registry.assertNoOpenResources();
-        assertEquals(5, resources.deletedBuffers);
-        assertEquals(1, resources.deletedVertexArrays);
-        assertEquals(2, resources.deletedShaders);
-        assertEquals(1, resources.deletedPrograms);
+        assertEquals(6, resources.deletedBuffers);
+        assertEquals(2, resources.deletedVertexArrays);
+        assertEquals(4, resources.deletedShaders);
+        assertEquals(2, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
     }
@@ -216,6 +222,105 @@ class IndexedStaticMeshPipelineTest {
         assertTrue(resources.uploads.isEmpty());
         assertTrue(draw.trace.isEmpty());
         assertEquals(RenderCullingCounters.EMPTY, pipeline.lastCullingCounters());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void debugFrameUploadsLinesDrawsAfterSceneAndPublishesCounters() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+        resources.uploads.clear();
+        draw.trace.clear();
+
+        DebugTextCounter first = new DebugTextCounter("tick", 42L);
+        DebugTextCounter second = new DebugTextCounter("net/rtt_ms", 17L);
+        DebugFrame debugFrame = new DebugFrame(
+                List.of(new DebugLine(
+                        -0.5f, 0.0f, 0.5f,
+                        0.5f, 0.0f, 0.5f,
+                        new DebugColor(0.0f, 1.0f, 0.0f))),
+                List.of(first, second));
+        RenderFramePacket frame = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                debugFrame);
+
+        pipeline.render(frame);
+
+        assertEquals(4, resources.uploads.size());
+        assertEquals(
+                2 * DebugLineVertexPacker.VERTEX_STRIDE_BYTES,
+                resources.uploads.get(3).bytes().length);
+        assertTrue(draw.trace.contains("debug-state"));
+        assertTrue(draw.trace.contains("program:204"));
+        assertTrue(draw.trace.contains("vao:102"));
+        assertTrue(draw.trace.contains("draw:lines:2"));
+        assertEquals(List.of(first, second), pipeline.lastDebugTextCounters());
+        assertEquals(new RenderCullingCounters(2, 2, 0, 2), pipeline.lastCullingCounters());
+
+        pipeline.close();
+        registry.assertNoOpenResources();
+    }
+
+    @Test
+    void debugDrawFailureDoesNotPublishDebugOrCullingCounters() {
+        OpenGlThreadGuard guard = boundGuard();
+        NativeResourceRegistry registry = new NativeResourceRegistry();
+        FakeResourceBackend resources = new FakeResourceBackend();
+        FakeDrawBackend draw = new FakeDrawBackend();
+        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+                guard,
+                registry,
+                resources,
+                draw,
+                new FakeReflectionBackend(),
+                "vertex",
+                "fragment");
+
+        DebugTextCounter acceptedCounter = new DebugTextCounter("tick", 1L);
+        RenderFramePacket accepted = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                new DebugFrame(List.of(), List.of(acceptedCounter)));
+        pipeline.render(accepted);
+        RenderCullingCounters acceptedCulling = pipeline.lastCullingCounters();
+
+        draw.debugDrawFailure = new IllegalStateException("debug draw failure");
+        RenderFramePacket failing = new RenderFramePacket(
+                new Matrix4f(),
+                new Matrix4f(),
+                800,
+                600,
+                List.of(),
+                new DebugFrame(
+                        List.of(new DebugLine(
+                                -0.5f, 0.0f, 0.5f,
+                                0.5f, 0.0f, 0.5f,
+                                new DebugColor(0.0f, 1.0f, 0.0f))),
+                        List.of(new DebugTextCounter("tick", 2L))));
+
+        assertThrows(IllegalStateException.class, () -> pipeline.render(failing));
+
+        assertEquals(List.of(acceptedCounter), pipeline.lastDebugTextCounters());
+        assertEquals(acceptedCulling, pipeline.lastCullingCounters());
 
         pipeline.close();
         registry.assertNoOpenResources();
@@ -629,12 +734,18 @@ class IndexedStaticMeshPipelineTest {
     private static final class FakeDrawBackend implements OpenGlDrawBackend {
         private final List<String> trace = new ArrayList<>();
         private RuntimeException drawFailure;
+        private RuntimeException debugDrawFailure;
         private int defaultFramebufferEncoding = GL21.GL_SRGB;
         private DirectionalLight lastDirectionalLight;
 
         @Override
         public void configurePositionAndNormalAttributes(int vertexArray, int vertexBuffer) {
             trace.add("position:" + vertexArray + ":" + vertexBuffer);
+        }
+
+        @Override
+        public void configureDebugLineAttributes(int vertexArray, int vertexBuffer) {
+            trace.add("debug-position:" + vertexArray + ":" + vertexBuffer);
         }
 
         @Override
@@ -657,6 +768,11 @@ class IndexedStaticMeshPipelineTest {
             trace.add("state:blend=" + material.blendMode()
                     + ":depth=" + material.depthMode()
                     + ":cull=" + material.cullMode());
+        }
+
+        @Override
+        public void applyDebugLineState() {
+            trace.add("debug-state");
         }
 
         @Override
@@ -712,6 +828,14 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
+        public void drawDebugLines(int vertexCount) {
+            trace.add("draw:lines:" + vertexCount);
+            if (debugDrawFailure != null) {
+                throw debugDrawFailure;
+            }
+        }
+
+        @Override
         public void bindDefaultVertexArray() {
             trace.add("vao:0");
         }
@@ -724,6 +848,7 @@ class IndexedStaticMeshPipelineTest {
 
     private static final class FakeResourceBackend implements OpenGlResourceBackend {
         private int nextBuffer = 11;
+        private int nextVertexArray = 101;
         private int nextShader = 201;
         private int nextProgram = 203;
         private int nextTexture = 301;
@@ -785,7 +910,7 @@ class IndexedStaticMeshPipelineTest {
 
         @Override
         public int createVertexArray() {
-            return 101;
+            return nextVertexArray++;
         }
 
         @Override

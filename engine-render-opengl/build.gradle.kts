@@ -85,8 +85,11 @@ val verifyPublicApiArtifact by tasks.registering {
             check("com/samo/engine/render/opengl/internal/IndexedStaticMeshPipeline.class" in entries) {
                 "Renderer runtime artifact must retain the indexed-mesh implementation"
             }
-            check("shaders/p5/basic.vert" in entries && "shaders/p5/basic.frag" in entries) {
-                "Renderer runtime artifact must retain committed shader resources"
+            check("shaders/p5/basic.vert" in entries
+                    && "shaders/p5/basic.frag" in entries
+                    && "shaders/p5/debug-lines.vert" in entries
+                    && "shaders/p5/debug-lines.frag" in entries) {
+                "Renderer runtime artifact must retain committed scene/debug shader resources"
             }
         }
     }

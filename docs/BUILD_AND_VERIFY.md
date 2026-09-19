@@ -1164,3 +1164,30 @@ Focused verification:
 The existing P5-T09 Windows native acceptance remains a regression over the same production `OpenGlRenderer` path because the compatibility overload constructs a `RenderFramePacket` before entering the pipeline. P5-T10 adds no new native behavior or visual requirement, so no separate native artifact is required beyond the ordinary heavy matrix.
 
 Ordering/lifetime contract: packet construction creates one complete frame snapshot; renderer consumption is synchronous in caller invocation order; the renderer does not retain packets after `render(...)` returns. Packets own no native resources and require no `close()`. This is not an async queue or network snapshot contract.
+
+
+## P5-T11 CPU frustum-culling verification
+
+P5-T11 adds no project or production dependency. It reuses public P4 `Aabb3f`, `Plane3f`, and `Frustum3f` semantics and the accepted P5-T10 frame snapshot. The fixed reference mesh remains renderer-owned.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.CpuFrustumCullerTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewFrustumExtractorTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderCullingCountersTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticFormatterTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Required deterministic evidence:
+- identity clip-space fixture: inside and exact boundary-contact AABBs remain visible; clearly outside AABBs are rejected;
+- translated camera fixture: world bounds move correctly relative to the extracted frustum;
+- controlled renderer fixture: two off-camera candidates produce zero material-state applications and zero indexed draws;
+- latest-success counters remain unchanged when a later render fails;
+- all-culled frames still restore the full framebuffer viewport and disable framebuffer-sRGB state.
+
+The ordinary five-job final-candidate CI remains the authoritative repository verification. The existing Windows native P5 regression remains applicable because the normal sandbox/reference camera keeps the committed fixed mesh visible; P5-T11 adds no new native API or required capture artifact.

@@ -40,6 +40,8 @@ The previous `render(view, projection, width, height)` overload remains as a com
 
 Every call currently:
 
+- derives the active CPU view frustum from the packet's accepted `projection * view` matrices;
+- tests the fixed reference mesh world AABB through P4 `Frustum3f.intersects(Aabb3f)` before each draw candidate;
 - uploads the P5-T06 `CameraBlock` and `PerFrameBlock`;
 - detects whether the actual default back buffer is `GL_SRGB` or `GL_LINEAR`;
 - clears the full development color/depth buffers using the matching presentation-encoding path;
@@ -49,6 +51,8 @@ Every call currently:
 - applies each material's bounded linear color multipliers after sRGB texture decode and before presentation encode;
 - uses hardware `GL_FRAMEBUFFER_SRGB` encoding on an sRGB default buffer, or one bounded fragment encode on a linear default buffer;
 - restores the full framebuffer viewport, unbinds program/VAO/texture state, and disables `GL_FRAMEBUFFER_SRGB` before returning.
+
+After a successful render, `lastCullingCounters()` returns immutable `RenderCullingCounters` for that frame: tested candidates, visible candidates, culled candidates, and submitted draws. Failed renders leave the prior successful counters unchanged. These are correctness/diagnostic counters, not a performance benchmark.
 
 Presentation is intentionally separate through `GlfwWindow.present()`.
 
@@ -84,7 +88,7 @@ The current bounded renderer does not provide:
 - HDR, tonemapping, fog, post-processing, or P5-T15 presentation architecture;
 - world/ECS integration;
 - gameplay camera ownership;
-- batching, culling, sorting, or frame graphs;
+- batching, P5-T12 draw sorting, broad-phase/occlusion/GPU culling, or frame graphs;
 - render-worker or command-queue behavior;
 - raw OpenGL handles.
 

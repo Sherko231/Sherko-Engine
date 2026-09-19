@@ -47,15 +47,15 @@ The current playground keeps these capabilities active together rather than show
 - live mouse sensitivity and mouse-Y inversion changes through `InputResponseSettings`;
 - `PlayerInputCommandSampler` and tick-aligned `PlayerInputCommand` output;
 - `EngineClock`, `FixedStepAccumulator`, and `FixedStepCatchUpPolicy` driving the fixed 60 Hz simulation-tick path;
-- interpolation alpha and once-per-second diagnostics;
+- interpolation alpha and once-per-second diagnostics, including P5-T11 tested/visible/culled/submitted render counters from the latest successful frame;
 - structured `EngineLogger` output;
 - orderly stop/close plus `NativeResourceRegistry.assertNoOpenResources()` on exit.
 
-The once-per-second line is deliberately an owner diagnostic. It is not FPS, a benchmark, a soak test, replay acceptance evidence, or leak proof.
+The once-per-second line is deliberately an owner diagnostic. P5-T11 appends `renderCull[tested=...,visible=...,culled=...,draws=...]`; with the current fixed visible reference scene the expected steady state is two tested candidates, two visible candidates, zero culled candidates, and two submitted draws. These counters are not FPS, a benchmark, a soak test, replay acceptance evidence, or leak proof.
 
 ## Current limitations
 
-The sandbox now submits each visible frame through the public immutable `RenderFramePacket` boundary, then shows the same indexed reference triangle twice side by side through the production renderer: the left baseline material preserves the neutral-gray P5-T08 reference, while the right material is visibly tinted and uses a distinct internal blend/depth/cull policy. P5-T08 remains responsible for sRGB-correct decode/presentation. The sandbox itself still performs no direct OpenGL/LWJGL calls and cannot create arbitrary materials.
+The sandbox now submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T11 derives the active view frustum, tests the fixed reference mesh world AABB before both current draw candidates, publishes latest-success counters, then shows the same indexed reference triangle twice side by side when visible: the left baseline material preserves the neutral-gray P5-T08 reference, while the right material is visibly tinted and uses a distinct internal blend/depth/cull policy. P5-T08 remains responsible for sRGB-correct decode/presentation. The sandbox itself still performs no direct OpenGL/LWJGL calls and cannot create arbitrary materials.
 
 This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, lighting, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, world/ECS rendering, gameplay camera ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 

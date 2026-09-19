@@ -14,7 +14,8 @@ final class SandboxDiagnosticFormatter {
                 Locale.ROOT,
                 "sandboxTime=%.1fs, interpolationAlpha=%.3f, inputFrame=%d, focused=%s, cursorCaptured=%s, "
                         + "mode=%s, sensitivity=%.2f, invertY=%s, WASD=[%s,%s,%s,%s], frameMOVE=(%.1f,%.1f), "
-                        + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], %s, mouseDelta=(%.2f,%.2f) "
+                        + "JUMP[p=%s,h=%s,r=%s], INTERACT[p=%s,h=%s,r=%s], %s, mouseDelta=(%.2f,%.2f), "
+                        + "renderCull[tested=%d,visible=%d,culled=%d,draws=%d] "
                         + "(sandbox diagnostic; not FPS/benchmark/replay acceptance evidence)",
                 values.sandboxTimeSeconds(),
                 values.interpolationAlpha(),
@@ -38,7 +39,11 @@ final class SandboxDiagnosticFormatter {
                 values.interactReleased(),
                 values.commandDiagnostic(),
                 values.mouseDeltaX(),
-                values.mouseDeltaY());
+                values.mouseDeltaY(),
+                values.testedCandidates(),
+                values.visibleCandidates(),
+                values.culledCandidates(),
+                values.submittedDraws());
     }
 
     record DiagnosticValues(
@@ -64,10 +69,20 @@ final class SandboxDiagnosticFormatter {
             boolean interactReleased,
             String commandDiagnostic,
             double mouseDeltaX,
-            double mouseDeltaY) {
+            double mouseDeltaY,
+            int testedCandidates,
+            int visibleCandidates,
+            int culledCandidates,
+            int submittedDraws) {
         DiagnosticValues {
             Objects.requireNonNull(mode, "mode");
             Objects.requireNonNull(commandDiagnostic, "commandDiagnostic");
+            if (testedCandidates < 0
+                    || visibleCandidates < 0
+                    || culledCandidates < 0
+                    || submittedDraws < 0) {
+                throw new IllegalArgumentException("render counters must be non-negative");
+            }
         }
     }
 }

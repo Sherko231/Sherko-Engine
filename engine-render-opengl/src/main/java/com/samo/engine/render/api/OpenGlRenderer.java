@@ -18,8 +18,10 @@ import org.joml.Matrix4fc;
  * fallback when it is linear. The material values remain implementation details until stable runtime
  * asset/resource references exist. P5-T10 adds an immutable renderer-facing frame packet that
  * snapshots camera matrices and framebuffer size without retaining mutable world/gameplay objects.
- * This API intentionally does not expose native handles, arbitrary meshes/textures/materials, world
- * components, or asset loading.
+ * P5-T11 derives a CPU view frustum from that snapshot, tests the fixed reference mesh world AABB
+ * through the accepted Phase 4 geometry semantics, and exposes latest-successful-frame culling
+ * counters. This API intentionally does not expose native handles, arbitrary meshes/textures/materials,
+ * world components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
     private final IndexedStaticMeshPipeline pipeline;
@@ -42,6 +44,15 @@ public final class OpenGlRenderer implements AutoCloseable {
 
     public void render(RenderFramePacket frame) {
         pipeline.render(Objects.requireNonNull(frame, "frame"));
+    }
+
+    /**
+     * Returns immutable counters from the latest successfully completed render call.
+     *
+     * <p>A failed render does not replace the previously published counters.
+     */
+    public RenderCullingCounters lastCullingCounters() {
+        return pipeline.lastCullingCounters();
     }
 
     public void render(

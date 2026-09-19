@@ -79,19 +79,17 @@ P4-T09 / Issue #102 / PR #179 completed on merged `master` `66a81a418e0c953b8f00
 
 The Phase 4 exit gate also passes. The accepted candidate and merged master share tree `c2e290e844cbd4ae0f08f40796b19967cc254b84`; root/subproject tests passed on that tree, while `engine-core` depends only on JOML and has no OpenGL/LWJGL or Jolt test dependency/import. The spatial test surface is therefore independently executable from OpenGL and Jolt. Issue #180 records the exit and Phase 5 readiness review.
 
-## Current focus — M2 / Phase 5
+## Current focus — M2 / Phase 6 readiness
 
-**Goal:** render a stable, inspectable 3D room without gameplay or physics dependencies, reaching a basic end-to-end room before visual polish.
+**Phase 5 outcome:** a stable, inspectable 3D room now renders without gameplay or physics dependencies.
 
-Phase 5 is ready to proceed because its required platform and spatial inputs are accepted.
-
-P5-T01 through P5-T17 are accepted. Exit review #250 found the phase gate still open because the integrated sandbox does not yet render a real textured room and its input path does not move the rendered camera. P5-T18 / #251 is the planned bounded follow-up and must be freshly activated/refined against then-current `master` before implementation.
+P5-T01 through P5-T18 are accepted. P5-T18 / #251 closed the final integration gaps with one renderer-owned mapped-UV textured-room fixture and a sandbox-owned movable rendered camera using existing public input/camera boundaries. Final candidate `8e61764fda7cd845dc86062ab1d3000067ddf8c5` passed the required five-job CI in run #441 / `35460986757`; PR #253 merged as `96dcd56ac56a3a968b789163e440c7684afbc44d`, and exact-merge Lightweight verification passed in run #442 / `35461897536`.
 
 The phase progresses through OpenGL diagnostics/thread ownership/resource wrappers, bounded upload/shader/uniform infrastructure, the first indexed static mesh, sRGB/material/render-submission/culling/sorting foundations, directional and bounded local lights, correct gamma/sRGB presentation, debug geometry/counters, the first-person view-model layer, and the final P5-T18 integrated textured-room/movable-camera gate closure.
 
-Phase 5 exit gate remains the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish are deliberately not Phase 5 exit blockers.
+Phase 5 exit review #250 passed the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish remain deliberately deferred.
 
-The exact task definitions and planning acceptance criteria are in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md#phase-5---rendering-foundation). Live workflow status belongs to GitHub Issues/Project, not this roadmap.
+Phase 5 is complete. The next executable work must be freshly materialized/refined from Phase 6, beginning with P6-T01; this roadmap entry does not itself activate that task. Exact task definitions and planning acceptance criteria remain in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md).
 
 ## Milestone exit outcomes
 

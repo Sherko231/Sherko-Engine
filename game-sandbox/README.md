@@ -34,6 +34,7 @@ The current playground keeps these capabilities active together rather than show
 
 - production `GlfwWindow` / OpenGL 4.6 startup through the public engine API;
 - public `RenderFramePacket` construction each visible frame, snapshotting the current camera matrices and framebuffer pixel size before synchronous `OpenGlRenderer.render(frame)` consumption;
+- P5-T14 public local-light submission on that packet: one warm point light and one cool spot light, with the renderer configured for a maximum of four local lights through the structured sandbox `EngineLogger`;
 - public `OpenGlRenderer` production composition drawing the same indexed static triangle twice every visible framebuffer frame through two internal P5-T09 material values, while preserving the fixed P5-T08 neutral-gray sRGB reference and one presentation encode;
 - P5-T06 camera/per-frame uniform blocks driven by a fixed D-041/D-045 camera and current framebuffer aspect;
 - explicit depth testing and back-face culling through the production renderer path;
@@ -55,9 +56,9 @@ The once-per-second line is deliberately an owner diagnostic. P5-T11 appends `re
 
 ## Current limitations
 
-The sandbox now submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T11 derives the active view frustum and tests the fixed reference mesh world AABB before both current draw candidates. P5-T12 then orders the visible renderer-owned candidates deterministically — opaque baseline before the transparent tinted candidate in the current scene. P5-T13 now shades that same cumulative scene with one fixed renderer-owned unshadowed directional light: the internal +Z reference normals use explicit D-041 world-space ray-travel direction and linear RGB/intensity semantics, with Lambert diffuse applied before the existing P5-T08 presentation encode. The left material remains neutral gray but is visibly darkened by the angled light; the right remains red-tinted with its distinct blend/depth/cull policy. The sandbox itself still performs no direct OpenGL/LWJGL calls and exposes no light-creation API.
+The sandbox submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T11 derives the active view frustum and tests the fixed reference mesh world AABB before both current draw candidates. P5-T12 orders the visible renderer-owned candidates deterministically. P5-T13 contributes the fixed renderer-owned directional light, and P5-T14 now adds one public warm point light plus one public cool spot light to the same packet. Their position/range/direction/color data uses the production public render API; the sandbox still performs no direct OpenGL/LWJGL calls and does not import renderer internals. The left baseline and right tinted material are therefore illuminated by the same bounded directional + local-light path.
 
-This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, public light submission, point/spot lights, shadows, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, PBR/IBL, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
+This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, more than eight local lights per frame, world/ECS light ownership, directional-light replacement, shadows, arbitrary mesh loading, HDR/tonemapping/fog/post-processing, PBR/IBL, clustered/Forward+ lighting, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

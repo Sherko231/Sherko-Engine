@@ -834,11 +834,6 @@ class IndexedStaticMeshPipelineTest {
         }
 
         @Override
-        public void configureViewModelAttributes(int vertexArray, int vertexBuffer) {
-            trace.add("view-model-position:" + vertexArray + ":" + vertexBuffer);
-        }
-
-        @Override
         public void bindElementBuffer(int vertexArray, int indexBuffer) {
             trace.add("element:" + vertexArray + ":" + indexBuffer);
         }
@@ -863,16 +858,6 @@ class IndexedStaticMeshPipelineTest {
         @Override
         public void applyDebugLineState() {
             trace.add("debug-state");
-        }
-
-        @Override
-        public void clearDepthOnly() {
-            trace.add("depth-clear");
-        }
-
-        @Override
-        public void applyViewModelState() {
-            trace.add("view-model-state");
         }
 
         @Override
@@ -942,14 +927,6 @@ class IndexedStaticMeshPipelineTest {
             trace.add("draw:lines:" + vertexCount);
             if (debugDrawFailure != null) {
                 throw debugDrawFailure;
-            }
-        }
-
-        @Override
-        public void drawViewModelTriangles(int vertexCount) {
-            trace.add("draw:view-model:" + vertexCount);
-            if (viewModelDrawFailure != null) {
-                throw viewModelDrawFailure;
             }
         }
 

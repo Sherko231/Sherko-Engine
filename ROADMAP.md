@@ -43,7 +43,7 @@ Sherko Engine is a Java-first engine intentionally scoped for small/medium **3D 
 | --- | --- | --- | --- | --- |
 | M0 | Feasibility | FOLLOW-UP GATES | P0 | Native-stack feasibility is proven; end-to-end Steam transport and sustained-lifecycle evidence remain explicit blockers for the phases that consume them. |
 | M1 | Engine foundation | COMPLETE | P1-P4 | Build/module boundaries, lifecycle, timing, input, math, and spatial contracts are implemented and verified. |
-| M2 | Local playable runtime | NOW | P5-P9 | Render and load a room, build world/physics/basic-audio/runtime-UI stacks, then prove a five-minute local co-op-style vertical slice. |
+| M2 | Local playable runtime | NOW | P5, P5R, P6-P9 | Render a room, harden the completed foundation through a mandatory architecture/refactor gate, then load assets and build world/physics/basic-audio/runtime-UI stacks before proving a five-minute local co-op-style vertical slice. |
 | M3 | Multiplayer core | LATER | P10-P13 | Build transport, replication, prediction/correction, join-in-progress, and Steam session flow. |
 | M4 | Genre and presentation systems | LATER | P14 | Add network-aware audio, animation, IK, third-person presentation, visual feedback, navigation, perception, and one server-authoritative enemy. |
 | M5 | Tools | LATER | P15 | Add the minimum editor and diagnostics needed to author and debug the game without source edits. |
@@ -79,7 +79,7 @@ P4-T09 / Issue #102 / PR #179 completed on merged `master` `66a81a418e0c953b8f00
 
 The Phase 4 exit gate also passes. The accepted candidate and merged master share tree `c2e290e844cbd4ae0f08f40796b19967cc254b84`; root/subproject tests passed on that tree, while `engine-core` depends only on JOML and has no OpenGL/LWJGL or Jolt test dependency/import. The spatial test surface is therefore independently executable from OpenGL and Jolt. Issue #180 records the exit and Phase 5 readiness review.
 
-## Current focus — M2 / Phase 6 readiness
+## Current focus — M2 / Phase 5R architecture & refactor hardening
 
 **Phase 5 outcome:** a stable, inspectable 3D room now renders without gameplay or physics dependencies.
 
@@ -89,7 +89,11 @@ The phase progresses through OpenGL diagnostics/thread ownership/resource wrappe
 
 Phase 5 exit review #250 passed the technical backlog contract: **a textured room with depth, camera movement, one directional light, correct sRGB/gamma, and debug geometry renders without gameplay code.** Shadows, fog, tonemapping, and other polish remain deliberately deferred.
 
-Phase 5 is complete. The next executable work must be freshly materialized/refined from Phase 6, beginning with P6-T01; this roadmap entry does not itself activate that task. Exact task definitions and planning acceptance criteria remain in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md).
+Phase 5 is complete. Before any Phase 6 implementation begins, the repository must pass **Phase 5R — Architecture & Refactor Hardening**. Phase 5R is an inserted mandatory engineering gate, not an optional cleanup suggestion and not a renumbering of established P6-P16 work.
+
+Phase 5R exists to make the completed P1-P5 codebase easier to read, maintain, test, and scale before the asset/world layers multiply dependencies. It emphasizes responsibility-driven class decomposition, comprehensive naming review, descriptive class/method/field/package names, explicit public/internal boundaries, removal of stale compatibility/dead code where safe, and adoption of proven patterns only when they solve an observed coupling/responsibility/testability problem. Behavior, module direction, native ownership, spatial conventions, persisted formats, protocol layouts, and accepted public semantics must remain unchanged unless a bounded P5R Issue explicitly authorizes a contract change.
+
+The next executable work must therefore be freshly materialized/refined from **P5R-T01**, not P6-T01. Only after the Phase 5R exit review passes may P6-T01 be materialized. Exact task definitions and acceptance criteria remain in the [technical backlog](docs/roadmap/TECHNICAL_BACKLOG.md).
 
 ## Milestone exit outcomes
 

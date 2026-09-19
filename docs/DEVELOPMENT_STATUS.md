@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 5 complete — Phase 6 not yet activated |
+| Active phase | Phase 5 complete — Phase 5R refactor hardening is next; Phase 6 is blocked until P5R exit PASS |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — Phase 5 exit gate passed; P6-T01 may now be freshly materialized/refined before implementation |
+| Active executable task | None — freshly materialize/refine P5R-T01 before implementation; do not activate P6-T01 until the Phase 5R exit gate passes |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -52,7 +52,7 @@ Accepted prerequisites already exist:
 
 The owner removed mandatory hardware-baseline benchmarking from the roadmap on 2026-09-18. The 1080p60 target remains a development performance target, but exact minimum CPU/GPU/driver/RAM/VRAM qualification is not a current Phase 5 task or exit gate and must not be claimed without separate future evidence.
 
-Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T18 / #251 are accepted. Phase 5 exit review #250 passed on merged `master` `96dcd56ac56a3a968b789163e440c7684afbc44d`; Phase 6 may now be materialized/refined, but no Phase 6 task is activated by this checkpoint.
+Issue #182 and follow-up #201 are closed as not planned after the owner removed mandatory hardware benchmarking from the roadmap. P5-T01 / #183 through P5-T18 / #251 are accepted. Phase 5 exit review #250 passed on merged `master` `96dcd56ac56a3a968b789163e440c7684afbc44d`; the repository now proceeds through mandatory Phase 5R hardening before any Phase 6 task may be materialized.
 
 P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3d8cd0d3` passed all five heavy CI jobs in run #352 / `35330036806`, including the Windows native OpenGL debug acceptance. It merged as `754f3ea5f1183c7a719de04776c503a0d00153cf`, and exact-merge Lightweight verification passed in run #353 / `35330526069`.
 
@@ -102,7 +102,7 @@ P5-T17 / #199 is accepted. Initial candidate run #431 / `35455023387` was reject
 
 Phase 5 is **complete**. P5-T18 / #251 final candidate `8e61764fda7cd845dc86062ab1d3000067ddf8c5` passed all five required PR jobs in run #441 / `35460986757`, including retained hosted-Windows artifact `p5-t18-phase5-exit` / `10589069189`. PR #253 merged as `96dcd56ac56a3a968b789163e440c7684afbc44d`, and exact-merge Lightweight verification passed in run #442 / `35461897536`.
 
-Rerun #250 records PASS for the authoritative gate: the integrated renderer/sandbox now demonstrates a mapped non-uniform sRGB textured room, real depth/occlusion, owner-controlled rendered camera movement/look, the accepted directional light, correct sRGB/gamma presentation, P5-T16 debug geometry, and P5-T17 view-model coexistence without gameplay/world/ECS/physics ownership. P6-T01 may now be freshly materialized/refined, but no Phase 6 implementation is active yet.
+Rerun #250 records PASS for the authoritative gate: the integrated renderer/sandbox now demonstrates a mapped non-uniform sRGB textured room, real depth/occlusion, owner-controlled rendered camera movement/look, the accepted directional light, correct sRGB/gamma presentation, P5-T16 debug geometry, and P5-T17 view-model coexistence without gameplay/world/ECS/physics ownership. That PASS completes Phase 5; it no longer authorizes direct P6 activation because Phase 5R is now the mandatory intervening gate.
 
 ## Open gates and blockers
 
@@ -112,8 +112,16 @@ Rerun #250 records PASS for the authoritative gate: the integrated renderer/sand
 | P0-T13 / #43 | Claims of sustained native stability | 15-minute combined native run with retained evidence |
 | P0-T14 / #44 | Claims of repeatable native lifecycle safety | 100 supported lifecycle cycles or explicit process-global limits |
 
-The P0 follow-up gates did not block Phase 5 renderer-foundation completion and do not block Phase 6 asset-pipeline planning, but their unproven claims must remain narrow.
+The P0 follow-up gates did not block Phase 5 renderer-foundation completion and do not block Phase 5R refactor planning or later Phase 6 asset-pipeline planning, but their unproven claims must remain narrow.
+
+## Phase 5R readiness
+
+Phase 5R is a mandatory inserted hardening phase between completed Phase 5 and planned Phase 6. It exists to comprehensively review and improve naming, responsibility boundaries, internal decomposition, package organization, public/internal API clarity, and justified scalability patterns while preserving accepted behavior and architecture contracts.
+
+The stable P5R task catalog lives in `docs/roadmap/TECHNICAL_BACKLOG.md`. Execute one bounded P5R task/Issue/branch at a time. Internal decomposition/renaming should precede public API renaming where possible. Public API renames require synchronized consumer/wiki updates and independent review. Do not pull P6 asset/resource work forward merely to make a refactor cleaner.
+
+Phase 6 remains blocked until P5R-T26 records a passing Phase 5R exit review.
 
 ## Exact next action
 
-Freshly materialize/refine P6-T01 from the current `master` baseline before implementation. Re-read the Phase 6 backlog and relevant architecture/decision/build contracts, then create one bounded executable Issue for stable path-independent `AssetId`; do not pull P6-T02+ cooker/metadata/import work into that first task.
+Freshly materialize/refine **P5R-T01** from the current `master` baseline before implementation. P5R-T01 must define the naming/refactor standard and repository-wide symbol inventory before any Java rename/decomposition begins. Do not materialize P6-T01 yet.

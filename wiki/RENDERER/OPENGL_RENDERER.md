@@ -68,13 +68,13 @@ The previous `render(view, projection, width, height)` overload remains as a com
 Every call currently:
 
 - derives the active CPU view frustum from the packet's accepted `projection * view` matrices;
-- tests the fixed reference mesh world AABB through P4 `Frustum3f.intersects(Aabb3f)` before each draw candidate;
+- tests the fixed renderer-owned room world AABB through P4 `Frustum3f.intersects(Aabb3f)` before each draw candidate;
 - sorts the remaining internal draw submissions deterministically: opaque by renderer-owned logical program/material/mesh keys, transparent back-to-front by camera-space depth with stable ties;
 - uploads the P5-T06 `CameraBlock` / `PerFrameBlock` plus the fixed-capacity P5-T14 `LocalLightBlock` at binding 2;
 - detects whether the actual default back buffer is `GL_SRGB` or `GL_LINEAR`;
 - clears the full development color/depth buffers using the matching presentation-encoding path;
-- samples one renderer-owned 1x1 neutral-gray sRGB reference texture through an internal sampler;
-- draws the same owned indexed triangle twice using two internal immutable P5-T09 material values;
+- samples one renderer-owned non-uniform 4x4 sRGB validation texture through mapped UV coordinates;
+- draws the fixed indexed P5-T18 room fixture through the existing two internal immutable P5-T09 material submissions; the fixture contains multiple room surfaces plus a nearer depth-occlusion panel;
 - applies blend/depth/cull state from each material instead of entity-type branches;
 - adds the fixed P5-T13 directional contribution and accepted P5-T14 point/spot Lambert-range-cone contributions in linear space, clamps bounded SDR illumination, then applies material linear color multipliers before presentation encode;
 - uses hardware `GL_FRAMEBUFFER_SRGB` encoding on an sRGB default buffer, or one bounded fragment encode on a linear default buffer;

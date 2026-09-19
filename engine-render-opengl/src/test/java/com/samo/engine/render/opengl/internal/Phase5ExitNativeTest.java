@@ -131,13 +131,13 @@ class Phase5ExitNativeTest {
                 renderer.render(frameA);
 
                 RenderCullingCounters cullingA = renderer.lastCullingCounters();
-                assertEquals(2, cullingA.submittedDraws());
+                assertEquals(1, cullingA.submittedDraws());
 
-                int leftCenterX = ((framebufferWidth + 1) / 2) / 2;
+                int centerX = framebufferWidth / 2;
                 int centerY = framebufferHeight / 2;
-                nearPanel = readPixel(leftCenterX, centerY);
-                floor = readPixel(leftCenterX, framebufferHeight / 4);
-                ceiling = readPixel(leftCenterX, (framebufferHeight * 3) / 4);
+                nearPanel = readPixel(centerX, centerY);
+                floor = readPixel(centerX, framebufferHeight / 4);
+                ceiling = readPixel(centerX, (framebufferHeight * 3) / 4);
 
                 assertNeutralNearPanel(nearPanel);
                 assertTrue(maxChannel(floor) > 25, "Expected lit textured floor: " + rgb(floor));
@@ -172,7 +172,7 @@ class Phase5ExitNativeTest {
                         List.of(),
                         debugFrame);
                 renderer.render(frameB);
-                shiftedCenter = readPixel(leftCenterX, centerY);
+                shiftedCenter = readPixel(centerX, centerY);
 
                 assertTrue(
                         colorDistance(nearPanel, shiftedCenter) > 12,
@@ -336,7 +336,7 @@ class Phase5ExitNativeTest {
                 "directional.light.contribution=verified-by-neutral-panel-reference",
                 "debug.geometry.coexists.rgb=" + rgb(debugGreen),
                 "view.model.coexists.rgb=" + rgb(viewModelOrange),
-                "world.submitted.draws=2",
+                "world.submitted.draws=1",
                 "viewport.restored=true",
                 "program.unbound=true",
                 "vertex.array.unbound=true",

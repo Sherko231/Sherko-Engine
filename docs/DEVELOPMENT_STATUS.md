@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T10 / Issue #270 is accepted; freshly refine P5R-T11 / Issue #271 against current `master` before implementation |
+| Active executable task | P5R-T11 / Issue #271 — frame-orchestration responsibility decomposition candidate on `p5r-t11-frame-orchestration`; P5R-T12 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -142,6 +142,8 @@ P5R-T09 / Issue #269 completed as an audit-only KEEP task after mandatory review
 
 P5R-T10 / Issue #270 is accepted through PR #325. Final head `a3d376eaf786c63e2e8e7e823020c4d2b6312d2b` passed all five required jobs in run #460 / `35505791294`, including Windows native renderer regressions and the P5-T18 Phase 5 exit integration. PR #325 merged as `53d31e4b8dea6fd9b26dd64a2df859d929befad6`, and exact merged `master` passed Lightweight verification in run #461 / `35506050544`. The accepted refactor renames renderer-internal `IndexedStaticMeshPipeline` to `ReferenceSceneRenderer`, extracts package-private `ReferenceRoomFixture` for fixed room geometry/texture/bounds/counts, and deliberately leaves frame orchestration/culling/draw/uniform/light/diagnostic responsibilities for T11-T15. Public `OpenGlRenderer` signatures and Phase 5 behavior remain unchanged.
 
+P5R-T11 / Issue #271 is the active candidate from baseline `7f52be25af02d270b08af6eba05082deb40957b1`. The candidate keeps `ReferenceSceneRenderer` as the internal lifecycle/native-resource owner and public-facade delegate while extracting package-private, non-owning `RendererFrameUniformUploader`, `ReferenceSceneVisibilityPlanner`, `ReferenceSceneDrawExecutor`, and `RendererFrameDiagnostics`. The frame sequence remains local-light selection/captured matrices -> frustum extraction -> uniform upload -> visibility/sort planning -> world/debug/view-model draw execution with GL-state restoration -> latest-success diagnostics publication. Public `OpenGlRenderer`, shader/layout semantics, material/light/culling names owned by T12-T15, cleanup order, sandbox usage, and native ownership remain unchanged pending verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T11 / Issue #271** against current `master` before implementation. Keep the task bounded to renderer frame orchestration responsibility decomposition, preserve public `OpenGlRenderer` contracts and draw/frame diagnostics semantics, and do not materialize P6-T01 yet.
+Complete implementation/self-review/verification for **P5R-T11 / Issue #271** on `p5r-t11-frame-orchestration`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T12 and P6-T01 remain blocked.

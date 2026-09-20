@@ -417,3 +417,21 @@ T16 keeps public `SandboxMain` as the bootstrap/lifecycle entry point and extrac
 ### P5R-T17 accepted implementation
 
 T17 removes the verified-obsolete `EngineDemoMain` source and `runEngineDemo` Gradle task, leaving `SandboxMain` / `runSandbox` canonical. It renames only nested `SandboxControls.Action` -> `SandboxAction` and `SandboxControls.Input` -> `SandboxControlInput`. T16 helper names, owner controls, diagnostics, scene/camera behavior, resources, and shutdown semantics remain unchanged.
+
+
+## P5R-T21 public API naming audit candidate
+
+Fresh review against `master` `8783cd441b1b126f2bc1858a6706adb3c7bdee66` confirms the current supported P1-P5 public vocabulary is already responsibility-revealing after the earlier bounded refactors.
+
+The durable member-by-member audit lives in `PUBLIC_API_NAMING_AUDIT.md` and covers:
+
+- 36 `engine-core` public top-level types;
+- 18 `engine-platform-lwjgl` public top-level types;
+- 6 `engine-render-opengl` public top-level types;
+- 15 supported nested public types;
+- declared public constructors/factories/operations/queries/constants, record components/accessors, interface/default methods, and enum constants.
+
+T21 selects **KEEP** for every currently supported public type/member. No additional rename, alias, wrapper, package move, visibility widening, or compatibility shim is justified. The prior T07 lifecycle coordinator renames remain the only public-name corrections introduced by Phase 5R so far.
+
+Wiki impact: none — no supported public name or usage changes.
+Sandbox impact: none — no capability or owner-facing usage changes.

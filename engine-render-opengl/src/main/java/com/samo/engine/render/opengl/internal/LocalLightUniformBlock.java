@@ -10,7 +10,7 @@ import java.util.Objects;
 final class LocalLightUniformBlock {
     static final String GLSL_BLOCK_NAME = "LocalLightBlock";
     static final int BINDING = 2;
-    static final int CAPACITY = LocalLightSelection.SHADER_CAPACITY;
+    static final int CAPACITY = LocalLightSelector.SHADER_CAPACITY;
 
     static final int POSITION_RANGE_OFFSET_BYTES = 0;
     static final int DIRECTION_TYPE_OFFSET_BYTES = POSITION_RANGE_OFFSET_BYTES + CAPACITY * 4 * Float.BYTES;

@@ -23,26 +23,26 @@ class UniformBlockLayoutVerifierTest {
     @Test
     void missingBlockFailsClearly() {
         FakeReflectionBackend backend = expectedBackend();
-        backend.indices.put(CameraUniformBlock.GLSL_BLOCK_NAME, -1);
+        backend.indices.put(CameraMatricesUniformBlock.GLSL_BLOCK_NAME, -1);
 
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
-        assertTrue(failure.getMessage().contains(CameraUniformBlock.GLSL_BLOCK_NAME));
+        assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("Missing"));
     }
 
     @Test
     void wrongSizeFailsClearly() {
         FakeReflectionBackend backend = expectedBackend();
-        backend.sizes.put(0, CameraUniformBlock.SIZE_BYTES + 16);
+        backend.sizes.put(0, CameraMatricesUniformBlock.SIZE_BYTES + 16);
 
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
-        assertTrue(failure.getMessage().contains(CameraUniformBlock.GLSL_BLOCK_NAME));
+        assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=128"));
         assertTrue(failure.getMessage().contains("actual=144"));
     }
@@ -56,21 +56,21 @@ class UniformBlockLayoutVerifierTest {
                 IllegalStateException.class,
                 () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
-        assertTrue(failure.getMessage().contains(PerFrameUniformBlock.GLSL_BLOCK_NAME));
+        assertTrue(failure.getMessage().contains(FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=1"));
         assertTrue(failure.getMessage().contains("actual=5"));
     }
 
     private static FakeReflectionBackend expectedBackend() {
         FakeReflectionBackend backend = new FakeReflectionBackend();
-        backend.indices.put(CameraUniformBlock.GLSL_BLOCK_NAME, 0);
-        backend.indices.put(PerFrameUniformBlock.GLSL_BLOCK_NAME, 1);
+        backend.indices.put(CameraMatricesUniformBlock.GLSL_BLOCK_NAME, 0);
+        backend.indices.put(FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME, 1);
         backend.indices.put(LocalLightUniformBlock.GLSL_BLOCK_NAME, 2);
-        backend.sizes.put(0, CameraUniformBlock.SIZE_BYTES);
-        backend.sizes.put(1, PerFrameUniformBlock.SIZE_BYTES);
+        backend.sizes.put(0, CameraMatricesUniformBlock.SIZE_BYTES);
+        backend.sizes.put(1, FramebufferMetricsUniformBlock.SIZE_BYTES);
         backend.sizes.put(2, LocalLightUniformBlock.SIZE_BYTES);
-        backend.bindings.put(0, CameraUniformBlock.BINDING);
-        backend.bindings.put(1, PerFrameUniformBlock.BINDING);
+        backend.bindings.put(0, CameraMatricesUniformBlock.BINDING);
+        backend.bindings.put(1, FramebufferMetricsUniformBlock.BINDING);
         backend.bindings.put(2, LocalLightUniformBlock.BINDING);
         return backend;
     }

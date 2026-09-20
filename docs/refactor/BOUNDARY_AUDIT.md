@@ -227,9 +227,9 @@ The following public visibility is intentional/current implementation or executa
 | `com.samo.engine.render.opengl.internal.ReferenceSceneRenderer` | Public modifier allows cross-package use from `OpenGlRenderer`, but the type remains in the declared internal root and excluded from the renderer API artifact. | T10 established the responsibility-bearing name/fixture split; accepted T11 keeps this type as lifecycle/native-resource owner while extracting package-private non-owning frame collaborators. |
 | `com.samo.engine.render.opengl.internal.RendererVisualDemo` (visualDemo source set) | Owner-facing standalone demo entry point; not in the production consumer API surface. | T18. |
 | `com.samo.game.client.ClientMain` | Executable composition entry point, not reusable engine API. | T19. |
-| `com.samo.game.client.internal.ClientVersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 candidate renames only the helper while preserving output and executable boundaries. |
+| `com.samo.game.client.internal.ClientVersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 accepted implementation renames only the helper while preserving output and executable boundaries. |
 | `com.samo.game.server.ServerMain` | Headless executable composition entry point, not reusable engine API. | T19. |
-| `com.samo.game.server.internal.ServerVersionReport` | Executable helper; public modifier supports cross-package call from `ServerMain`, not engine consumption. | T19 candidate renames only the helper while preserving output and executable boundaries. |
+| `com.samo.game.server.internal.ServerVersionReport` | Executable helper; public modifier supports cross-package call from `ServerMain`, not engine consumption. | T19 accepted implementation renames only the helper while preserving output and executable boundaries. |
 | `com.samo.game.sandbox.SandboxMain` | Persistent owner-facing playground entry point, not an engine-library API. | T16 keeps the entry point while decomposing internals. |
 | `com.samo.game.sandbox.demo.EngineDemoMain` | Removed legacy compatibility entry point; T17 reference audit found no live code/workflow/test consumer. | Removed in T17; `SandboxMain` / `runSandbox` remain canonical. |
 
@@ -247,7 +247,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | `SandboxMain` decomposition | Game/playground entry point, not engine consumer API; entry point retained. | T16. |
 | `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 removes it after repository-wide reference verification; no replacement alias is introduced. |
 | `RendererVisualDemo` decomposition | Non-production visual-demo entry point remains public only within the dedicated source-set executable surface; extracted collaborators are package-private and not present in the production API artifact. | T18 accepted implementation keeps this boundary unchanged. |
-| client/server `VersionReport` renames | Internal executable helpers, not engine consumer API. | T19 while preserving exact compatibility output. |
+| client/server version-report renames | Internal executable helpers, not engine consumer API. | T19 accepted `ClientVersionReport` / `ServerVersionReport` while preserving exact compatibility output and executable boundaries. |
 | feasibility-spike naming/isolation | Experimental surface. | T20. |
 | broad public engine naming review | Supported engine consumer API. | T21. |
 | internal package moves | Implementation package organization after responsibilities stabilize. | T23. |

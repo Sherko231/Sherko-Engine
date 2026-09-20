@@ -437,9 +437,9 @@ Wiki impact: none — no supported public name or usage changes.
 Sandbox impact: none — no capability or owner-facing usage changes.
 
 
-## P5R-T22 test/fixture/evidence naming candidate
+## P5R-T22 accepted test/fixture/evidence naming result
 
-T22 audits 99 current test classes and all current `@Test` method names after the T03-T21 refactor sequence. Directly coupled tests already use accepted production names; no test class rename is justified.
+Accepted T22 audited 99 current test classes and all current `@Test` method names after the T03-T21 refactor sequence. Directly coupled tests already use accepted production names; no test class rename is justified.
 
 The only naming correction is the negative GLSL fixture `broken.frag` -> `invalid-syntax.frag` and its directly coupled method `rejectsInvalidSyntaxFixtureWithDiagnostics`. The invalid GLSL bytes and assertions are unchanged.
 

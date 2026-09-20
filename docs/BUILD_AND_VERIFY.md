@@ -1848,3 +1848,6 @@ If every changed path ends in `.md`, the `AGENTS.md` Markdown-only CI exemption 
 
 Wiki impact: none — no supported public API name/signature/usage changes.
 Sandbox impact: none — no capability or owner-facing usage changes.
+
+
+Accepted P5R-T21 verification evidence: final audit head `32886cb82e69c199ed6747630aa42b12ac55b125` was merged through PR #347 as `d79f6d6c18490c839157770e51e9908eb2f7e13d`. The complete PR diff contained exactly 8 changed paths and every path ended in `.md`, so the documented Markdown-only exemption applied. No heavy PR CI or post-merge Lightweight run was required or claimed. Source/wiki/boundary review found no justified public rename and no source/wiki/sandbox/runtime change.

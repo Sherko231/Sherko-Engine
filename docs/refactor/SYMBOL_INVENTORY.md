@@ -396,6 +396,6 @@ T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` 
 T16 keeps public `SandboxMain` as the bootstrap/lifecycle entry point and extracts package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize`. `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged; T17-owned control/helper naming and `EngineDemoMain` / `runEngineDemo` compatibility cleanup remain deferred. Owner controls, spatial/camera semantics, fixed scene values, diagnostics, renderer/present ordering, and shutdown behavior remain unchanged.
 
 
-### P5R-T17 active implementation
+### P5R-T17 accepted implementation
 
 T17 removes the verified-obsolete `EngineDemoMain` source and `runEngineDemo` Gradle task, leaving `SandboxMain` / `runSandbox` canonical. It renames only nested `SandboxControls.Action` -> `SandboxAction` and `SandboxControls.Input` -> `SandboxControlInput`. T16 helper names, owner controls, diagnostics, scene/camera behavior, resources, and shutdown semantics remain unchanged.

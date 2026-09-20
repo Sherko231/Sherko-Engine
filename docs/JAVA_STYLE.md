@@ -69,3 +69,5 @@ Checkstyle remains enabled for semantic/static style rules such as wildcard impo
 ## Formatting-only maintenance rule
 
 A repository-wide formatting change must not be mixed with behavior changes. When changing Java logic, apply the formatter after the logic change and review semantic changes separately from mechanical formatting.
+
+The formatter is intentionally enforced before Phase 6 so future asset-pipeline work starts from one deterministic Java layout.

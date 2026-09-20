@@ -401,6 +401,28 @@ The existing focus, input-snapshot, and mouse-motion scenarios/assertions must r
 
 The task adds no new native behavior, dependency, module edge, or public input surface. The exact final PR head therefore requires the normal five-job heavy CI matrix, including the existing P3 focus-loss/raw-motion/input Windows native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #264 can close.
 
+## P5R-T05 GLFW window-mode/size decomposition verification
+
+Issue #265 refactors only internal window-mode, restore-geometry, monitor-targeting, transition-planning/application, and deferred size-delivery responsibilities behind the unchanged public `GlfwWindow` facade.
+
+Run the complete deterministic platform suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --rerun-tasks
+```
+
+Run the architecture boundary regression:
+
+```powershell
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+```
+
+The existing P3-T02/P3-T03 deterministic scenarios and assertions must remain behaviorally unchanged. Repository/source review must also confirm that the public `GlfwWindow` constructor/method declaration set is unchanged; `GlfwWindowModeController`, `GlfwDeferredSizeDelivery`, and the extracted GLFW value records are package-private; accepted T04 input/focus/cursor collaborators are unchanged; and no P5R-T06 input-binding work appears.
+
+Behavioral review must preserve: same-mode no-op; original windowed geometry across direct fullscreen switches; fresh geometry after return to windowed; primary-monitor/current-video-mode borderless/exclusive targeting; original transition failure identity plus one rollback attempt and distinct rollback suppression; initial independent logical/framebuffer queries; post-poll logical-before-framebuffer delivery; independent latest-value coalescing; zero framebuffer axes; and negative-dimension rejection before listener delivery.
+
+The task adds no new native behavior, dependency, module edge, public API, monitor-selection policy, or renderer behavior. The exact final PR head therefore requires the normal five-job heavy CI matrix including the existing hosted-Windows P3-T02 size and P3-T03 window-mode native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #265 can close.
+
 ## P3-T02 logical/framebuffer sizing verification
 
 Issue #85 extends the production `GlfwWindow` boundary with `WindowSizeListener` and owner-thread `pollEvents()` while keeping logical window units distinct from framebuffer pixels. It adds no dependency, renderer, fullscreen/input behavior, raw handle, or content-scale callback API.

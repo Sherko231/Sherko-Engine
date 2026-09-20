@@ -80,8 +80,8 @@ class ReferenceSceneRendererTest {
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
 
         assertEquals(4, resources.uploads.size());
-        assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
-        assertEquals(PerFrameUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
+        assertEquals(CameraMatricesUniformBlock.SIZE_BYTES, resources.uploads.get(0).bytes().length);
+        assertEquals(FramebufferMetricsUniformBlock.SIZE_BYTES, resources.uploads.get(1).bytes().length);
         assertEquals(LocalLightUniformBlock.SIZE_BYTES, resources.uploads.get(2).bytes().length);
         ByteBuffer localLights = ByteBuffer.wrap(resources.uploads.get(2).bytes())
                 .order(ByteOrder.nativeOrder());
@@ -273,7 +273,7 @@ class ReferenceSceneRendererTest {
         assertEquals(
                 2 * DebugLineVertexPacker.VERTEX_STRIDE_BYTES,
                 resources.uploads.get(3).bytes().length);
-        assertEquals(CameraUniformBlock.SIZE_BYTES, resources.uploads.get(4).bytes().length);
+        assertEquals(CameraMatricesUniformBlock.SIZE_BYTES, resources.uploads.get(4).bytes().length);
         assertTrue(draw.trace.contains("debug-state"));
         assertTrue(draw.trace.contains("program:204"));
         assertTrue(draw.trace.contains("vao:102"));
@@ -418,12 +418,12 @@ class ReferenceSceneRendererTest {
 
         ByteBuffer camera = ByteBuffer.wrap(resources.uploads.getFirst().bytes())
                 .order(ByteOrder.nativeOrder());
-        assertEquals(1.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 12 * Float.BYTES));
-        assertEquals(2.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 13 * Float.BYTES));
-        assertEquals(3.0f, camera.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 14 * Float.BYTES));
-        assertEquals(2.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES));
-        assertEquals(3.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 5 * Float.BYTES));
-        assertEquals(4.0f, camera.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 10 * Float.BYTES));
+        assertEquals(1.0f, camera.getFloat(CameraMatricesUniformBlock.VIEW_OFFSET_BYTES + 12 * Float.BYTES));
+        assertEquals(2.0f, camera.getFloat(CameraMatricesUniformBlock.VIEW_OFFSET_BYTES + 13 * Float.BYTES));
+        assertEquals(3.0f, camera.getFloat(CameraMatricesUniformBlock.VIEW_OFFSET_BYTES + 14 * Float.BYTES));
+        assertEquals(2.0f, camera.getFloat(CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES));
+        assertEquals(3.0f, camera.getFloat(CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES + 5 * Float.BYTES));
+        assertEquals(4.0f, camera.getFloat(CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES + 10 * Float.BYTES));
         assertEquals("viewport:0:0:800x600", draw.trace.getFirst());
 
         pipeline.close();
@@ -580,9 +580,9 @@ class ReferenceSceneRendererTest {
     void fragmentVariantInjectsManualEncodeOnlyForLinearDefaultFramebuffer() {
         String source = "#version 460 core\nvoid main() {}";
 
-        assertEquals(source, PresentationMode.HARDWARE_SRGB.fragmentSource(source));
+        assertEquals(source, SrgbPresentationMode.HARDWARE_SRGB.fragmentSource(source));
 
-        String fallback = PresentationMode.MANUAL_SRGB.fragmentSource(source);
+        String fallback = SrgbPresentationMode.MANUAL_SRGB.fragmentSource(source);
         assertTrue(fallback.startsWith(
                 "#version 460 core" + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
         assertTrue(fallback.endsWith("\nvoid main() {}"));
@@ -778,8 +778,8 @@ class ReferenceSceneRendererTest {
 
     private static final class FakeReflectionBackend implements OpenGlUniformBlockReflectionBackend {
         private final Map<String, Integer> indices = Map.of(
-                CameraUniformBlock.GLSL_BLOCK_NAME, 0,
-                PerFrameUniformBlock.GLSL_BLOCK_NAME, 1,
+                CameraMatricesUniformBlock.GLSL_BLOCK_NAME, 0,
+                FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME, 1,
                 LocalLightUniformBlock.GLSL_BLOCK_NAME, 2);
 
         @Override
@@ -790,8 +790,8 @@ class ReferenceSceneRendererTest {
         @Override
         public int uniformBlockDataSize(int programHandle, int blockIndex) {
             return switch (blockIndex) {
-                case 0 -> CameraUniformBlock.SIZE_BYTES;
-                case 1 -> PerFrameUniformBlock.SIZE_BYTES;
+                case 0 -> CameraMatricesUniformBlock.SIZE_BYTES;
+                case 1 -> FramebufferMetricsUniformBlock.SIZE_BYTES;
                 case 2 -> LocalLightUniformBlock.SIZE_BYTES;
                 default -> -1;
             };
@@ -800,8 +800,8 @@ class ReferenceSceneRendererTest {
         @Override
         public int uniformBlockBinding(int programHandle, int blockIndex) {
             return switch (blockIndex) {
-                case 0 -> CameraUniformBlock.BINDING;
-                case 1 -> PerFrameUniformBlock.BINDING;
+                case 0 -> CameraMatricesUniformBlock.BINDING;
+                case 1 -> FramebufferMetricsUniformBlock.BINDING;
                 case 2 -> LocalLightUniformBlock.BINDING;
                 default -> -1;
             };
@@ -879,7 +879,7 @@ class ReferenceSceneRendererTest {
         }
 
         @Override
-        public void clearFrame(PresentationMode presentationMode) {
+        public void clearFrame(SrgbPresentationMode presentationMode) {
             trace.add("clear:" + presentationMode.framebufferSrgbEnabled());
         }
 

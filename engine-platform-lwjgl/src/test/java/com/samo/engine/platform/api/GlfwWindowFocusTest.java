@@ -455,18 +455,18 @@ class GlfwWindowFocusTest {
         }
 
         @Override
-        public GlfwWindow.Dimensions queryLogicalSize(long handle) {
-            return new GlfwWindow.Dimensions(800, 600);
+        public GlfwDimensions queryLogicalSize(long handle) {
+            return new GlfwDimensions(800, 600);
         }
 
         @Override
-        public GlfwWindow.Dimensions queryFramebufferSize(long handle) {
-            return new GlfwWindow.Dimensions(800, 600);
+        public GlfwDimensions queryFramebufferSize(long handle) {
+            return new GlfwDimensions(800, 600);
         }
 
         @Override
-        public GlfwWindow.Position queryWindowPosition(long handle) {
-            return new GlfwWindow.Position(100, 100);
+        public GlfwPosition queryWindowPosition(long handle) {
+            return new GlfwPosition(100, 100);
         }
 
         @Override
@@ -475,13 +475,13 @@ class GlfwWindowFocusTest {
         }
 
         @Override
-        public GlfwWindow.VideoMode queryVideoMode(long monitor) {
-            return new GlfwWindow.VideoMode(1920, 1080, 120);
+        public GlfwVideoMode queryVideoMode(long monitor) {
+            return new GlfwVideoMode(1920, 1080, 120);
         }
 
         @Override
-        public GlfwWindow.Position queryMonitorPosition(long monitor) {
-            return new GlfwWindow.Position(0, 0);
+        public GlfwPosition queryMonitorPosition(long monitor) {
+            return new GlfwPosition(0, 0);
         }
 
         @Override

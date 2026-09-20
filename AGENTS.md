@@ -228,3 +228,12 @@ Before yielding to another agent or opening the final PR:
 10. Record review provenance and unresolved findings in the PR; for phase completion, link integration evidence and the next-phase planning review.
 11. Ensure all intended changes are committed and pushed **before** opening/marking the final PR ready for heavy CI. Uncommitted local state is not transferable through Markdown.
 12. After the final PR run passes, avoid unnecessary candidate changes; merge only while the tested head/base remain current, then require the lightweight exact-merge verifier before task closure unless the Issue explicitly requires stronger post-merge evidence.
+
+## Java formatting
+
+- The authoritative Java formatter is Spotless using the pinned Eclipse JDT profile in `config/formatter/sherko-eclipse-java.xml`.
+- Run `.\gradlew.bat spotlessApply` after editing authored Java and before final verification.
+- The root `check` task includes `spotlessCheck`; do not bypass or weaken it.
+- Do not hand-format Java against the committed profile. If the desired repository style changes, update the formatter contract in a bounded Issue first.
+- Java text blocks are content-bearing runtime strings; the formatter profile must preserve their indentation/content.
+- See `docs/JAVA_STYLE.md` for the current formatting contract and representative shape.

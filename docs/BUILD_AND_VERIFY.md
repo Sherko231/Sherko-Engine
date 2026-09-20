@@ -1080,6 +1080,8 @@ Source review must confirm no production/test/workflow reference remains to the 
 
 Because Java/test/workflow source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #272 can close.
 
+Accepted P5R-T12 evidence: final PR head `85de9922f0fef5bbedc17add1bc41b1065d94f4a` passed all five required jobs in run #465 / `35508358983`, including the renamed P5-T09 native material regression, P5-T14 local-light regression, and P5-T18 integration. PR #329 merged as `aa3cccf885216f4e955c5cf671a96bb73702af8d`; exact merged-master Lightweight verification passed in run #466 / `35508613959`.
+
 Wiki impact: none — no supported public API or consumer usage changes. Sandbox impact: none — owner-facing usage and behavior are unchanged.
 
 ## P5-T07 first indexed static mesh verification

@@ -104,7 +104,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | Symbol | Visibility | Action | Proposed name/location | Current responsibility / rationale | Contract risk |
 | --- | --- | --- | --- | --- | --- |
 | `BoundedDynamicBufferUploader` | package-private class | **KEEP** | — | Name states bounded dynamic upload role and resource ownership behavior. | Internal native ownership; P5R-T14 may simplify duplication only with equivalent cleanup. |
-| `CameraUniformBlock` | package-private class | **RENAME** | `CameraMatricesUniformBlock` | Carries view and projection matrices specifically; proposed name makes payload explicit. | Internal shader ABI: block name/binding/layout cannot change. |
+| `CameraMatricesUniformBlock` | package-private class | **KEEP** | — | T13 canonical name states that this std140 CPU packer carries view/projection matrices specifically. | Internal shader ABI: GLSL `CameraBlock`, binding, offsets, and layout remain unchanged. |
 | `CleanupFailures` | package-private class | **RENAME** | `CleanupFailureSuppression` | Only adds cleanup failures as suppressed while avoiding self-suppression; current plural noun is vague. | Internal failure-preservation semantics must remain exact. |
 | `CpuFrustumCuller` | package-private class | **KEEP** | — | CPU frustum visibility test responsibility is explicit. | Internal spatial semantics. |
 | `DebugLineRenderer` | package-private class | **KEEP** | — | Renders debug lines and owns required GL resources; role is clear. | Internal native ownership. |
@@ -134,8 +134,8 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `OpenGlUniformBlockReflectionBackend` | package-private interface | **KEEP** | — | Reflection backend contract is exact. | Internal shader ABI inspection. |
 | `OpenGlVertexArray` | package-private class | **KEEP** | — | Owned VAO wrapper is precise. | Native ownership/thread affinity. |
 | `OwnedOpenGlHandle` | package-private class | **KEEP** | — | Generic owned GL-handle lifecycle primitive; ownership is explicit in name. | Native ownership/cleanup. |
-| `PerFrameUniformBlock` | package-private class | **RENAME** | `FramebufferMetricsUniformBlock` | Current payload is framebuffer size and inverse size, not general per-frame state; proposed name is responsibility-specific. | Internal shader ABI: GLSL name/binding/layout remain unchanged unless separately authorized. |
-| `PresentationMode` | package-private enum | **RENAME** | `SrgbPresentationMode` | Enum specifically chooses hardware-vs-manual sRGB presentation encoding. | Internal D-056/D-063 presentation semantics. |
+| `FramebufferMetricsUniformBlock` | package-private class | **KEEP** | — | T13 canonical name states that the block payload is framebuffer size and inverse size rather than general per-frame state. | Internal shader ABI: GLSL `PerFrameBlock`, binding, offsets, and layout remain unchanged. |
+| `SrgbPresentationMode` | package-private enum | **KEEP** | — | T13 canonical name states the hardware-vs-manual sRGB presentation-encoding dimension explicitly. | Internal D-056/D-063 presentation semantics. |
 | `RenderMaterialDescriptor` | package-private record | **KEEP** | — | T12 canonical name describes the immutable declarative material value without implying renderer/resource ownership. | Internal material/state behavior; no public resource API. |
 | `SrgbTransfer` | package-private class | **KEEP** | — | Exact sRGB transfer-function utility. | Internal color semantics. |
 | `TextureColorEncoding` | package-private enum | **KEEP** | — | Distinguishes linear vs sRGB texture storage/interpretation. | Internal D-056 color semantics. |
@@ -252,6 +252,16 @@ T11 decomposes only frame-time orchestration while retaining `ReferenceSceneRend
 - `RendererFrameDiagnostics` owns latest-success culling and debug text-counter snapshots.
 
 All four collaborators are package-private and non-owning. Existing material/light/culling/uniform/presentation/resource names and cleanup behavior remain for T12-T15 rather than being pulled into T11.
+
+### P5R-T13 active implementation
+
+T13 applies only three justified internal Java type renames:
+
+- `CameraUniformBlock` -> `CameraMatricesUniformBlock`, naming the view/projection matrix payload explicitly;
+- `PerFrameUniformBlock` -> `FramebufferMetricsUniformBlock`, naming the actual framebuffer-size/inverse payload instead of general frame state;
+- `PresentationMode` -> `SrgbPresentationMode`, naming the exact sRGB presentation dimension.
+
+Fresh review explicitly keeps `LocalLightUniformBlock`, `UniformBlockLayoutVerifier`, `SrgbTransfer`, and `TextureColorEncoding` unchanged. GLSL names `CameraBlock`, `PerFrameBlock`, `LocalLightBlock`, bindings 0/1/2, byte layouts, and `SHERKO_MANUAL_SRGB_ENCODE` remain ABI/behavior contracts rather than Java rename targets.
 
 ### P5R-T12 accepted implementation
 

@@ -4,19 +4,19 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL21;
 
-enum PresentationMode {
+enum SrgbPresentationMode {
     HARDWARE_SRGB(true, false),
     MANUAL_SRGB(false, true);
 
     private final boolean framebufferSrgbEnabled;
     private final boolean manualShaderEncode;
 
-    PresentationMode(boolean framebufferSrgbEnabled, boolean manualShaderEncode) {
+    SrgbPresentationMode(boolean framebufferSrgbEnabled, boolean manualShaderEncode) {
         this.framebufferSrgbEnabled = framebufferSrgbEnabled;
         this.manualShaderEncode = manualShaderEncode;
     }
 
-    static PresentationMode fromDefaultFramebufferEncoding(int encoding) {
+    static SrgbPresentationMode fromDefaultFramebufferEncoding(int encoding) {
         if (encoding == GL21.GL_SRGB) {
             return HARDWARE_SRGB;
         }

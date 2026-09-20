@@ -96,25 +96,25 @@ class UniformBlockNativeTest {
                         100.0f,
                         new Matrix4f());
 
-                ByteBuffer cameraBytes = ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES)
+                ByteBuffer cameraBytes = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES)
                         .order(ByteOrder.nativeOrder());
-                CameraUniformBlock.write(view, projection, cameraBytes);
+                CameraMatricesUniformBlock.write(view, projection, cameraBytes);
 
-                assertEquals(CameraUniformBlock.SIZE_BYTES, cameraBytes.position());
-                assertEquals(view.m00(), cameraBytes.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES));
-                assertEquals(view.m30(), cameraBytes.getFloat(CameraUniformBlock.VIEW_OFFSET_BYTES + 48));
+                assertEquals(CameraMatricesUniformBlock.SIZE_BYTES, cameraBytes.position());
+                assertEquals(view.m00(), cameraBytes.getFloat(CameraMatricesUniformBlock.VIEW_OFFSET_BYTES));
+                assertEquals(view.m30(), cameraBytes.getFloat(CameraMatricesUniformBlock.VIEW_OFFSET_BYTES + 48));
                 assertEquals(
                         projection.m00(),
-                        cameraBytes.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES));
+                        cameraBytes.getFloat(CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES));
                 assertEquals(
                         projection.m32(),
-                        cameraBytes.getFloat(CameraUniformBlock.PROJECTION_OFFSET_BYTES + 56));
+                        cameraBytes.getFloat(CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES + 56));
 
-                ByteBuffer frameBytes = ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES)
+                ByteBuffer frameBytes = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES)
                         .order(ByteOrder.nativeOrder());
-                PerFrameUniformBlock.write(1920, 1080, frameBytes);
+                FramebufferMetricsUniformBlock.write(1920, 1080, frameBytes);
 
-                assertEquals(PerFrameUniformBlock.SIZE_BYTES, frameBytes.position());
+                assertEquals(FramebufferMetricsUniformBlock.SIZE_BYTES, frameBytes.position());
                 assertEquals(1920.0f, frameBytes.getFloat(0));
                 assertEquals(1080.0f, frameBytes.getFloat(4));
             }

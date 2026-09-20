@@ -5,14 +5,14 @@ import java.nio.ByteOrder;
 import java.util.Objects;
 import org.joml.Matrix4fc;
 
-final class CameraUniformBlock {
+final class CameraMatricesUniformBlock {
     static final String GLSL_BLOCK_NAME = "CameraBlock";
     static final int BINDING = 0;
     static final int VIEW_OFFSET_BYTES = 0;
     static final int PROJECTION_OFFSET_BYTES = 64;
     static final int SIZE_BYTES = 128;
 
-    private CameraUniformBlock() {
+    private CameraMatricesUniformBlock() {
     }
 
     static void write(Matrix4fc view, Matrix4fc projection, ByteBuffer destination) {

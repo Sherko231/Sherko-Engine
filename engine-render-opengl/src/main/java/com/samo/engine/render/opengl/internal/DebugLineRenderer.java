@@ -48,7 +48,7 @@ final class DebugLineRenderer implements AutoCloseable {
             OpenGlDrawBackend drawBackend,
             OpenGlUniformBlockReflectionBackend reflectionBackend,
             int cameraBufferHandle,
-            PresentationMode presentationMode,
+            SrgbPresentationMode presentationMode,
             String vertexSource,
             String fragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
@@ -57,7 +57,7 @@ final class DebugLineRenderer implements AutoCloseable {
         OpenGlDrawBackend draw = Objects.requireNonNull(drawBackend, "drawBackend");
         OpenGlUniformBlockReflectionBackend reflection =
                 Objects.requireNonNull(reflectionBackend, "reflectionBackend");
-        PresentationMode mode = Objects.requireNonNull(presentationMode, "presentationMode");
+        SrgbPresentationMode mode = Objects.requireNonNull(presentationMode, "presentationMode");
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");
         guard.assertOwnerThread();
@@ -97,7 +97,7 @@ final class DebugLineRenderer implements AutoCloseable {
             UniformBlockLayoutVerifier.verifyCameraOnly(
                     linkedProgram.handle(), guard, reflection);
             draw.configureDebugLineAttributes(vao.handle(), vertices.handle());
-            draw.bindUniformBuffer(CameraUniformBlock.BINDING, cameraBufferHandle);
+            draw.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, cameraBufferHandle);
 
             return new DebugLineRenderer(
                     guard,

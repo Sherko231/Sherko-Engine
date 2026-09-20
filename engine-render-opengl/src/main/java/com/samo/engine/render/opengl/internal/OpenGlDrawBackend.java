@@ -25,7 +25,7 @@ interface OpenGlDrawBackend {
 
     void setFramebufferSrgbEnabled(boolean enabled);
 
-    void clearFrame(PresentationMode presentationMode);
+    void clearFrame(SrgbPresentationMode presentationMode);
 
     void bindTextureAndSampler(int unit, int texture, int sampler);
 

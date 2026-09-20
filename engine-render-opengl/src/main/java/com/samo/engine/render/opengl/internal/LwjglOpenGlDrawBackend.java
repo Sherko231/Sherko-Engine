@@ -166,7 +166,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void clearFrame(PresentationMode presentationMode) {
+    public void clearFrame(SrgbPresentationMode presentationMode) {
         GL11.glClearColor(
                 presentationMode.clearComponent(0.08f),
                 presentationMode.clearComponent(0.10f),

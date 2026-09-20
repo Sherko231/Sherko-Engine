@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 
-final class PerFrameUniformBlock {
+final class FramebufferMetricsUniformBlock {
     static final String GLSL_BLOCK_NAME = "PerFrameBlock";
     static final int BINDING = 1;
     static final int FRAMEBUFFER_SIZE_AND_INVERSE_OFFSET_BYTES = 0;
     static final int SIZE_BYTES = 16;
 
-    private PerFrameUniformBlock() {
+    private FramebufferMetricsUniformBlock() {
     }
 
     static void write(int framebufferWidth, int framebufferHeight, ByteBuffer destination) {

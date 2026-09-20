@@ -43,17 +43,17 @@ class GlslOfflineValidationTest {
         GlslOfflineValidator.validate(
                 GlslOfflineValidator.Stage.FRAGMENT,
                 "shaders/p5/basic.frag[manual-srgb]",
-                PresentationMode.MANUAL_SRGB.fragmentSource(source));
+                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(source));
         String debugSource = resource("shaders/p5/debug-lines.frag");
         GlslOfflineValidator.validate(
                 GlslOfflineValidator.Stage.FRAGMENT,
                 "shaders/p5/debug-lines.frag[manual-srgb]",
-                PresentationMode.MANUAL_SRGB.fragmentSource(debugSource));
+                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(debugSource));
         String viewModelSource = resource("shaders/p5/view-model.frag");
         GlslOfflineValidator.validate(
                 GlslOfflineValidator.Stage.FRAGMENT,
                 "shaders/p5/view-model.frag[manual-srgb]",
-                PresentationMode.MANUAL_SRGB.fragmentSource(viewModelSource));
+                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(viewModelSource));
     }
 
     @Test

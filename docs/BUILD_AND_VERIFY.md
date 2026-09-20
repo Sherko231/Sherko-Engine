@@ -1872,3 +1872,6 @@ Because Java test/resource paths change, the exact final PR head requires the no
 
 Wiki impact: none — no public API or consumer usage changes.
 Sandbox impact: none — no owner-facing behavior changes.
+
+
+Accepted P5R-T22 verification evidence: final head `5bda2120526a40c4176aa161ba1492060118860f` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #491 / `35530836855`. The accepted resource rename preserved identical fixture bytes/Git blob `fe6d5138a34d2a8903ab88b73b54110b25b6adeb`. PR #349 merged as `387549c83ffa6af9d8d69b0373772e84ac23053c`; exact merged-master Lightweight verification passed in run #492 / `35532808303`. Historical CI/evidence identifiers remained unchanged.

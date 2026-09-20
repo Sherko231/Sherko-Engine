@@ -328,6 +328,9 @@ Sandbox impact: none — no runtime capability or owner-facing usage change.
 
 ## P5R-T22 test/evidence boundary result
 
+Accepted T22 evidence: PR #349 final head `5bda2120526a40c4176aa161ba1492060118860f` passed all five required jobs in run #491 / `35530836855`, merged as `387549c83ffa6af9d8d69b0373772e84ac23053c`, and exact-merge Lightweight verification passed in run #492 / `35532808303`. No production/public/internal boundary changed.
+
+
 T22 does not alter production/public/internal package boundaries. Test vocabulary is already synchronized with accepted production names. The only fixture rename is an invalid GLSL test resource from `broken.frag` to `invalid-syntax.frag`; no production resource path changes.
 
 Historical native/gate environment variables, evidence report/capture paths, workflow artifact names, and phase-gate test names remain stable because they are evidence provenance and automation contracts, not consumer API.

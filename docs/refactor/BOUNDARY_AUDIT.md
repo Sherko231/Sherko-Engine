@@ -246,7 +246,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. T10 renamed the fixed room/world owner and extracted `ReferenceRoomFixture`; T11 extracts package-private `RendererFrameUniformUploader`, `ReferenceSceneVisibilityPlanner`, `ReferenceSceneDrawExecutor`, and `RendererFrameDiagnostics` without promoting or transferring ownership. | T10-T15. |
 | `SandboxMain` decomposition | Game/playground entry point, not engine consumer API; entry point retained. | T16. |
 | `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 removes it after repository-wide reference verification; no replacement alias is introduced. |
-| `RendererVisualDemo` decomposition | Non-production visual-demo entry point remains public only within the dedicated source-set executable surface; extracted collaborators are package-private and not present in the production API artifact. | T18 candidate keeps this boundary unchanged. |
+| `RendererVisualDemo` decomposition | Non-production visual-demo entry point remains public only within the dedicated source-set executable surface; extracted collaborators are package-private and not present in the production API artifact. | T18 accepted implementation keeps this boundary unchanged. |
 | client/server `VersionReport` renames | Internal executable helpers, not engine consumer API. | T19 while preserving exact compatibility output. |
 | feasibility-spike naming/isolation | Experimental surface. | T20. |
 | broad public engine naming review | Supported engine consumer API. | T21. |

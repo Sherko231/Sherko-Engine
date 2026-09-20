@@ -206,9 +206,9 @@ Private implementation-only enums/records that do not materially affect later Ph
 
 ## P5R implementation updates
 
-### P5R-T03 candidate
+### P5R-T03 accepted implementation
 
-The T03 candidate preserves public `GlfwWindow` and extracts the native test/adapter seam into package-private top-level types in the same `com.samo.engine.platform.api` package:
+The accepted T03 implementation preserves public `GlfwWindow` and extracts the native test/adapter seam into package-private top-level types in the same `com.samo.engine.platform.api` package:
 
 - `GlfwNativeBackend` replaces nested `GlfwWindow.Backend`;
 - `LwjglGlfwNativeBackend` replaces nested `GlfwWindow.LwjglBackend`;
@@ -216,6 +216,17 @@ The T03 candidate preserves public `GlfwWindow` and extracts the native test/ada
 - backend event sinks are extracted with GLFW/OpenGL responsibility-bearing names.
 
 The T01 `GlfwWindow` decomposition classification remains active for T04/T05: input/focus/cursor state and window-mode/size transition model types intentionally remain inside the facade for their bounded later tasks. No T03 helper is public and no package reorganization is performed.
+
+### P5R-T04 candidate
+
+The T04 candidate preserves the public `GlfwWindow` facade and resolves the T01 input/focus/cursor decomposition into three package-private top-level responsibility owners in the same package:
+
+- `GlfwInputState` owns focus state, held keyboard/mouse state, frame edges, focus-loss release synthesis, native-to-engine input mapping, and snapshot edge consumption;
+- `GlfwMouseMotionTracker` owns cursor baseline/previous samples and accumulated relative delta; its package-private `MouseDelta` replaces the former `GlfwWindow.MouseMotion` test value;
+- `GlfwCursorCaptureController` owns requested/effective capture, explicit rearm, raw-motion enable/disable, retryable cursor normalization, capture rollback, focus-loss release, and cleanup retry behavior.
+
+`GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
+
 
 ## Cross-check against P5R-T02 through P5R-T25
 

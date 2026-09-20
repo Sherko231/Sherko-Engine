@@ -1,13 +1,13 @@
 # Fatal termination
 
-`FatalTermination` coordinates one synchronous orderly fatal shutdown before process termination.
+`FatalTerminationCoordinator` coordinates one synchronous orderly fatal shutdown before process termination.
 
 ## Create a coordinator
 
 ```java
-import com.samo.engine.core.api.FatalTermination;
+import com.samo.engine.core.api.FatalTerminationCoordinator;
 
-FatalTermination fatalTermination = new FatalTermination(logger);
+FatalTerminationCoordinator fatalTermination = new FatalTerminationCoordinator(logger);
 ```
 
 The public production constructor uses process exit status `1`.
@@ -40,7 +40,7 @@ Failures from logging, cleanup, registry verification, or flush are captured so 
 
 ## One-shot contract
 
-A `FatalTermination` instance is one-shot. Reentrant, concurrent, or later `terminate(...)` calls are rejected.
+A `FatalTerminationCoordinator` instance is one-shot. Reentrant, concurrent, or later `terminate(...)` calls are rejected.
 
 ## Important warning
 

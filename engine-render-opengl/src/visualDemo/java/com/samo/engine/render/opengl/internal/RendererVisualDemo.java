@@ -301,7 +301,7 @@ public final class RendererVisualDemo {
         private final OpenGlProgram program;
         private final RenderMaterialDescriptor opaque;
         private final RenderMaterialDescriptor transparent;
-        private final PresentationMode presentationMode;
+        private final SrgbPresentationMode presentationMode;
         private boolean closed;
 
         private MaterialComparisonOverlay(
@@ -316,7 +316,7 @@ public final class RendererVisualDemo {
                 OpenGlProgram program,
                 RenderMaterialDescriptor opaque,
                 RenderMaterialDescriptor transparent,
-                PresentationMode presentationMode) {
+                SrgbPresentationMode presentationMode) {
             this.draw = draw;
             this.vertexArray = vertexArray;
             this.vertexBuffer = vertexBuffer;
@@ -374,7 +374,7 @@ public final class RendererVisualDemo {
                                 .flip());
                 sampler = OpenGlSampler.createLinearClamp(guard, registry, resources);
 
-                PresentationMode mode = PresentationMode.fromDefaultFramebufferEncoding(
+                SrgbPresentationMode mode = SrgbPresentationMode.fromDefaultFramebufferEncoding(
                         draw.defaultFramebufferColorEncoding());
 
                 vertex = OpenGlShader.compile(

@@ -1805,3 +1805,25 @@ Wiki impact: none — no supported engine API changes.
 Sandbox impact: none — no sandbox behavior changes.
 
 Accepted P5R-T19 verification evidence: final PR head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #487 / `35524411941`. The Build job passed both default executable runs, `verifyHeadlessServerRuntime`, and the end-to-end six-key version-report verifier. PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`; exact merged-master Lightweight verification passed in run #488 / `35524646827`, including committed dependency locks, headless-server runtime isolation, and exact-merge version reporting.
+
+
+## P5R-T20 feasibility-spike naming/isolation verification
+
+Issue #280 keeps the Phase 0/P1 feasibility module experimental. The only Java rename is `IntegratedNativeSoakSpike` -> `IntegratedNativeEvidenceHarness`; both integrated native Gradle task names, P0-T12/P0-T13 durations, evidence labels, JFR paths, external dependency versions, and runtime behavior remain unchanged.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :feasibility-spikes:classes --rerun-tasks
+.\gradlew.bat :feasibility-spikes:check --rerun-tasks
+.\gradlew.bat :feasibility-spikes:tasks --all
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+`:feasibility-spikes:check` includes `verifyFeasibilitySpikeIsolation`, which fails when any other declared subproject configuration contains a Gradle `ProjectDependency` targeting `:feasibility-spikes`. Compilation protects the renamed entry class/wiring. Architecture verification remains a source-level cross-module implementation-boundary check. Repository search must additionally confirm no production Java references `com.samo.spike.*` and no non-historical live reference remains to `IntegratedNativeSoakSpike`.
+
+Do not run P0-T13's 900-second sustained evidence merely for this naming/isolation refactor; T20 creates no new native-stability claim. The ordinary exact-head five-job PR matrix remains required because Java/build source changes. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #280 closes.
+
+Wiki impact: none — no supported engine API changes.
+Sandbox impact: none — no sandbox behavior changes.

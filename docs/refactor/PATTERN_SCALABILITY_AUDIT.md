@@ -116,3 +116,16 @@ Wiki impact: none — no supported public API/usage changes.
 Sandbox impact: none — no owner-facing capability or usage changes.
 
 Durable decision impact: none — this is an internal composition refinement of already accepted Adapter boundaries.
+
+
+## Acceptance record
+
+P5R-T24 was accepted through PR #353.
+
+- Final candidate: `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005`.
+- Heavy verification: run #493 / `35534567287`, all five required jobs passed.
+- Merge commit: `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`.
+- Exact-merge verification: run #494 / `35534881306`, Lightweight master verification passed.
+- Accepted hardening: package-private `OpenGlBackendSet` composes the existing renderer resource/draw/reflection adapters.
+- Rejected speculative patterns remain rejected.
+- Public API/module/native/wiki/sandbox behavior: unchanged.

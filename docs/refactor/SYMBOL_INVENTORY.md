@@ -227,9 +227,9 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
-### P5R-T05 candidate
+### P5R-T05 accepted implementation
 
-The T05 candidate completes the bounded P3/T03-T05 `GlfwWindow` decomposition while preserving the public facade:
+The accepted T05 implementation completes the bounded P3/T03-T05 `GlfwWindow` decomposition while preserving the public facade:
 
 - `GlfwWindowModeController` owns current mode, windowed restore geometry, primary-monitor/current-video-mode validation, transition planning/application, state commit, and one-attempt rollback;
 - `GlfwDeferredSizeDelivery` owns independent logical/framebuffer staging, latest-value coalescing, validation, post-poll delivery order, and lifecycle clearing;

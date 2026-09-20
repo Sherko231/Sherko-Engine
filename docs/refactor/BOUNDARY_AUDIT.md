@@ -356,3 +356,19 @@ Detailed evidence: `docs/refactor/INTERNAL_PACKAGE_AUDIT.md`.
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+## P5R-T24 pattern boundary result
+
+`OpenGlBackendSet` is package-private under the existing renderer internal root. It composes — but does not merge, publish, or redirect — the three accepted renderer adapter contracts:
+
+- `OpenGlResourceBackend`;
+- `OpenGlDrawBackend`;
+- `OpenGlUniformBlockReflectionBackend`.
+
+The production factory constructs the existing LWJGL implementations. No adapter becomes public, no module edge changes, and no service locator/registry/global access path is introduced. Test injection remains explicit.
+
+This change is compatible with T23's KEEP package result: the set stays inside the same connected renderer internal package and requires no visibility widening.
+
+Wiki impact: none.
+Sandbox impact: none.

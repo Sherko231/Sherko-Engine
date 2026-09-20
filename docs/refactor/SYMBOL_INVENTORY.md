@@ -459,3 +459,17 @@ Accepted T23 review selects **KEEP** for the current package layout.
 - `game-client.internal.ClientVersionReport` and `game-server.internal.ServerVersionReport` remain in their existing internal roots; deeper one-class packages would be fragmentation.
 
 No symbol/package/visibility/API/wiki/sandbox change is introduced. The detailed package evidence is in `INTERNAL_PACKAGE_AUDIT.md`.
+
+
+## P5R-T24 pattern/scalability candidate
+
+T24 introduces one package-private internal composition value:
+
+- `OpenGlBackendSet` — immutable grouping of the existing resource/draw/uniform-reflection renderer adapter interfaces, with null validation and a `production()` factory for the current LWJGL implementations.
+
+The individual backend interface/type names remain KEEP. `ReferenceSceneRenderer`, `DebugLineRenderer`, and `ViewModelRenderer` replace only the repeated three-adapter construction parameter cluster with the set.
+
+No Singleton, Service Locator, Object Pool, ECS, job system, command bus, public DI container/backend registry, or mega `OpenGlBackend` abstraction is introduced.
+
+Wiki impact: none.
+Sandbox impact: none.

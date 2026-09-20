@@ -41,8 +41,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
 
     private ReferenceSceneRenderer(
             OpenGlThreadGuard threadGuard,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
+            OpenGlBackendSet backends,
             OpenGlVertexArray vertexArray,
             OpenGlBuffer vertexBuffer,
             OpenGlBuffer indexBuffer,
@@ -76,7 +75,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         this.viewModelRenderer = viewModelRenderer;
         this.localLightSelector = new LocalLightSelector(logger, maxLocalLights);
         this.frameUniformUploader = new RendererFrameUniformUploader(
-                resourceBackend,
+                backends.resourceBackend(),
                 cameraBuffer.handle(),
                 perFrameBuffer.handle(),
                 localLightBuffer.handle());
@@ -85,7 +84,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
                 new CpuFrustumCuller(),
                 new DrawSubmissionSorter());
         this.drawExecutor = new ReferenceSceneDrawExecutor(
-                drawBackend,
+                backends.drawBackend(),
                 program.handle(),
                 vertexArray.handle(),
                 debugLineRenderer,
@@ -129,9 +128,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         return create(
                 threadGuard,
                 registry,
-                new LwjglOpenGlResourceBackend(),
-                new LwjglOpenGlDrawBackend(),
-                new LwjglOpenGlUniformBlockReflectionBackend(),
+                OpenGlBackendSet.production(),
                 logger,
                 maxLocalLights,
                 vertexSource,
@@ -145,17 +142,13 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
     static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            OpenGlBackendSet backends,
             String vertexSource,
             String fragmentSource) {
         return create(
                 threadGuard,
                 registry,
-                resourceBackend,
-                drawBackend,
-                reflectionBackend,
+                backends,
                 new EngineLogger(event -> { }),
                 LocalLightSelector.SHADER_CAPACITY,
                 vertexSource,
@@ -169,9 +162,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
     static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            OpenGlBackendSet backends,
             EngineLogger logger,
             int maxLocalLights,
             String vertexSource,
@@ -179,9 +170,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         return create(
                 threadGuard,
                 registry,
-                resourceBackend,
-                drawBackend,
-                reflectionBackend,
+                backends,
                 logger,
                 maxLocalLights,
                 vertexSource,
@@ -195,9 +184,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
     static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            OpenGlBackendSet backends,
             EngineLogger logger,
             int maxLocalLights,
             String vertexSource,
@@ -208,10 +195,10 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             String viewModelFragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
-        OpenGlResourceBackend gl = Objects.requireNonNull(resourceBackend, "resourceBackend");
-        OpenGlDrawBackend draw = Objects.requireNonNull(drawBackend, "drawBackend");
-        OpenGlUniformBlockReflectionBackend reflection =
-                Objects.requireNonNull(reflectionBackend, "reflectionBackend");
+        OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
+        OpenGlResourceBackend gl = backendSet.resourceBackend();
+        OpenGlDrawBackend draw = backendSet.drawBackend();
+        OpenGlUniformBlockReflectionBackend reflection = backendSet.reflectionBackend();
         EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
         if (maxLocalLights < 1 || maxLocalLights > LocalLightSelector.SHADER_CAPACITY) {
             throw new IllegalArgumentException(
@@ -316,9 +303,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             debugRenderer = DebugLineRenderer.create(
                     guard,
                     resources,
-                    gl,
-                    draw,
-                    reflection,
+                    backendSet,
                     camera.handle(),
                     presentationMode,
                     debugVertSource,
@@ -327,9 +312,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             viewModelRenderer = ViewModelRenderer.create(
                     guard,
                     resources,
-                    gl,
-                    draw,
-                    reflection,
+                    backendSet,
                     camera.handle(),
                     presentationMode,
                     viewModelVertSource,
@@ -337,8 +320,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
 
             return new ReferenceSceneRenderer(
                     guard,
-                    gl,
-                    draw,
+                    backendSet,
                     vao,
                     vertices,
                     indices,

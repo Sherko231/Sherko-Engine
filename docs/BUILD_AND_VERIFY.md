@@ -1898,3 +1898,25 @@ Sandbox impact: none — no owner-facing behavior changes.
 
 
 Accepted P5R-T23 verification evidence: final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` merged through PR #351 as `36352d874c04c383ce53527001e279f7634f973b`. The complete PR diff contained 9 Markdown paths only, so the documented Markdown-only exemption applied. No heavy PR CI or post-merge Lightweight run was required or claimed. The audit introduced no Java/package/build/runtime change.
+
+
+## P5R-T24 pattern/scalability hardening verification
+
+Issue #304 adds package-private `OpenGlBackendSet` and replaces the renderer's repeated resource/draw/reflection backend parameter cluster with that composition object. The individual backend interfaces, LWJGL implementations, public renderer API, native behavior, module edges, dependencies, and workflows remain unchanged.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlBackendSetTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+`OpenGlBackendSetTest` verifies injected adapter identity, null rejection, and that `production()` composes the current LWJGL resource/draw/reflection adapters. Existing `ReferenceSceneRendererTest` coverage verifies resource ownership, draw/state order, shader/uniform behavior, diagnostics, local-light limits, failure cleanup, sRGB presentation, view-model/debug rendering, and test-fake injection through the new set.
+
+Because production Java and tests change, the exact final PR head requires the normal five-job matrix. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #304 closes.
+
+Wiki impact: none — no supported API/usage changes.
+Sandbox impact: none — no owner-facing behavior changes.

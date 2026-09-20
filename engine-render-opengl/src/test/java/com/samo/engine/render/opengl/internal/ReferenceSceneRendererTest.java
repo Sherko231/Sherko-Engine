@@ -41,9 +41,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                reflection,
+                new OpenGlBackendSet(resources, draw, reflection),
                 "vertex",
                 "fragment");
 
@@ -137,9 +135,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 new EngineLogger(events::add),
                 2,
                 "vertex",
@@ -201,9 +197,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 failingLogger,
                 1,
                 "vertex",
@@ -243,9 +237,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         resources.uploads.clear();
@@ -297,9 +289,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
 
@@ -346,9 +336,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
 
@@ -400,9 +388,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         resources.uploads.clear();
@@ -439,9 +425,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         resources.uploads.clear();
@@ -475,9 +459,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
 
@@ -510,9 +492,7 @@ class ReferenceSceneRendererTest {
                 () -> ReferenceSceneRenderer.create(
                         guard,
                         registry,
-                        resources,
-                        draw,
-                        new FakeReflectionBackend(),
+                        new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                         "vertex",
                         "#version 460 core\nvoid main() {}"));
 
@@ -535,9 +515,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "#version 460 core\nvoid main() {}");
         draw.trace.clear();
@@ -597,9 +575,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         draw.trace.clear();
@@ -629,9 +605,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         resources.uploads.clear();
@@ -656,9 +630,7 @@ class ReferenceSceneRendererTest {
         ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
-                resources,
-                draw,
-                new FakeReflectionBackend(),
+                new OpenGlBackendSet(resources, draw, new FakeReflectionBackend()),
                 "vertex",
                 "fragment");
         resources.uploads.clear();
@@ -695,9 +667,7 @@ class ReferenceSceneRendererTest {
                 () -> ReferenceSceneRenderer.create(
                         guard,
                         registry,
-                        resources,
-                        new FakeDrawBackend(),
-                        new FakeReflectionBackend(),
+                        new OpenGlBackendSet(resources, new FakeDrawBackend(), new FakeReflectionBackend()),
                         "vertex",
                         "fragment"));
 

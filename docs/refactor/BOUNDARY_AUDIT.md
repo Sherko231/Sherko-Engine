@@ -304,6 +304,8 @@ Sandbox impact: none — documentation/boundary audit only.
 
 ## P5R-T21 public API naming result
 
+Accepted T21 evidence: PR #347 merged final audit head `32886cb82e69c199ed6747630aa42b12ac55b125` as `d79f6d6c18490c839157770e51e9908eb2f7e13d`; its complete diff was Markdown-only and used the repository CI exemption.
+
 T21 re-audits the supported public P1-P5 consumer surface after the internal refactor sequence stabilized. The complete member-level record is `PUBLIC_API_NAMING_AUDIT.md`.
 
 Result: **no additional public rename is justified**.

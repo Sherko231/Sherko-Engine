@@ -13,7 +13,7 @@ final class ReferenceSceneDrawExecutor {
     private final int vertexArrayHandle;
     private final DebugLineRenderer debugLineRenderer;
     private final ViewModelRenderer viewModelRenderer;
-    private final PresentationMode presentationMode;
+    private final SrgbPresentationMode presentationMode;
 
     ReferenceSceneDrawExecutor(
             OpenGlDrawBackend drawBackend,
@@ -21,7 +21,7 @@ final class ReferenceSceneDrawExecutor {
             int vertexArrayHandle,
             DebugLineRenderer debugLineRenderer,
             ViewModelRenderer viewModelRenderer,
-            PresentationMode presentationMode) {
+            SrgbPresentationMode presentationMode) {
         this.drawBackend = Objects.requireNonNull(drawBackend, "drawBackend");
         this.programHandle = programHandle;
         this.vertexArrayHandle = vertexArrayHandle;

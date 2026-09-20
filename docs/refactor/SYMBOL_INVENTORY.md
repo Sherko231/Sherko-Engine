@@ -253,7 +253,7 @@ T11 decomposes only frame-time orchestration while retaining `ReferenceSceneRend
 
 All four collaborators are package-private and non-owning. Existing material/light/culling/uniform/presentation/resource names and cleanup behavior remain for T12-T15 rather than being pulled into T11.
 
-### P5R-T13 active implementation
+### P5R-T13 accepted implementation
 
 T13 applies only three justified internal Java type renames:
 

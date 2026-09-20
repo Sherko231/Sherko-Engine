@@ -1108,6 +1108,8 @@ Source review must confirm no production/test reference remains to the three rep
 
 Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #273 can close.
 
+Accepted P5R-T13 evidence: final PR head `ad89e199face9e4ad90da54a021de772c039d6ad` passed all five required jobs in run #467 / `35510543823`, including P5-T06 uniform-block ABI/reflection, P5-T15 sRGB presentation, and P5-T18 integration. PR #331 merged as `4d45a9468d96b72bdbfc911647bf57e622f64558`; exact merged-master Lightweight verification passed in run #468 / `35510816660`.
+
 Wiki impact: none — supported renderer API and consumer usage are unchanged. Sandbox impact: none — owner-facing controls and rendering behavior are unchanged.
 
 ## P5-T07 first indexed static mesh verification

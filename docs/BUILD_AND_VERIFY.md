@@ -673,6 +673,27 @@ Accepted P5R-T06 evidence: final PR head `791488bfcbae9573cebdb5fe5c8318d238b79c
 
 Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
 
+## P5R-T07 core lifecycle naming verification
+
+Issue #267 applies the D-066 public type renames `SubsystemStartupCoordinator` and `FatalTerminationCoordinator` only. Run the focused lifecycle suites:
+
+```powershell
+.\\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.FatalTerminationCoordinatorTest" --tests "com.samo.engine.core.api.Phase2IntegratedGateTest" --rerun-tasks
+```
+
+Run architecture/headless/dependency checks:
+
+```powershell
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+Repository review must confirm that the former production/test filenames are gone; no compatibility alias remains; the new coordinator files differ from their accepted predecessors only by the authorized declaring/constructor/type-reference names; existing lifecycle assertions/scenarios remain equivalent; D-020/D-029 historical decision rows remain intact; and the API index plus lifecycle/subsystem-composition/fatal-termination wiki pages use the new public names.
+
+The task changes supported public API names and Java source, so the final candidate requires the five-job heavy CI matrix on its exact head. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #267 can close. Independent review is required by policy for the public rename; if unavailable, record that honestly with remaining risk. Sandbox impact is none because the persistent sandbox does not directly consume either lifecycle coordinator.
+
+
 ## P3-T04A historical sandbox-origin verification
 
 Issue #149 originally turned the `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. Its original acceptance used a scripted timeline and `EngineDemoTimelineTest`. That historical evidence remains valid for the task as it merged, but **it is not the current sandbox contract**. Issue #165 supersedes the presentation/maintenance model with the persistent cumulative playground described in `AGENTS.md` and `game-sandbox/README.md`.

@@ -227,6 +227,18 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
+### P5R-T09 accepted KEEP audit
+
+T09 re-audited the live engine-core spatial/math vocabulary against the canonical spatial conventions and D-041 through D-047 and intentionally retained every reviewed public name:
+
+- `Transform` remains the canonical local/world hierarchy transform;
+- `CameraMatrices` remains the view/perspective construction boundary;
+- `ScreenRays` remains the screen/viewport-to-world ray boundary;
+- `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, and `Frustum3f` remain conventional geometry value names;
+- `TransformQuantization`, `QuantizedPosition`, and `QuantizedRotation` remain bounded value-level quantization names without packet/replication claims.
+
+Internal local/world/cache, hierarchy invalidation, camera basis, viewport/NDC/unprojection, geometry/frustum, and quantization encode/decode vocabulary was also reviewed and retained. No ambiguity or mixed responsibility justified a rename/decomposition, and no coordinate/unit/tolerance/allocation/serialization semantics changed.
+
 ### P5R-T08 accepted KEEP audit
 
 T08 re-audited the live `engine-core` configuration, logging, timing, and native-resource ownership vocabulary and intentionally retained every reviewed name. The result matches the T01 inventory rather than creating rename churn:

@@ -465,7 +465,7 @@ jobs:
       - name: Verify P5-T09 material record and render-state policy
         env:
           SHERKO_P5_T09_NATIVE: "true"
-        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RendererMaterialNativeTest" --rerun-tasks
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RenderMaterialDescriptorNativeTest" --rerun-tasks
 
       - name: Upload P5-T09 material evidence
         if: always()
@@ -473,7 +473,7 @@ jobs:
         with:
           name: p5-t09-materials
           path: |
-            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.RendererMaterialNativeTest.xml
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.RenderMaterialDescriptorNativeTest.xml
             engine-render-opengl/build/reports/p5/p5-t09-materials.txt
             engine-render-opengl/build/reports/p5/p5-t09-materials.png
           if-no-files-found: error

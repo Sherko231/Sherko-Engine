@@ -91,8 +91,11 @@ val verifyPublicApiArtifact by tasks.registering {
                     && "com/samo/engine/render/api/RenderSpotLight.class" in entries) {
                 "Renderer runtime artifact must contain the supported renderer/local-light API"
             }
-            check("com/samo/engine/render/opengl/internal/IndexedStaticMeshPipeline.class" in entries) {
-                "Renderer runtime artifact must retain the indexed-mesh implementation"
+            check("com/samo/engine/render/opengl/internal/ReferenceSceneRenderer.class" in entries) {
+                "Renderer runtime artifact must retain the reference-scene implementation"
+            }
+            check("com/samo/engine/render/opengl/internal/ReferenceRoomFixture.class" in entries) {
+                "Renderer runtime artifact must retain the reference-room fixture data"
             }
             check("shaders/p5/basic.vert" in entries
                     && "shaders/p5/basic.frag" in entries

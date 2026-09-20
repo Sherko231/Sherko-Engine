@@ -227,7 +227,7 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
-### P5R-T10 candidate
+### P5R-T10 accepted implementation
 
 T10 applies the inventory's fixed reference-scene decomposition in one bounded step:
 

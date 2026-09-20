@@ -1030,6 +1030,8 @@ Repository/source review must confirm `ReferenceRoomFixture` is package-private,
 
 The task changes Java/build/workflow/test source, so the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #270 can close.
 
+Accepted P5R-T10 evidence: final PR head `a3d376eaf786c63e2e8e7e823020c4d2b6312d2b` passed all five required jobs in run #460 / `35505791294`, including the hosted-Windows renderer/native regressions and P5-T18 Phase 5 exit integration. PR #325 merged as `53d31e4b8dea6fd9b26dd64a2df859d929befad6`; exact merged-master Lightweight verification passed in run #461 / `35506050544`.
+
 Wiki impact: none — supported public renderer API and intended usage are unchanged. Sandbox impact: none — the sandbox continues using `OpenGlRenderer` unchanged.
 
 ## P5-T07 first indexed static mesh verification

@@ -282,7 +282,7 @@ Successful validation returns an immutable map containing all three canonical ke
 
 ## Phase 5R reference-scene renderer decomposition — P5R-T10 / Issue #270
 
-The P5R-T10 candidate renames renderer-internal `IndexedStaticMeshPipeline` to `ReferenceSceneRenderer` because the implementation now owns the renderer's fixed reference-room/world path rather than a generic indexed-mesh pipeline. `OpenGlRenderer` keeps its supported public signatures and delegates internally to that renamed implementation.
+The accepted P5R-T10 implementation renames renderer-internal `IndexedStaticMeshPipeline` to `ReferenceSceneRenderer` because the implementation owns the renderer's fixed reference-room/world path rather than a generic indexed-mesh pipeline. `OpenGlRenderer` keeps its supported public signatures and delegates internally to that renamed implementation.
 
 Package-private `ReferenceRoomFixture` now owns only the fixed CPU-side room fixture data: exact vertex/index counts and byte sizes, the accepted reference-room world AABB, the exact 24 position/normal/UV vertices, the exact 36 unsigned-int indices, and the existing 4x4 sRGB texture bytes/dimensions. GL object creation, shader/program/material setup, presentation negotiation, uniform/light uploads, culling/sorting, draw execution, debug/view-model composition, diagnostics publication, and cleanup ordering remain in `ReferenceSceneRenderer`; those later responsibilities are intentionally left for T11-T15.
 

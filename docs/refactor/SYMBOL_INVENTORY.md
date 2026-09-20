@@ -161,7 +161,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `SandboxSceneSetup` | package-private class | **KEEP** | — | T16 owner for fixed sandbox lights/debug primitives, world projection, and per-frame render-packet construction. | Sandbox spatial/scene values must remain unchanged. |
 | `SandboxDiagnostics` | package-private class | **KEEP** | — | T16 owner for periodic diagnostic timing, mouse accumulation, render/debug counter assembly, and publication. | Owner diagnostic wording/meaning/cadence. |
 | `SandboxFramebufferSize` | package-private class | **KEEP** | — | T16 top-level owner for mutable current framebuffer pixel dimensions consumed by the application loop. | DPI/framebuffer dimension semantics. |
-| `EngineDemoMain` | public class | **REMOVE** | `Remove legacy compatibility entry point after reference verification` | Source explicitly marks it legacy and redirects to SandboxMain/runSandbox; P5R-T17 owns compatibility cleanup. | Compatibility risk; delete only after repo/reference/owner-facing command verification. |
+| `EngineDemoMain` | removed legacy sandbox entry point | **REMOVE** | — | T17 reference audit confirmed no live code/workflow/test consumer; canonical `SandboxMain` / `runSandbox` remains. | Historical documentation may mention it only as removed compatibility provenance. |
 | `ServerMain` | public class | **KEEP** | — | Executable headless server bootstrap entry point is clear. | Headless/runtime verification boundary. |
 | `game-server.internal.VersionReport` | public class in internal package | **RENAME** | `ServerVersionReport` | Generic VersionReport is ambiguous outside package/import context; P5R-T19 targets bootstrap/report naming. | Internal package but public modifier; emitted output must remain byte/meaning compatible. |
 
@@ -207,8 +207,8 @@ They are not permission to add Phase 6+ implementation during P5R.
 | `OpenGlShader` | `Stage` | package-level nested enum | KEEP | — | Shader stage enum is precise in owner context. |
 | `RendererVisualDemo` | `DemoLighting` | package-level nested record | RENAME | `AnimatedDemoLighting` (provisional) | Value specifically carries animated demo lights + debug markers; T18 should decide final name. |
 | `RendererVisualDemo` | `MaterialComparisonOverlay` | private nested class | MOVE | Top-level/package-private internal visual-demo collaborator | Owns distinct GL overlay resources; T18 decomposition candidate. |
-| `SandboxControls` | `Action` | package-level nested enum | RENAME | `SandboxAction` | Bare `Action` is ambiguous when extracted/used outside owner context; P5R-T17 may retain nested form if no extraction occurs. |
-| `SandboxControls` | `Input` | package-level nested record | RENAME | `SandboxControlInput` | Bare `Input` is vague; exact name should follow T16/T17 decomposition. |
+| `SandboxControls` | `SandboxAction` | package-level nested enum | KEEP | — | T17 canonical nested name remains explicit when consumed by `SandboxApplicationLoop` / `SandboxControlState`. | Owner-control members/order/semantics unchanged. |
+| `SandboxControls` | `SandboxControlInput` | package-level nested record | KEEP | — | T17 canonical nested name states this value is sandbox owner-control input, not platform input generally. | Record fields/order/semantics unchanged. |
 | `SandboxDiagnosticFormatter` | `DiagnosticValues` | package-level nested record | KEEP | — | Clear in owner context; no need to churn unless moved. |
 
 Private implementation-only enums/records that do not materially affect later Phase 5R planning are intentionally not promoted into the inventory merely to create churn.
@@ -394,3 +394,8 @@ T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` 
 ### P5R-T16 accepted implementation
 
 T16 keeps public `SandboxMain` as the bootstrap/lifecycle entry point and extracts package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize`. `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged; T17-owned control/helper naming and `EngineDemoMain` / `runEngineDemo` compatibility cleanup remain deferred. Owner controls, spatial/camera semantics, fixed scene values, diagnostics, renderer/present ordering, and shutdown behavior remain unchanged.
+
+
+### P5R-T17 active implementation
+
+T17 removes the verified-obsolete `EngineDemoMain` source and `runEngineDemo` Gradle task, leaving `SandboxMain` / `runSandbox` canonical. It renames only nested `SandboxControls.Action` -> `SandboxAction` and `SandboxControls.Input` -> `SandboxControlInput`. T16 helper names, owner controls, diagnostics, scene/camera behavior, resources, and shutdown semantics remain unchanged.

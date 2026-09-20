@@ -112,7 +112,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `DirectionalLight` | package-private record | **KEEP** | — | Internal directional-light value is exact. | Internal shader/light semantics. |
 | `DrawSubmission` | package-private record | **KEEP** | — | Internal draw submission descriptor is precise. | Internal render ordering/state semantics. |
 | `DrawSubmissionSorter` | package-private class | **KEEP** | — | Establishes documented draw order; role suffix is correct. | Internal ordering contract. |
-| `IndexedStaticMeshPipeline` | public-in-internal-package class | **DECOMPOSE** | `Provisional: ReferenceSceneRenderer plus extracted reference-room mesh/material fixture construction` | 741-line fixed reference-scene path mixes fixture construction, frame orchestration, culling, draw execution, uniforms, lighting, diagnostics, and owned GL resources; P5R-T10/T11 target it. | Implementation type but public modifier; renderer output, GL ownership, shader/state semantics must remain unchanged. |
+| `ReferenceSceneRenderer` | public-in-internal-package class | **DECOMPOSE** | T10 accepted name; T11 owns later frame-orchestration decomposition | Fixed renderer-owned reference-room/world path. T10 removes room byte construction into `ReferenceRoomFixture` while keeping GL ownership, frame orchestration, culling, draw execution, uniforms, lighting, diagnostics, debug/view-model composition, and cleanup behavior intact. | Implementation type but public modifier for cross-package `OpenGlRenderer` access; excluded from API artifact. |
 | `LocalLightSelection` | package-private class | **RENAME** | `LocalLightSelector` | This is a stateful bounded selector; role noun should name the actor rather than the result. | Internal selection capacity/logging semantics. |
 | `LocalLightUniformBlock` | package-private class | **KEEP** | — | Payload and shader block role are explicit. | Internal shader ABI/layout. |
 | `LwjglOpenGlDrawBackend` | package-private class | **KEEP** | — | LWJGL adapter implementing the OpenGL draw backend contract. | Internal native adapter/thread affinity. |
@@ -226,6 +226,17 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 - `GlfwCursorCaptureController` owns requested/effective capture, explicit rearm, raw-motion enable/disable, retryable cursor normalization, capture rollback, focus-loss release, and cleanup retry behavior.
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
+
+### P5R-T10 candidate
+
+T10 applies the inventory's fixed reference-scene decomposition in one bounded step:
+
+- `IndexedStaticMeshPipeline` becomes `ReferenceSceneRenderer`, matching the implementation's current renderer-owned reference-room/world role;
+- package-private `ReferenceRoomFixture` owns only fixed CPU-side room geometry/index/texture/bounds/count constants and byte construction;
+- `OpenGlRenderer` keeps the same public API and delegates to the renamed internal implementation;
+- frame orchestration, culling, sorting, uniform/light upload, draw execution, diagnostics, resource ownership, debug/view-model composition, and cleanup remain in `ReferenceSceneRenderer` for later bounded tasks.
+
+No public renderer/resource/material API is added and no Phase 5 output/state/ownership semantics change.
 
 ### P5R-T09 accepted KEEP audit
 

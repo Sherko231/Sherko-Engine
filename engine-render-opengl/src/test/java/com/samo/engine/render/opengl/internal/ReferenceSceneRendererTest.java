@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL21;
 
-class IndexedStaticMeshPipelineTest {
+class ReferenceSceneRendererTest {
     @Test
     void configuresKnownIndexedMeshAndExactDrawState() {
         OpenGlThreadGuard guard = boundGuard();
@@ -38,7 +38,7 @@ class IndexedStaticMeshPipelineTest {
         FakeDrawBackend draw = new FakeDrawBackend();
         FakeReflectionBackend reflection = new FakeReflectionBackend();
 
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -134,7 +134,7 @@ class IndexedStaticMeshPipelineTest {
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
         List<EngineLogger.Event> events = new ArrayList<>();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -198,7 +198,7 @@ class IndexedStaticMeshPipelineTest {
         EngineLogger failingLogger = new EngineLogger(event -> {
             throw new IllegalStateException("fixture logger failure");
         });
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -240,7 +240,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -294,7 +294,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -343,7 +343,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -397,7 +397,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -436,7 +436,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -472,7 +472,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -507,7 +507,7 @@ class IndexedStaticMeshPipelineTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> IndexedStaticMeshPipeline.create(
+                () -> ReferenceSceneRenderer.create(
                         guard,
                         registry,
                         resources,
@@ -532,7 +532,7 @@ class IndexedStaticMeshPipelineTest {
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
         draw.defaultFramebufferEncoding = GL11.GL_LINEAR;
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -594,7 +594,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -626,7 +626,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -653,7 +653,7 @@ class IndexedStaticMeshPipelineTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
         FakeDrawBackend draw = new FakeDrawBackend();
-        IndexedStaticMeshPipeline pipeline = IndexedStaticMeshPipeline.create(
+        ReferenceSceneRenderer pipeline = ReferenceSceneRenderer.create(
                 guard,
                 registry,
                 resources,
@@ -692,7 +692,7 @@ class IndexedStaticMeshPipelineTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> IndexedStaticMeshPipeline.create(
+                () -> ReferenceSceneRenderer.create(
                         guard,
                         registry,
                         resources,

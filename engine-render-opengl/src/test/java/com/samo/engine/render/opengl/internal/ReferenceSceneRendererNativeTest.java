@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
-class IndexedStaticMeshNativeTest {
+class ReferenceSceneRendererNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T07_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;

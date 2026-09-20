@@ -433,7 +433,7 @@ jobs:
       - name: Verify P5-T07 indexed static mesh draw
         env:
           SHERKO_P5_T07_NATIVE: "true"
-        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshNativeTest" --rerun-tasks
+        run: .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererNativeTest" --rerun-tasks
 
       - name: Upload P5-T07 indexed mesh evidence
         if: always()
@@ -441,7 +441,7 @@ jobs:
         with:
           name: p5-t07-indexed-mesh
           path: |
-            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.IndexedStaticMeshNativeTest.xml
+            engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.ReferenceSceneRendererNativeTest.xml
             engine-render-opengl/build/reports/p5/p5-t07-indexed-mesh.txt
             engine-render-opengl/build/reports/p5/p5-t07-indexed-mesh.png
           if-no-files-found: error

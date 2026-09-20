@@ -19,20 +19,12 @@ import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 
-public final class IndexedStaticMeshPipeline implements AutoCloseable {
-    private static final int ROOM_VERTEX_COUNT = 24;
-    private static final int ROOM_INDEX_COUNT = 36;
-    private static final int VERTEX_BYTES = ROOM_VERTEX_COUNT * 8 * Float.BYTES;
-    private static final int INDEX_BYTES = ROOM_INDEX_COUNT * Integer.BYTES;
+public final class ReferenceSceneRenderer implements AutoCloseable {
     private static final int PROGRAM_KEY_REFERENCE = 0;
     private static final int MATERIAL_KEY_BASELINE = 0;
     private static final int MESH_KEY_REFERENCE = 0;
     private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT =
             new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
-    private static final Aabb3f REFERENCE_MESH_WORLD_BOUNDS =
-            new Aabb3f(
-                    new Vector3f(-2.0f, -1.5f, -3.0f),
-                    new Vector3f(2.0f, 1.5f, 0.5f));
 
     private final OpenGlThreadGuard threadGuard;
     private final OpenGlResourceBackend resourceBackend;
@@ -67,7 +59,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
     private List<DebugTextCounter> lastDebugTextCounters = List.of();
     private boolean closeAttempted;
 
-    private IndexedStaticMeshPipeline(
+    private ReferenceSceneRenderer(
             OpenGlThreadGuard threadGuard,
             OpenGlResourceBackend resourceBackend,
             OpenGlDrawBackend drawBackend,
@@ -109,7 +101,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
     }
 
-    public static IndexedStaticMeshPipeline createProduction(
+    public static ReferenceSceneRenderer createProduction(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             String vertexSource,
@@ -131,7 +123,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 viewModelFragmentSource);
     }
 
-    public static IndexedStaticMeshPipeline createProduction(
+    public static ReferenceSceneRenderer createProduction(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             EngineLogger logger,
@@ -158,7 +150,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 viewModelFragmentSource);
     }
 
-    static IndexedStaticMeshPipeline create(
+    static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend resourceBackend,
@@ -182,7 +174,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 "#version 460 core\nvoid main() {}");
     }
 
-    static IndexedStaticMeshPipeline create(
+    static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend resourceBackend,
@@ -208,7 +200,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                 "#version 460 core\nvoid main() {}");
     }
 
-    static IndexedStaticMeshPipeline create(
+    static ReferenceSceneRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
             OpenGlResourceBackend resourceBackend,
@@ -260,12 +252,12 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
             vao = OpenGlVertexArray.create(guard, resources, gl);
 
             vertices = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(vertices.handle(), VERTEX_BYTES);
-            gl.uploadBufferSubData(vertices.handle(), 0L, roomVertices());
+            gl.allocateDynamicBufferStorage(vertices.handle(), ReferenceRoomFixture.VERTEX_BYTES);
+            gl.uploadBufferSubData(vertices.handle(), 0L, ReferenceRoomFixture.vertices());
 
             indices = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(indices.handle(), INDEX_BYTES);
-            gl.uploadBufferSubData(indices.handle(), 0L, roomIndices());
+            gl.allocateDynamicBufferStorage(indices.handle(), ReferenceRoomFixture.INDEX_BYTES);
+            gl.uploadBufferSubData(indices.handle(), 0L, ReferenceRoomFixture.indices());
 
             camera = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(camera.handle(), CameraUniformBlock.SIZE_BYTES);
@@ -281,9 +273,9 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     resources,
                     gl,
                     TextureColorEncoding.SRGB_COLOR,
-                    4,
-                    4,
-                    referenceRoomTexture());
+                    ReferenceRoomFixture.TEXTURE_WIDTH,
+                    ReferenceRoomFixture.TEXTURE_HEIGHT,
+                    ReferenceRoomFixture.textureRgba());
             sampler = OpenGlSampler.createLinearClamp(guard, resources, gl);
 
             vertex = OpenGlShader.compile(
@@ -351,7 +343,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
                     viewModelVertSource,
                     viewModelFragSource);
 
-            return new IndexedStaticMeshPipeline(
+            return new ReferenceSceneRenderer(
                     guard,
                     gl,
                     draw,
@@ -443,10 +435,10 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         int culledCandidates = 0;
         int submittedDraws = 0;
         ArrayList<DrawSubmission> visibleSubmissions = new ArrayList<>(1);
-        float referenceDepth = cameraDepth(viewMatrix, REFERENCE_MESH_WORLD_BOUNDS);
+        float referenceDepth = cameraDepth(viewMatrix, ReferenceRoomFixture.WORLD_BOUNDS);
 
         testedCandidates++;
-        if (frustumCuller.isVisible(frustum, REFERENCE_MESH_WORLD_BOUNDS)) {
+        if (frustumCuller.isVisible(frustum, ReferenceRoomFixture.WORLD_BOUNDS)) {
             visibleCandidates++;
             visibleSubmissions.add(new DrawSubmission(
                     baselineMaterial,
@@ -531,7 +523,7 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         drawBackend.useProgram(programHandle);
         drawBackend.bindVertexArray(vertexArray.handle());
         try {
-            drawBackend.drawIndexedTriangles(ROOM_INDEX_COUNT);
+            drawBackend.drawIndexedTriangles(ReferenceRoomFixture.INDEX_COUNT);
         } finally {
             drawBackend.bindDefaultVertexArray();
             drawBackend.useDefaultProgram();
@@ -576,124 +568,6 @@ public final class IndexedStaticMeshPipeline implements AutoCloseable {
         closeInto(failures, vertexBuffer);
         closeInto(failures, vertexArray);
         throwCleanupFailure(failures);
-    }
-
-    private static ByteBuffer roomVertices() {
-        ByteBuffer data = ByteBuffer.allocateDirect(VERTEX_BYTES).order(ByteOrder.nativeOrder());
-
-        putRoomQuad(
-                data,
-                -2.0f, -1.5f, -3.0f,
-                2.0f, -1.5f, -3.0f,
-                2.0f, 1.5f, -3.0f,
-                -2.0f, 1.5f, -3.0f,
-                0.0f, 0.0f, 1.0f);
-        putRoomQuad(
-                data,
-                -2.0f, -1.5f, 0.5f,
-                2.0f, -1.5f, 0.5f,
-                2.0f, -1.5f, -3.0f,
-                -2.0f, -1.5f, -3.0f,
-                0.0f, 1.0f, 0.0f);
-        putRoomQuad(
-                data,
-                -2.0f, 1.5f, -3.0f,
-                2.0f, 1.5f, -3.0f,
-                2.0f, 1.5f, 0.5f,
-                -2.0f, 1.5f, 0.5f,
-                0.0f, -1.0f, 0.0f);
-        putRoomQuad(
-                data,
-                -2.0f, -1.5f, 0.5f,
-                -2.0f, -1.5f, -3.0f,
-                -2.0f, 1.5f, -3.0f,
-                -2.0f, 1.5f, 0.5f,
-                1.0f, 0.0f, 0.0f);
-        putRoomQuad(
-                data,
-                2.0f, -1.5f, -3.0f,
-                2.0f, -1.5f, 0.5f,
-                2.0f, 1.5f, 0.5f,
-                2.0f, 1.5f, -3.0f,
-                -1.0f, 0.0f, 0.0f);
-        putRoomQuadUv(
-                data,
-                -1.20f, -0.80f, -1.0f,
-                1.20f, -0.80f, -1.0f,
-                1.20f, 0.80f, -1.0f,
-                -1.20f, 0.80f, -1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.25f, 0.25f);
-        return data.flip();
-    }
-
-    private static void putRoomQuad(
-            ByteBuffer data,
-            float x0, float y0, float z0,
-            float x1, float y1, float z1,
-            float x2, float y2, float z2,
-            float x3, float y3, float z3,
-            float nx, float ny, float nz) {
-        putRoomQuadUv(
-                data,
-                x0, y0, z0,
-                x1, y1, z1,
-                x2, y2, z2,
-                x3, y3, z3,
-                nx, ny, nz,
-                1.0f, 1.0f);
-    }
-
-    private static void putRoomQuadUv(
-            ByteBuffer data,
-            float x0, float y0, float z0,
-            float x1, float y1, float z1,
-            float x2, float y2, float z2,
-            float x3, float y3, float z3,
-            float nx, float ny, float nz,
-            float maxU, float maxV) {
-        putRoomVertex(data, x0, y0, z0, nx, ny, nz, 0.0f, 0.0f);
-        putRoomVertex(data, x1, y1, z1, nx, ny, nz, maxU, 0.0f);
-        putRoomVertex(data, x2, y2, z2, nx, ny, nz, maxU, maxV);
-        putRoomVertex(data, x3, y3, z3, nx, ny, nz, 0.0f, maxV);
-    }
-
-    private static void putRoomVertex(
-            ByteBuffer data,
-            float x, float y, float z,
-            float nx, float ny, float nz,
-            float u, float v) {
-        data.putFloat(x).putFloat(y).putFloat(z);
-        data.putFloat(nx).putFloat(ny).putFloat(nz);
-        data.putFloat(u).putFloat(v);
-    }
-
-    private static ByteBuffer roomIndices() {
-        ByteBuffer data = ByteBuffer.allocateDirect(INDEX_BYTES).order(ByteOrder.nativeOrder());
-        for (int quad = 0; quad < 6; quad++) {
-            int base = quad * 4;
-            data.putInt(base);
-            data.putInt(base + 1);
-            data.putInt(base + 2);
-            data.putInt(base);
-            data.putInt(base + 2);
-            data.putInt(base + 3);
-        }
-        return data.flip();
-    }
-
-    private static ByteBuffer referenceRoomTexture() {
-        int[] rgba = {
-            128, 128, 128, 255,  70, 150, 210, 255,  210, 110, 70, 255,   70, 150, 210, 255,
-             70, 150, 210, 255, 210, 110, 70, 255,    70, 150, 210, 255, 210, 110, 70, 255,
-            210, 110, 70, 255,   70, 150, 210, 255,  210, 110, 70, 255,   70, 150, 210, 255,
-             70, 150, 210, 255, 210, 110, 70, 255,    70, 150, 210, 255, 210, 110, 70, 255
-        };
-        ByteBuffer data = ByteBuffer.allocateDirect(rgba.length).order(ByteOrder.nativeOrder());
-        for (int component : rgba) {
-            data.put((byte) component);
-        }
-        return data.flip();
     }
 
     private static void suppressClose(Throwable failure, AutoCloseable resource) {

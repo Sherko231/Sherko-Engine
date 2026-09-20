@@ -4,7 +4,7 @@ import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
-import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
+import com.samo.engine.render.opengl.internal.ReferenceSceneRenderer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,10 +32,10 @@ import org.joml.Matrix4fc;
  * components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
-    private final IndexedStaticMeshPipeline pipeline;
+    private final ReferenceSceneRenderer referenceSceneRenderer;
 
-    private OpenGlRenderer(IndexedStaticMeshPipeline pipeline) {
-        this.pipeline = pipeline;
+    private OpenGlRenderer(ReferenceSceneRenderer referenceSceneRenderer) {
+        this.referenceSceneRenderer = referenceSceneRenderer;
     }
 
     public static OpenGlRenderer create(
@@ -63,7 +63,7 @@ public final class OpenGlRenderer implements AutoCloseable {
         if (maxLocalLights < 1 || maxLocalLights > 8) {
             throw new IllegalArgumentException("maxLocalLights must be within [1,8]");
         }
-        return new OpenGlRenderer(IndexedStaticMeshPipeline.createProduction(
+        return new OpenGlRenderer(ReferenceSceneRenderer.createProduction(
                 guard,
                 registry,
                 engineLogger,
@@ -77,7 +77,7 @@ public final class OpenGlRenderer implements AutoCloseable {
     }
 
     public void render(RenderFramePacket frame) {
-        pipeline.render(Objects.requireNonNull(frame, "frame"));
+        referenceSceneRenderer.render(Objects.requireNonNull(frame, "frame"));
     }
 
     /**
@@ -86,7 +86,7 @@ public final class OpenGlRenderer implements AutoCloseable {
      * <p>A failed render does not replace the previously published counters.
      */
     public RenderCullingCounters lastCullingCounters() {
-        return pipeline.lastCullingCounters();
+        return referenceSceneRenderer.lastCullingCounters();
     }
 
     /**
@@ -95,7 +95,7 @@ public final class OpenGlRenderer implements AutoCloseable {
      * <p>A failed render leaves the previously published snapshot unchanged.
      */
     public List<DebugTextCounter> lastDebugTextCounters() {
-        return pipeline.lastDebugTextCounters();
+        return referenceSceneRenderer.lastDebugTextCounters();
     }
 
     public void render(
@@ -108,7 +108,7 @@ public final class OpenGlRenderer implements AutoCloseable {
 
     @Override
     public void close() {
-        pipeline.close();
+        referenceSceneRenderer.close();
     }
 
     private static String loadShader(String path) {

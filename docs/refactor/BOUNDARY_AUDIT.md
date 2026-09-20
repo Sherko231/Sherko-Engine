@@ -180,7 +180,7 @@ Current important examples:
 | Surface | Status | Later owner |
 | --- | --- | --- |
 | `InputActionBindingsLoader` in `com.samo.engine.platform.api` | Package-private JSON/load/semantic implementation behind `InputActionBindings.load(...)`. | T06 may split parser/validator responsibilities; new helpers remain non-public. |
-| `GlfwWindow` nested `Backend`, `LwjglBackend`, callback states/sinks, motion/window-transition values | Package-level implementation/testing surface inside the public facade's package. | T03-T05 extract by responsibility without public promotion. |
+| `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and extracted callback registration/sink types | Package-private implementation/testing surface colocated with the public facade; extracted by T03 candidate without public promotion. | T03 owns native/backend plumbing; T04/T05 retain their separate input/focus/cursor and mode/size responsibilities. |
 | Renderer material/submission/culling/light/uniform/color/view-model helpers | Package-private under `com.samo.engine.render.opengl.internal`. | T10-T15. |
 | Sandbox camera/control/diagnostic helpers | Package-private game composition, not engine-library API. | T16-T17. |
 
@@ -190,13 +190,13 @@ A package named `.api` does not make a package-private type public API; Java vis
 
 ### Platform native adapter
 
-Current replaceable/testing boundary is nested under `GlfwWindow`:
+The P5R-T03 candidate extracts the replaceable/testing boundary from `GlfwWindow` into package-private top-level types in the same API package:
 
-- `GlfwWindow.Backend`
-- `GlfwWindow.LwjglBackend`
-- callback registration state/sink types associated with GLFW error, size, input, motion, and debug callbacks.
+- `GlfwNativeBackend`
+- `LwjglGlfwNativeBackend`
+- responsibility-specific callback registration values and event sinks for GLFW error, size, input, cursor-position, and OpenGL debug callbacks.
 
-T03 owns extraction/naming of this boundary. It must preserve callback ownership/restore behavior, owner-thread/native lifecycle semantics, and `GlfwWindow` as the public facade.
+The extracted seam remains implementation-only despite being colocated with the public facade. `GlfwWindow` keeps its public signatures and owns lifecycle/orchestration; the adapter keeps native callback installation/release and LWJGL/GLFW/OpenGL platform calls. T04/T05 responsibilities remain inside `GlfwWindow`, and package reorganization remains deferred to T23.
 
 ### Renderer OpenGL adapters
 

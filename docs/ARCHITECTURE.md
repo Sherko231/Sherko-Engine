@@ -25,6 +25,12 @@ P5R-T03 through P5R-T05 must preserve `GlfwWindow` as the public platform facade
 
 The complete type/consumer-role map and later-task deferrals are recorded in `docs/refactor/BOUNDARY_AUDIT.md`. This audit documents existing D-016/D-055 architecture and current source state; it introduces no new dependency/module edge, public contract, visibility rule, or durable decision.
 
+## Phase 5R GLFW native backend decomposition — P5R-T03 / Issue #263
+
+The P5R-T03 candidate keeps `com.samo.engine.platform.api.GlfwWindow` as the public platform facade while extracting its native test/adapter plumbing into package-private top-level collaborators in the same package. `GlfwNativeBackend` is the replaceable deterministic-test/native-operation boundary; `LwjglGlfwNativeBackend` is the production LWJGL/GLFW/OpenGL adapter. Responsibility-specific callback registration records and event-sink interfaces carry error, size, input, cursor-position, and OpenGL-debug callback ownership without becoming public API.
+
+The extraction deliberately leaves input/focus/cursor state in `GlfwWindow` for P5R-T04 and window-mode/size transition model responsibilities in `GlfwWindow` for P5R-T05. It also deliberately avoids moving the helpers to `com.samo.engine.platform.lwjgl.internal` in this task, because doing so would either widen visibility or require additional facade/package restructuring; stable package reorganization remains P5R-T23 work. Public `GlfwWindow` constructors/methods, native ownership/cleanup order, thread-affinity, callback semantics, input vocabulary, window-mode behavior, and module edges remain unchanged.
+
 P5-T01 extends the existing `GlfwWindow` ownership boundary with optional OpenGL debug-context diagnostics under D-048. `OpenGlDebugMode.DISABLED` preserves the existing release-safe constructors. `FAIL_ON_HIGH_SEVERITY` requests and verifies a debug context, installs one context-bound callback after capabilities exist, reports normalized source/type/severity/message fields through `EngineLogger`, stages callback/logging failures instead of throwing through native code, and surfaces high-severity failures once from owner-thread `pollEvents()`. The callback is released before context detachment and capability clearing during stop/start-failure/close. No raw OpenGL handle, renderer resource API, draw path, dependency, or module edge is introduced.
  The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 

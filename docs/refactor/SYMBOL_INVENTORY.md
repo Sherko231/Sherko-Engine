@@ -204,6 +204,19 @@ They are not permission to add Phase 6+ implementation during P5R.
 
 Private implementation-only enums/records that do not materially affect later Phase 5R planning are intentionally not promoted into the inventory merely to create churn.
 
+## P5R implementation updates
+
+### P5R-T03 candidate
+
+The T03 candidate preserves public `GlfwWindow` and extracts the native test/adapter seam into package-private top-level types in the same `com.samo.engine.platform.api` package:
+
+- `GlfwNativeBackend` replaces nested `GlfwWindow.Backend`;
+- `LwjglGlfwNativeBackend` replaces nested `GlfwWindow.LwjglBackend`;
+- callback ownership values are named `GlfwErrorCallbackRegistration`, `GlfwSizeCallbackRegistration`, `GlfwInputCallbackRegistration`, `GlfwCursorPositionCallbackRegistration`, and `OpenGlDebugCallbackRegistration`;
+- backend event sinks are extracted with GLFW/OpenGL responsibility-bearing names.
+
+The T01 `GlfwWindow` decomposition classification remains active for T04/T05: input/focus/cursor state and window-mode/size transition model types intentionally remain inside the facade for their bounded later tasks. No T03 helper is public and no package reorganization is performed.
+
 ## Cross-check against P5R-T02 through P5R-T25
 
 This inventory deliberately defers execution:

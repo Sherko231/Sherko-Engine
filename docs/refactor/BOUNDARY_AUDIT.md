@@ -227,9 +227,9 @@ The following public visibility is intentional/current implementation or executa
 | `com.samo.engine.render.opengl.internal.ReferenceSceneRenderer` | Public modifier allows cross-package use from `OpenGlRenderer`, but the type remains in the declared internal root and excluded from the renderer API artifact. | T10 established the responsibility-bearing name/fixture split; accepted T11 keeps this type as lifecycle/native-resource owner while extracting package-private non-owning frame collaborators. |
 | `com.samo.engine.render.opengl.internal.RendererVisualDemo` (visualDemo source set) | Owner-facing standalone demo entry point; not in the production consumer API surface. | T18. |
 | `com.samo.game.client.ClientMain` | Executable composition entry point, not reusable engine API. | T19. |
-| `com.samo.game.client.internal.VersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 may rename/restructure while preserving output. |
+| `com.samo.game.client.internal.ClientVersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 candidate renames only the helper while preserving output and executable boundaries. |
 | `com.samo.game.server.ServerMain` | Headless executable composition entry point, not reusable engine API. | T19. |
-| `com.samo.game.server.internal.VersionReport` | Executable helper; public modifier supports cross-package call from `ServerMain`, not engine consumption. | T19 may rename/restructure while preserving output. |
+| `com.samo.game.server.internal.ServerVersionReport` | Executable helper; public modifier supports cross-package call from `ServerMain`, not engine consumption. | T19 candidate renames only the helper while preserving output and executable boundaries. |
 | `com.samo.game.sandbox.SandboxMain` | Persistent owner-facing playground entry point, not an engine-library API. | T16 keeps the entry point while decomposing internals. |
 | `com.samo.game.sandbox.demo.EngineDemoMain` | Removed legacy compatibility entry point; T17 reference audit found no live code/workflow/test consumer. | Removed in T17; `SandboxMain` / `runSandbox` remain canonical. |
 

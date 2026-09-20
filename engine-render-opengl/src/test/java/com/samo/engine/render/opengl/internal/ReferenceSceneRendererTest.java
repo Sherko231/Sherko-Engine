@@ -847,7 +847,7 @@ class ReferenceSceneRendererTest {
         }
 
         @Override
-        public void applyMaterialState(RendererMaterial material) {
+        public void applyMaterialState(RenderMaterialDescriptor material) {
             trace.add("state:blend=" + material.blendMode()
                     + ":depth=" + material.depthMode()
                     + ":cull=" + material.cullMode());

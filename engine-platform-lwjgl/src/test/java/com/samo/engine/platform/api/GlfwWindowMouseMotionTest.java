@@ -379,7 +379,7 @@ class GlfwWindowMouseMotionTest {
         registry.assertNoOpenResources();
     }
 
-    private static void assertMotion(GlfwWindow.MouseMotion motion, double x, double y) {
+    private static void assertMotion(GlfwMouseMotionTracker.MouseDelta motion, double x, double y) {
         assertEquals(x, motion.x(), 0.0);
         assertEquals(y, motion.y(), 0.0);
     }

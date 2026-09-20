@@ -673,6 +673,16 @@ Accepted P5R-T06 evidence: final PR head `791488bfcbae9573cebdb5fe5c8318d238b79c
 
 Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
 
+## P5R-T09 spatial/math naming audit verification
+
+Issue #269 is an audit-only KEEP decision across engine-core transform, camera, screen-ray, geometry, and quantization vocabulary. `docs/SPATIAL_CONVENTIONS.md` is the controlling semantic reference and must remain byte-unchanged.
+
+Before merging, verify the complete branch diff against `master` contains only `.md` paths; confirm no Java/test/Gradle/workflow/resource/wiki/sandbox path changed; confirm the retained names align with live source, D-041/D-045/D-046/D-047, `docs/refactor/SYMBOL_INVENTORY.md`, and `docs/refactor/BOUNDARY_AUDIT.md`; and confirm P5R-T10 / Issue #270 is next while P6-T01 remains blocked.
+
+If the complete diff remains Markdown-only, the AGENTS.md Markdown-only CI exemption applies. Do not introduce a spatial source change merely to manufacture executable verification for an audit whose accepted result is no code churn.
+
+Wiki impact: none — public names, signatures, spatial semantics, failures, and intended usage remain unchanged. Sandbox impact: none — no engine capability or owner-visible behavior changes.
+
 ## P5R-T08 core naming audit verification
 
 Issue #268 is an audit-only KEEP decision across `engine-core` configuration, logging, timing, and native-resource ownership vocabulary. It intentionally introduces no Java, Gradle, workflow, resource, dependency, module-edge, public-API, configuration-format, wiki, or sandbox change.

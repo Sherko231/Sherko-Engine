@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T08 / Issue #268 is accepted as a Markdown-only KEEP audit; freshly refine P5R-T09 / Issue #269 against current `master` before implementation |
+| Active executable task | None — P5R-T09 / Issue #269 is accepted as a Markdown-only spatial/math KEEP audit; freshly refine P5R-T10 / Issue #270 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -138,6 +138,8 @@ P5R-T07 / Issue #267 is accepted through PR #321. Final head `682f2744d6585c3cef
 
 P5R-T08 / Issue #268 completed as an audit-only KEEP task. The live configuration/logging/timing/native-resource surface was rechecked against T01 naming classifications and D-021 through D-028; every reviewed public and implementation-level name already communicates its current responsibility, so no Java rename, extraction, wrapper, package move, compatibility alias, or new abstraction was introduced. The complete task diff is documentation-only, with no wiki or sandbox impact because consumer usage and runtime behavior are unchanged.
 
+P5R-T09 / Issue #269 completed as an audit-only KEEP task after mandatory review of `docs/SPATIAL_CONVENTIONS.md`. Live transform/camera/screen-ray/geometry/quantization names were rechecked against D-041 through D-047 and T01 inventory classifications; every reviewed public and implementation-level name already communicates its math responsibility, so no Java rename, structural split, wrapper, package move, compatibility alias, tolerance/allocation change, or serialization/layout change was introduced. `docs/SPATIAL_CONVENTIONS.md`, wiki, and sandbox remain unchanged.
+
 ## Exact next action
 
-Freshly refine **P5R-T09 / Issue #269** against current `master` before implementation. Keep the task bounded to spatial/math naming and structure, preserve D-041/D-045/D-046/D-047 coordinate/unit/tolerance/allocation/serialization semantics, and do not materialize P6-T01 yet.
+Freshly refine **P5R-T10 / Issue #270** against current `master` before implementation. Keep the task bounded to the fixed reference-scene renderer path and room-fixture responsibility naming/decomposition, preserve Phase 5 rendering output and public renderer contracts, and do not materialize P6-T01 yet.

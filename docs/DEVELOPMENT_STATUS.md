@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T23 / Issue #303 is accepted; freshly refine P5R-T24 / Issue #304 against current `master` before implementation |
+| Active executable task | P5R-T24 / Issue #304 — compose renderer OpenGL adapters as one internal dependency set; reject speculative patterns |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -168,6 +168,8 @@ P5R-T22 / Issue #302 is accepted through PR #349. Final head `5bda2120526a40c417
 
 P5R-T23 / Issue #303 is accepted through Markdown-only PR #351. Final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` inventoried the three explicit production `.internal` roots, rechecked the platform's 11 package-private implementation collaborators, confirmed all 42 renderer production internals form one connected source-dependency component, documented visual-demo coupling to package-private renderer infrastructure, and retained the client/server singleton internal roots. No package move was justified because available splits would require visibility widening/bridge APIs, one-class fragmentation, or broad path churn without stronger responsibility separation. PR #351 merged as `36352d874c04c383ce53527001e279f7634f973b`. Its complete diff contained 9 Markdown files only, so the `AGENTS.md` Markdown-only exemption correctly required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. No Java/package/build/wiki/sandbox/public/module/ownership/spatial/config/wire behavior changed.
 
+P5R-T24 / Issue #304 is active from baseline `90bc1a5e64eac8422050f4cfc2811c58e872d11a`. Fresh pattern audit keeps the existing Facade, Adapter, Policy, Coordinator, typed-ownership, and constructor-injection boundaries and finds no Singleton/Service-Locator/Object-Pool/ECS/job-system need. The concrete renderer scalability problem is the repeated resource/draw/reflection adapter parameter cluster across `ReferenceSceneRenderer`, `DebugLineRenderer`, `ViewModelRenderer`, and tests. The candidate introduces package-private `OpenGlBackendSet` to compose exactly those three existing adapters while preserving each interface, all native behavior, and test injection.
+
 ## Exact next action
 
-Freshly refine **P5R-T24 / Issue #304** against current `master` before implementation. Introduce or strengthen patterns only when current code demonstrates a concrete coupling/responsibility/testability problem; reject speculative architecture and keep P6-T01 blocked.
+Complete T24 self-review, exact-head five-job CI, merge verification, and handoff. P5R-T25 and P6-T01 remain blocked until T24 acceptance.

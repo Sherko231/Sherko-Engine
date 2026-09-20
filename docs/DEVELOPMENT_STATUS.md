@@ -146,4 +146,4 @@ P5R-T11 / Issue #271 is the active candidate from baseline `7f52be25af02d270b08a
 
 ## Exact next action
 
-Complete implementation/self-review/verification for **P5R-T11 / Issue #271** on `p5r-t11-frame-orchestration`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T12 and P6-T01 remain blocked.
+Complete exact-head verification for **P5R-T11 / Issue #271 / PR #327** on `p5r-t11-frame-orchestration`. Merge only after all five required jobs pass on the current PR head and `master` is still the tested base; then require Lightweight master verification on the exact merge SHA before closing #271. P5R-T12 and P6-T01 remain blocked.

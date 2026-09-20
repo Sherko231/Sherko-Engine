@@ -21,27 +21,27 @@ class UniformBlockPackingTest {
                 25, 26, 27, 28,
                 29, 30, 31, 32,
                 33, 34, 35, 36);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES + 8)
+        ByteBuffer buffer = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES + 8)
                 .order(ByteOrder.nativeOrder());
         buffer.position(4);
 
-        CameraUniformBlock.write(view, projection, buffer);
+        CameraMatricesUniformBlock.write(view, projection, buffer);
 
-        assertEquals(4 + CameraUniformBlock.SIZE_BYTES, buffer.position());
-        assertEquals(1.0f, buffer.getFloat(4 + CameraUniformBlock.VIEW_OFFSET_BYTES));
-        assertEquals(16.0f, buffer.getFloat(4 + CameraUniformBlock.VIEW_OFFSET_BYTES + 60));
-        assertEquals(21.0f, buffer.getFloat(4 + CameraUniformBlock.PROJECTION_OFFSET_BYTES));
-        assertEquals(36.0f, buffer.getFloat(4 + CameraUniformBlock.PROJECTION_OFFSET_BYTES + 60));
+        assertEquals(4 + CameraMatricesUniformBlock.SIZE_BYTES, buffer.position());
+        assertEquals(1.0f, buffer.getFloat(4 + CameraMatricesUniformBlock.VIEW_OFFSET_BYTES));
+        assertEquals(16.0f, buffer.getFloat(4 + CameraMatricesUniformBlock.VIEW_OFFSET_BYTES + 60));
+        assertEquals(21.0f, buffer.getFloat(4 + CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES));
+        assertEquals(36.0f, buffer.getFloat(4 + CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES + 60));
     }
 
     @Test
     void perFrameBlockWritesFramebufferAndInverseAtOffsetZero() {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES)
+        ByteBuffer buffer = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES)
                 .order(ByteOrder.nativeOrder());
 
-        PerFrameUniformBlock.write(1920, 1080, buffer);
+        FramebufferMetricsUniformBlock.write(1920, 1080, buffer);
 
-        assertEquals(PerFrameUniformBlock.SIZE_BYTES, buffer.position());
+        assertEquals(FramebufferMetricsUniformBlock.SIZE_BYTES, buffer.position());
         assertEquals(1920.0f, buffer.getFloat(0));
         assertEquals(1080.0f, buffer.getFloat(4));
         assertEquals(1.0f / 1920.0f, buffer.getFloat(8));
@@ -50,30 +50,30 @@ class UniformBlockPackingTest {
 
     @Test
     void invalidInputsFailBeforeDestinationPositionChanges() {
-        ByteBuffer camera = ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES - 1);
+        ByteBuffer camera = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES - 1);
         int cameraStart = camera.position();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> CameraUniformBlock.write(new Matrix4f(), new Matrix4f(), camera));
+                () -> CameraMatricesUniformBlock.write(new Matrix4f(), new Matrix4f(), camera));
         assertEquals(cameraStart, camera.position());
 
-        ByteBuffer perFrame = ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES);
+        ByteBuffer perFrame = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES);
         int frameStart = perFrame.position();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> PerFrameUniformBlock.write(0, 1080, perFrame));
+                () -> FramebufferMetricsUniformBlock.write(0, 1080, perFrame));
         assertEquals(frameStart, perFrame.position());
     }
 
     @Test
     void blockConstantsMatchExpectedAbi() {
-        assertEquals(0, CameraUniformBlock.BINDING);
-        assertEquals(0, CameraUniformBlock.VIEW_OFFSET_BYTES);
-        assertEquals(64, CameraUniformBlock.PROJECTION_OFFSET_BYTES);
-        assertEquals(128, CameraUniformBlock.SIZE_BYTES);
+        assertEquals(0, CameraMatricesUniformBlock.BINDING);
+        assertEquals(0, CameraMatricesUniformBlock.VIEW_OFFSET_BYTES);
+        assertEquals(64, CameraMatricesUniformBlock.PROJECTION_OFFSET_BYTES);
+        assertEquals(128, CameraMatricesUniformBlock.SIZE_BYTES);
 
-        assertEquals(1, PerFrameUniformBlock.BINDING);
-        assertEquals(0, PerFrameUniformBlock.FRAMEBUFFER_SIZE_AND_INVERSE_OFFSET_BYTES);
-        assertEquals(16, PerFrameUniformBlock.SIZE_BYTES);
+        assertEquals(1, FramebufferMetricsUniformBlock.BINDING);
+        assertEquals(0, FramebufferMetricsUniformBlock.FRAMEBUFFER_SIZE_AND_INVERSE_OFFSET_BYTES);
+        assertEquals(16, FramebufferMetricsUniformBlock.SIZE_BYTES);
     }
 }

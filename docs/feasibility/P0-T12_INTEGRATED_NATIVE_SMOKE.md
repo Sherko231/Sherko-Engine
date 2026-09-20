@@ -23,7 +23,7 @@ The canonical backlog now records the 15-second contract directly. P0-T13 owns t
 
 ## Entry point
 
-`src/main/java/com/samo/spike/integration/IntegratedNativeSoakSpike.java`
+`feasibility-spikes/src/main/java/com/samo/spike/integration/IntegratedNativeEvidenceHarness.java`
 
 ## Run command
 

@@ -694,3 +694,6 @@ The durable analysis is recorded in `docs/refactor/INTERNAL_PACKAGE_AUDIT.md`.
 Wiki impact: none — no supported public package/type/signature/usage changes.
 Sandbox impact: none — no runtime capability or owner-facing usage changes.
 Durable decision impact: none — current package-private cohesion is retained rather than replaced.
+
+
+Accepted P5R-T23 evidence: Markdown-only PR #351 merged final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` as `36352d874c04c383ce53527001e279f7634f973b`. The accepted result is KEEP for the current package layout; no Java visibility, package, module edge, public API, runtime behavior, wiki, or sandbox contract changed.

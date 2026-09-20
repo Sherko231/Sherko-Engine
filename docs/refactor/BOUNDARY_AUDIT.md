@@ -224,7 +224,7 @@ The following public visibility is intentional/current implementation or executa
 
 | Type | Why it is not engine-consumer API | Later owner |
 | --- | --- | --- |
-| `com.samo.engine.render.opengl.internal.ReferenceSceneRenderer` | Public modifier allows cross-package use from `OpenGlRenderer`, but the type remains in the declared internal root and excluded from the renderer API artifact. | T10 establishes the responsibility-bearing name and extracts package-private `ReferenceRoomFixture`; T11 may further decompose frame orchestration without promoting internals. |
+| `com.samo.engine.render.opengl.internal.ReferenceSceneRenderer` | Public modifier allows cross-package use from `OpenGlRenderer`, but the type remains in the declared internal root and excluded from the renderer API artifact. | Accepted T10 establishes the responsibility-bearing name and extracts package-private `ReferenceRoomFixture`; T11 may further decompose frame orchestration without promoting internals. |
 | `com.samo.engine.render.opengl.internal.RendererVisualDemo` (visualDemo source set) | Owner-facing standalone demo entry point; not in the production consumer API surface. | T18. |
 | `com.samo.game.client.ClientMain` | Executable composition entry point, not reusable engine API. | T19. |
 | `com.samo.game.client.internal.VersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 may rename/restructure while preserving output. |

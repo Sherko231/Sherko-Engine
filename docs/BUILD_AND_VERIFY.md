@@ -673,6 +673,16 @@ Accepted P5R-T06 evidence: final PR head `791488bfcbae9573cebdb5fe5c8318d238b79c
 
 Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
 
+## P5R-T08 core naming audit verification
+
+Issue #268 is an audit-only KEEP decision across `engine-core` configuration, logging, timing, and native-resource ownership vocabulary. It intentionally introduces no Java, Gradle, workflow, resource, dependency, module-edge, public-API, configuration-format, wiki, or sandbox change.
+
+Before merging, verify the complete branch diff against `master` contains only `.md` paths. Cross-check the retained names against live source, `docs/refactor/SYMBOL_INVENTORY.md`, and `docs/refactor/BOUNDARY_AUDIT.md`; confirm D-021 through D-028 behavior/ownership contracts are unchanged; confirm P5R-T09 / Issue #269 is next and P6-T01 remains blocked.
+
+If the complete diff remains Markdown-only, the AGENTS.md Markdown-only CI exemption applies. Do not introduce a source change solely to manufacture executable verification for a naming audit whose accepted result is no code churn.
+
+Wiki impact: none — public names, signatures, behavior, config/failure semantics, and intended usage remain unchanged. Sandbox impact: none — no capability or owner-visible behavior changes.
+
 ## P5R-T07 core lifecycle naming verification
 
 Issue #267 applies the D-066 public type renames `SubsystemStartupCoordinator` and `FatalTerminationCoordinator` only. Run the focused lifecycle suites:

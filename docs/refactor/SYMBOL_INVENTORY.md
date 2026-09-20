@@ -151,7 +151,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | Symbol | Visibility | Action | Proposed name/location | Current responsibility / rationale | Contract risk |
 | --- | --- | --- | --- | --- | --- |
 | `ClientMain` | public class | **KEEP** | — | Executable client bootstrap entry point is clear. | Executable behavior/version-report invocation. |
-| `game-client.internal.ClientVersionReport` | public class in internal package | **KEEP** | — | T19 candidate gives the executable-specific reporter an explicit client role while retaining its internal package and exact output behavior. | Internal executable helper; emitted output must remain byte/meaning compatible. |
+| `game-client.internal.ClientVersionReport` | public class in internal package | **KEEP** | — | T19 accepted implementation gives the executable-specific reporter an explicit client role while retaining its internal package and exact output behavior. | Internal executable helper; emitted output must remain byte/meaning compatible. |
 | `SandboxCamera` | package-private class | **KEEP** | — | Sandbox-only camera state/control helper; name is clear in sandbox package. | Sandbox behavior/spatial controls. |
 | `SandboxControls` | package-private class | **KEEP** | — | Owner control mapping for persistent sandbox; exact. | Sandbox controls must remain unchanged. |
 | `SandboxDiagnosticFormatter` | package-private class | **KEEP** | — | Pure owner diagnostic formatter; exact. | Sandbox output wording/meaning may be acceptance-sensitive. |
@@ -163,7 +163,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `SandboxFramebufferSize` | package-private class | **KEEP** | — | T16 top-level owner for mutable current framebuffer pixel dimensions consumed by the application loop. | DPI/framebuffer dimension semantics. |
 | `EngineDemoMain` | removed legacy sandbox entry point | **REMOVE** | — | T17 reference audit confirmed no live code/workflow/test consumer; canonical `SandboxMain` / `runSandbox` remains. | Historical documentation may mention it only as removed compatibility provenance. |
 | `ServerMain` | public class | **KEEP** | — | Executable headless server bootstrap entry point is clear. | Headless/runtime verification boundary. |
-| `game-server.internal.ServerVersionReport` | public class in internal package | **KEEP** | — | T19 candidate gives the executable-specific reporter an explicit server role while retaining its internal package and exact output behavior. | Internal executable helper; emitted output must remain byte/meaning compatible. |
+| `game-server.internal.ServerVersionReport` | public class in internal package | **KEEP** | — | T19 accepted implementation gives the executable-specific reporter an explicit server role while retaining its internal package and exact output behavior. | Internal executable helper; emitted output must remain byte/meaning compatible. |
 
 ## Modules with no production/runtime Java in the current P1-P5 implementation
 

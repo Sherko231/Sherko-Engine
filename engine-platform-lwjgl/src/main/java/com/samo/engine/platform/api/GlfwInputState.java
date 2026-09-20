@@ -16,17 +16,22 @@ final class GlfwInputState {
     private boolean focused;
 
     boolean focused() {
+
         return focused;
+
     }
 
     void onFocusChanged(boolean focused) {
+
         this.focused = focused;
         if (!focused) {
             clearHeldInputForFocusLoss();
         }
+
     }
 
     void onKeyChanged(int key, int action) {
+
         if (!focused || key < 0 || key >= heldKeys.length) {
             return;
         }
@@ -44,9 +49,11 @@ final class GlfwInputState {
                 pendingReleasedKeys[inputKey.ordinal()] = true;
             }
         }
+
     }
 
     void onMouseButtonChanged(int button, int action) {
+
         if (!focused || button < 0 || button >= heldMouseButtons.length) {
             return;
         }
@@ -62,13 +69,11 @@ final class GlfwInputState {
                 pendingReleasedMouseButtons[inputButton.ordinal()] = true;
             }
         }
+
     }
 
-    InputSnapshot captureSnapshot(
-            long frameId,
-            boolean cursorCaptured,
-            double accumulatedMouseDeltaX,
-            double accumulatedMouseDeltaY) {
+    InputSnapshot captureSnapshot(long frameId, boolean cursorCaptured, double accumulatedMouseDeltaX, double accumulatedMouseDeltaY) {
+
         if (frameId < 0L) {
             throw new IllegalArgumentException("frameId must be non-negative");
         }
@@ -103,41 +108,41 @@ final class GlfwInputState {
             }
         }
 
-        InputSnapshot snapshot = new InputSnapshot(
-                frameId,
-                focused,
-                cursorCaptured,
-                heldKeySet,
-                pressedKeySet,
-                releasedKeySet,
-                heldButtonSet,
-                pressedButtonSet,
-                releasedButtonSet,
-                accumulatedMouseDeltaX,
-                accumulatedMouseDeltaY);
+        InputSnapshot snapshot = new InputSnapshot(frameId, focused, cursorCaptured, heldKeySet, pressedKeySet, releasedKeySet, heldButtonSet, pressedButtonSet, releasedButtonSet,
+            accumulatedMouseDeltaX, accumulatedMouseDeltaY);
         clearPendingInputEdges();
         return snapshot;
+
     }
 
     boolean isKeyHeld(int key) {
+
         return key >= 0 && key < heldKeys.length && heldKeys[key];
+
     }
 
     boolean isMouseButtonHeld(int button) {
+
         return button >= 0 && button < heldMouseButtons.length && heldMouseButtons[button];
+
     }
 
     void clearForLifecycle() {
+
         clearHeldInput();
         clearPendingInputEdges();
+
     }
 
     private void clearHeldInput() {
+
         Arrays.fill(heldKeys, false);
         Arrays.fill(heldMouseButtons, false);
+
     }
 
     private void clearHeldInputForFocusLoss() {
+
         Arrays.fill(pendingPressedKeys, false);
         Arrays.fill(pendingPressedMouseButtons, false);
         for (InputKey key : InputKey.values()) {
@@ -153,16 +158,20 @@ final class GlfwInputState {
             }
         }
         clearHeldInput();
+
     }
 
     private void clearPendingInputEdges() {
+
         Arrays.fill(pendingPressedKeys, false);
         Arrays.fill(pendingReleasedKeys, false);
         Arrays.fill(pendingPressedMouseButtons, false);
         Arrays.fill(pendingReleasedMouseButtons, false);
+
     }
 
     private static InputKey inputKey(int glfwKey) {
+
         return switch (glfwKey) {
             case GLFW.GLFW_KEY_W -> InputKey.W;
             case GLFW.GLFW_KEY_A -> InputKey.A;
@@ -182,9 +191,11 @@ final class GlfwInputState {
             case GLFW.GLFW_KEY_F -> InputKey.F;
             default -> null;
         };
+
     }
 
     private static int glfwKey(InputKey key) {
+
         return switch (key) {
             case W -> GLFW.GLFW_KEY_W;
             case A -> GLFW.GLFW_KEY_A;
@@ -203,9 +214,11 @@ final class GlfwInputState {
             case R -> GLFW.GLFW_KEY_R;
             case F -> GLFW.GLFW_KEY_F;
         };
+
     }
 
     private static InputMouseButton inputMouseButton(int glfwButton) {
+
         return switch (glfwButton) {
             case GLFW.GLFW_MOUSE_BUTTON_LEFT -> InputMouseButton.LEFT;
             case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> InputMouseButton.RIGHT;
@@ -214,9 +227,11 @@ final class GlfwInputState {
             case GLFW.GLFW_MOUSE_BUTTON_5 -> InputMouseButton.BUTTON_5;
             default -> null;
         };
+
     }
 
     private static int glfwMouseButton(InputMouseButton button) {
+
         return switch (button) {
             case LEFT -> GLFW.GLFW_MOUSE_BUTTON_LEFT;
             case RIGHT -> GLFW.GLFW_MOUSE_BUTTON_RIGHT;
@@ -224,5 +239,6 @@ final class GlfwInputState {
             case BUTTON_4 -> GLFW.GLFW_MOUSE_BUTTON_4;
             case BUTTON_5 -> GLFW.GLFW_MOUSE_BUTTON_5;
         };
+
     }
 }

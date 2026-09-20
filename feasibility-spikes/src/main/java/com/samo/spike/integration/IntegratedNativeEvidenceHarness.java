@@ -58,9 +58,11 @@ public final class IntegratedNativeEvidenceHarness {
     private static final int BP_LAYER_MOVING = 1;
 
     private IntegratedNativeEvidenceHarness() {
+
     }
 
     public static void main(String[] args) throws Exception {
+
         int durationSeconds = Integer.getInteger("spike.durationSeconds", DEFAULT_DURATION_SECONDS);
         if (durationSeconds <= 0) {
             throw new IllegalArgumentException("spike.durationSeconds must be > 0");
@@ -68,8 +70,7 @@ public final class IntegratedNativeEvidenceHarness {
 
         String evidenceTask = System.getProperty("spike.evidenceTask", "P0-T12");
         String runKind = durationSeconds >= 900 ? "sustained test" : "smoke test";
-        System.out.printf("%s integrated native %s: %d seconds%n",
-                evidenceTask, runKind, durationSeconds);
+        System.out.printf("%s integrated native %s: %d seconds%n", evidenceTask, runKind, durationSeconds);
 
         GLFWErrorCallback glfwError = GLFWErrorCallback.createPrint(System.err);
         glfwSetErrorCallback(glfwError);
@@ -120,13 +121,7 @@ public final class IntegratedNativeEvidenceHarness {
             glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-            window = glfwCreateWindow(
-                    960,
-                    540,
-                    "Sherko Engine - " + evidenceTask + " Integrated Native " + runKind,
-                    NULL,
-                    NULL
-            );
+            window = glfwCreateWindow(960, 540, "Sherko Engine - " + evidenceTask + " Integrated Native " + runKind, NULL, NULL);
             if (window == NULL) {
                 throw new IllegalStateException("Failed to create OpenGL 4.6 window");
             }
@@ -198,31 +193,15 @@ public final class IntegratedNativeEvidenceHarness {
             physicsSystem = new PhysicsSystem();
             physicsSystem.init(1_024, 0, 1_024, 1_024, layerMap, broadPhaseFilter, objectLayerFilter);
             tempAllocator = new TempAllocatorMalloc();
-            jobSystem = new JobSystemThreadPool(
-                    Jolt.cMaxPhysicsJobs,
-                    Jolt.cMaxPhysicsBarriers,
-                    Math.max(1, Runtime.getRuntime().availableProcessors() - 1)
-            );
+            jobSystem = new JobSystemThreadPool(Jolt.cMaxPhysicsJobs, Jolt.cMaxPhysicsBarriers, Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
             bodies = physicsSystem.getBodyInterface();
 
             floorShape = new BoxShape(new Vec3(10f, 0.5f, 10f));
-            floorSettings = new BodyCreationSettings(
-                    floorShape,
-                    new RVec3(0.0, -0.5, 0.0),
-                    new Quat(),
-                    EMotionType.Static,
-                    OBJ_LAYER_NON_MOVING
-            );
+            floorSettings = new BodyCreationSettings(floorShape, new RVec3(0.0, -0.5, 0.0), new Quat(), EMotionType.Static, OBJ_LAYER_NON_MOVING);
             floorId = bodies.createAndAddBody(floorSettings, EActivation.DontActivate);
 
             boxShape = new BoxShape(new Vec3(0.5f, 0.5f, 0.5f));
-            boxSettings = new BodyCreationSettings(
-                    boxShape,
-                    new RVec3(0.0, 5.0, 0.0),
-                    new Quat(),
-                    EMotionType.Dynamic,
-                    OBJ_LAYER_MOVING
-            );
+            boxSettings = new BodyCreationSettings(boxShape, new RVec3(0.0, 5.0, 0.0), new Quat(), EMotionType.Dynamic, OBJ_LAYER_MOVING);
             boxId = bodies.createAndAddBody(boxSettings, EActivation.Activate);
             physicsSystem.optimizeBroadPhase();
             System.out.println("Jolt initialized   : " + Jolt.versionString());
@@ -291,9 +270,7 @@ public final class IntegratedNativeEvidenceHarness {
                 throw new IllegalStateException("High-severity OpenGL debug message observed");
             }
             if (sentPackets < 2 || echoedPackets < 2) {
-                throw new IllegalStateException(
-                        "UDP traffic insufficient: sent=" + sentPackets + ", echoed=" + echoedPackets
-                );
+                throw new IllegalStateException("UDP traffic insufficient: sent=" + sentPackets + ", echoed=" + echoedPackets);
             }
             if (bodies.getPosition(boxId).y() > 1.0) {
                 throw new IllegalStateException("Jolt dynamic body did not settle as expected");
@@ -340,12 +317,7 @@ public final class IntegratedNativeEvidenceHarness {
 
             if (joltDebugBuild) {
                 long finalBalance = allocationBalance();
-                System.out.printf(
-                        "Jolt allocation balance: initial=%d final=%d delta=%+d%n",
-                        initialJoltBalance,
-                        finalBalance,
-                        finalBalance - initialJoltBalance
-                );
+                System.out.printf("Jolt allocation balance: initial=%d final=%d delta=%+d%n", initialJoltBalance, finalBalance, finalBalance - initialJoltBalance);
                 if (finalBalance > initialJoltBalance) {
                     throw new IllegalStateException("Jolt native allocation balance grew during soak");
                 }
@@ -377,18 +349,18 @@ public final class IntegratedNativeEvidenceHarness {
             glfwError.free();
         }
 
-        System.out.printf(
-                "%s passed: integrated native %s completed and all subsystems shut down cleanly.%n",
-                evidenceTask,
-                runKind
-        );
+        System.out.printf("%s passed: integrated native %s completed and all subsystems shut down cleanly.%n", evidenceTask, runKind);
+
     }
 
     private static ByteBuffer packetBuffer() {
+
         return ByteBuffer.allocateDirect(PACKET_BYTES).order(ByteOrder.BIG_ENDIAN);
+
     }
 
     private static ShortBuffer generateTone() {
+
         int sampleRate = 48_000;
         ShortBuffer samples = BufferUtils.createShortBuffer(sampleRate);
         double angularStep = 2.0 * Math.PI * 440.0 / sampleRate;
@@ -397,20 +369,26 @@ public final class IntegratedNativeEvidenceHarness {
         }
         samples.flip();
         return samples;
+
     }
 
     private static void checkAl(String operation) {
+
         int error = alGetError();
         if (error != AL_NO_ERROR) {
             throw new IllegalStateException(operation + " failed with OpenAL error 0x" + Integer.toHexString(error));
         }
+
     }
 
     private static long allocationBalance() {
+
         return (long) Jolt.countNews() - Jolt.countDeletes();
+
     }
 
     private static void close(AutoCloseable closeable) {
+
         if (closeable == null) {
             return;
         }
@@ -419,21 +397,20 @@ public final class IntegratedNativeEvidenceHarness {
         } catch (Exception exception) {
             throw new RuntimeException("Failed to release native object", exception);
         }
+
     }
 
     private static void loadJoltNativeLibrary() {
+
         LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
         NativeBinaryLoader loader = new NativeBinaryLoader(info);
-        loader.registerNativeLibraries(new NativeDynamicLibrary[]{
-                new NativeDynamicLibrary(
-                        "windows/x86-64/com/github/stephengold",
-                        PlatformPredicate.WIN_X86_64
-                )
-        }).initPlatformLibrary();
+        loader.registerNativeLibraries(new NativeDynamicLibrary[]{new NativeDynamicLibrary("windows/x86-64/com/github/stephengold", PlatformPredicate.WIN_X86_64)})
+            .initPlatformLibrary();
         try {
             loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
         } catch (Exception exception) {
             throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
         }
+
     }
 }

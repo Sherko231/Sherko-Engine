@@ -13,16 +13,17 @@ final class CameraMatricesUniformBlock {
     static final int SIZE_BYTES = 128;
 
     private CameraMatricesUniformBlock() {
+
     }
 
     static void write(Matrix4fc view, Matrix4fc projection, ByteBuffer destination) {
+
         Matrix4fc viewMatrix = Objects.requireNonNull(view, "view");
         Matrix4fc projectionMatrix = Objects.requireNonNull(projection, "projection");
         ByteBuffer output = Objects.requireNonNull(destination, "destination");
 
         if (output.remaining() < SIZE_BYTES) {
-            throw new IllegalArgumentException(
-                    "destination requires at least " + SIZE_BYTES + " remaining bytes");
+            throw new IllegalArgumentException("destination requires at least " + SIZE_BYTES + " remaining bytes");
         }
 
         int start = output.position();
@@ -31,9 +32,11 @@ final class CameraMatricesUniformBlock {
         putMatrixColumnMajor(viewMatrix, target);
         putMatrixColumnMajor(projectionMatrix, target);
         output.position(start + SIZE_BYTES);
+
     }
 
     private static void putMatrixColumnMajor(Matrix4fc matrix, ByteBuffer target) {
+
         target.putFloat(matrix.m00());
         target.putFloat(matrix.m01());
         target.putFloat(matrix.m02());
@@ -50,5 +53,6 @@ final class CameraMatricesUniformBlock {
         target.putFloat(matrix.m31());
         target.putFloat(matrix.m32());
         target.putFloat(matrix.m33());
+
     }
 }

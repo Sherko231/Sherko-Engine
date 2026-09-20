@@ -61,3 +61,7 @@ Do not open a PR as a development scratchpad. Corrections after failed CI create
 Qualifying Markdown-only changes retain the documented complete-diff CI exemption. Tasks that explicitly require stronger exact-merge native/performance/integration evidence may use `workflow_dispatch`; ordinary tasks do not repeat the complete heavy matrix on `master`.
 
 When a task changes public engine API or consumer-visible usage, update the relevant [`wiki/`](wiki/README.md) pages in the same pull request.
+
+### Java formatting
+
+Java source is formatted mechanically with Spotless + the pinned Eclipse JDT profile in `config/formatter/sherko-eclipse-java.xml`. Use `.\gradlew.bat spotlessApply` to format and `.\gradlew.bat spotlessCheck` to verify. The normal root `check` task enforces formatting. See `docs/JAVA_STYLE.md` for the style contract.

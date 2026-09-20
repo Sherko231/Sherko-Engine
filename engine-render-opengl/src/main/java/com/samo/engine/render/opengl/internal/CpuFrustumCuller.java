@@ -6,7 +6,8 @@ import java.util.Objects;
 
 final class CpuFrustumCuller {
     boolean isVisible(Frustum3f frustum, Aabb3f worldBounds) {
-        return Objects.requireNonNull(frustum, "frustum")
-                .intersects(Objects.requireNonNull(worldBounds, "worldBounds"));
+
+        return Objects.requireNonNull(frustum, "frustum").intersects(Objects.requireNonNull(worldBounds, "worldBounds"));
+
     }
 }

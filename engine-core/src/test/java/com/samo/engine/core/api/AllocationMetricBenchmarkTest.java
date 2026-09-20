@@ -29,8 +29,7 @@ class AllocationMetricBenchmarkTest {
     private static final String MEASUREMENT_SOURCE = "JFR jdk.ObjectAllocationSample weight";
     private static final int WARMUP_ITERATIONS = 512;
     private static final int MEASURED_ITERATIONS = 4_096;
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "allocation", "p2-t11-allocation-metric.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "allocation", "p2-t11-allocation-metric.txt");
 
     private static volatile Object allocationSink;
     private static volatile long arithmeticSink;
@@ -38,71 +37,50 @@ class AllocationMetricBenchmarkTest {
 
     @BeforeAll
     static void runBenchmarkAndWriteReport() throws Exception {
+
         requireAllocationSampleEvent();
 
-        Measurement simulationTick = measure(
-                "simulation tick",
-                "p2-t11-simulation-tick",
-                WARMUP_ITERATIONS,
-                MEASURED_ITERATIONS,
-                iterations -> allocate(iterations, 2_048));
-        Measurement renderFrame = measure(
-                "render frame",
-                "p2-t11-render-frame",
-                WARMUP_ITERATIONS,
-                MEASURED_ITERATIONS,
-                iterations -> allocate(iterations, 4_096));
-        Measurement allocatingControl = measure(
-                "allocating control",
-                "p2-t11-allocating-control",
-                WARMUP_ITERATIONS,
-                MEASURED_ITERATIONS,
-                iterations -> allocate(iterations, 8_192));
-        Measurement nonallocatingControl = measure(
-                "nonallocating control",
-                "p2-t11-nonallocating-control",
-                WARMUP_ITERATIONS,
-                MEASURED_ITERATIONS,
-                AllocationMetricBenchmarkTest::runArithmetic);
+        Measurement simulationTick = measure("simulation tick", "p2-t11-simulation-tick", WARMUP_ITERATIONS, MEASURED_ITERATIONS, iterations -> allocate(iterations, 2_048));
+        Measurement renderFrame = measure("render frame", "p2-t11-render-frame", WARMUP_ITERATIONS, MEASURED_ITERATIONS, iterations -> allocate(iterations, 4_096));
+        Measurement allocatingControl = measure("allocating control", "p2-t11-allocating-control", WARMUP_ITERATIONS, MEASURED_ITERATIONS,
+            iterations -> allocate(iterations, 8_192));
+        Measurement nonallocatingControl = measure("nonallocating control", "p2-t11-nonallocating-control", WARMUP_ITERATIONS, MEASURED_ITERATIONS,
+            AllocationMetricBenchmarkTest::runArithmetic);
 
         if (allocatingControl.sampleCount() == 0 || allocatingControl.sampledWeightBytes() <= 0) {
-            throw new IllegalStateException(
-                    "JFR allocation metric unusable: allocating control produced no usable allocation samples");
+            throw new IllegalStateException("JFR allocation metric unusable: allocating control produced no usable allocation samples");
         }
 
-        evidence = new BenchmarkEvidence(
-                simulationTick,
-                renderFrame,
-                allocatingControl,
-                nonallocatingControl);
+        evidence = new BenchmarkEvidence(simulationTick, renderFrame, allocatingControl, nonallocatingControl);
         writeReport(evidence);
+
     }
 
     @Test
     void syntheticSampleArithmeticUsesIndependentExpectedSumAndThreadAttribution() {
-        List<Sample> samples = List.of(
-                new Sample("target", 100L),
-                new Sample("other", 1_000L),
-                new Sample("target", 300L));
+
+        List<Sample> samples = List.of(new Sample("target", 100L), new Sample("other", 1_000L), new Sample("target", 300L));
 
         SampleSummary summary = summarizeSamples(samples, "target", 4);
 
         assertEquals(2L, summary.sampleCount());
         assertEquals(400L, summary.sampledWeightBytes());
         assertEquals(100.0, summary.estimatedBytesPerIteration());
+
     }
 
     @Test
     void reportArithmeticRejectsZeroIterations() {
-        IllegalArgumentException failure = assertThrows(
-                IllegalArgumentException.class,
-                () -> summarizeSamples(List.of(new Sample("target", 10L)), "target", 0));
+
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () -> summarizeSamples(List.of(new Sample("target", 10L)), "target", 0));
 
         assertTrue(failure.getMessage().contains("iteration count"));
+
     }
 
     @Test
     void channelLabelsRemainDistinctAndLiveEvidenceHasExpectedShape() {
+
         assertEquals("simulation tick", evidence.simulationTick().channel());
         assertEquals("render frame", evidence.renderFrame().channel());
         assertFalse(evidence.simulationTick().channel().equals(evidence.renderFrame().channel()));
@@ -111,46 +89,28 @@ class AllocationMetricBenchmarkTest {
         assertTrue(evidence.allocatingControl().sampleCount() > 0);
         assertTrue(evidence.allocatingControl().sampledWeightBytes() > 0);
         assertTrue(evidence.nonallocatingControl().iterations() > 0);
+
     }
 
     @Test
     void reportExistsWithStableFieldOrderAndRequiredLimitations() throws IOException {
+
         assertTrue(Files.isRegularFile(REPORT_PATH));
         List<String> lines = Files.readAllLines(REPORT_PATH, StandardCharsets.UTF_8);
 
-        assertFieldOrder(lines, List.of(
-                "java.version=",
-                "measurement.source=" + MEASUREMENT_SOURCE,
-                "estimate=true",
-                "warmup.iterations=" + WARMUP_ITERATIONS,
-                "simulation.tick.iterations=",
-                "simulation.tick.sample.count=",
-                "simulation.tick.sampled.weight.bytes=",
-                "simulation.tick.duration.nanos=",
-                "simulation.tick.estimated.bytes.per.tick=",
-                "render.frame.iterations=",
-                "render.frame.sample.count=",
-                "render.frame.sampled.weight.bytes=",
-                "render.frame.duration.nanos=",
-                "render.frame.estimated.bytes.per.frame=",
-                "allocating.control.sample.count=",
-                "allocating.control.sampled.weight.bytes=",
-                "allocating.control.estimated.bytes.per.iteration=",
-                "nonallocating.control.sample.count=",
-                "nonallocating.control.sampled.weight.bytes=",
-                "nonallocating.control.estimated.bytes.per.iteration=",
-                "limitations.sampled.estimate=true",
-                "limitations.render.synthetic.headless=true",
-                "limitations.heap.only=true",
-                "limitations.native.gpu.attribution=false"));
+        assertFieldOrder(lines,
+            List.of("java.version=", "measurement.source=" + MEASUREMENT_SOURCE, "estimate=true", "warmup.iterations=" + WARMUP_ITERATIONS, "simulation.tick.iterations=",
+                "simulation.tick.sample.count=", "simulation.tick.sampled.weight.bytes=", "simulation.tick.duration.nanos=", "simulation.tick.estimated.bytes.per.tick=",
+                "render.frame.iterations=", "render.frame.sample.count=", "render.frame.sampled.weight.bytes=", "render.frame.duration.nanos=",
+                "render.frame.estimated.bytes.per.frame=", "allocating.control.sample.count=", "allocating.control.sampled.weight.bytes=",
+                "allocating.control.estimated.bytes.per.iteration=", "nonallocating.control.sample.count=", "nonallocating.control.sampled.weight.bytes=",
+                "nonallocating.control.estimated.bytes.per.iteration=", "limitations.sampled.estimate=true", "limitations.render.synthetic.headless=true",
+                "limitations.heap.only=true", "limitations.native.gpu.attribution=false"));
+
     }
 
-    private static Measurement measure(
-            String channel,
-            String threadName,
-            int warmupIterations,
-            int measuredIterations,
-            Workload workload) throws Exception {
+    private static Measurement measure(String channel, String threadName, int warmupIterations, int measuredIterations, Workload workload) throws Exception {
+
         if (warmupIterations < 0) {
             throw new IllegalArgumentException("warm-up iteration count must be non-negative");
         }
@@ -202,19 +162,15 @@ class AllocationMetricBenchmarkTest {
 
             List<Sample> samples = readAllocationSamples(recordingPath);
             SampleSummary summary = summarizeSamples(samples, threadName, measuredIterations);
-            return new Measurement(
-                    channel,
-                    measuredIterations,
-                    summary.sampleCount(),
-                    summary.sampledWeightBytes(),
-                    elapsedNanos.get(),
-                    summary.estimatedBytesPerIteration());
+            return new Measurement(channel, measuredIterations, summary.sampleCount(), summary.sampledWeightBytes(), elapsedNanos.get(), summary.estimatedBytesPerIteration());
         } finally {
             Files.deleteIfExists(recordingPath);
         }
+
     }
 
     private static List<Sample> readAllocationSamples(Path recordingPath) throws IOException {
+
         List<Sample> samples = new ArrayList<>();
         for (RecordedEvent event : RecordingFile.readAllEvents(recordingPath)) {
             if (!EVENT_NAME.equals(event.getEventType().getName())) {
@@ -233,9 +189,11 @@ class AllocationMetricBenchmarkTest {
             }
         }
         return samples;
+
     }
 
     private static SampleSummary summarizeSamples(List<Sample> samples, String targetThread, int iterations) {
+
         if (iterations <= 0) {
             throw new IllegalArgumentException("iteration count must be positive");
         }
@@ -253,78 +211,72 @@ class AllocationMetricBenchmarkTest {
             totalWeight = Math.addExact(totalWeight, sample.weight());
         }
         return new SampleSummary(count, totalWeight, (double) totalWeight / iterations);
+
     }
 
     private static void requireAllocationSampleEvent() {
-        boolean available = FlightRecorder.getFlightRecorder().getEventTypes().stream()
-                .anyMatch(eventType -> EVENT_NAME.equals(eventType.getName()));
+
+        boolean available = FlightRecorder.getFlightRecorder().getEventTypes().stream().anyMatch(eventType -> EVENT_NAME.equals(eventType.getName()));
         if (!available) {
             throw new IllegalStateException("JFR event unavailable: " + EVENT_NAME);
         }
+
     }
 
     private static void allocate(int iterations, int bytes) {
+
         for (int index = 0; index < iterations; index++) {
             byte[] allocation = new byte[bytes];
             allocation[0] = (byte) index;
             allocationSink = allocation;
         }
+
     }
 
     private static void runArithmetic(int iterations) {
+
         long value = arithmeticSink;
         for (int index = 0; index < iterations; index++) {
             value = value * 31L + index;
             value ^= value >>> 7;
         }
         arithmeticSink = value;
+
     }
 
     private static void writeReport(BenchmarkEvidence benchmark) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
-        List<String> lines = List.of(
-                "java.version=" + System.getProperty("java.version"),
-                "measurement.source=" + MEASUREMENT_SOURCE,
-                "estimate=true",
-                "warmup.iterations=" + WARMUP_ITERATIONS,
-                "simulation.tick.iterations=" + benchmark.simulationTick().iterations(),
-                "simulation.tick.sample.count=" + benchmark.simulationTick().sampleCount(),
-                "simulation.tick.sampled.weight.bytes=" + benchmark.simulationTick().sampledWeightBytes(),
-                "simulation.tick.duration.nanos=" + benchmark.simulationTick().durationNanos(),
-                "simulation.tick.estimated.bytes.per.tick="
-                        + benchmark.simulationTick().estimatedBytesPerIteration(),
-                "render.frame.iterations=" + benchmark.renderFrame().iterations(),
-                "render.frame.sample.count=" + benchmark.renderFrame().sampleCount(),
-                "render.frame.sampled.weight.bytes=" + benchmark.renderFrame().sampledWeightBytes(),
-                "render.frame.duration.nanos=" + benchmark.renderFrame().durationNanos(),
-                "render.frame.estimated.bytes.per.frame="
-                        + benchmark.renderFrame().estimatedBytesPerIteration(),
-                "allocating.control.sample.count=" + benchmark.allocatingControl().sampleCount(),
-                "allocating.control.sampled.weight.bytes=" + benchmark.allocatingControl().sampledWeightBytes(),
-                "allocating.control.estimated.bytes.per.iteration="
-                        + benchmark.allocatingControl().estimatedBytesPerIteration(),
-                "nonallocating.control.sample.count=" + benchmark.nonallocatingControl().sampleCount(),
-                "nonallocating.control.sampled.weight.bytes="
-                        + benchmark.nonallocatingControl().sampledWeightBytes(),
-                "nonallocating.control.estimated.bytes.per.iteration="
-                        + benchmark.nonallocatingControl().estimatedBytesPerIteration(),
-                "limitations.sampled.estimate=true",
-                "limitations.render.synthetic.headless=true",
-                "limitations.heap.only=true",
-                "limitations.native.gpu.attribution=false");
+        List<String> lines = List.of("java.version=" + System.getProperty("java.version"), "measurement.source=" + MEASUREMENT_SOURCE, "estimate=true",
+            "warmup.iterations=" + WARMUP_ITERATIONS, "simulation.tick.iterations=" + benchmark.simulationTick().iterations(),
+            "simulation.tick.sample.count=" + benchmark.simulationTick().sampleCount(), "simulation.tick.sampled.weight.bytes=" + benchmark.simulationTick().sampledWeightBytes(),
+            "simulation.tick.duration.nanos=" + benchmark.simulationTick().durationNanos(),
+            "simulation.tick.estimated.bytes.per.tick=" + benchmark.simulationTick().estimatedBytesPerIteration(),
+            "render.frame.iterations=" + benchmark.renderFrame().iterations(), "render.frame.sample.count=" + benchmark.renderFrame().sampleCount(),
+            "render.frame.sampled.weight.bytes=" + benchmark.renderFrame().sampledWeightBytes(), "render.frame.duration.nanos=" + benchmark.renderFrame().durationNanos(),
+            "render.frame.estimated.bytes.per.frame=" + benchmark.renderFrame().estimatedBytesPerIteration(),
+            "allocating.control.sample.count=" + benchmark.allocatingControl().sampleCount(),
+            "allocating.control.sampled.weight.bytes=" + benchmark.allocatingControl().sampledWeightBytes(),
+            "allocating.control.estimated.bytes.per.iteration=" + benchmark.allocatingControl().estimatedBytesPerIteration(),
+            "nonallocating.control.sample.count=" + benchmark.nonallocatingControl().sampleCount(),
+            "nonallocating.control.sampled.weight.bytes=" + benchmark.nonallocatingControl().sampledWeightBytes(),
+            "nonallocating.control.estimated.bytes.per.iteration=" + benchmark.nonallocatingControl().estimatedBytesPerIteration(), "limitations.sampled.estimate=true",
+            "limitations.render.synthetic.headless=true", "limitations.heap.only=true", "limitations.native.gpu.attribution=false");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static void assertFieldOrder(List<String> lines, List<String> prefixes) {
+
         assertEquals(prefixes.size(), lines.size());
         for (int index = 0; index < prefixes.size(); index++) {
-            assertTrue(
-                    lines.get(index).startsWith(prefixes.get(index)),
-                    "Expected report field " + prefixes.get(index) + " at line " + (index + 1));
+            assertTrue(lines.get(index).startsWith(prefixes.get(index)), "Expected report field " + prefixes.get(index) + " at line " + (index + 1));
         }
+
     }
 
     private static void rethrowWorkerFailure(Throwable failure) throws Exception {
+
         if (failure == null) {
             return;
         }
@@ -335,6 +287,7 @@ class AllocationMetricBenchmarkTest {
             throw exception;
         }
         throw new IllegalStateException("allocation benchmark worker failed", failure);
+
     }
 
     @FunctionalInterface
@@ -348,19 +301,9 @@ class AllocationMetricBenchmarkTest {
     private record SampleSummary(long sampleCount, long sampledWeightBytes, double estimatedBytesPerIteration) {
     }
 
-    private record Measurement(
-            String channel,
-            int iterations,
-            long sampleCount,
-            long sampledWeightBytes,
-            long durationNanos,
-            double estimatedBytesPerIteration) {
+    private record Measurement(String channel, int iterations, long sampleCount, long sampledWeightBytes, long durationNanos, double estimatedBytesPerIteration) {
     }
 
-    private record BenchmarkEvidence(
-            Measurement simulationTick,
-            Measurement renderFrame,
-            Measurement allocatingControl,
-            Measurement nonallocatingControl) {
+    private record BenchmarkEvidence(Measurement simulationTick, Measurement renderFrame, Measurement allocatingControl, Measurement nonallocatingControl) {
     }
 }

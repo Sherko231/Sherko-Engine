@@ -9,10 +9,11 @@ import java.util.Objects;
 /** Validates and defensively copies one complete input-action binding set. */
 final class InputActionBindingsValidator {
     private InputActionBindingsValidator() {
+
     }
 
-    static Map<InputAction, List<InputBinding>> validateAndCopy(
-            Map<InputAction, ? extends List<InputBinding>> bindings) {
+    static Map<InputAction, List<InputBinding>> validateAndCopy(Map<InputAction, ? extends List<InputBinding>> bindings) {
+
         Objects.requireNonNull(bindings, "bindings");
 
         EnumMap<InputAction, List<InputBinding>> copy = new EnumMap<>(InputAction.class);
@@ -30,8 +31,7 @@ final class InputActionBindingsValidator {
                 InputBinding nonNullBinding = Objects.requireNonNull(binding, "binding for " + action);
                 validateActionComponent(action, nonNullBinding);
                 if (bindingCopy.contains(nonNullBinding)) {
-                    throw new IllegalArgumentException(
-                            "duplicate binding for action " + action + ": " + nonNullBinding);
+                    throw new IllegalArgumentException("duplicate binding for action " + action + ": " + nonNullBinding);
                 }
                 bindingCopy.add(nonNullBinding);
             }
@@ -42,9 +42,11 @@ final class InputActionBindingsValidator {
             throw new IllegalArgumentException("binding map contains unsupported action entries");
         }
         return Map.copyOf(copy);
+
     }
 
     static void validateActionComponent(InputAction action, InputBinding binding) {
+
         InputActionComponent component = binding.component();
         if (action.valueType() == InputActionValueType.DIGITAL && component != InputActionComponent.VALUE) {
             throw new IllegalArgumentException("digital action " + action + " requires VALUE bindings");
@@ -52,5 +54,6 @@ final class InputActionBindingsValidator {
         if (action.valueType() == InputActionValueType.VECTOR2 && component == InputActionComponent.VALUE) {
             throw new IllegalArgumentException("vector action " + action + " requires X or Y bindings");
         }
+
     }
 }

@@ -26,24 +26,17 @@ import org.lwjgl.system.MemoryUtil;
 
 class GlfwWindowMouseMotionNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P3_T05_NATIVE";
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p3", "p3-t05-mouse-motion.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "p3", "p3-t05-mouse-motion.txt");
 
     @Test
-    void productionWindowTogglesRawMotionAcrossCaptureAndRealFocusTransitions()
-            throws Exception {
-        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P3-T05 native acceptance");
-        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P3-T05 native acceptance targets Windows x64");
+    void productionWindowTogglesRawMotionAcrossCaptureAndRealFocusTransitions() throws Exception {
+
+        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T05 native acceptance");
+        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T05 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        GlfwWindow window = new GlfwWindow(
-                960,
-                540,
-                "Sherko Engine P3-T05 Native Acceptance",
-                new EngineLogger(event -> { }),
-                registry);
+        GlfwWindow window = new GlfwWindow(960, 540, "Sherko Engine P3-T05 Native Acceptance", new EngineLogger(event -> {
+        }), registry);
 
         boolean started = false;
         boolean stopAttempted = false;
@@ -134,17 +127,12 @@ class GlfwWindowMouseMotionNativeTest {
             }
         }
 
-        writeReport(
-                rawSupported,
-                rawBeforeCapture,
-                rawDuringCapture,
-                rawAfterRelease,
-                rawAfterFocusLoss,
-                rawAfterFocusRegain,
-                rawAfterExplicitRecapture);
+        writeReport(rawSupported, rawBeforeCapture, rawDuringCapture, rawAfterRelease, rawAfterFocusLoss, rawAfterFocusRegain, rawAfterExplicitRecapture);
+
     }
 
     private static void pumpUntil(GlfwWindow window, Condition condition) throws InterruptedException {
+
         for (int attempt = 0; attempt < 100; attempt++) {
             window.pollEvents();
             if (condition.test()) {
@@ -153,61 +141,51 @@ class GlfwWindowMouseMotionNativeTest {
             Thread.sleep(10L);
         }
         assertTrue(condition.test(), "focus transition did not complete within bounded polling");
+
     }
 
     private static void assertMotionCleared(GlfwWindow window) {
+
         GlfwMouseMotionTracker.MouseDelta motion = window.drainMouseMotionForTest();
         assertEquals(0.0, motion.x(), 0.0);
         assertEquals(0.0, motion.y(), 0.0);
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
-    private static void writeReport(
-            boolean rawSupported,
-            int rawBeforeCapture,
-            int rawDuringCapture,
-            int rawAfterRelease,
-            int rawAfterFocusLoss,
-            int rawAfterFocusRegain,
-            int rawAfterExplicitRecapture) throws IOException {
+    private static void writeReport(boolean rawSupported, int rawBeforeCapture, int rawDuringCapture, int rawAfterRelease, int rawAfterFocusLoss, int rawAfterFocusRegain,
+        int rawAfterExplicitRecapture) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
-        List<String> lines = List.of(
-                "task=P3-T05",
-                "result=PASS",
-                "raw.mouse.supported=" + rawSupported,
-                "raw.mode.before.capture=" + rawBeforeCapture,
-                "raw.mode.during.capture=" + rawDuringCapture,
-                "raw.mode.after.release=" + rawAfterRelease,
-                "raw.mode.after.focus.loss=" + rawAfterFocusLoss,
-                "raw.mode.after.focus.regain=" + rawAfterFocusRegain,
-                "raw.mode.after.explicit.recapture=" + rawAfterExplicitRecapture,
-                "baseline.cleared.across.capture.focus.transitions=true",
-                "focus.regain.auto.raw.enable=false",
-                "relative.delta.deterministic.coverage=GlfwWindowMouseMotionTest",
-                "fallback.forced.unsupported.coverage=GlfwWindowMouseMotionTest",
-                "raw.hardware.motion.synthetic.oracle=not-used",
-                "raw.hardware.motion.note=glfwSetCursorPos is not treated as physical raw mouse input",
-                "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
-                "java.version=" + System.getProperty("java.version"),
-                "os.name=" + System.getProperty("os.name"),
-                "os.arch=" + System.getProperty("os.arch"),
-                "native.resource.registry.empty.after.cleanup=true",
-                "fallback.limit=disabled-cursor position deltas are screen-bound independent but do not claim OS pointer acceleration bypass",
-                "evidence.limit=native raw-mode selection/focus lifecycle proven; delta arithmetic/fallback are deterministic-test evidence; public InputSnapshot remains P3-T06");
+        List<String> lines = List.of("task=P3-T05", "result=PASS", "raw.mouse.supported=" + rawSupported, "raw.mode.before.capture=" + rawBeforeCapture,
+            "raw.mode.during.capture=" + rawDuringCapture, "raw.mode.after.release=" + rawAfterRelease, "raw.mode.after.focus.loss=" + rawAfterFocusLoss,
+            "raw.mode.after.focus.regain=" + rawAfterFocusRegain, "raw.mode.after.explicit.recapture=" + rawAfterExplicitRecapture,
+            "baseline.cleared.across.capture.focus.transitions=true", "focus.regain.auto.raw.enable=false", "relative.delta.deterministic.coverage=GlfwWindowMouseMotionTest",
+            "fallback.forced.unsupported.coverage=GlfwWindowMouseMotionTest", "raw.hardware.motion.synthetic.oracle=not-used",
+            "raw.hardware.motion.note=glfwSetCursorPos is not treated as physical raw mouse input", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
+            "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
+            "native.resource.registry.empty.after.cleanup=true",
+            "fallback.limit=disabled-cursor position deltas are screen-bound independent but do not claim OS pointer acceleration bypass",
+            "evidence.limit=native raw-mode selection/focus lifecycle proven; delta arithmetic/fallback are deterministic-test evidence; public InputSnapshot remains P3-T06");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 
     @FunctionalInterface

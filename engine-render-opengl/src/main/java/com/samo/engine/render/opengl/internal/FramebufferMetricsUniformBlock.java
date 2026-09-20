@@ -11,9 +11,11 @@ final class FramebufferMetricsUniformBlock {
     static final int SIZE_BYTES = 16;
 
     private FramebufferMetricsUniformBlock() {
+
     }
 
     static void write(int framebufferWidth, int framebufferHeight, ByteBuffer destination) {
+
         ByteBuffer output = Objects.requireNonNull(destination, "destination");
         if (framebufferWidth <= 0) {
             throw new IllegalArgumentException("framebufferWidth must be positive");
@@ -22,8 +24,7 @@ final class FramebufferMetricsUniformBlock {
             throw new IllegalArgumentException("framebufferHeight must be positive");
         }
         if (output.remaining() < SIZE_BYTES) {
-            throw new IllegalArgumentException(
-                    "destination requires at least " + SIZE_BYTES + " remaining bytes");
+            throw new IllegalArgumentException("destination requires at least " + SIZE_BYTES + " remaining bytes");
         }
 
         int start = output.position();
@@ -34,5 +35,6 @@ final class FramebufferMetricsUniformBlock {
         target.putFloat(1.0f / framebufferWidth);
         target.putFloat(1.0f / framebufferHeight);
         output.position(start + SIZE_BYTES);
+
     }
 }

@@ -20,17 +20,14 @@ public final class OpenAL3DAudioSpike {
     private static final float RIGHT_X = 4.0f;
 
     private OpenAL3DAudioSpike() {
+
     }
 
     public static void main(String[] args) throws InterruptedException {
-        int durationSeconds = Integer.getInteger(
-                "spike.durationSeconds",
-                DEFAULT_DURATION_SECONDS
-        );
+
+        int durationSeconds = Integer.getInteger("spike.durationSeconds", DEFAULT_DURATION_SECONDS);
         if (durationSeconds <= 0) {
-            throw new IllegalArgumentException(
-                    "spike.durationSeconds must be greater than zero"
-            );
+            throw new IllegalArgumentException("spike.durationSeconds must be greater than zero");
         }
 
         long device = NULL;
@@ -71,10 +68,7 @@ public final class OpenAL3DAudioSpike {
             alDistanceModel(AL_NONE);
             alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
             alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
-            alListenerfv(
-                    AL_ORIENTATION,
-                    new float[]{0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f}
-            );
+            alListenerfv(AL_ORIENTATION, new float[]{0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f});
             checkAl("listener setup");
 
             ShortBuffer pcm = generateMonoTone(SAMPLE_RATE, TONE_HZ);
@@ -97,9 +91,7 @@ public final class OpenAL3DAudioSpike {
             alSourcePlay(source);
             checkAl("alSourcePlay");
 
-            System.out.println(
-                    "Listen for the tone moving continuously left <-> right."
-            );
+            System.out.println("Listen for the tone moving continuously left <-> right.");
 
             long startNanos = System.nanoTime();
             long durationNanos = durationSeconds * 1_000_000_000L;
@@ -112,9 +104,7 @@ public final class OpenAL3DAudioSpike {
 
                 double elapsedSeconds = elapsedNanos / 1_000_000_000.0;
                 double normalized = elapsedSeconds / durationSeconds;
-                float x = (float) (
-                        Math.sin(normalized * Math.PI * 4.0) * RIGHT_X
-                );
+                float x = (float) (Math.sin(normalized * Math.PI * 4.0) * RIGHT_X);
                 alSource3f(source, AL_POSITION, x, 0.0f, -1.0f);
                 checkAl("source movement");
 
@@ -150,21 +140,16 @@ public final class OpenAL3DAudioSpike {
             }
 
             if (liveSources != 0 || liveBuffers != 0) {
-                throw new IllegalStateException(
-                        "OpenAL cleanup counters are not zero: sources="
-                                + liveSources
-                                + ", buffers="
-                                + liveBuffers
-                );
+                throw new IllegalStateException("OpenAL cleanup counters are not zero: sources=" + liveSources + ", buffers=" + liveBuffers);
             }
         }
 
-        System.out.println(
-                "P0-T05 passed: moving mono source completed and source/buffer counts returned to zero."
-        );
+        System.out.println("P0-T05 passed: moving mono source completed and source/buffer counts returned to zero.");
+
     }
 
     private static ShortBuffer generateMonoTone(int sampleRate, float frequency) {
+
         int sampleCount = sampleRate;
         ShortBuffer samples = BufferUtils.createShortBuffer(sampleCount);
 
@@ -175,15 +160,15 @@ public final class OpenAL3DAudioSpike {
         }
         samples.flip();
         return samples;
+
     }
 
     private static void checkAl(String operation) {
+
         int error = alGetError();
         if (error != AL_NO_ERROR) {
-            throw new IllegalStateException(
-                    operation + " failed with OpenAL error 0x"
-                            + Integer.toHexString(error)
-            );
+            throw new IllegalStateException(operation + " failed with OpenAL error 0x" + Integer.toHexString(error));
         }
+
     }
 }

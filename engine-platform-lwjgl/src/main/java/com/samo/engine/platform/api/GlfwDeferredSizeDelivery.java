@@ -14,22 +14,29 @@ final class GlfwDeferredSizeDelivery {
     private int framebufferHeight;
 
     GlfwDeferredSizeDelivery(WindowSizeListener listener) {
+
         this.listener = Objects.requireNonNull(listener, "listener");
+
     }
 
     void stageLogical(int width, int height) {
+
         logicalWidth = width;
         logicalHeight = height;
         logicalPending = true;
+
     }
 
     void stageFramebuffer(int width, int height) {
+
         framebufferWidth = width;
         framebufferHeight = height;
         framebufferPending = true;
+
     }
 
     void dispatchPending() {
+
         if (logicalPending) {
             int width = logicalWidth;
             int height = logicalHeight;
@@ -44,18 +51,21 @@ final class GlfwDeferredSizeDelivery {
             validateDimensions("framebuffer", new GlfwDimensions(width, height));
             listener.onFramebufferSizeChanged(width, height);
         }
+
     }
 
     void clear() {
+
         logicalPending = false;
         framebufferPending = false;
+
     }
 
     static void validateDimensions(String kind, GlfwDimensions dimensions) {
+
         if (dimensions.width() < 0 || dimensions.height() < 0) {
-            throw new IllegalStateException(
-                    "GLFW reported negative " + kind + " dimensions: "
-                            + dimensions.width() + "x" + dimensions.height());
+            throw new IllegalStateException("GLFW reported negative " + kind + " dimensions: " + dimensions.width() + "x" + dimensions.height());
         }
+
     }
 }

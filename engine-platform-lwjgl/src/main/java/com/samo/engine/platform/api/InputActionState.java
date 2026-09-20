@@ -12,14 +12,8 @@ public final class InputActionState {
     private final double x;
     private final double y;
 
-    InputActionState(
-            InputAction action,
-            boolean pressed,
-            boolean held,
-            boolean released,
-            double value,
-            double x,
-            double y) {
+    InputActionState(InputAction action, boolean pressed, boolean held, boolean released, double value, double x, double y) {
+
         this.action = Objects.requireNonNull(action, "action");
         if (!Double.isFinite(value) || !Double.isFinite(x) || !Double.isFinite(y)) {
             throw new IllegalArgumentException("action values must be finite");
@@ -36,33 +30,48 @@ public final class InputActionState {
         this.value = value;
         this.x = x;
         this.y = y;
+
     }
 
     public InputAction action() {
+
         return action;
+
     }
 
     public boolean pressed() {
+
         return pressed;
+
     }
 
     public boolean held() {
+
         return held;
+
     }
 
     public boolean released() {
+
         return released;
+
     }
 
     public double value() {
+
         return value;
+
     }
 
     public double x() {
+
         return x;
+
     }
 
     public double y() {
+
         return y;
+
     }
 }

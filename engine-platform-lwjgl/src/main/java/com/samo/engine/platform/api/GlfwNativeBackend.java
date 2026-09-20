@@ -32,14 +32,19 @@ interface GlfwNativeBackend {
     String glRenderer();
 
     default boolean openGlDebugContext() {
+
         return false;
+
     }
 
     default OpenGlDebugCallbackRegistration installOpenGlDebugCallback(OpenGlDebugEventSink sink) {
+
         return null;
+
     }
 
     default void releaseOpenGlDebugCallback(OpenGlDebugCallbackRegistration state) {
+
     }
 
     GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink);
@@ -47,33 +52,43 @@ interface GlfwNativeBackend {
     void releaseSizeCallbacks(long handle, GlfwSizeCallbackRegistration state);
 
     default GlfwInputCallbackRegistration installInputCallbacks(long handle, GlfwInputEventSink sink) {
+
         return null;
+
     }
 
     default void releaseInputCallbacks(long handle, GlfwInputCallbackRegistration state) {
+
     }
 
-    default GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-            long handle,
-            GlfwCursorPositionEventSink sink) {
+    default GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
+
         return null;
+
     }
 
     default void releaseCursorPositionCallback(long handle, GlfwCursorPositionCallbackRegistration state) {
+
     }
 
     default boolean queryWindowFocused(long handle) {
+
         return true;
+
     }
 
     default void setCursorMode(long handle, int mode) {
+
     }
 
     default boolean rawMouseMotionSupported() {
+
         return false;
+
     }
 
     default void setRawMouseMotion(long handle, boolean enabled) {
+
     }
 
     GlfwDimensions queryLogicalSize(long handle);
@@ -90,14 +105,7 @@ interface GlfwNativeBackend {
 
     void setDecorated(long handle, boolean decorated);
 
-    void setWindowMonitor(
-            long handle,
-            long monitor,
-            int x,
-            int y,
-            int width,
-            int height,
-            int refreshRate);
+    void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate);
 
     void swapBuffers(long handle);
 

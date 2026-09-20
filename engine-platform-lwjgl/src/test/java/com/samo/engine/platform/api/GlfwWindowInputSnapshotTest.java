@@ -17,6 +17,7 @@ import org.lwjgl.glfw.GLFW;
 class GlfwWindowInputSnapshotTest {
     @Test
     void pressAndReleaseBetweenSnapshotsRetainsBothEdges() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -45,10 +46,12 @@ class GlfwWindowInputSnapshotTest {
         assertFalse(second.mouseButtonReleased(InputMouseButton.LEFT));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void repeatPreservesHeldLevelWithoutCreatingAnotherPressEdge() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -68,10 +71,12 @@ class GlfwWindowInputSnapshotTest {
         assertFalse(repeated.keyReleased(InputKey.W));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void mouseDeltaIsConsumedOnceWithoutResettingBaseline() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -97,10 +102,12 @@ class GlfwWindowInputSnapshotTest {
         assertEquals(5.0, continued.mouseDeltaY(), 0.0);
 
         cleanup(window, registry);
+
     }
 
     @Test
     void focusLossClearsHeldStateDiscardsPressesAndRetainsSyntheticReleases() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -138,10 +145,12 @@ class GlfwWindowInputSnapshotTest {
         assertFalse(regained.keyHeld(InputKey.W));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void latePressAndRepeatEventsWhileUnfocusedCannotRestoreHeldState() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -170,10 +179,12 @@ class GlfwWindowInputSnapshotTest {
         assertFalse(regained.mouseButtonHeld(InputMouseButton.LEFT));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void failedCaptureValidationConsumesNothing() throws Exception {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -201,10 +212,12 @@ class GlfwWindowInputSnapshotTest {
         assertTrue(valid.keyPressed(InputKey.A));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void captureDoesNotPollAndReturnedSnapshotRemainsStable() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -231,10 +244,12 @@ class GlfwWindowInputSnapshotTest {
         assertTrue(second.keyReleased(InputKey.D));
 
         cleanup(window, registry);
+
     }
 
     @Test
     void notStartedCaptureFailsBeforeAnyStateCanBeConsumed() {
+
         SnapshotBackend backend = new SnapshotBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry);
@@ -244,27 +259,29 @@ class GlfwWindowInputSnapshotTest {
         window.initialize();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     private static GlfwWindow window(SnapshotBackend backend, NativeResourceRegistry registry) {
-        return new GlfwWindow(
-                800,
-                600,
-                "P3-T06 input snapshot test",
-                new EngineLogger(event -> { }),
-                registry,
-                backend);
+
+        return new GlfwWindow(800, 600, "P3-T06 input snapshot test", new EngineLogger(event -> {
+        }), registry, backend);
+
     }
 
     private static void start(GlfwWindow window) {
+
         window.initialize();
         window.start();
+
     }
 
     private static void cleanup(GlfwWindow window, NativeResourceRegistry registry) {
+
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     private static final class SnapshotBackend implements GlfwNativeBackend {
@@ -275,195 +292,248 @@ class GlfwWindowInputSnapshotTest {
         private int pollCount;
 
         void queueKey(int key, int action) {
+
             queuedEvents.add(() -> inputSink.onKey(key, action));
+
         }
 
         void queueMouseButton(int button, int action) {
+
             queuedEvents.add(() -> inputSink.onMouseButton(button, action));
+
         }
 
         void queueFocus(boolean value) {
+
             queuedEvents.add(() -> {
                 focused = value;
                 inputSink.onFocus(value);
             });
+
         }
 
         void queueCursor(double x, double y) {
+
             queuedEvents.add(() -> motionSink.onCursorPosition(x, y));
+
         }
 
         @Override
         public GlfwErrorCallbackRegistration installErrorCallback() {
+
             return new GlfwErrorCallbackRegistration(new Object(), new Object());
+
         }
 
         @Override
         public void restoreErrorCallback(GlfwErrorCallbackRegistration state) {
+
         }
 
         @Override
         public void freeOwnedErrorCallback(GlfwErrorCallbackRegistration state) {
+
         }
 
         @Override
         public boolean initGlfw() {
+
             return true;
+
         }
 
         @Override
         public void terminateGlfw() {
+
         }
 
         @Override
         public void defaultWindowHints() {
+
         }
 
         @Override
         public void windowHint(int hint, int value) {
+
         }
 
         @Override
         public long createWindow(int width, int height, String title) {
+
             return 101L;
+
         }
 
         @Override
         public void destroyWindow(long handle) {
+
         }
 
         @Override
         public void makeContextCurrent(long handle) {
+
         }
 
         @Override
         public void createCapabilities() {
+
         }
 
         @Override
         public void clearCapabilities() {
+
         }
 
         @Override
         public boolean openGl46Supported() {
+
             return true;
+
         }
 
         @Override
         public String glVersion() {
+
             return "4.6 fixture";
+
         }
 
         @Override
         public String glRenderer() {
+
             return "fixture renderer";
+
         }
 
         @Override
         public GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink) {
+
             return new GlfwSizeCallbackRegistration(new Object(), new Object());
+
         }
 
         @Override
         public void releaseSizeCallbacks(long handle, GlfwSizeCallbackRegistration state) {
+
         }
 
         @Override
         public GlfwInputCallbackRegistration installInputCallbacks(long handle, GlfwInputEventSink sink) {
+
             inputSink = sink;
             return new GlfwInputCallbackRegistration(new Object(), new Object(), new Object());
+
         }
 
         @Override
         public void releaseInputCallbacks(long handle, GlfwInputCallbackRegistration state) {
+
             inputSink = null;
+
         }
 
         @Override
-        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-                long handle,
-                GlfwCursorPositionEventSink sink) {
+        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
+
             motionSink = sink;
             return new GlfwCursorPositionCallbackRegistration(new Object());
+
         }
 
         @Override
         public void releaseCursorPositionCallback(long handle, GlfwCursorPositionCallbackRegistration state) {
+
             motionSink = null;
+
         }
 
         @Override
         public boolean queryWindowFocused(long handle) {
+
             return focused;
+
         }
 
         @Override
         public void setCursorMode(long handle, int mode) {
+
         }
 
         @Override
         public GlfwDimensions queryLogicalSize(long handle) {
+
             return new GlfwDimensions(800, 600);
+
         }
 
         @Override
         public GlfwDimensions queryFramebufferSize(long handle) {
+
             return new GlfwDimensions(800, 600);
+
         }
 
         @Override
         public GlfwPosition queryWindowPosition(long handle) {
+
             return new GlfwPosition(100, 100);
+
         }
 
         @Override
         public long primaryMonitor() {
+
             return 202L;
+
         }
 
         @Override
         public GlfwVideoMode queryVideoMode(long monitor) {
+
             return new GlfwVideoMode(1920, 1080, 120);
+
         }
 
         @Override
         public GlfwPosition queryMonitorPosition(long monitor) {
+
             return new GlfwPosition(0, 0);
+
         }
 
         @Override
         public void setDecorated(long handle, boolean decorated) {
+
         }
 
         @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
+        public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
+
         }
 
         @Override
         public void swapBuffers(long handle) {
+
         }
 
         @Override
         public void pollEvents() {
+
             pollCount++;
             List<Runnable> events = List.copyOf(queuedEvents);
             queuedEvents.clear();
             events.forEach(Runnable::run);
+
         }
 
         @Override
         public void showWindow(long handle) {
+
         }
 
         @Override
         public void hideWindow(long handle) {
+
         }
     }
 }

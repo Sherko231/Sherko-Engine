@@ -12,30 +12,21 @@ final class RendererFrameUniformUploader {
     private final int cameraBuffer;
     private final int perFrameBuffer;
     private final int localLightBuffer;
-    private final ByteBuffer cameraBytes =
-            ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
-    private final ByteBuffer perFrameBytes =
-            ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
-    private final ByteBuffer localLightBytes =
-            ByteBuffer.allocateDirect(LocalLightUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer cameraBytes = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer perFrameBytes = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer localLightBytes = ByteBuffer.allocateDirect(LocalLightUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
 
-    RendererFrameUniformUploader(
-            OpenGlResourceBackend resourceBackend,
-            int cameraBuffer,
-            int perFrameBuffer,
-            int localLightBuffer) {
+    RendererFrameUniformUploader(OpenGlResourceBackend resourceBackend, int cameraBuffer, int perFrameBuffer, int localLightBuffer) {
+
         this.resourceBackend = Objects.requireNonNull(resourceBackend, "resourceBackend");
         this.cameraBuffer = cameraBuffer;
         this.perFrameBuffer = perFrameBuffer;
         this.localLightBuffer = localLightBuffer;
+
     }
 
-    void upload(
-            Matrix4fc viewMatrix,
-            Matrix4fc projectionMatrix,
-            int framebufferWidth,
-            int framebufferHeight,
-            List<RenderLocalLight> localLights) {
+    void upload(Matrix4fc viewMatrix, Matrix4fc projectionMatrix, int framebufferWidth, int framebufferHeight, List<RenderLocalLight> localLights) {
+
         cameraBytes.clear();
         CameraMatricesUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
         cameraBytes.flip();
@@ -50,5 +41,6 @@ final class RendererFrameUniformUploader {
         LocalLightUniformBlock.write(localLights, localLightBytes);
         localLightBytes.flip();
         resourceBackend.uploadBufferSubData(localLightBuffer, 0L, localLightBytes);
+
     }
 }

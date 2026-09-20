@@ -20,13 +20,12 @@ public final class SteamInitSpike {
     private static final long CALLBACK_PUMP_SLEEP_MILLIS = 50L;
 
     private SteamInitSpike() {
+
     }
 
     public static void main(String[] args) throws Exception {
-        int timeoutSeconds = Integer.getInteger(
-                "spike.timeoutSeconds",
-                DEFAULT_TIMEOUT_SECONDS
-        );
+
+        int timeoutSeconds = Integer.getInteger("spike.timeoutSeconds", DEFAULT_TIMEOUT_SECONDS);
         if (timeoutSeconds <= 0) {
             throw new IllegalArgumentException("spike.timeoutSeconds must be greater than zero");
         }
@@ -40,17 +39,12 @@ public final class SteamInitSpike {
         try {
             SteamLibraryLoader loader = new SteamLibraryLoaderLwjgl3();
             if (!SteamAPI.loadLibraries(loader)) {
-                throw new IllegalStateException(
-                        "Failed to load Steamworks4j native libraries. Ensure Steam is installed and the dependency natives can be loaded."
-                );
+                throw new IllegalStateException("Failed to load Steamworks4j native libraries. Ensure Steam is installed and the dependency natives can be loaded.");
             }
 
             SteamAPI.InitResult initResult = SteamAPI.initEx();
             if (initResult != SteamAPI.InitResult.OK) {
-                throw new IllegalStateException(
-                        "SteamAPI.initEx() failed with result: " + initResult
-                                + ". Make sure the Steam client is running and logged in."
-                );
+                throw new IllegalStateException("SteamAPI.initEx() failed with result: " + initResult + ". Make sure the Steam client is running and logged in.");
             }
             steamInitialized = true;
 
@@ -61,23 +55,19 @@ public final class SteamInitSpike {
             steamUserStats = new SteamUserStats(new SteamUserStatsCallback() {
                 @Override
                 public void onNumberOfCurrentPlayersReceived(boolean success, int players) {
+
                     callbackReceived.set(true);
-                    System.out.printf(
-                            "Steam callback: onNumberOfCurrentPlayersReceived success=%s players=%d%n",
-                            success,
-                            players
-                    );
+                    System.out.printf("Steam callback: onNumberOfCurrentPlayersReceived success=%s players=%d%n", success, players);
+
                 }
 
                 @Override
                 public void onUserStatsReceived(long gameId, SteamID steamIDUser, SteamResult result) {
+
                     callbackReceived.set(true);
-                    System.out.printf(
-                            "Steam callback: onUserStatsReceived gameId=%d user=%s result=%s%n",
-                            gameId,
-                            Long.toUnsignedString(SteamNativeHandle.getNativeHandle(steamIDUser)),
-                            result
-                    );
+                    System.out.printf("Steam callback: onUserStatsReceived gameId=%d user=%s result=%s%n", gameId,
+                        Long.toUnsignedString(SteamNativeHandle.getNativeHandle(steamIDUser)), result);
+
                 }
             });
 
@@ -99,9 +89,7 @@ public final class SteamInitSpike {
             }
 
             if (!callbackReceived.get()) {
-                throw new IllegalStateException(
-                        "Steam callback pump timed out after " + timeoutSeconds + " seconds"
-                );
+                throw new IllegalStateException("Steam callback pump timed out after " + timeoutSeconds + " seconds");
             }
         } finally {
             if (steamUserStats != null) {
@@ -118,8 +106,7 @@ public final class SteamInitSpike {
             }
         }
 
-        System.out.println(
-                "P0-T07 passed: Steam initialized, identity printed, callback received, and shutdown completed."
-        );
+        System.out.println("P0-T07 passed: Steam initialized, identity printed, callback received, and shutdown completed.");
+
     }
 }

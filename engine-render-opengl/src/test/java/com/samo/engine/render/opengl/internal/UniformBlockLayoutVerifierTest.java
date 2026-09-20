@@ -16,52 +16,55 @@ import org.junit.jupiter.api.Test;
 class UniformBlockLayoutVerifierTest {
     @Test
     void acceptsExpectedSizesAndBindings() {
+
         FakeReflectionBackend backend = expectedBackend();
         UniformBlockLayoutVerifier.verify(7, boundGuard(), backend);
+
     }
 
     @Test
     void missingBlockFailsClearly() {
+
         FakeReflectionBackend backend = expectedBackend();
         backend.indices.put(CameraMatricesUniformBlock.GLSL_BLOCK_NAME, -1);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("Missing"));
+
     }
 
     @Test
     void wrongSizeFailsClearly() {
+
         FakeReflectionBackend backend = expectedBackend();
         backend.sizes.put(0, CameraMatricesUniformBlock.SIZE_BYTES + 16);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=128"));
         assertTrue(failure.getMessage().contains("actual=144"));
+
     }
 
     @Test
     void wrongBindingFailsClearly() {
+
         FakeReflectionBackend backend = expectedBackend();
         backend.bindings.put(1, 5);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=1"));
         assertTrue(failure.getMessage().contains("actual=5"));
+
     }
 
     private static FakeReflectionBackend expectedBackend() {
+
         FakeReflectionBackend backend = new FakeReflectionBackend();
         backend.indices.put(CameraMatricesUniformBlock.GLSL_BLOCK_NAME, 0);
         backend.indices.put(FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME, 1);
@@ -73,15 +76,13 @@ class UniformBlockLayoutVerifierTest {
         backend.bindings.put(1, FramebufferMetricsUniformBlock.BINDING);
         backend.bindings.put(2, LocalLightUniformBlock.BINDING);
         return backend;
+
     }
 
     private static OpenGlThreadGuard boundGuard() {
-        GlfwWindow window = new GlfwWindow(
-                1,
-                1,
-                "guard fixture",
-                new EngineLogger(event -> { }),
-                new NativeResourceRegistry());
+
+        GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
+        }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
         try {
             Method bind = OpenGlThreadGuard.class.getDeclaredMethod("bindOwnerThread", Thread.class);
@@ -93,6 +94,7 @@ class UniformBlockLayoutVerifierTest {
         } catch (InvocationTargetException failure) {
             throw new AssertionError(failure.getCause());
         }
+
     }
 
     private static final class FakeReflectionBackend implements OpenGlUniformBlockReflectionBackend {
@@ -102,17 +104,23 @@ class UniformBlockLayoutVerifierTest {
 
         @Override
         public int uniformBlockIndex(int programHandle, String blockName) {
+
             return indices.getOrDefault(blockName, -1);
+
         }
 
         @Override
         public int uniformBlockDataSize(int programHandle, int blockIndex) {
+
             return sizes.getOrDefault(blockIndex, -1);
+
         }
 
         @Override
         public int uniformBlockBinding(int programHandle, int blockIndex) {
+
             return bindings.getOrDefault(blockIndex, -1);
+
         }
     }
 }

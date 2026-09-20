@@ -6,13 +6,16 @@ import java.util.Objects;
 
 final class DrawSubmissionSorter {
     List<DrawSubmission> sort(List<DrawSubmission> submissions) {
+
         List<DrawSubmission> source = List.copyOf(Objects.requireNonNull(submissions, "submissions"));
         ArrayList<DrawSubmission> ordered = new ArrayList<>(source);
         ordered.sort(this::compare);
         return List.copyOf(ordered);
+
     }
 
     private int compare(DrawSubmission left, DrawSubmission right) {
+
         boolean leftTransparent = left.transparent();
         boolean rightTransparent = right.transparent();
         if (leftTransparent != rightTransparent) {
@@ -39,5 +42,6 @@ final class DrawSubmissionSorter {
             return mesh;
         }
         return Integer.compare(left.sequence(), right.sequence());
+
     }
 }

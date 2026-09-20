@@ -13,15 +13,19 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public final class WindowsNativeCiSmoke {
     private WindowsNativeCiSmoke() {
+
     }
 
     public static void main(String[] args) {
+
         verifyGlfwLifecycle();
         verifyOpenAlLifecycle();
         System.out.println("P1-T08 passed: hosted Windows GLFW and OpenAL native lifecycle smoke completed.");
+
     }
 
     private static void verifyGlfwLifecycle() {
+
         GLFWErrorCallback errorCallback = GLFWErrorCallback.createPrint(System.err);
         glfwSetErrorCallback(errorCallback);
         try {
@@ -34,9 +38,11 @@ public final class WindowsNativeCiSmoke {
             glfwSetErrorCallback(null);
             errorCallback.free();
         }
+
     }
 
     private static void verifyOpenAlLifecycle() {
+
         long device = NULL;
         long context = NULL;
         try {
@@ -62,9 +68,7 @@ public final class WindowsNativeCiSmoke {
             System.out.println("OpenAL version  : " + alGetString(AL_VERSION));
             int error = alGetError();
             if (error != AL_NO_ERROR) {
-                throw new IllegalStateException(
-                        "OpenAL smoke reported error 0x" + Integer.toHexString(error)
-                );
+                throw new IllegalStateException("OpenAL smoke reported error 0x" + Integer.toHexString(error));
             }
         } finally {
             if (context != NULL) {
@@ -75,5 +79,6 @@ public final class WindowsNativeCiSmoke {
                 throw new IllegalStateException("Failed to close OpenAL device on hosted Windows CI");
             }
         }
+
     }
 }

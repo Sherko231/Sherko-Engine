@@ -15,13 +15,5 @@ record GlfwWindowGeometry(int x, int y, int width, int height) {
 record GlfwMonitorTarget(long handle, GlfwPosition position, GlfwVideoMode videoMode) {
 }
 
-record GlfwWindowTransitionPlan(
-        WindowMode mode,
-        Boolean decorated,
-        long monitor,
-        int x,
-        int y,
-        int width,
-        int height,
-        int refreshRate) {
+record GlfwWindowTransitionPlan(WindowMode mode, Boolean decorated, long monitor, int x, int y, int width, int height, int refreshRate) {
 }

@@ -22,6 +22,7 @@ public final class PlayerInputCommandSampler {
     private double pendingLookY;
 
     public void submit(InputActionSnapshot snapshot) {
+
         Objects.requireNonNull(snapshot, "snapshot");
         if (hasFrame && snapshot.frameId() <= lastFrameId) {
             throw new IllegalArgumentException("frameId must be strictly increasing");
@@ -61,9 +62,11 @@ public final class PlayerInputCommandSampler {
         System.arraycopy(nextReleased, 0, pendingDigitalReleased, 0, nextReleased.length);
         lastFrameId = snapshot.frameId();
         hasFrame = true;
+
     }
 
     public PlayerInputCommand nextCommand(long tickId) {
+
         if (!hasFrame) {
             throw new IllegalStateException("at least one action snapshot must be submitted before a command is emitted");
         }
@@ -74,26 +77,14 @@ public final class PlayerInputCommandSampler {
             throw new IllegalArgumentException("tickId must be strictly increasing");
         }
 
-        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states =
-                new EnumMap<>(PlayerInputCommand.DigitalAction.class);
+        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = new EnumMap<>(PlayerInputCommand.DigitalAction.class);
         for (PlayerInputCommand.DigitalAction action : PlayerInputCommand.DigitalAction.values()) {
             int index = action.ordinal();
-            states.put(
-                    action,
-                    new PlayerInputCommand.DigitalState(
-                            latestDigitalValues[index],
-                            pendingDigitalPressed[index],
-                            latestDigitalHeld[index],
-                            pendingDigitalReleased[index]));
+            states.put(action,
+                new PlayerInputCommand.DigitalState(latestDigitalValues[index], pendingDigitalPressed[index], latestDigitalHeld[index], pendingDigitalReleased[index]));
         }
 
-        PlayerInputCommand command = new PlayerInputCommand(
-                tickId,
-                latestMoveX,
-                latestMoveY,
-                pendingLookX,
-                pendingLookY,
-                states);
+        PlayerInputCommand command = new PlayerInputCommand(tickId, latestMoveX, latestMoveY, pendingLookX, pendingLookY, states);
 
         pendingLookX = 0.0;
         pendingLookY = 0.0;
@@ -104,9 +95,11 @@ public final class PlayerInputCommandSampler {
         lastTickId = tickId;
         hasTick = true;
         return command;
+
     }
 
     private static InputAction platformAction(PlayerInputCommand.DigitalAction action) {
+
         return switch (action) {
             case JUMP -> InputAction.JUMP;
             case CROUCH -> InputAction.CROUCH;
@@ -118,17 +111,22 @@ public final class PlayerInputCommandSampler {
             case PAUSE -> InputAction.PAUSE;
             case PUSH_TO_TALK -> InputAction.PUSH_TO_TALK;
         };
+
     }
 
     private static double finiteSum(double left, double right, String name) {
+
         double result = left + right;
         requireFinite(name, result);
         return result;
+
     }
 
     private static void requireFinite(String name, double value) {
+
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 }

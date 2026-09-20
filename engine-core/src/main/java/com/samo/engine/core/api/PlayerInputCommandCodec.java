@@ -15,9 +15,11 @@ public final class PlayerInputCommandCodec {
     private static final int VALID_DIGITAL_MASK = (1 << PlayerInputCommand.DigitalAction.values().length) - 1;
 
     private PlayerInputCommandCodec() {
+
     }
 
     public static void encode(PlayerInputCommand command, ByteBuffer destination) {
+
         Objects.requireNonNull(command, "command");
         Objects.requireNonNull(destination, "destination");
         if (destination.remaining() < ENCODED_SIZE) {
@@ -58,9 +60,11 @@ public final class PlayerInputCommandCodec {
         view.putShort((short) heldMask);
         view.putShort((short) releasedMask);
         destination.position(destination.position() + ENCODED_SIZE);
+
     }
 
     public static PlayerInputCommand decode(ByteBuffer source) {
+
         Objects.requireNonNull(source, "source");
         if (source.remaining() < ENCODED_SIZE) {
             throw new IllegalArgumentException("source requires " + ENCODED_SIZE + " remaining bytes");
@@ -98,26 +102,21 @@ public final class PlayerInputCommandCodec {
         validateMask("held", heldMask);
         validateMask("released", releasedMask);
 
-        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states =
-                new EnumMap<>(PlayerInputCommand.DigitalAction.class);
+        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = new EnumMap<>(PlayerInputCommand.DigitalAction.class);
         for (int index = 0; index < actions.length; index++) {
             requireFinite("digital value for " + actions[index], values[index]);
             int bit = 1 << index;
-            states.put(
-                    actions[index],
-                    new PlayerInputCommand.DigitalState(
-                            values[index],
-                            (pressedMask & bit) != 0,
-                            (heldMask & bit) != 0,
-                            (releasedMask & bit) != 0));
+            states.put(actions[index], new PlayerInputCommand.DigitalState(values[index], (pressedMask & bit) != 0, (heldMask & bit) != 0, (releasedMask & bit) != 0));
         }
 
         PlayerInputCommand result = new PlayerInputCommand(tickId, moveX, moveY, lookX, lookY, states);
         source.position(source.position() + ENCODED_SIZE);
         return result;
+
     }
 
     private static void validateHeader(int magic, int version, int reserved) {
+
         if (magic != MAGIC) {
             throw new IllegalArgumentException("invalid PlayerInputCommand magic");
         }
@@ -127,17 +126,22 @@ public final class PlayerInputCommandCodec {
         if (reserved != 0) {
             throw new IllegalArgumentException("reserved flags must be zero");
         }
+
     }
 
     private static void validateMask(String name, int mask) {
+
         if ((mask & ~VALID_DIGITAL_MASK) != 0) {
             throw new IllegalArgumentException(name + " mask contains unsupported bits");
         }
+
     }
 
     private static void requireFinite(String name, double value) {
+
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 }

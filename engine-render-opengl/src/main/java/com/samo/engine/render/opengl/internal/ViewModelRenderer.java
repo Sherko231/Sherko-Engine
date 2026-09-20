@@ -20,23 +20,14 @@ final class ViewModelRenderer implements AutoCloseable {
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
     private final int worldCameraBufferHandle;
-    private final ByteBuffer cameraBytes =
-            ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer cameraBytes = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final Matrix4f identityView = new Matrix4f();
     private final Matrix4f projection = new Matrix4f();
     private boolean closeAttempted;
 
-    private ViewModelRenderer(
-            OpenGlThreadGuard threadGuard,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlVertexArray vertexArray,
-            OpenGlBuffer vertexBuffer,
-            OpenGlBuffer cameraBuffer,
-            OpenGlShader vertexShader,
-            OpenGlShader fragmentShader,
-            OpenGlProgram program,
-            int worldCameraBufferHandle) {
+    private ViewModelRenderer(OpenGlThreadGuard threadGuard, OpenGlResourceBackend resourceBackend, OpenGlDrawBackend drawBackend, OpenGlVertexArray vertexArray,
+        OpenGlBuffer vertexBuffer, OpenGlBuffer cameraBuffer, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program, int worldCameraBufferHandle) {
+
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -47,16 +38,12 @@ final class ViewModelRenderer implements AutoCloseable {
         this.fragmentShader = fragmentShader;
         this.program = program;
         this.worldCameraBufferHandle = worldCameraBufferHandle;
+
     }
 
-    static ViewModelRenderer create(
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry registry,
-            OpenGlBackendSet backends,
-            int worldCameraBufferHandle,
-            SrgbPresentationMode presentationMode,
-            String vertexSource,
-            String fragmentSource) {
+    static ViewModelRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, int worldCameraBufferHandle,
+        SrgbPresentationMode presentationMode, String vertexSource, String fragmentSource) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
@@ -86,43 +73,14 @@ final class ViewModelRenderer implements AutoCloseable {
             camera = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(camera.handle(), CameraMatricesUniformBlock.SIZE_BYTES);
 
-            vertex = OpenGlShader.compile(
-                    OpenGlShader.Stage.VERTEX,
-                    "shaders/p5/view-model.vert",
-                    vertSource,
-                    guard,
-                    resources,
-                    gl);
-            fragment = OpenGlShader.compile(
-                    OpenGlShader.Stage.FRAGMENT,
-                    "shaders/p5/view-model.frag",
-                    mode.fragmentSource(fragSource),
-                    guard,
-                    resources,
-                    gl);
-            linkedProgram = OpenGlProgram.link(
-                    "p5-view-model-program",
-                    vertex,
-                    fragment,
-                    guard,
-                    resources,
-                    gl);
+            vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "shaders/p5/view-model.vert", vertSource, guard, resources, gl);
+            fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "shaders/p5/view-model.frag", mode.fragmentSource(fragSource), guard, resources, gl);
+            linkedProgram = OpenGlProgram.link("p5-view-model-program", vertex, fragment, guard, resources, gl);
 
-            UniformBlockLayoutVerifier.verifyCameraOnly(
-                    linkedProgram.handle(), guard, reflection);
+            UniformBlockLayoutVerifier.verifyCameraOnly(linkedProgram.handle(), guard, reflection);
             draw.configureViewModelAttributes(vao.handle(), vertices.handle());
 
-            return new ViewModelRenderer(
-                    guard,
-                    gl,
-                    draw,
-                    vao,
-                    vertices,
-                    camera,
-                    vertex,
-                    fragment,
-                    linkedProgram,
-                    worldCameraBufferHandle);
+            return new ViewModelRenderer(guard, gl, draw, vao, vertices, camera, vertex, fragment, linkedProgram, worldCameraBufferHandle);
         } catch (RuntimeException | Error failure) {
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);
@@ -132,9 +90,11 @@ final class ViewModelRenderer implements AutoCloseable {
             suppressClose(failure, vao);
             throw failure;
         }
+
     }
 
     void render(int framebufferWidth, int framebufferHeight) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
 
@@ -157,22 +117,27 @@ final class ViewModelRenderer implements AutoCloseable {
             drawBackend.useDefaultProgram();
             drawBackend.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, worldCameraBufferHandle);
         }
+
     }
 
     private static ByteBuffer fixtureVertices() {
-        ByteBuffer data = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES)
-                .order(ByteOrder.nativeOrder());
+
+        ByteBuffer data = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES).order(ByteOrder.nativeOrder());
         return ViewModelFixtureVertexPacker.write(data).flip();
+
     }
 
     private void requireOpen() {
+
         if (closeAttempted) {
             throw new IllegalStateException("view-model renderer is closed");
         }
+
     }
 
     @Override
     public void close() {
+
         if (closeAttempted) {
             return;
         }
@@ -187,9 +152,11 @@ final class ViewModelRenderer implements AutoCloseable {
         closeInto(failures, vertexBuffer);
         closeInto(failures, vertexArray);
         throwCleanupFailure(failures);
+
     }
 
     private static void suppressClose(Throwable failure, AutoCloseable resource) {
+
         if (resource == null) {
             return;
         }
@@ -200,9 +167,11 @@ final class ViewModelRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void closeInto(List<Throwable> failures, AutoCloseable resource) {
+
         try {
             resource.close();
         } catch (RuntimeException | Error failure) {
@@ -210,9 +179,11 @@ final class ViewModelRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -224,5 +195,6 @@ final class ViewModelRenderer implements AutoCloseable {
             throw runtimeFailure;
         }
         throw (Error) first;
+
     }
 }

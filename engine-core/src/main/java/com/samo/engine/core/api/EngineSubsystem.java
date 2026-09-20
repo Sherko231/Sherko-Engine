@@ -3,16 +3,19 @@ package com.samo.engine.core.api;
 /**
  * Enforces one subsystem lifetime: initialize, start, stop, then close.
  *
- * <p>The owner must serialize all calls on its lifecycle thread. This class is
+ * <p>
+ * The owner must serialize all calls on its lifecycle thread. This class is
  * not thread-safe and provides no restart or native reinitialization guarantee.
  * Reentrant lifecycle calls from hooks are rejected.
  *
- * <p>Initialization acquires resources; starting activates work; stopping
+ * <p>
+ * Initialization acquires resources; starting activates work; stopping
  * quiesces work; closing releases resources. An unstarted subsystem can be
  * closed directly. A running subsystem must be stopped explicitly before close.
  * No other subsystem is coordinated or rolled back by this class.
  *
- * <p>An unchecked initialize/start/stop hook failure is propagated unchanged and
+ * <p>
+ * An unchecked initialize/start/stop hook failure is propagated unchanged and
  * prevents further forward progress, but the owner can still close. Closing is
  * attempted at most once, even if its hook fails. A failed close does not prove
  * resource release; the owner must report that failure.
@@ -22,43 +25,55 @@ public abstract class EngineSubsystem implements AutoCloseable {
 
     /** Creates an uninitialized subsystem without acquiring resources. */
     protected EngineSubsystem() {
+
     }
 
     /**
      * Acquires resources once.
      *
-     * @throws IllegalStateException unless this instance is new
+     * @throws IllegalStateException
+     *             unless this instance is new
      */
     public final void initialize() {
+
         transition("initialize", State.NEW, State.INITIALIZING, State.INITIALIZED, this::onInitialize);
+
     }
 
     /**
      * Activates successfully initialized resources once.
      *
-     * @throws IllegalStateException unless initialization completed successfully
+     * @throws IllegalStateException
+     *             unless initialization completed successfully
      */
     public final void start() {
+
         transition("start", State.INITIALIZED, State.STARTING, State.STARTED, this::onStart);
+
     }
 
     /**
      * Quiesces a successfully started subsystem once without releasing its resources.
      *
-     * @throws IllegalStateException unless starting completed successfully
+     * @throws IllegalStateException
+     *             unless starting completed successfully
      */
     public final void stop() {
+
         transition("stop", State.STARTED, State.STOPPING, State.STOPPED, this::onStop);
+
     }
 
     /**
      * Attempts resource release once, including after partial initialization or
      * failed activation/stopping. Further calls after this attempt return normally.
      *
-     * @throws IllegalStateException if running or inside any lifecycle hook
+     * @throws IllegalStateException
+     *             if running or inside any lifecycle hook
      */
     @Override
     public final void close() {
+
         if (state == State.CLOSED) {
             return;
         }
@@ -73,6 +88,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
             }
             default -> throw invalidOperation("close");
         }
+
     }
 
     /** Acquires resources, retaining ownership information even if setup fails. */
@@ -92,6 +108,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
     protected abstract void onClose();
 
     private void transition(String operation, State expected, State entering, State completed, Runnable hook) {
+
         if (state != expected) {
             throw invalidOperation(operation);
         }
@@ -103,10 +120,13 @@ public abstract class EngineSubsystem implements AutoCloseable {
             state = State.FAILED;
             throw failure;
         }
+
     }
 
     private IllegalStateException invalidOperation(String operation) {
+
         return new IllegalStateException("Cannot " + operation + " subsystem in state " + state);
+
     }
 
     private enum State {

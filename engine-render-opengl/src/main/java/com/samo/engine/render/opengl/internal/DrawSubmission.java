@@ -2,19 +2,11 @@ package com.samo.engine.render.opengl.internal;
 
 import java.util.Objects;
 
-record DrawSubmission(
-        RenderMaterialDescriptor material,
-        int programKey,
-        int materialKey,
-        int meshKey,
-        float cameraDepth,
-        int sequence,
-        int viewportX,
-        int viewportY,
-        int viewportWidth,
-        int viewportHeight) {
+record DrawSubmission(RenderMaterialDescriptor material, int programKey, int materialKey, int meshKey, float cameraDepth, int sequence, int viewportX, int viewportY,
+    int viewportWidth, int viewportHeight) {
 
     DrawSubmission {
+
         Objects.requireNonNull(material, "material");
         if (programKey < 0) {
             throw new IllegalArgumentException("programKey must be non-negative");
@@ -37,9 +29,12 @@ record DrawSubmission(
         if (viewportWidth <= 0 || viewportHeight <= 0) {
             throw new IllegalArgumentException("viewport dimensions must be positive");
         }
+
     }
 
     boolean transparent() {
+
         return material.blendMode() == MaterialBlendMode.ALPHA_BLEND;
+
     }
 }

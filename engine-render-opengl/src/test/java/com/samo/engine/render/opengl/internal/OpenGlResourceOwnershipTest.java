@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 class OpenGlResourceOwnershipTest {
     @Test
     void createsAndClosesAllResourceTypesExactlyOnce() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
@@ -29,10 +30,8 @@ class OpenGlResourceOwnershipTest {
         OpenGlTexture texture = OpenGlTexture.create(guard, registry, backend);
         OpenGlSampler sampler = OpenGlSampler.create(guard, registry, backend);
         OpenGlFramebuffer framebuffer = OpenGlFramebuffer.create(guard, registry, backend);
-        OpenGlShader vertex = OpenGlShader.compile(
-                OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
-        OpenGlShader fragment = OpenGlShader.compile(
-                OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
+        OpenGlShader vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
+        OpenGlShader fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
         OpenGlProgram program = OpenGlProgram.link(vertex, fragment, guard, registry, backend);
 
         program.close();
@@ -61,10 +60,12 @@ class OpenGlResourceOwnershipTest {
         assertEquals(1, backend.deletedTextures);
         assertEquals(1, backend.deletedVertexArrays);
         assertEquals(1, backend.deletedBuffers);
+
     }
 
     @Test
     void workerThreadCreationRejectsBeforeBackendEntry() throws Exception {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
@@ -82,10 +83,12 @@ class OpenGlResourceOwnershipTest {
         assertTrue(failure.get() instanceof IllegalStateException);
         assertEquals(0, backend.createdBuffers);
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void workerThreadCloseRejectsBeforeRegistryMutationAndOwnerCanStillClose() throws Exception {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
@@ -108,72 +111,59 @@ class OpenGlResourceOwnershipTest {
         buffer.close();
         assertEquals(1, backend.deletedBuffers);
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void registryRegistrationFailureDeletesNewHandleOnce() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        NativeResourceRegistry.Registration existing =
-                registry.register("OpenGL buffer", 11L, () -> { });
+        NativeResourceRegistry.Registration existing = registry.register("OpenGL buffer", 11L, () -> {
+        });
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> OpenGlBuffer.create(guard, registry, backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> OpenGlBuffer.create(guard, registry, backend));
 
         assertTrue(failure.getMessage().contains("already registered"));
         assertEquals(1, backend.deletedBuffers);
         existing.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void shaderCompileFailureDeletesShaderWithoutRegisteringIt() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
         backend.shaderCompileSucceeded = false;
         backend.shaderInfoLog = "fixture compile error";
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> OpenGlShader.compile(
-                        OpenGlShader.Stage.VERTEX,
-                        "fixture/broken.vert",
-                        "broken",
-                        guard,
-                        registry,
-                        backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+            () -> OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "fixture/broken.vert", "broken", guard, registry, backend));
 
         assertTrue(failure.getMessage().contains("fixture/broken.vert"));
         assertTrue(failure.getMessage().contains("VERTEX"));
         assertTrue(failure.getMessage().contains("fixture compile error"));
         assertEquals(1, backend.deletedShaders);
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void programLinkFailureDeletesProgramButLeavesCallerShadersOwned() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        OpenGlShader vertex = OpenGlShader.compile(
-                OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
-        OpenGlShader fragment = OpenGlShader.compile(
-                OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
+        OpenGlShader vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
+        OpenGlShader fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
         backend.programLinkSucceeded = false;
         backend.programInfoLog = "fixture link error";
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> OpenGlProgram.link(
-                        "fixture-program",
-                        vertex,
-                        fragment,
-                        guard,
-                        registry,
-                        backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> OpenGlProgram.link("fixture-program", vertex, fragment, guard, registry, backend));
 
         assertTrue(failure.getMessage().contains("fixture-program"));
         assertTrue(failure.getMessage().contains("fixture link error"));
@@ -185,10 +175,12 @@ class OpenGlResourceOwnershipTest {
         vertex.close();
         assertEquals(2, backend.deletedShaders);
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void shaderRollbackKeepsSameThrowablePrimaryWithoutSelfSuppression() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
@@ -196,31 +188,24 @@ class OpenGlResourceOwnershipTest {
         backend.shaderSourceFailure = primary;
         backend.shaderDeleteFailure = primary;
 
-        RuntimeException actual = assertThrows(
-                RuntimeException.class,
-                () -> OpenGlShader.compile(
-                        OpenGlShader.Stage.VERTEX,
-                        "fixture/shared.vert",
-                        "broken",
-                        guard,
-                        registry,
-                        backend));
+        RuntimeException actual = assertThrows(RuntimeException.class,
+            () -> OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "fixture/shared.vert", "broken", guard, registry, backend));
 
         assertSame(primary, actual);
         assertEquals(0, actual.getSuppressed().length);
         assertEquals(1, backend.deletedShaders);
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void programRollbackPreservesDistinctCleanupFailureOrder() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        OpenGlShader vertex = OpenGlShader.compile(
-                OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
-        OpenGlShader fragment = OpenGlShader.compile(
-                OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
+        OpenGlShader vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "vertex", guard, registry, backend);
+        OpenGlShader fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "fragment", guard, registry, backend);
 
         RuntimeException primary = new IllegalStateException("link operation failed");
         RuntimeException fragmentDetach = new IllegalStateException("fragment detach failed");
@@ -231,30 +216,22 @@ class OpenGlResourceOwnershipTest {
         backend.vertexDetachFailure = vertexDetach;
         backend.programDeleteFailure = deleteProgram;
 
-        RuntimeException actual = assertThrows(
-                RuntimeException.class,
-                () -> OpenGlProgram.link(
-                        "fixture-program",
-                        vertex,
-                        fragment,
-                        guard,
-                        registry,
-                        backend));
+        RuntimeException actual = assertThrows(RuntimeException.class, () -> OpenGlProgram.link("fixture-program", vertex, fragment, guard, registry, backend));
 
         assertSame(primary, actual);
-        assertArrayEquals(
-                new Throwable[] {fragmentDetach, vertexDetach, deleteProgram},
-                actual.getSuppressed());
+        assertArrayEquals(new Throwable[]{fragmentDetach, vertexDetach, deleteProgram}, actual.getSuppressed());
         assertEquals(1, backend.deletedPrograms);
 
         backend.shaderDeleteFailure = null;
         fragment.close();
         vertex.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void deleteFailurePropagatesOnceAndIsNeverRetried() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
@@ -268,34 +245,31 @@ class OpenGlResourceOwnershipTest {
 
         buffer.close();
         assertEquals(1, backend.deletedBuffers);
-        IllegalStateException registryFailure =
-                assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
+        IllegalStateException registryFailure = assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
         assertTrue(registryFailure.getMessage().contains("CLOSE_FAILED"));
+
     }
 
     @Test
     void zeroCreateHandleFailsWithoutRegistration() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
         backend.bufferHandle = 0;
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> OpenGlBuffer.create(guard, registry, backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> OpenGlBuffer.create(guard, registry, backend));
 
         assertTrue(failure.getMessage().contains("handle 0"));
         assertEquals(0, backend.deletedBuffers);
         registry.assertNoOpenResources();
+
     }
 
     private static OpenGlThreadGuard boundGuard() {
-        GlfwWindow window = new GlfwWindow(
-                1,
-                1,
-                "guard fixture",
-                new EngineLogger(event -> { }),
-                new NativeResourceRegistry());
+
+        GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
+        }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
         try {
             Method bind = OpenGlThreadGuard.class.getDeclaredMethod("bindOwnerThread", Thread.class);
@@ -307,6 +281,7 @@ class OpenGlResourceOwnershipTest {
         } catch (InvocationTargetException failure) {
             throw new AssertionError(failure.getCause());
         }
+
     }
 
     private static final class FakeBackend implements OpenGlResourceBackend {
@@ -340,150 +315,203 @@ class OpenGlResourceOwnershipTest {
 
         @Override
         public int createBuffer() {
+
             createdBuffers++;
             return bufferHandle;
+
         }
 
         @Override
         public void deleteBuffer(int handle) {
+
             deletedBuffers++;
             if (bufferDeleteFailure != null) {
                 throw bufferDeleteFailure;
             }
+
         }
 
         @Override
         public void allocateDynamicBufferStorage(int handle, long capacityBytes) {
+
             throw new UnsupportedOperationException("not used by P5-T03");
+
         }
 
         @Override
         public void uploadBufferSubData(int handle, long offsetBytes, java.nio.ByteBuffer data) {
+
             throw new UnsupportedOperationException("not used by P5-T03");
+
         }
 
         @Override
         public long createFence() {
+
             throw new UnsupportedOperationException("not used by P5-T03");
+
         }
 
         @Override
         public OpenGlResourceBackend.FenceStatus fenceStatus(long fenceHandle) {
+
             throw new UnsupportedOperationException("not used by P5-T03");
+
         }
 
         @Override
         public void deleteFence(long fenceHandle) {
+
             throw new UnsupportedOperationException("not used by P5-T03");
+
         }
 
         @Override
         public int createVertexArray() {
+
             return vertexArrayHandle;
+
         }
 
         @Override
         public void deleteVertexArray(int handle) {
+
             deletedVertexArrays++;
+
         }
 
         @Override
         public int createTexture() {
+
             return textureHandle;
+
         }
 
         @Override
         public void deleteTexture(int handle) {
+
             deletedTextures++;
+
         }
 
         @Override
         public int createSampler() {
+
             return samplerHandle;
+
         }
 
         @Override
         public void deleteSampler(int handle) {
+
             deletedSamplers++;
+
         }
 
         @Override
         public int createFramebuffer() {
+
             return framebufferHandle;
+
         }
 
         @Override
         public void deleteFramebuffer(int handle) {
+
             deletedFramebuffers++;
+
         }
 
         @Override
         public int createShader(int shaderType) {
+
             trace.add("create-shader:" + shaderType);
             return nextShaderHandle++;
+
         }
 
         @Override
         public void shaderSource(int shader, String source) {
+
             trace.add("shader-source:" + shader);
             if (shaderSourceFailure != null) {
                 throw shaderSourceFailure;
             }
+
         }
 
         @Override
         public void compileShader(int shader) {
+
             trace.add("compile-shader:" + shader);
+
         }
 
         @Override
         public boolean shaderCompileSucceeded(int shader) {
+
             return shaderCompileSucceeded;
+
         }
 
         @Override
         public String shaderInfoLog(int shader) {
+
             return shaderInfoLog;
+
         }
 
         @Override
         public void deleteShader(int shader) {
+
             deletedShaders++;
             if (shaderDeleteFailure != null) {
                 throw shaderDeleteFailure;
             }
+
         }
 
         @Override
         public int createProgram() {
+
             return programHandle;
+
         }
 
         @Override
         public void attachShader(int program, int shader) {
+
             trace.add("attach:" + program + ":" + shader);
+
         }
 
         @Override
         public void linkProgram(int program) {
+
             trace.add("link:" + program);
             if (linkProgramFailure != null) {
                 throw linkProgramFailure;
             }
+
         }
 
         @Override
         public boolean programLinkSucceeded(int program) {
+
             return programLinkSucceeded;
+
         }
 
         @Override
         public String programInfoLog(int program) {
+
             return programInfoLog;
+
         }
 
         @Override
         public void detachShader(int program, int shader) {
+
             trace.add("detach:" + program + ":" + shader);
             if (shader == 21 && fragmentDetachFailure != null) {
                 throw fragmentDetachFailure;
@@ -491,14 +519,17 @@ class OpenGlResourceOwnershipTest {
             if (shader == 20 && vertexDetachFailure != null) {
                 throw vertexDetachFailure;
             }
+
         }
 
         @Override
         public void deleteProgram(int program) {
+
             deletedPrograms++;
             if (programDeleteFailure != null) {
                 throw programDeleteFailure;
             }
+
         }
     }
 }

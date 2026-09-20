@@ -10,6 +10,7 @@ public final class InputActionSnapshot {
     private final Map<InputAction, InputActionState> states;
 
     InputActionSnapshot(long frameId, Map<InputAction, InputActionState> states) {
+
         if (frameId < 0L) {
             throw new IllegalArgumentException("frameId must be non-negative");
         }
@@ -29,17 +30,24 @@ public final class InputActionSnapshot {
 
         this.frameId = frameId;
         this.states = Map.copyOf(copy);
+
     }
 
     public long frameId() {
+
         return frameId;
+
     }
 
     public InputActionState state(InputAction action) {
+
         return states.get(Objects.requireNonNull(action, "action"));
+
     }
 
     public Map<InputAction, InputActionState> asMap() {
+
         return states;
+
     }
 }

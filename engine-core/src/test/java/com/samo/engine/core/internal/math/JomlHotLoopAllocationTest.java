@@ -25,8 +25,7 @@ final class JomlHotLoopAllocationTest {
     private static final int ALLOCATING_CONTROL_ITERATIONS = 1_024;
     private static final int ALLOCATING_CONTROL_BYTES = 1_024;
     private static final float EPSILON = 1.0e-5f;
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "allocation", "p4-t02-joml-hot-loop-allocation.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "allocation", "p4-t02-joml-hot-loop-allocation.txt");
 
     private static volatile Object allocationSink;
     private static volatile float mathSink;
@@ -34,6 +33,7 @@ final class JomlHotLoopAllocationTest {
 
     @BeforeAll
     static void runAllocationAcceptanceAndWriteReport() throws IOException {
+
         ThreadMXBean bean = requireThreadAllocationBean();
         boolean initiallyEnabled = bean.isThreadAllocatedMemoryEnabled();
         try {
@@ -66,23 +66,20 @@ final class JomlHotLoopAllocationTest {
             writeReport(evidence);
 
             for (int pass = 0; pass < passDeltas.size(); pass++) {
-                assertEquals(
-                        0L,
-                        passDeltas.get(pass).longValue(),
-                        "Warmed JOML hot-loop pass " + pass + " allocated heap bytes");
+                assertEquals(0L, passDeltas.get(pass).longValue(), "Warmed JOML hot-loop pass " + pass + " allocated heap bytes");
             }
-            assertTrue(
-                    allocatingControlDelta > 0L,
-                    "Allocating control must report positive heap allocation through the same counter");
+            assertTrue(allocatingControlDelta > 0L, "Allocating control must report positive heap allocation through the same counter");
         } finally {
             if (!initiallyEnabled && bean.isThreadAllocatedMemoryEnabled()) {
                 bean.setThreadAllocatedMemoryEnabled(false);
             }
         }
+
     }
 
     @Test
     void canonicalPositiveYRotationMapsForwardToLeft() {
+
         Vector3f forward = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f result = new Vector3f();
         Quaternionf positiveQuarterTurnY = new Quaternionf().rotationY((float) (Math.PI / 2.0));
@@ -92,10 +89,12 @@ final class JomlHotLoopAllocationTest {
         assertEquals(-1.0f, result.x, EPSILON);
         assertEquals(0.0f, result.y, EPSILON);
         assertEquals(0.0f, result.z, EPSILON);
+
     }
 
     @Test
     void evidenceReportContainsStableContractFields() throws IOException {
+
         assertTrue(Files.isRegularFile(REPORT_PATH));
         List<String> lines = Files.readAllLines(REPORT_PATH, StandardCharsets.UTF_8);
 
@@ -109,43 +108,52 @@ final class JomlHotLoopAllocationTest {
         assertEquals("limitations.heap.only=true", lines.get(15));
         assertEquals("limitations.jvm.accounting.approximation=true", lines.get(16));
         assertEquals("spatial.convention=right-handed,+Y-up,-Z-forward,radians", lines.get(17));
+
     }
 
     private static ThreadMXBean requireThreadAllocationBean() {
+
         java.lang.management.ThreadMXBean platformBean = ManagementFactory.getThreadMXBean();
         if (!(platformBean instanceof ThreadMXBean allocationBean)) {
-            throw new IllegalStateException(
-                    "Java runtime does not expose com.sun.management.ThreadMXBean allocation accounting");
+            throw new IllegalStateException("Java runtime does not expose com.sun.management.ThreadMXBean allocation accounting");
         }
         if (!allocationBean.isThreadAllocatedMemorySupported()) {
             throw new IllegalStateException("Thread allocation measurement is unsupported by this Java runtime");
         }
         return allocationBean;
+
     }
 
     private static void warmAllocationCounter(ThreadMXBean bean, long threadId) {
+
         for (int index = 0; index < 128; index++) {
             allocatedBytes(bean, threadId);
         }
+
     }
 
     private static long allocatedBytes(ThreadMXBean bean, long threadId) {
+
         long allocated = bean.getThreadAllocatedBytes(threadId);
         if (allocated < 0L) {
             throw new IllegalStateException("Thread allocation counter returned unavailable value: " + allocated);
         }
         return allocated;
+
     }
 
     private static void runAllocatingControl() {
+
         for (int index = 0; index < ALLOCATING_CONTROL_ITERATIONS; index++) {
             byte[] allocation = new byte[ALLOCATING_CONTROL_BYTES];
             allocation[0] = (byte) index;
             allocationSink = allocation;
         }
+
     }
 
     private static void writeReport(BenchmarkEvidence benchmark) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         List<String> lines = new ArrayList<>();
         lines.add("task=P4-T02");
@@ -166,6 +174,7 @@ final class JomlHotLoopAllocationTest {
         lines.add("spatial.convention=right-handed,+Y-up,-Z-forward,radians");
         lines.add("result.sink=" + benchmark.resultSink());
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static final class MathWorkload {
@@ -176,6 +185,7 @@ final class JomlHotLoopAllocationTest {
         private final Matrix4f translation = new Matrix4f().translation(2.0f, -1.0f, -4.0f);
 
         void run(int iterations) {
+
             float sink = mathSink;
             for (int index = 0; index < iterations; index++) {
                 float offset = (index & 7) * 0.001f;
@@ -185,17 +195,20 @@ final class JomlHotLoopAllocationTest {
                 sink += transformed.x * 0.25f + transformed.y * 0.5f + transformed.z * 0.125f;
             }
             mathSink = sink;
+
         }
     }
 
     private record BenchmarkEvidence(List<Long> passDeltas, long allocatingControlDelta, float resultSink) {
         boolean allPassesZero() {
+
             for (long delta : passDeltas) {
                 if (delta != 0L) {
                     return false;
                 }
             }
             return true;
+
         }
     }
 }

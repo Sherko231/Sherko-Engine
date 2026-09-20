@@ -11,6 +11,7 @@ class ViewModelProjectionFactoryTest {
 
     @Test
     void buildsIndependentDocumentedPerspectiveProjection() {
+
         Matrix4f projection = ViewModelProjectionFactory.build(1600, 900, new Matrix4f());
 
         float aspect = 1600.0f / 900.0f;
@@ -25,15 +26,14 @@ class ViewModelProjectionFactoryTest {
         assertEquals(-1.0f, projection.m23(), TOLERANCE);
         assertEquals((2.0f * far * near) / denominator, projection.m32(), TOLERANCE);
         assertEquals(0.0f, projection.m33(), TOLERANCE);
+
     }
 
     @Test
     void rejectsInvalidFramebufferDimensions() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ViewModelProjectionFactory.build(0, 900, new Matrix4f()));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ViewModelProjectionFactory.build(1600, 0, new Matrix4f()));
+
+        assertThrows(IllegalArgumentException.class, () -> ViewModelProjectionFactory.build(0, 900, new Matrix4f()));
+        assertThrows(IllegalArgumentException.class, () -> ViewModelProjectionFactory.build(1600, 0, new Matrix4f()));
+
     }
 }

@@ -11,27 +11,17 @@ final class RendererVisualDemoApplication {
     private static final int HEIGHT = 720;
 
     private RendererVisualDemoApplication() {
+
     }
 
     static void run() {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        RendererVisualDemoFramebufferSize framebuffer =
-                new RendererVisualDemoFramebufferSize(WIDTH, HEIGHT);
+        RendererVisualDemoFramebufferSize framebuffer = new RendererVisualDemoFramebufferSize(WIDTH, HEIGHT);
 
-        EngineLogger logger = new EngineLogger(event -> System.out.printf(
-                "[%s] [%s] %s%n",
-                event.level(),
-                event.context().subsystem(),
-                event.message()));
+        EngineLogger logger = new EngineLogger(event -> System.out.printf("[%s] [%s] %s%n", event.level(), event.context().subsystem(), event.message()));
 
-        GlfwWindow window = new GlfwWindow(
-                WIDTH,
-                HEIGHT,
-                "Sherko Renderer Visual Demo",
-                logger,
-                registry,
-                framebuffer,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
+        GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Renderer Visual Demo", logger, registry, framebuffer, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
         boolean stopped = false;
@@ -44,10 +34,8 @@ final class RendererVisualDemoApplication {
 
             printOwnerInstructions();
 
-            try (OpenGlRenderer renderer =
-                            OpenGlRenderer.create(window.openGlThreadGuard(), registry);
-                    MaterialComparisonOverlay overlay =
-                            MaterialComparisonOverlay.create(window.openGlThreadGuard(), registry)) {
+            try (OpenGlRenderer renderer = OpenGlRenderer.create(window.openGlThreadGuard(), registry);
+                MaterialComparisonOverlay overlay = MaterialComparisonOverlay.create(window.openGlThreadGuard(), registry)) {
                 RendererVisualDemoLoop.run(window, renderer, overlay, framebuffer);
             }
 
@@ -72,14 +60,17 @@ final class RendererVisualDemoApplication {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static void printOwnerInstructions() {
+
         System.out.println("Renderer visual demo");
         System.out.println("  LEFT panel  = OPAQUE");
         System.out.println("  RIGHT panel = TRANSPARENT (alpha blended)");
         System.out.println("  Orange cross = moving POINT light");
         System.out.println("  Cyan cross + ray = moving SPOT light");
         System.out.println("  ESC or Ctrl+Q = exit");
+
     }
 }

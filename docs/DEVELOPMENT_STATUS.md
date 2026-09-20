@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T26 / Issue #306 exit review passed; freshly materialize/refine P6-T01 before implementation |
+| Active executable task | PRE-P6 Issue #359 — repository-wide Java formatting normalization and enforceable formatter; P6-T01 remains unmaterialized until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Freshly materialize/refine **P6-T01** against current `master` before implementation. Confirm Phase 6 assumptions, exact AssetId contract, allowed files/modules, and verification plan. Do not implement later P6 tasks unless P6-T01 explicitly requires them.
+Complete **PRE-P6 Issue #359** as a formatting-only maintenance task: preserve zero Java semantic changes, require Spotless/Checkstyle/tests/architecture/JaCoCo/Windows native verification on the exact candidate, and exact-merge Lightweight verification. After #359 is accepted, freshly materialize/refine P6-T01 against the new `master`.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -182,3 +182,6 @@ P5R-T26 / Issue #306 is active from baseline `69c860f02aa54bdb8e8d32055f9e582dc1
 
 
 P5R-T26 / Issue #306 Phase 5R exit review PASSED. Exact final candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in PR run #495 / `35537699489`. PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`, and exact-merge Lightweight master verification passed in run #496 / `35537989459`. Static/contract reconciliation found no unresolved public/internal/module/native-ownership/spatial/persisted/config/wire/protocol contradiction, no stale-name/refactor residue, and no Phase 6 readiness blocker. Interactive sandbox/visual-demo windows were not run in this connected review environment and are not claimed as manual visual evidence; their canonical entry wiring, deterministic tests/compilation, and retained native renderer regression coverage remain verified. Phase 5R is complete. P6-T01 may now be materialized/refined from current `master`; no Phase 6 implementation has been performed yet.
+
+
+PRE-P6 Issue #359 is active from baseline `91015f6246a4daed16fb3ec707fa758ca8872f14`. Spotless 8.10.2 with Eclipse JDT 4.40 and `config/formatter/sherko-eclipse-java.xml` now defines the canonical Java style: 4-space indentation, 180-column compact declaration/call wrapping, method-body visual padding, and preserved Java text-block contents. The formatter was applied repository-wide. Verification-only bootstrap run #6 proved `spotlessApply` idempotence, `spotlessCheck` success, and lexical equivalence across all 241 changed Java files. The temporary bootstrap workflow has been removed before the final PR candidate. No P6 implementation is included.

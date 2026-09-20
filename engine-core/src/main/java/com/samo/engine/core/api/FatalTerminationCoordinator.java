@@ -12,7 +12,8 @@ import java.util.function.IntConsumer;
 /**
  * Coordinates one orderly fatal shutdown before process termination.
  *
- * <p>The caller must invoke this coordinator on the lifecycle/native-affinity
+ * <p>
+ * The caller must invoke this coordinator on the lifecycle/native-affinity
  * thread that owns the supplied subsystems and resource registry. Shutdown is
  * synchronous and one-shot: diagnostics, reverse subsystem cleanup, registry
  * verification, failure reporting, and log flushing are all attempted before
@@ -28,41 +29,52 @@ public final class FatalTerminationCoordinator {
     /**
      * Creates a coordinator that terminates the process with exit status {@code 1}.
      *
-     * @param logger synchronous structured logger to use for fatal diagnostics
-     * @throws NullPointerException if {@code logger} is null
+     * @param logger
+     *            synchronous structured logger to use for fatal diagnostics
+     * @throws NullPointerException
+     *             if {@code logger} is null
      */
     public FatalTerminationCoordinator(EngineLogger logger) {
+
         this(logger, System::exit);
+
     }
 
     FatalTerminationCoordinator(EngineLogger logger, IntConsumer terminator) {
+
         this.logger = Objects.requireNonNull(logger, "logger");
         this.terminator = Objects.requireNonNull(terminator, "terminator");
+
     }
 
     /**
      * Logs a fatal diagnostic, attempts orderly reverse shutdown, verifies native
      * ownership, flushes diagnostics, and then terminates with exit status {@code 1}.
      *
-     * <p>The supplied subsystem order is the dependency-first order that completed
+     * <p>
+     * The supplied subsystem order is the dependency-first order that completed
      * startup. This method snapshots and validates it before any side effect, then
      * visits it in strict reverse order. Cleanup and diagnostic failures are retained
      * but never prevent later cleanup or the final termination attempt.
      *
-     * @param message nonblank fatal diagnostic message, preserved as supplied
-     * @param context structured context for the fatal and cleanup-failure events
-     * @param initializationOrder dependency-first successfully started subsystems
-     * @param resourceRegistry registry to verify after subsystem cleanup
-     * @throws NullPointerException for null required arguments or list elements
-     * @throws IllegalArgumentException for a blank message or repeated subsystem instance
-     * @throws IllegalStateException if this coordinator was already claimed, or if a
-     *     test termination action returns normally
+     * @param message
+     *            nonblank fatal diagnostic message, preserved as supplied
+     * @param context
+     *            structured context for the fatal and cleanup-failure events
+     * @param initializationOrder
+     *            dependency-first successfully started subsystems
+     * @param resourceRegistry
+     *            registry to verify after subsystem cleanup
+     * @throws NullPointerException
+     *             for null required arguments or list elements
+     * @throws IllegalArgumentException
+     *             for a blank message or repeated subsystem instance
+     * @throws IllegalStateException
+     *             if this coordinator was already claimed, or if a
+     *             test termination action returns normally
      */
-    public void terminate(
-            String message,
-            EngineLogger.Context context,
-            List<EngineSubsystem> initializationOrder,
-            NativeResourceRegistry resourceRegistry) {
+    public void terminate(String message, EngineLogger.Context context, List<EngineSubsystem> initializationOrder, NativeResourceRegistry resourceRegistry) {
+
         String fatalMessage = Objects.requireNonNull(message, "message");
         if (fatalMessage.isBlank()) {
             throw new IllegalArgumentException("message must not be blank");
@@ -76,9 +88,7 @@ public final class FatalTerminationCoordinator {
         }
 
         List<Throwable> failures = new ArrayList<>();
-        captureFailure(
-                failures,
-                () -> logger.log(EngineLogger.Level.FATAL, fatalMessage, fatalContext));
+        captureFailure(failures, () -> logger.log(EngineLogger.Level.FATAL, fatalMessage, fatalContext));
 
         for (int index = ordered.size() - 1; index >= 0; index--) {
             EngineSubsystem subsystem = ordered.get(index);
@@ -92,21 +102,17 @@ public final class FatalTerminationCoordinator {
         for (int index = 0; index < reportableFailureCount; index++) {
             Throwable failure = failures.get(index);
             int failureNumber = index + 1;
-            captureFailure(
-                    failures,
-                    () -> logger.log(
-                            EngineLogger.Level.ERROR,
-                            failureMessage(failureNumber, failure),
-                            fatalContext));
+            captureFailure(failures, () -> logger.log(EngineLogger.Level.ERROR, failureMessage(failureNumber, failure), fatalContext));
         }
 
         captureFailure(failures, logger::flush);
         terminateProcess(failures);
+
     }
 
     private static List<EngineSubsystem> snapshotAndValidate(List<EngineSubsystem> initializationOrder) {
-        List<EngineSubsystem> snapshot = List.copyOf(
-                Objects.requireNonNull(initializationOrder, "initializationOrder"));
+
+        List<EngineSubsystem> snapshot = List.copyOf(Objects.requireNonNull(initializationOrder, "initializationOrder"));
         Set<EngineSubsystem> identities = Collections.newSetFromMap(new IdentityHashMap<>());
         for (EngineSubsystem subsystem : snapshot) {
             if (!identities.add(subsystem)) {
@@ -114,26 +120,27 @@ public final class FatalTerminationCoordinator {
             }
         }
         return snapshot;
+
     }
 
     private static String failureMessage(int index, Throwable failure) {
-        return "Fatal cleanup failure "
-                + index
-                + ": "
-                + failure.getClass().getName()
-                + ": "
-                + String.valueOf(failure.getMessage());
+
+        return "Fatal cleanup failure " + index + ": " + failure.getClass().getName() + ": " + String.valueOf(failure.getMessage());
+
     }
 
     private static void captureFailure(List<Throwable> failures, Runnable action) {
+
         try {
             action.run();
         } catch (RuntimeException | Error failure) {
             failures.add(failure);
         }
+
     }
 
     private void terminateProcess(List<Throwable> failures) {
+
         try {
             terminator.accept(FATAL_EXIT_STATUS);
         } catch (RuntimeException | Error terminationFailure) {
@@ -142,24 +149,24 @@ public final class FatalTerminationCoordinator {
             throw terminationFailure;
         }
 
-        IllegalStateException returned =
-                new IllegalStateException("Fatal termination action returned normally");
+        IllegalStateException returned = new IllegalStateException("Fatal termination action returned normally");
         state.set(State.TERMINATED);
         addSuppressedFailures(returned, failures);
         throw returned;
+
     }
 
     private static void addSuppressedFailures(Throwable primary, List<Throwable> failures) {
+
         for (Throwable failure : failures) {
             if (failure != primary) {
                 primary.addSuppressed(failure);
             }
         }
+
     }
 
     private enum State {
-        READY,
-        TERMINATING,
-        TERMINATED
+        READY, TERMINATING, TERMINATED
     }
 }

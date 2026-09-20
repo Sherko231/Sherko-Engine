@@ -16,9 +16,11 @@ public final class LocalhostUdpSpike {
     private static final int PACKET_BYTES = Integer.BYTES + Long.BYTES;
 
     private LocalhostUdpSpike() {
+
     }
 
     public static void main(String[] args) throws Exception {
+
         if (args.length != 1) {
             throw new IllegalArgumentException("Expected exactly one argument: server or client");
         }
@@ -43,19 +45,16 @@ public final class LocalhostUdpSpike {
             case "client" -> runClient(port, packetCount, timeoutMillis);
             default -> throw new IllegalArgumentException("Unknown role: " + args[0]);
         }
+
     }
 
     private static void runServer(int port, int packetCount, int timeoutMillis) throws IOException {
+
         try (DatagramChannel channel = DatagramChannel.open()) {
             channel.bind(new InetSocketAddress(HOST, port));
             channel.configureBlocking(false);
 
-            System.out.printf(
-                    "P0-T06 server listening on %s:%d, expecting %d packets.%n",
-                    HOST,
-                    port,
-                    packetCount
-            );
+            System.out.printf("P0-T06 server listening on %s:%d, expecting %d packets.%n", HOST, port, packetCount);
 
             ByteBuffer packet = newPacketBuffer();
             long deadlineNanos = System.nanoTime() + timeoutMillis * 1_000_000L;
@@ -66,29 +65,21 @@ public final class LocalhostUdpSpike {
                 SocketAddress sender = channel.receive(packet);
                 if (sender == null) {
                     if (System.nanoTime() >= deadlineNanos) {
-                        throw new IllegalStateException(
-                                "Server timed out after receiving " + receivedCount + "/" + packetCount + " packets"
-                        );
+                        throw new IllegalStateException("Server timed out after receiving " + receivedCount + "/" + packetCount + " packets");
                     }
                     Thread.onSpinWait();
                     continue;
                 }
 
                 if (packet.position() != PACKET_BYTES) {
-                    throw new IllegalStateException(
-                            "Server received invalid packet size: " + packet.position()
-                    );
+                    throw new IllegalStateException("Server received invalid packet size: " + packet.position());
                 }
 
                 packet.flip();
                 int sequence = packet.getInt();
                 long sentNanos = packet.getLong();
 
-                System.out.printf(
-                        "Server received seq=%d from %s%n",
-                        sequence,
-                        sender
-                );
+                System.out.printf("Server received seq=%d from %s%n", sequence, sender);
 
                 packet.clear();
                 packet.putInt(sequence);
@@ -97,9 +88,7 @@ public final class LocalhostUdpSpike {
 
                 int bytesSent = channel.send(packet, sender);
                 if (bytesSent != PACKET_BYTES) {
-                    throw new IllegalStateException(
-                            "Server sent unexpected byte count: " + bytesSent
-                    );
+                    throw new IllegalStateException("Server sent unexpected byte count: " + bytesSent);
                 }
 
                 System.out.printf("Server echoed seq=%d%n", sequence);
@@ -107,14 +96,13 @@ public final class LocalhostUdpSpike {
                 deadlineNanos = System.nanoTime() + timeoutMillis * 1_000_000L;
             }
 
-            System.out.printf(
-                    "P0-T06 server passed: received and echoed %d numbered UDP datagrams.%n",
-                    receivedCount
-            );
+            System.out.printf("P0-T06 server passed: received and echoed %d numbered UDP datagrams.%n", receivedCount);
         }
+
     }
 
     private static void runClient(int port, int packetCount, int timeoutMillis) throws IOException, InterruptedException {
+
         InetSocketAddress serverAddress = new InetSocketAddress(HOST, port);
 
         try (DatagramChannel channel = DatagramChannel.open()) {
@@ -122,12 +110,7 @@ public final class LocalhostUdpSpike {
             channel.connect(serverAddress);
             channel.configureBlocking(false);
 
-            System.out.printf(
-                    "P0-T06 client connected to %s:%d, sending %d packets.%n",
-                    HOST,
-                    port,
-                    packetCount
-            );
+            System.out.printf("P0-T06 client connected to %s:%d, sending %d packets.%n", HOST, port, packetCount);
 
             ByteBuffer packet = newPacketBuffer();
             double totalRttMillis = 0.0;
@@ -153,18 +136,14 @@ public final class LocalhostUdpSpike {
                     SocketAddress sender = channel.receive(packet);
                     if (sender == null) {
                         if (System.nanoTime() >= deadlineNanos) {
-                            throw new IllegalStateException(
-                                    "Client timed out waiting for seq=" + sequence
-                            );
+                            throw new IllegalStateException("Client timed out waiting for seq=" + sequence);
                         }
                         Thread.onSpinWait();
                         continue;
                     }
 
                     if (packet.position() != PACKET_BYTES) {
-                        throw new IllegalStateException(
-                                "Client received invalid packet size: " + packet.position()
-                        );
+                        throw new IllegalStateException("Client received invalid packet size: " + packet.position());
                     }
 
                     long receivedNanos = System.nanoTime();
@@ -173,24 +152,16 @@ public final class LocalhostUdpSpike {
                     long echoedSentNanos = packet.getLong();
 
                     if (echoedSequence != sequence) {
-                        throw new IllegalStateException(
-                                "Client expected seq=" + sequence + " but received seq=" + echoedSequence
-                        );
+                        throw new IllegalStateException("Client expected seq=" + sequence + " but received seq=" + echoedSequence);
                     }
                     if (echoedSentNanos != sentNanos) {
-                        throw new IllegalStateException(
-                                "Client received mismatched timestamp for seq=" + sequence
-                        );
+                        throw new IllegalStateException("Client received mismatched timestamp for seq=" + sequence);
                     }
 
                     double rttMillis = (receivedNanos - sentNanos) / 1_000_000.0;
                     totalRttMillis += rttMillis;
 
-                    System.out.printf(
-                            "Client received seq=%d RTT=%.3f ms%n",
-                            echoedSequence,
-                            rttMillis
-                    );
+                    System.out.printf("Client received seq=%d RTT=%.3f ms%n", echoedSequence, rttMillis);
                     replyReceived = true;
                 }
 
@@ -198,18 +169,14 @@ public final class LocalhostUdpSpike {
             }
 
             double averageRttMillis = totalRttMillis / packetCount;
-            System.out.printf(
-                    "P0-T06 client passed: received %d/%d replies; average RTT=%.3f ms.%n",
-                    packetCount,
-                    packetCount,
-                    averageRttMillis
-            );
+            System.out.printf("P0-T06 client passed: received %d/%d replies; average RTT=%.3f ms.%n", packetCount, packetCount, averageRttMillis);
         }
+
     }
 
     private static ByteBuffer newPacketBuffer() {
-        return ByteBuffer
-                .allocateDirect(PACKET_BYTES)
-                .order(ByteOrder.BIG_ENDIAN);
+
+        return ByteBuffer.allocateDirect(PACKET_BYTES).order(ByteOrder.BIG_ENDIAN);
+
     }
 }

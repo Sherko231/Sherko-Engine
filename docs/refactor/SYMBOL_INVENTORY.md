@@ -227,6 +227,17 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
+### P5R-T07 candidate
+
+The T07 candidate resolves the two T01 lifecycle public-name findings under D-066:
+
+- `SubsystemStartupCoordinator` replaces `SubsystemStartup` and retains the same stateless `start(...)` coordination, partial-start rollback, caller ownership, failure identity, suppression order, and self-suppression avoidance;
+- `FatalTerminationCoordinator` replaces `FatalTermination` and retains the same synchronous one-shot `terminate(...)` sequence, cleanup/reporting containment, logger flush, and exit-status behavior;
+- `EngineSubsystem` and `SubsystemGraph` remain unchanged because their current names already communicate their roles.
+
+No compatibility aliases, package moves, lifecycle behavior changes, module/dependency changes, or sandbox changes are introduced. Public wiki usage and direct test/CI names are synchronized in the same candidate; historical D-020/D-029 decision text remains unchanged.
+
+
 ### P5R-T06 accepted implementation
 
 The accepted T06 implementation resolves the T01 `InputActionBindingsLoader` decomposition without changing the supported public input API or schema:

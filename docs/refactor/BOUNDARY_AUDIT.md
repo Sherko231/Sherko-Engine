@@ -171,6 +171,10 @@ This constraint applies to the T01 candidates `Backend`, `LwjglBackend`, callbac
 
 T10-T15 may rename/decompose renderer internals, but none may expose internal mesh/material/resource/native identities or change these public contracts unless that later Issue explicitly authorizes a public change. T21 remains the deliberate general public naming pass.
 
+### P5R-T09 spatial/math naming audit result
+
+The bounded engine-core spatial/math surface requires no boundary or visibility change. `Transform`, `CameraMatrices`, `ScreenRays`, geometry primitives, and `TransformQuantization` remain supported public API exactly as documented; no helper was promoted, no public type was aliased/wrapped, and no package or ownership boundary moved. Their names remain consistent with `docs/SPATIAL_CONVENTIONS.md` and D-041 through D-047. Broader public naming review remains T21 and stable package regrouping remains T23.
+
 ### P5R-T08 core naming audit result
 
 The bounded configuration/logging/timing/native-resource surface required no boundary change. Public visibility and ownership stay exactly as documented above; no helper was promoted, no public type was wrapped or aliased, and no implementation responsibility was moved merely to create a rename. T21 remains the deliberate broad public-name review and T23 remains the stable internal package-grouping task.

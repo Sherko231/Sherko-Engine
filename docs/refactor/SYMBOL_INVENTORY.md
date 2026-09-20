@@ -105,7 +105,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | --- | --- | --- | --- | --- | --- |
 | `BoundedDynamicBufferUploader` | package-private class | **KEEP** | — | Name states bounded dynamic upload role and resource ownership behavior. | Internal native ownership; P5R-T14 may simplify duplication only with equivalent cleanup. |
 | `CameraMatricesUniformBlock` | package-private class | **KEEP** | — | T13 canonical name states that this std140 CPU packer carries view/projection matrices specifically. | Internal shader ABI: GLSL `CameraBlock`, binding, offsets, and layout remain unchanged. |
-| `CleanupFailures` | package-private class | **RENAME** | `CleanupFailureSuppression` | Only adds cleanup failures as suppressed while avoiding self-suppression; current plural noun is vague. | Internal failure-preservation semantics must remain exact. |
+| `CleanupFailureSuppression` | package-private class | **KEEP** | — | T14 canonical name for the narrow helper that preserves a primary failure while adding only distinct cleanup failures as suppressed; it does not own resources. | Internal failure-preservation semantics must remain exact. |
 | `CpuFrustumCuller` | package-private class | **KEEP** | — | CPU frustum visibility test responsibility is explicit. | Internal spatial semantics. |
 | `DebugLineRenderer` | package-private class | **KEEP** | — | Renders debug lines and owns required GL resources; role is clear. | Internal native ownership. |
 | `DebugLineVertexPacker` | package-private class | **KEEP** | — | Packs debug-line vertices; precise role. | Internal packing/layout behavior. |
@@ -374,3 +374,8 @@ Highest-risk future proposals are intentionally deferred:
 Wiki impact: none — proposals only; no public API changed.
 
 Sandbox impact: none — proposals only; no owner-facing behavior changed.
+
+
+### P5R-T14 active implementation
+
+T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fresh review. It renames only `CleanupFailures` -> `CleanupFailureSuppression` and centralizes equivalent rollback suppression through `runAndSuppress(...)`; native ownership, registration/deletion order, thread affinity, idempotent close, dynamic-buffer fence behavior, and multi-resource close ordering remain unchanged.

@@ -58,11 +58,7 @@ final class OpenGlShader implements AutoCloseable {
                                 + backend.shaderInfoLog(handle));
             }
         } catch (RuntimeException | Error failure) {
-            try {
-                backend.deleteShader(handle);
-            } catch (RuntimeException | Error cleanupFailure) {
-                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
-            }
+            CleanupFailureSuppression.runAndSuppress(failure, () -> backend.deleteShader(handle));
             throw failure;
         }
 

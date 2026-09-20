@@ -50,11 +50,7 @@ final class OpenGlTexture implements AutoCloseable {
                     rgbaBytes);
             return texture;
         } catch (RuntimeException | Error failure) {
-            try {
-                texture.close();
-            } catch (RuntimeException | Error cleanupFailure) {
-                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
-            }
+            CleanupFailureSuppression.runAndSuppress(failure, texture::close);
             throw failure;
         }
     }

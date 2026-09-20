@@ -26,11 +26,7 @@ final class OpenGlSampler implements AutoCloseable {
             backend.configureLinearClampSampler(sampler.handle());
             return sampler;
         } catch (RuntimeException | Error failure) {
-            try {
-                sampler.close();
-            } catch (RuntimeException | Error cleanupFailure) {
-                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
-            }
+            CleanupFailureSuppression.runAndSuppress(failure, sampler::close);
             throw failure;
         }
     }

@@ -423,6 +423,8 @@ Behavioral review must preserve: same-mode no-op; original windowed geometry acr
 
 The task adds no new native behavior, dependency, module edge, public API, monitor-selection policy, or renderer behavior. The exact final PR head therefore requires the normal five-job heavy CI matrix including the existing hosted-Windows P3-T02 size and P3-T03 window-mode native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #265 can close.
 
+Accepted P5R-T05 evidence: final PR head `0657c2848f3686828610d22375ab030007ab4c8e` passed all five required jobs in run #454 / `35498045572`; PR #317 merged as `e85ed173372013effd72e57b52c52e6e0e813d28`; exact merged-master Lightweight verification passed in run #455 / `35498247856`.
+
 ## P3-T02 logical/framebuffer sizing verification
 
 Issue #85 extends the production `GlfwWindow` boundary with `WindowSizeListener` and owner-thread `pollEvents()` while keeping logical window units distinct from framebuffer pixels. It adds no dependency, renderer, fullscreen/input behavior, raw handle, or content-scale callback API.

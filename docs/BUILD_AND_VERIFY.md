@@ -1054,6 +1054,8 @@ Source/test review must confirm the extracted collaborators are package-private,
 
 The task changes Java source, so the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #271 can close. No separate native artifact is introduced because T11 changes internal decomposition only; the existing renderer/native Phase 5 regressions remain authoritative.
 
+Accepted P5R-T11 evidence: final PR head `2512677512e657de4f82b64e09f0b74fabd75c95` passed all five required jobs in run #463 / `35507186284`, including Windows native regressions and P5-T18 integration. PR #327 merged as `71ae263026f674bdfda2462f4bfb8c077ef24098`; exact merged-master Lightweight verification passed in run #464 / `35507442998`.
+
 Wiki impact: none — public renderer API and consumer usage are unchanged. Sandbox impact: none — the persistent sandbox continues through public `OpenGlRenderer` unchanged.
 
 ## P5-T07 first indexed static mesh verification

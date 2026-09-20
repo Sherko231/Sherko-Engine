@@ -2,12 +2,10 @@ package com.samo.game.sandbox;
 
 import com.samo.engine.core.api.InputResponseSettings;
 import com.samo.engine.platform.api.InputActionEvaluator;
-import com.samo.engine.platform.api.InputSnapshot;
 import com.samo.engine.platform.api.WindowMode;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 final class SandboxControlState {
     private static final double[] MOUSE_SENSITIVITIES = {0.5d, 1.0d, 2.0d};
@@ -21,28 +19,30 @@ final class SandboxControlState {
         sensitivityIndex = indexOfSensitivity(responseSettings.mouseSensitivity());
     }
 
-    ControlUpdate apply(
+    boolean apply(
             EnumSet<SandboxControls.Action> actions,
-            InputSnapshot latestInput,
-            InputActionEvaluator actionEvaluator) {
+            boolean cursorCaptured,
+            InputActionEvaluator actionEvaluator,
+            Consumer<WindowMode> windowModeSetter,
+            Consumer<Boolean> cursorCaptureSetter,
+            Consumer<String> logSink) {
         Objects.requireNonNull(actions, "actions");
-        InputSnapshot input = Objects.requireNonNull(latestInput, "latestInput");
-        InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
-
-        WindowMode requestedWindowMode = null;
-        Boolean requestedCursorCapture = null;
-        List<String> logMessages = new ArrayList<>();
+        Objects.requireNonNull(windowModeSetter, "windowModeSetter");
+        Objects.requireNonNull(cursorCaptureSetter, "cursorCaptureSetter");
+        Objects.requireNonNull(logSink, "logSink");
 
         if (actions.contains(SandboxControls.Action.CYCLE_WINDOW_MODE)) {
             currentWindowMode = nextWindowMode(currentWindowMode);
-            requestedWindowMode = currentWindowMode;
-            logMessages.add("Sandbox window mode -> " + currentWindowMode);
+            windowModeSetter.accept(currentWindowMode);
+            logSink.accept("Sandbox window mode -> " + currentWindowMode);
         }
         if (actions.contains(SandboxControls.Action.TOGGLE_CURSOR_CAPTURE)) {
-            requestedCursorCapture = !input.cursorCaptured();
-            logMessages.add("Sandbox cursor capture requested -> " + requestedCursorCapture);
+            boolean requestedCapture = !cursorCaptured;
+            cursorCaptureSetter.accept(requestedCapture);
+            logSink.accept("Sandbox cursor capture requested -> " + requestedCapture);
         }
         if (actions.contains(SandboxControls.Action.CYCLE_MOUSE_SENSITIVITY)) {
+            InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
             sensitivityIndex = (sensitivityIndex + 1) % MOUSE_SENSITIVITIES.length;
             responseSettings = new InputResponseSettings(
                     MOUSE_SENSITIVITIES[sensitivityIndex],
@@ -50,23 +50,20 @@ final class SandboxControlState {
                     responseSettings.controllerDeadZone(),
                     responseSettings.controllerCurveExponent());
             evaluator.setResponseSettings(responseSettings);
-            logMessages.add("Mouse sensitivity -> %.2f".formatted(responseSettings.mouseSensitivity()));
+            logSink.accept("Mouse sensitivity -> %.2f".formatted(responseSettings.mouseSensitivity()));
         }
         if (actions.contains(SandboxControls.Action.TOGGLE_MOUSE_Y_INVERSION)) {
+            InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
             responseSettings = new InputResponseSettings(
                     responseSettings.mouseSensitivity(),
                     !responseSettings.invertMouseY(),
                     responseSettings.controllerDeadZone(),
                     responseSettings.controllerCurveExponent());
             evaluator.setResponseSettings(responseSettings);
-            logMessages.add("Mouse Y inversion -> " + responseSettings.invertMouseY());
+            logSink.accept("Mouse Y inversion -> " + responseSettings.invertMouseY());
         }
 
-        return new ControlUpdate(
-                requestedWindowMode,
-                requestedCursorCapture,
-                List.copyOf(logMessages),
-                actions.contains(SandboxControls.Action.EXIT));
+        return actions.contains(SandboxControls.Action.EXIT);
     }
 
     WindowMode currentWindowMode() {
@@ -92,15 +89,5 @@ final class SandboxControlState {
             }
         }
         return 0;
-    }
-
-    record ControlUpdate(
-            WindowMode requestedWindowMode,
-            Boolean requestedCursorCapture,
-            List<String> logMessages,
-            boolean exitRequested) {
-        ControlUpdate {
-            logMessages = List.copyOf(Objects.requireNonNull(logMessages, "logMessages"));
-        }
     }
 }

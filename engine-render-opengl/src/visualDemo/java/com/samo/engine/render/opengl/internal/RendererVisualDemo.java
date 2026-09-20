@@ -299,8 +299,8 @@ public final class RendererVisualDemo {
         private final OpenGlShader vertexShader;
         private final OpenGlShader fragmentShader;
         private final OpenGlProgram program;
-        private final RendererMaterial opaque;
-        private final RendererMaterial transparent;
+        private final RenderMaterialDescriptor opaque;
+        private final RenderMaterialDescriptor transparent;
         private final PresentationMode presentationMode;
         private boolean closed;
 
@@ -314,8 +314,8 @@ public final class RendererVisualDemo {
                 OpenGlShader vertexShader,
                 OpenGlShader fragmentShader,
                 OpenGlProgram program,
-                RendererMaterial opaque,
-                RendererMaterial transparent,
+                RenderMaterialDescriptor opaque,
+                RenderMaterialDescriptor transparent,
                 PresentationMode presentationMode) {
             this.draw = draw;
             this.vertexArray = vertexArray;
@@ -401,14 +401,14 @@ public final class RendererVisualDemo {
 
                 MaterialTextureBinding binding =
                         new MaterialTextureBinding(0, texture.handle(), sampler.handle());
-                RendererMaterial opaque = new RendererMaterial(
+                RenderMaterialDescriptor opaque = new RenderMaterialDescriptor(
                         MaterialShaderVariant.TEXTURED_REFERENCE,
                         List.of(binding),
                         new MaterialScalars(0.10f, 0.62f, 1.0f, 1.0f),
                         MaterialBlendMode.OPAQUE,
                         MaterialDepthMode.DISABLED,
                         MaterialCullMode.NONE);
-                RendererMaterial transparent = new RendererMaterial(
+                RenderMaterialDescriptor transparent = new RenderMaterialDescriptor(
                         MaterialShaderVariant.TEXTURED_REFERENCE,
                         List.of(binding),
                         new MaterialScalars(0.10f, 0.62f, 1.0f, 0.32f),
@@ -461,7 +461,7 @@ public final class RendererVisualDemo {
             }
         }
 
-        private void drawPanel(RendererMaterial material, float horizontalOffset) {
+        private void drawPanel(RenderMaterialDescriptor material, float horizontalOffset) {
             draw.applyMaterialState(material);
             draw.bindTextureAndSampler(0, texture.handle(), sampler.handle());
             draw.setMaterialScalars(program.handle(), material.scalars());

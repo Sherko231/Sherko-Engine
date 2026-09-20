@@ -13,8 +13,8 @@ class DrawSubmissionSorterTest {
 
     @Test
     void groupsOpaqueByProgramMaterialMeshBeforeTransparent() {
-        RendererMaterial opaque = material(MaterialBlendMode.OPAQUE);
-        RendererMaterial transparent = material(MaterialBlendMode.ALPHA_BLEND);
+        RenderMaterialDescriptor opaque = material(MaterialBlendMode.OPAQUE);
+        RenderMaterialDescriptor transparent = material(MaterialBlendMode.ALPHA_BLEND);
 
         DrawSubmission opaqueLaterKey = submission(opaque, 2, 1, 1, 1.0f, 3);
         DrawSubmission transparentFar = submission(transparent, 0, 0, 0, 8.0f, 4);
@@ -34,7 +34,7 @@ class DrawSubmissionSorterTest {
 
     @Test
     void sortsTransparentBackToFrontThenUsesStableKeysAndSequence() {
-        RendererMaterial transparent = material(MaterialBlendMode.ALPHA_BLEND);
+        RenderMaterialDescriptor transparent = material(MaterialBlendMode.ALPHA_BLEND);
 
         DrawSubmission near = submission(transparent, 0, 0, 0, 2.0f, 5);
         DrawSubmission far = submission(transparent, 9, 9, 9, 10.0f, 4);
@@ -61,7 +61,7 @@ class DrawSubmissionSorterTest {
 
     @Test
     void doesNotMutateSourceCollectionOrMaterialIdentity() {
-        RendererMaterial opaque = material(MaterialBlendMode.OPAQUE);
+        RenderMaterialDescriptor opaque = material(MaterialBlendMode.OPAQUE);
         DrawSubmission later = submission(opaque, 2, 0, 0, 1.0f, 1);
         DrawSubmission earlier = submission(opaque, 1, 0, 0, 1.0f, 0);
         ArrayList<DrawSubmission> source = new ArrayList<>(List.of(later, earlier));
@@ -76,7 +76,7 @@ class DrawSubmissionSorterTest {
 
     @Test
     void validatesOrderingInputsBeforeSorting() {
-        RendererMaterial opaque = material(MaterialBlendMode.OPAQUE);
+        RenderMaterialDescriptor opaque = material(MaterialBlendMode.OPAQUE);
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -94,7 +94,7 @@ class DrawSubmissionSorterTest {
 
     @Test
     void emptyAndSingletonInputsRemainDeterministic() {
-        RendererMaterial opaque = material(MaterialBlendMode.OPAQUE);
+        RenderMaterialDescriptor opaque = material(MaterialBlendMode.OPAQUE);
         DrawSubmission only = submission(opaque, 0, 0, 0, 0.0f, 0);
 
         assertEquals(List.of(), sorter.sort(List.of()));
@@ -102,7 +102,7 @@ class DrawSubmissionSorterTest {
     }
 
     private static DrawSubmission submission(
-            RendererMaterial material,
+            RenderMaterialDescriptor material,
             int programKey,
             int materialKey,
             int meshKey,
@@ -121,8 +121,8 @@ class DrawSubmissionSorterTest {
                 100);
     }
 
-    private static RendererMaterial material(MaterialBlendMode blendMode) {
-        return new RendererMaterial(
+    private static RenderMaterialDescriptor material(MaterialBlendMode blendMode) {
+        return new RenderMaterialDescriptor(
                 MaterialShaderVariant.TEXTURED_REFERENCE,
                 List.of(new MaterialTextureBinding(0, 31, 41)),
                 MaterialScalars.identity(),

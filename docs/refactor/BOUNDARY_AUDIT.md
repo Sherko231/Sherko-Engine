@@ -147,7 +147,7 @@ Public nested `InputBinding` types that remain supported consumer API:
 
 #### T03-T05 extraction constraint
 
-Current `GlfwWindow` contains package-level nested backend/callback/input/window-mode helper types while the facade lives in `com.samo.engine.platform.api`.
+Through P5R-T03 to P5R-T05, `GlfwWindow` implementation collaborators are extracted from the public facade while remaining colocated package-private types in `com.samo.engine.platform.api`.
 
 When T03-T05 extract them:
 
@@ -180,7 +180,7 @@ Current important examples:
 | Surface | Status | Later owner |
 | --- | --- | --- |
 | `InputActionBindingsLoader` in `com.samo.engine.platform.api` | Package-private JSON/load/semantic implementation behind `InputActionBindings.load(...)`. | T06 may split parser/validator responsibilities; new helpers remain non-public. |
-| `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and extracted callback registration/sink types | Package-private implementation/testing surface colocated with the public facade; extracted by T03 candidate without public promotion. | T03 owns native/backend plumbing; T04/T05 retain their separate input/focus/cursor and mode/size responsibilities. |
+| `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, callback registration/sink types, `GlfwInputState`, `GlfwMouseMotionTracker`, `GlfwCursorCaptureController`, `GlfwWindowModeController`, `GlfwDeferredSizeDelivery`, and GLFW window value records | Package-private implementation/testing surface colocated with the public facade; T03-T05 extract native/backend, input/focus/cursor, and mode/size responsibilities without public promotion. | T03-T05 own the bounded decomposition; T23 may later reconsider stable internal package grouping without widening consumer API. |
 | Renderer material/submission/culling/light/uniform/color/view-model helpers | Package-private under `com.samo.engine.render.opengl.internal`. | T10-T15. |
 | Sandbox camera/control/diagnostic helpers | Package-private game composition, not engine-library API. | T16-T17. |
 
@@ -190,13 +190,13 @@ A package named `.api` does not make a package-private type public API; Java vis
 
 ### Platform native adapter
 
-The P5R-T03 candidate extracts the replaceable/testing boundary from `GlfwWindow` into package-private top-level types in the same API package:
+The accepted P5R-T03 implementation extracts the replaceable/testing boundary from `GlfwWindow` into package-private top-level types in the same API package:
 
 - `GlfwNativeBackend`
 - `LwjglGlfwNativeBackend`
 - responsibility-specific callback registration values and event sinks for GLFW error, size, input, cursor-position, and OpenGL debug callbacks.
 
-The extracted seam remains implementation-only despite being colocated with the public facade. `GlfwWindow` keeps its public signatures and owns lifecycle/orchestration; the adapter keeps native callback installation/release and LWJGL/GLFW/OpenGL platform calls. T04/T05 responsibilities remain inside `GlfwWindow`, and package reorganization remains deferred to T23.
+The extracted seam remains implementation-only despite being colocated with the public facade. `GlfwWindow` keeps its public signatures and lifecycle/thread-affinity orchestration; the adapter keeps native callback installation/release and LWJGL/GLFW/OpenGL platform calls. Accepted T04 collaborators own input/focus/cursor state, while the T05 candidate owns window-mode/restore/monitor/rollback state plus deferred logical/framebuffer size delivery. All remain package-private in the same package, and package reorganization remains deferred to T23.
 
 ### Renderer OpenGL adapters
 

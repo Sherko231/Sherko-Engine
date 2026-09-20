@@ -11,31 +11,31 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class LocalLightSelectionTest {
+class LocalLightSelectorTest {
     @Test
     void zeroAndExactlyMaxCountsDoNotWarn() {
         List<EngineLogger.Event> events = new ArrayList<>();
-        LocalLightSelection selection =
-                new LocalLightSelection(new EngineLogger(events::add), 2);
+        LocalLightSelector selector =
+                new LocalLightSelector(new EngineLogger(events::add), 2);
 
-        assertEquals(List.of(), selection.select(List.of()));
+        assertEquals(List.of(), selector.select(List.of()));
 
         RenderLocalLight first = point(1.0f);
         RenderLocalLight second = point(2.0f);
-        assertEquals(List.of(first, second), selection.select(List.of(first, second)));
+        assertEquals(List.of(first, second), selector.select(List.of(first, second)));
         assertEquals(List.of(), events);
     }
 
     @Test
     void overMaxKeepsFirstLightsAndEmitsExactlyOneBoundedWarning() {
         List<EngineLogger.Event> events = new ArrayList<>();
-        LocalLightSelection selection =
-                new LocalLightSelection(new EngineLogger(events::add), 2);
+        LocalLightSelector selector =
+                new LocalLightSelector(new EngineLogger(events::add), 2);
         RenderLocalLight first = point(1.0f);
         RenderLocalLight second = point(2.0f);
         RenderLocalLight third = point(3.0f);
 
-        List<RenderLocalLight> accepted = selection.select(List.of(first, second, third));
+        List<RenderLocalLight> accepted = selector.select(List.of(first, second, third));
 
         assertEquals(2, accepted.size());
         assertSame(first, accepted.get(0));
@@ -54,11 +54,11 @@ class LocalLightSelectionTest {
         EngineLogger logger = new EngineLogger(event -> {
             throw new IllegalStateException("fixture logger failure");
         });
-        LocalLightSelection selection = new LocalLightSelection(logger, 1);
+        LocalLightSelector selector = new LocalLightSelector(logger, 1);
 
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
-                () -> selection.select(List.of(point(1.0f), point(2.0f))));
+                () -> selector.select(List.of(point(1.0f), point(2.0f))));
 
         assertEquals("fixture logger failure", failure.getMessage());
     }
@@ -67,10 +67,10 @@ class LocalLightSelectionTest {
     void rejectsConfiguredMaximumOutsideFixedCapacity() {
         EngineLogger logger = new EngineLogger(event -> { });
 
-        assertThrows(IllegalArgumentException.class, () -> new LocalLightSelection(logger, 0));
+        assertThrows(IllegalArgumentException.class, () -> new LocalLightSelector(logger, 0));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new LocalLightSelection(logger, LocalLightSelection.SHADER_CAPACITY + 1));
+                () -> new LocalLightSelector(logger, LocalLightSelector.SHADER_CAPACITY + 1));
     }
 
     private static RenderPointLight point(float x) {

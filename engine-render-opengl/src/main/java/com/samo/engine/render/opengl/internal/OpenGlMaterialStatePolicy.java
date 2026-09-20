@@ -4,7 +4,7 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-record MaterialStatePolicy(
+record OpenGlMaterialStatePolicy(
         boolean blendEnabled,
         int blendEquation,
         int blendSourceFactor,
@@ -16,8 +16,8 @@ record MaterialStatePolicy(
         int cullFace,
         int frontFace) {
 
-    static MaterialStatePolicy from(RendererMaterial material) {
-        RendererMaterial value = Objects.requireNonNull(material, "material");
+    static OpenGlMaterialStatePolicy from(RenderMaterialDescriptor material) {
+        RenderMaterialDescriptor value = Objects.requireNonNull(material, "material");
 
         boolean blendEnabled;
         int blendSource;
@@ -72,7 +72,7 @@ record MaterialStatePolicy(
             default -> throw new IllegalStateException("Unhandled cull mode: " + value.cullMode());
         }
 
-        return new MaterialStatePolicy(
+        return new OpenGlMaterialStatePolicy(
                 blendEnabled,
                 GL14.GL_FUNC_ADD,
                 blendSource,

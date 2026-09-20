@@ -117,12 +117,12 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `ReferenceSceneVisibilityPlanner` | package-private class | **KEEP** | — | T11 owner for frustum extraction, fixed reference-scene visibility, and ordered draw-submission preparation. | Internal culling/sorting semantics; T12 may rename existing subordinate culling/submission/light types only. |
 | `ReferenceSceneDrawExecutor` | package-private class | **KEEP** | — | T11 owner for world/debug/view-model frame execution and GL-state restoration; borrows program/VAO/renderers without closing them. | Internal draw/state/order semantics. |
 | `RendererFrameDiagnostics` | package-private class | **KEEP** | — | T11 owner for latest-success culling/text-counter publication state. | Public facade exposes snapshots but not this owner type. |
-| `LocalLightSelection` | package-private class | **RENAME** | `LocalLightSelector` | This is a stateful bounded selector; role noun should name the actor rather than the result. | Internal selection capacity/logging semantics. |
+| `LocalLightSelector` | package-private class | **KEEP** | — | T12 canonical name for the stateful bounded first-N local-light selector actor. | Internal selection capacity/logging semantics. |
 | `LocalLightUniformBlock` | package-private class | **KEEP** | — | Payload and shader block role are explicit. | Internal shader ABI/layout. |
 | `LwjglOpenGlDrawBackend` | package-private class | **KEEP** | — | LWJGL adapter implementing the OpenGL draw backend contract. | Internal native adapter/thread affinity. |
 | `LwjglOpenGlResourceBackend` | package-private class | **KEEP** | — | LWJGL adapter implementing resource operations. | Internal native ownership/adapter. |
 | `LwjglOpenGlUniformBlockReflectionBackend` | package-private class | **KEEP** | — | LWJGL adapter for uniform-block reflection; long but exact. | Internal shader reflection adapter. |
-| `MaterialStatePolicy` | package-private record | **RENAME** | `OpenGlMaterialStatePolicy` | Contains concrete GL enums/state decisions rather than renderer-neutral policy; prefix removes ambiguity. | Internal fixed-state mapping; no material semantics change. |
+| `OpenGlMaterialStatePolicy` | package-private record | **KEEP** | — | T12 canonical name makes the concrete OpenGL blend/depth/cull state mapping explicit. | Internal fixed-state mapping; no material semantics change. |
 | `OpenGlBuffer` | package-private class | **KEEP** | — | Owned OpenGL buffer wrapper is precise. | Native ownership/thread affinity. |
 | `OpenGlDrawBackend` | package-private interface | **KEEP** | — | Replaceable backend boundary for GL draw/state work. | Internal adapter contract. |
 | `OpenGlFramebuffer` | package-private class | **KEEP** | — | Owned framebuffer wrapper is precise. | Native ownership/thread affinity. |
@@ -136,7 +136,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `OwnedOpenGlHandle` | package-private class | **KEEP** | — | Generic owned GL-handle lifecycle primitive; ownership is explicit in name. | Native ownership/cleanup. |
 | `PerFrameUniformBlock` | package-private class | **RENAME** | `FramebufferMetricsUniformBlock` | Current payload is framebuffer size and inverse size, not general per-frame state; proposed name is responsibility-specific. | Internal shader ABI: GLSL name/binding/layout remain unchanged unless separately authorized. |
 | `PresentationMode` | package-private enum | **RENAME** | `SrgbPresentationMode` | Enum specifically chooses hardware-vs-manual sRGB presentation encoding. | Internal D-056/D-063 presentation semantics. |
-| `RendererMaterial` | package-private record | **RENAME** | `RenderMaterialDescriptor` | Declarative material description rather than an owning renderer object; Descriptor clarifies semantics. | Internal material/state behavior; no public resource API. |
+| `RenderMaterialDescriptor` | package-private record | **KEEP** | — | T12 canonical name describes the immutable declarative material value without implying renderer/resource ownership. | Internal material/state behavior; no public resource API. |
 | `SrgbTransfer` | package-private class | **KEEP** | — | Exact sRGB transfer-function utility. | Internal color semantics. |
 | `TextureColorEncoding` | package-private enum | **KEEP** | — | Distinguishes linear vs sRGB texture storage/interpretation. | Internal D-056 color semantics. |
 | `UniformBlockLayoutVerifier` | package-private class | **KEEP** | — | Verifies reflected block layout against expected ABI; precise. | Internal shader ABI validation. |
@@ -196,7 +196,7 @@ They are not permission to add Phase 6+ implementation during P5R.
 | `GlfwWindow` | `DebugEventSink` | package-level nested interface | MOVE | Provisional internal GL-debug callback sink | T03 extraction; no public debug behavior change. |
 | `GlfwWindow` | `Backend` | package-level nested interface | MOVE | Provisional `GlfwBackend` top-level internal interface | Replaceable native boundary belongs outside the facade; tests already depend on it. |
 | `GlfwWindow` | `LwjglBackend` | package-level nested class | MOVE | Provisional `LwjglGlfwBackend` | Concrete LWJGL adapter belongs beside `GlfwBackend`; T03 owns the move. |
-| `RendererMaterial` | material enums/texture/scalar records | package-level nested types | RENAME | Re-evaluate under P5R-T12 after parent becomes `RenderMaterialDescriptor` | Vocabulary should align with descriptor/state roles; preserve all fixed-state and shader semantics. |
+| `RenderMaterialDescriptor` | material enums/texture/scalar records | package-level companion types | KEEP | — | T12 re-review retains `MaterialShaderVariant`, `MaterialTextureBinding`, `MaterialScalars`, `MaterialBlendMode`, `MaterialDepthMode`, and `MaterialCullMode`; each is clear in material context. | Preserve all fixed-state and shader semantics. |
 | `OpenGlResourceBackend` | `FenceStatus` | package-level nested enum | KEEP | — | Backend-specific sync status is clear in owner context. |
 | `OpenGlShader` | `Stage` | package-level nested enum | KEEP | — | Shader stage enum is precise in owner context. |
 | `RendererVisualDemo` | `DemoLighting` | package-level nested record | RENAME | `AnimatedDemoLighting` (provisional) | Value specifically carries animated demo lights + debug markers; T18 should decide final name. |
@@ -252,6 +252,17 @@ T11 decomposes only frame-time orchestration while retaining `ReferenceSceneRend
 - `RendererFrameDiagnostics` owns latest-success culling and debug text-counter snapshots.
 
 All four collaborators are package-private and non-owning. Existing material/light/culling/uniform/presentation/resource names and cleanup behavior remain for T12-T15 rather than being pulled into T11.
+
+### P5R-T12 active implementation
+
+T12 applies only three justified internal renames from the T01 inventory:
+
+- `RendererMaterial` -> `RenderMaterialDescriptor`, clarifying that the value is declarative and non-owning;
+- `MaterialStatePolicy` -> `OpenGlMaterialStatePolicy`, clarifying that the policy stores concrete OpenGL state decisions;
+- `LocalLightSelection` -> `LocalLightSelector`, naming the bounded first-N selector actor rather than a result.
+
+Fresh source review explicitly keeps `DrawSubmission`, `DrawSubmissionSorter`, `CpuFrustumCuller`, `DirectionalLight`, and the companion material enums/records unchanged because their current names are already precise. T12 adds no compatibility aliases, public rename, package move, resource ownership change, ordering/state/limit change, or shader semantic change.
+
 
 ### P5R-T09 accepted KEEP audit
 

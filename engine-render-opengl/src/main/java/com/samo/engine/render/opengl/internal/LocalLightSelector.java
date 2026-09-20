@@ -5,14 +5,14 @@ import com.samo.engine.render.api.RenderLocalLight;
 import java.util.List;
 import java.util.Objects;
 
-final class LocalLightSelection {
+final class LocalLightSelector {
     static final int SHADER_CAPACITY = 8;
     private static final String SUBSYSTEM = "renderer";
 
     private final EngineLogger logger;
     private final int maximum;
 
-    LocalLightSelection(EngineLogger logger, int maximum) {
+    LocalLightSelector(EngineLogger logger, int maximum) {
         this.logger = Objects.requireNonNull(logger, "logger");
         if (maximum < 1 || maximum > SHADER_CAPACITY) {
             throw new IllegalArgumentException(

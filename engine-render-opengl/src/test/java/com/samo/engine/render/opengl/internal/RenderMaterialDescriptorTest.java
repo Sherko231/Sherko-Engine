@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-class RendererMaterialTest {
+class RenderMaterialDescriptorTest {
     @Test
     void retainsCompleteImmutableMaterialValueWithoutOwningResources() {
         MaterialTextureBinding binding = new MaterialTextureBinding(0, 31, 41);
         MaterialScalars scalars = new MaterialScalars(1.0f, 0.5f, 0.25f, 0.75f);
-        RendererMaterial material = new RendererMaterial(
+        RenderMaterialDescriptor material = new RenderMaterialDescriptor(
                 MaterialShaderVariant.TEXTURED_REFERENCE,
                 List.of(binding),
                 scalars,
@@ -33,14 +33,14 @@ class RendererMaterialTest {
     void mapsEveryMaterialStateModeDeterministically() {
         MaterialTextureBinding binding = new MaterialTextureBinding(0, 31, 41);
 
-        RendererMaterial opaqueBack = new RendererMaterial(
+        RenderMaterialDescriptor opaqueBack = new RenderMaterialDescriptor(
                 MaterialShaderVariant.TEXTURED_REFERENCE,
                 List.of(binding),
                 MaterialScalars.identity(),
                 MaterialBlendMode.OPAQUE,
                 MaterialDepthMode.TEST_WRITE,
                 MaterialCullMode.BACK);
-        MaterialStatePolicy opaqueBackPolicy = MaterialStatePolicy.from(opaqueBack);
+        OpenGlMaterialStatePolicy opaqueBackPolicy = OpenGlMaterialStatePolicy.from(opaqueBack);
         assertEquals(false, opaqueBackPolicy.blendEnabled());
         assertEquals(GL14.GL_FUNC_ADD, opaqueBackPolicy.blendEquation());
         assertEquals(GL11.GL_ONE, opaqueBackPolicy.blendSourceFactor());
@@ -52,14 +52,14 @@ class RendererMaterialTest {
         assertEquals(GL11.GL_BACK, opaqueBackPolicy.cullFace());
         assertEquals(GL11.GL_CCW, opaqueBackPolicy.frontFace());
 
-        RendererMaterial alphaFront = new RendererMaterial(
+        RenderMaterialDescriptor alphaFront = new RenderMaterialDescriptor(
                 MaterialShaderVariant.TEXTURED_REFERENCE,
                 List.of(binding),
                 MaterialScalars.identity(),
                 MaterialBlendMode.ALPHA_BLEND,
                 MaterialDepthMode.TEST_NO_WRITE,
                 MaterialCullMode.FRONT);
-        MaterialStatePolicy alphaFrontPolicy = MaterialStatePolicy.from(alphaFront);
+        OpenGlMaterialStatePolicy alphaFrontPolicy = OpenGlMaterialStatePolicy.from(alphaFront);
         assertEquals(true, alphaFrontPolicy.blendEnabled());
         assertEquals(GL11.GL_SRC_ALPHA, alphaFrontPolicy.blendSourceFactor());
         assertEquals(GL11.GL_ONE_MINUS_SRC_ALPHA, alphaFrontPolicy.blendDestinationFactor());
@@ -68,14 +68,14 @@ class RendererMaterialTest {
         assertEquals(true, alphaFrontPolicy.cullEnabled());
         assertEquals(GL11.GL_FRONT, alphaFrontPolicy.cullFace());
 
-        RendererMaterial disabled = new RendererMaterial(
+        RenderMaterialDescriptor disabled = new RenderMaterialDescriptor(
                 MaterialShaderVariant.TEXTURED_REFERENCE,
                 List.of(binding),
                 MaterialScalars.identity(),
                 MaterialBlendMode.OPAQUE,
                 MaterialDepthMode.DISABLED,
                 MaterialCullMode.NONE);
-        MaterialStatePolicy disabledPolicy = MaterialStatePolicy.from(disabled);
+        OpenGlMaterialStatePolicy disabledPolicy = OpenGlMaterialStatePolicy.from(disabled);
         assertEquals(false, disabledPolicy.depthTestEnabled());
         assertEquals(false, disabledPolicy.depthWriteEnabled());
         assertEquals(false, disabledPolicy.cullEnabled());
@@ -88,7 +88,7 @@ class RendererMaterialTest {
         assertThrows(IllegalArgumentException.class, () -> new MaterialTextureBinding(0, 1, 0));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new RendererMaterial(
+                () -> new RenderMaterialDescriptor(
                         MaterialShaderVariant.TEXTURED_REFERENCE,
                         List.of(
                                 new MaterialTextureBinding(0, 1, 1),

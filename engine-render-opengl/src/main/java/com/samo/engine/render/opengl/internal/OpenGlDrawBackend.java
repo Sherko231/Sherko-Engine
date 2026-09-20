@@ -13,7 +13,7 @@ interface OpenGlDrawBackend {
 
     void setViewport(int x, int y, int width, int height);
 
-    void applyMaterialState(RendererMaterial material);
+    void applyMaterialState(RenderMaterialDescriptor material);
 
     void applyDebugLineState();
 

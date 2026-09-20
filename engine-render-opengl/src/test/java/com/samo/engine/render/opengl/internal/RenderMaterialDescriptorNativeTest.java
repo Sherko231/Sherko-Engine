@@ -28,7 +28,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-class RendererMaterialNativeTest {
+class RenderMaterialDescriptorNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T09_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;

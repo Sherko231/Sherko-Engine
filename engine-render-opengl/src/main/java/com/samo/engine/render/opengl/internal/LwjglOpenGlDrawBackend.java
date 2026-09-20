@@ -95,8 +95,8 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
     }
 
     @Override
-    public void applyMaterialState(RendererMaterial material) {
-        MaterialStatePolicy policy = MaterialStatePolicy.from(material);
+    public void applyMaterialState(RenderMaterialDescriptor material) {
+        OpenGlMaterialStatePolicy policy = OpenGlMaterialStatePolicy.from(material);
 
         if (policy.blendEnabled()) {
             GL11.glEnable(GL11.GL_BLEND);

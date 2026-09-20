@@ -30,7 +30,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
     private final OpenGlProgram program;
     private final DebugLineRenderer debugLineRenderer;
     private final ViewModelRenderer viewModelRenderer;
-    private final LocalLightSelection localLightSelection;
+    private final LocalLightSelector localLightSelector;
     private final RendererFrameUniformUploader frameUniformUploader;
     private final ReferenceSceneVisibilityPlanner visibilityPlanner;
     private final ReferenceSceneDrawExecutor drawExecutor;
@@ -56,7 +56,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             OpenGlProgram program,
             DebugLineRenderer debugLineRenderer,
             ViewModelRenderer viewModelRenderer,
-            RendererMaterial baselineMaterial,
+            RenderMaterialDescriptor baselineMaterial,
             PresentationMode presentationMode,
             EngineLogger logger,
             int maxLocalLights) {
@@ -74,7 +74,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         this.program = program;
         this.debugLineRenderer = debugLineRenderer;
         this.viewModelRenderer = viewModelRenderer;
-        this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
+        this.localLightSelector = new LocalLightSelector(logger, maxLocalLights);
         this.frameUniformUploader = new RendererFrameUniformUploader(
                 resourceBackend,
                 cameraBuffer.handle(),
@@ -106,7 +106,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
                 threadGuard,
                 registry,
                 new EngineLogger(event -> { }),
-                LocalLightSelection.SHADER_CAPACITY,
+                LocalLightSelector.SHADER_CAPACITY,
                 vertexSource,
                 fragmentSource,
                 debugVertexSource,
@@ -157,7 +157,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
                 drawBackend,
                 reflectionBackend,
                 new EngineLogger(event -> { }),
-                LocalLightSelection.SHADER_CAPACITY,
+                LocalLightSelector.SHADER_CAPACITY,
                 vertexSource,
                 fragmentSource,
                 "#version 460 core\nvoid main() {}",
@@ -213,9 +213,9 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         OpenGlUniformBlockReflectionBackend reflection =
                 Objects.requireNonNull(reflectionBackend, "reflectionBackend");
         EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
-        if (maxLocalLights < 1 || maxLocalLights > LocalLightSelection.SHADER_CAPACITY) {
+        if (maxLocalLights < 1 || maxLocalLights > LocalLightSelector.SHADER_CAPACITY) {
             throw new IllegalArgumentException(
-                    "maxLocalLights must be within [1," + LocalLightSelection.SHADER_CAPACITY + "]");
+                    "maxLocalLights must be within [1," + LocalLightSelector.SHADER_CAPACITY + "]");
         }
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");
@@ -306,7 +306,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
 
             MaterialTextureBinding referenceBinding =
                     new MaterialTextureBinding(0, texture.handle(), sampler.handle());
-            RendererMaterial baselineMaterial = new RendererMaterial(
+            RenderMaterialDescriptor baselineMaterial = new RenderMaterialDescriptor(
                     MaterialShaderVariant.TEXTURED_REFERENCE,
                     List.of(referenceBinding),
                     MaterialScalars.identity(),
@@ -378,7 +378,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         threadGuard.assertOwnerThread();
         requireOpen();
         RenderFramePacket snapshot = Objects.requireNonNull(frame, "frame");
-        List<RenderLocalLight> selectedLights = localLightSelection.select(snapshot.localLights());
+        List<RenderLocalLight> selectedLights = localLightSelector.select(snapshot.localLights());
         snapshot.copyViewTo(submittedView);
         snapshot.copyProjectionTo(submittedProjection);
         renderSnapshot(

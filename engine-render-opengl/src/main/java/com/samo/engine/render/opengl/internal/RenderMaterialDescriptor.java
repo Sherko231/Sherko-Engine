@@ -3,14 +3,14 @@ package com.samo.engine.render.opengl.internal;
 import java.util.List;
 import java.util.Objects;
 
-record RendererMaterial(
+record RenderMaterialDescriptor(
         MaterialShaderVariant shaderVariant,
         List<MaterialTextureBinding> textures,
         MaterialScalars scalars,
         MaterialBlendMode blendMode,
         MaterialDepthMode depthMode,
         MaterialCullMode cullMode) {
-    RendererMaterial {
+    RenderMaterialDescriptor {
         Objects.requireNonNull(shaderVariant, "shaderVariant");
         Objects.requireNonNull(textures, "textures");
         Objects.requireNonNull(scalars, "scalars");

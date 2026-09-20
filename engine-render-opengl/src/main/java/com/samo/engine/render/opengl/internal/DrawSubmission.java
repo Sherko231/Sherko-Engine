@@ -3,7 +3,7 @@ package com.samo.engine.render.opengl.internal;
 import java.util.Objects;
 
 record DrawSubmission(
-        RendererMaterial material,
+        RenderMaterialDescriptor material,
         int programKey,
         int materialKey,
         int meshKey,

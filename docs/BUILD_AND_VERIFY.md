@@ -1058,6 +1058,30 @@ Accepted P5R-T11 evidence: final PR head `2512677512e657de4f82b64e09f0b74fabd75c
 
 Wiki impact: none — public renderer API and consumer usage are unchanged. Sandbox impact: none — the persistent sandbox continues through public `OpenGlRenderer` unchanged.
 
+## P5R-T12 renderer internal naming verification
+
+Issue #272 is a naming-only internal refactor. It renames `RendererMaterial` to `RenderMaterialDescriptor`, `MaterialStatePolicy` to `OpenGlMaterialStatePolicy`, and `LocalLightSelection` to `LocalLightSelector`. Submission, culling, directional-light, subordinate material vocabulary, shader ABI, resource ownership, public API, and runtime behavior remain unchanged.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RenderMaterialDescriptorTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DrawSubmissionSorterTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightSelectorTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source review must confirm no production/test/workflow reference remains to the three replaced symbols, while `DrawSubmission`, `DrawSubmissionSorter`, `CpuFrustumCuller`, `DirectionalLight`, and the subordinate material names remain intentionally unchanged. The P5-T09 native workflow now invokes `RenderMaterialDescriptorNativeTest`; retained report/image artifact names remain `p5-t09-materials` for historical evidence continuity. Local-light warning text, configured capacity 1–8, first-N truncation, draw ordering, material GL mappings, and shader outputs must remain byte/meaning compatible.
+
+Because Java/test/workflow source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #272 can close.
+
+Wiki impact: none — no supported public API or consumer usage changes. Sandbox impact: none — owner-facing usage and behavior are unchanged.
+
 ## P5-T07 first indexed static mesh verification
 
 Issue #189 introduces the first public production renderer path and window-owned presentation.
@@ -1155,7 +1179,7 @@ The committed P5 GLSL validator uses Shaderc with an explicit OpenGL target envi
 Focused deterministic verification:
 
 ```powershell
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RendererMaterialTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RenderMaterialDescriptorTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
@@ -1166,7 +1190,7 @@ Windows native acceptance is part of `Windows native smoke` with `SHERKO_P5_T09_
 
 - `engine-render-opengl/build/reports/p5/p5-t09-materials.txt`;
 - `engine-render-opengl/build/reports/p5/p5-t09-materials.png`;
-- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.RendererMaterialNativeTest.xml`.
+- `engine-render-opengl/build/test-results/test/TEST-com.samo.engine.render.opengl.internal.RenderMaterialDescriptorNativeTest.xml`.
 
 The native acceptance requires two primitives from the same owned indexed mesh, a baseline left material that preserves the P5-T08 encoded gray tolerance, a visibly distinct tinted right material, restored full-frame viewport, unbound program/VAO, disabled framebuffer-sRGB state after render, and an empty native-resource registry after cleanup. This evidence is renderer correctness/lifecycle evidence only; hosted software OpenGL is not physical-GPU performance or vendor-driver qualification.
 
@@ -1459,7 +1483,7 @@ Focused verification:
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderLocalLightTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.OpenGlRendererConfigurationTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightSelectionTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightSelectorTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightUniformBlockTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --rerun-tasks

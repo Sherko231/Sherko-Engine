@@ -43,6 +43,7 @@ class ModulePackageBoundaryTest {
 
     @Test
     void everyDeclaredModuleHasValidPackageBoundaryRoots() throws IOException {
+
         List<String> modules = declaredModules();
         Map<String, Boundary> boundaries = loadBoundaries(modules);
 
@@ -53,10 +54,12 @@ class ModulePackageBoundaryTest {
             assertTrue(boundary.internalRoot().startsWith(boundary.moduleRoot() + "."), module + " internal root must be below its module root");
             assertFalse(boundary.apiRoot().equals(boundary.internalRoot()), module + " API/internal roots must differ");
         });
+
     }
 
     @Test
     void modulesOnlyReferenceOtherModulesThroughDeclaredApiRoots() throws IOException {
+
         List<String> modules = declaredModules();
         Map<String, Boundary> boundaries = loadBoundaries(modules);
         List<Violation> violations = new ArrayList<>();
@@ -74,10 +77,12 @@ class ModulePackageBoundaryTest {
 
         assertTrue(violations.isEmpty(), () -> "Cross-module source references must use the target module API root:\n"
             + violations.stream().map(Violation::toString).reduce("", (left, right) -> left + right + "\n"));
+
     }
 
     @Test
     void rendererSubmissionBoundaryDoesNotReferenceWorldOrGamePackages() throws IOException {
+
         Path sourceRoot = repositoryRoot().resolve("engine-render-opengl/src/main/java");
         List<String> violations = new ArrayList<>();
 
@@ -94,10 +99,12 @@ class ModulePackageBoundaryTest {
         }
 
         assertTrue(violations.isEmpty(), () -> "Renderer production source must not depend on world/game packages:\n" + String.join("\n", violations));
+
     }
 
     @Test
     void fullyQualifiedImplementationReferenceIsRejected(@TempDir Path tempDirectory) throws IOException {
+
         Path sourceFile = tempDirectory.resolve("FullyQualifiedShortcut.java");
         Files.writeString(sourceFile, """
             package example.source.api;
@@ -114,20 +121,24 @@ class ModulePackageBoundaryTest {
         Violation violation = violations.getFirst();
         assertEquals("target", violation.targetModule());
         assertEquals("example.target.internal.Secret", violation.referencedName());
+
     }
 
     @Test
     void productionSourceWithoutPackageIsRejected(@TempDir Path tempDirectory) throws IOException {
+
         Path sourceFile = tempDirectory.resolve("MissingPackage.java");
         Files.writeString(sourceFile, "final class MissingPackage {}\n");
 
         AssertionError error = assertThrows(AssertionError.class, () -> scanSourceFile("source", sourceFile, true, sampleBoundaries(), new ArrayList<>()));
 
         assertTrue(error.getMessage().contains("must declare a package"));
+
     }
 
     @Test
     void mostSpecificModuleRootOwnsNestedNetworkPackage() {
+
         Map<String, Boundary> boundaries = new LinkedHashMap<>();
         boundaries.put("engine-network-api", new Boundary("com.samo.engine.network", "com.samo.engine.network.api", "com.samo.engine.network.internal"));
         boundaries.put("engine-network-ip", new Boundary("com.samo.engine.network.ip", "com.samo.engine.network.ip.api", "com.samo.engine.network.ip.internal"));
@@ -137,9 +148,11 @@ class ModulePackageBoundaryTest {
         assertNotNull(target);
         assertEquals("engine-network-ip", target.module());
         assertNull(findTarget("com.samo.engine.network.ip.internal.UdpTransport", "engine-network-ip", boundaries));
+
     }
 
     private static List<String> declaredModules() {
+
         String configuredModules = System.getProperty(MODULES_PROPERTY);
         assertNotNull(configuredModules, MODULES_PROPERTY + " must be supplied by the test-support Gradle test task");
 
@@ -148,9 +161,11 @@ class ModulePackageBoundaryTest {
         assertFalse(modules.isEmpty(), MODULES_PROPERTY + " must contain at least one module");
         assertEquals(modules.size(), new LinkedHashSet<>(modules).size(), MODULES_PROPERTY + " must not contain duplicate module names");
         return modules;
+
     }
 
     private static Map<String, Boundary> loadBoundaries(List<String> modules) throws IOException {
+
         Properties properties = new Properties();
         Path registry = repositoryRoot().resolve("config/architecture/module-boundaries.properties");
         try (Reader reader = Files.newBufferedReader(registry)) {
@@ -164,9 +179,11 @@ class ModulePackageBoundaryTest {
 
         assertEquals(expectedPropertyNames(modules), properties.stringPropertyNames());
         return boundaries;
+
     }
 
     private static Set<String> expectedPropertyNames(List<String> modules) {
+
         Set<String> names = new LinkedHashSet<>();
         for (String module : modules) {
             names.add(module + ".root");
@@ -174,17 +191,21 @@ class ModulePackageBoundaryTest {
             names.add(module + ".internal");
         }
         return names;
+
     }
 
     private static String required(Properties properties, String key) {
+
         String value = properties.getProperty(key);
         assertNotNull(value, "Missing package-boundary property " + key);
         assertFalse(value.isBlank(), "Blank package-boundary property " + key);
         return value.trim();
+
     }
 
     private static void scanSourceTree(String sourceModule, Path sourceRoot, boolean validatePackageOwnership, Map<String, Boundary> boundaries, List<Violation> violations)
         throws IOException {
+
         if (!Files.isDirectory(sourceRoot)) {
             return;
         }
@@ -193,18 +214,22 @@ class ModulePackageBoundaryTest {
             files.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".java")).sorted()
                 .forEach(path -> scanUnchecked(sourceModule, path, validatePackageOwnership, boundaries, violations));
         }
+
     }
 
     private static void scanUnchecked(String sourceModule, Path sourceFile, boolean validatePackageOwnership, Map<String, Boundary> boundaries, List<Violation> violations) {
+
         try {
             scanSourceFile(sourceModule, sourceFile, validatePackageOwnership, boundaries, violations);
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to scan " + sourceFile, exception);
         }
+
     }
 
     private static void scanSourceFile(String sourceModule, Path sourceFile, boolean validatePackageOwnership, Map<String, Boundary> boundaries, List<Violation> violations)
         throws IOException {
+
         ParsedSource source = parseSource(sourceFile);
         if (validatePackageOwnership) {
             validateOwnedPackage(sourceModule, sourceFile, source.packageName(), boundaries);
@@ -216,9 +241,11 @@ class ModulePackageBoundaryTest {
                 violations.add(new Violation(sourceModule, target.module(), displayPath(sourceFile), reference.line(), reference.name(), target.boundary().apiRoot()));
             }
         }
+
     }
 
     private static ParsedSource parseSource(Path sourceFile) throws IOException {
+
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         assertNotNull(compiler, "Architecture verification requires a JDK compiler");
 
@@ -246,12 +273,14 @@ class ModulePackageBoundaryTest {
             TreeScanner<Void, Void> scanner = new TreeScanner<>() {
                 @Override
                 public Void visitMemberSelect(MemberSelectTree selected, Void unused) {
+
                     String name = qualifiedName(selected);
                     if (name != null) {
                         references.add(new SourceReference(name, lineNumber(unit, positions, selected)));
                         return null;
                     }
                     return super.visitMemberSelect(selected, unused);
+
                 }
             };
             for (Tree declaration : unit.getTypeDecls()) {
@@ -261,17 +290,21 @@ class ModulePackageBoundaryTest {
             String packageName = unit.getPackageName() == null ? null : unit.getPackageName().toString();
             return new ParsedSource(packageName, List.copyOf(references));
         }
+
     }
 
     private static int lineNumber(CompilationUnitTree unit, SourcePositions positions, Tree sourceTree) {
+
         long position = positions.getStartPosition(unit, sourceTree);
         if (position == Diagnostic.NOPOS) {
             return 0;
         }
         return (int) unit.getLineMap().getLineNumber(position);
+
     }
 
     private static String qualifiedName(Tree tree) {
+
         if (tree instanceof IdentifierTree identifier) {
             return identifier.getName().toString();
         }
@@ -282,9 +315,11 @@ class ModulePackageBoundaryTest {
             }
         }
         return null;
+
     }
 
     private static void validateOwnedPackage(String sourceModule, Path sourceFile, String packageName, Map<String, Boundary> boundaries) {
+
         Boundary sourceBoundary = boundaries.get(sourceModule);
         assertNotNull(sourceBoundary, "Missing boundary for source module " + sourceModule);
         assertNotNull(packageName, sourceModule + " production source " + displayPath(sourceFile) + " must declare a package under " + sourceBoundary.moduleRoot());
@@ -294,44 +329,57 @@ class ModulePackageBoundaryTest {
         BoundaryTarget owner = findOwner(packageName, boundaries);
         assertNotNull(owner, "No module owns production package " + packageName);
         assertEquals(sourceModule, owner.module(), sourceModule + " production source " + displayPath(sourceFile) + " uses package " + packageName + " owned by " + owner.module());
+
     }
 
     private static BoundaryTarget findTarget(String referencedName, String sourceModule, Map<String, Boundary> boundaries) {
+
         BoundaryTarget owner = findOwner(referencedName, boundaries);
         if (owner != null && owner.module().equals(sourceModule)) {
             return null;
         }
         return owner;
+
     }
 
     private static BoundaryTarget findOwner(String packageOrType, Map<String, Boundary> boundaries) {
+
         return boundaries.entrySet().stream().filter(entry -> isWithin(packageOrType, entry.getValue().moduleRoot()))
             .sorted(Comparator.comparingInt((Map.Entry<String, Boundary> entry) -> entry.getValue().moduleRoot().length()).reversed())
             .map(entry -> new BoundaryTarget(entry.getKey(), entry.getValue())).findFirst().orElse(null);
+
     }
 
     private static boolean isWithin(String packageOrType, String packageRoot) {
+
         return packageOrType.equals(packageRoot) || packageOrType.startsWith(packageRoot + ".");
+
     }
 
     private static Map<String, Boundary> sampleBoundaries() {
+
         Map<String, Boundary> boundaries = new LinkedHashMap<>();
         boundaries.put("source", new Boundary("example.source", "example.source.api", "example.source.internal"));
         boundaries.put("target", new Boundary("example.target", "example.target.api", "example.target.internal"));
         return boundaries;
+
     }
 
     private static String displayPath(Path sourceFile) {
+
         Path normalized = sourceFile.toAbsolutePath().normalize();
         Path root = repositoryRoot();
         if (normalized.startsWith(root)) {
             return root.relativize(normalized).toString();
         }
         return normalized.toString();
+
     }
 
     private static Path repositoryRoot() {
+
         return Path.of(System.getProperty("repository.root")).toAbsolutePath().normalize();
+
     }
 
     private record Boundary(String moduleRoot, String apiRoot, String internalRoot) {
@@ -349,7 +397,9 @@ class ModulePackageBoundaryTest {
     private record Violation(String sourceModule, String targetModule, String file, int line, String referencedName, String requiredApiRoot) {
         @Override
         public String toString() {
+
             return sourceModule + " -> " + targetModule + " at " + file + ":" + line + " references " + referencedName + "; expected target API root " + requiredApiRoot;
+
         }
     }
 }

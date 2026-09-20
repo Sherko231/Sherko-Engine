@@ -49,6 +49,7 @@ class ViewModelNativeTest {
 
     @Test
     void rendersViewModelAfterDepthIsolationOverCloserWorldGeometry() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T17 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"));
 
@@ -57,12 +58,15 @@ class ViewModelNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
         GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5-T17 View Model", new EngineLogger(event -> {
@@ -156,9 +160,11 @@ class ViewModelNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static int[] findFixturePixel(int centerX, int centerY, int radius) {
+
         int expectedRed = encodedByte(COLOR_RED_LINEAR);
         int expectedGreen = encodedByte(COLOR_GREEN_LINEAR);
         int expectedBlue = encodedByte(COLOR_BLUE_LINEAR);
@@ -172,21 +178,27 @@ class ViewModelNativeTest {
             }
         }
         return null;
+
     }
 
     private static double[] worldNdc(double x, double y, double distance, double focal, double aspect) {
+
         return new double[]{(focal / aspect) * x / distance, focal * y / distance};
+
     }
 
     private static boolean pointInTriangle(double px, double py, double[] a, double[] b, double[] c) {
+
         double denominator = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
         double alpha = ((b[1] - c[1]) * (px - c[0]) + (c[0] - b[0]) * (py - c[1])) / denominator;
         double beta = ((c[1] - a[1]) * (px - c[0]) + (a[0] - c[0]) * (py - c[1])) / denominator;
         double gamma = 1.0 - alpha - beta;
         return alpha >= 0.0 && beta >= 0.0 && gamma >= 0.0;
+
     }
 
     private static double windowDepth(double distance, double near, double far) {
+
         double m22 = (far + near) / (near - far);
         double m32 = (2.0 * far * near) / (near - far);
         double viewZ = -distance;
@@ -194,17 +206,21 @@ class ViewModelNativeTest {
         double clipW = -viewZ;
         double ndcZ = clipZ / clipW;
         return ndcZ * 0.5 + 0.5;
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -225,9 +241,11 @@ class ViewModelNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int sampleX, int sampleY, double worldWindowDepth, double viewModelWindowDepth, int[] fixturePixel) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T17", "result=PASS", "view.model.fov.degrees=55", "view.model.near.meters=0.01", "view.model.far.meters=10.0",
             "view.model.view=identity", "view.model.depth.reset.before.draw=true", "view.model.depth.test=GL_LESS", "view.model.depth.write=true",
@@ -239,28 +257,37 @@ class ViewModelNativeTest {
             "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"),
             "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=fixed engine-owned first-person view-model validation layer with independent projection and depth reset over the P5-T18 room depth panel; no public asset submission, gameplay weapon/hand/tool, animation/IK, third-person system, HUD/UI, FBO, render graph, or performance claim"));
+
     }
 
     private static int encodedByte(float linear) {
+
         double encoded = linear <= 0.0031308 ? linear * 12.92 : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055;
         return (int) Math.round(encoded * 255.0);
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error failure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

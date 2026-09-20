@@ -16,9 +16,11 @@ public final class LocalhostUdpSpike {
     private static final int PACKET_BYTES = Integer.BYTES + Long.BYTES;
 
     private LocalhostUdpSpike() {
+
     }
 
     public static void main(String[] args) throws Exception {
+
         if (args.length != 1) {
             throw new IllegalArgumentException("Expected exactly one argument: server or client");
         }
@@ -43,9 +45,11 @@ public final class LocalhostUdpSpike {
             case "client" -> runClient(port, packetCount, timeoutMillis);
             default -> throw new IllegalArgumentException("Unknown role: " + args[0]);
         }
+
     }
 
     private static void runServer(int port, int packetCount, int timeoutMillis) throws IOException {
+
         try (DatagramChannel channel = DatagramChannel.open()) {
             channel.bind(new InetSocketAddress(HOST, port));
             channel.configureBlocking(false);
@@ -94,9 +98,11 @@ public final class LocalhostUdpSpike {
 
             System.out.printf("P0-T06 server passed: received and echoed %d numbered UDP datagrams.%n", receivedCount);
         }
+
     }
 
     private static void runClient(int port, int packetCount, int timeoutMillis) throws IOException, InterruptedException {
+
         InetSocketAddress serverAddress = new InetSocketAddress(HOST, port);
 
         try (DatagramChannel channel = DatagramChannel.open()) {
@@ -165,9 +171,12 @@ public final class LocalhostUdpSpike {
             double averageRttMillis = totalRttMillis / packetCount;
             System.out.printf("P0-T06 client passed: received %d/%d replies; average RTT=%.3f ms.%n", packetCount, packetCount, averageRttMillis);
         }
+
     }
 
     private static ByteBuffer newPacketBuffer() {
+
         return ByteBuffer.allocateDirect(PACKET_BYTES).order(ByteOrder.BIG_ENDIAN);
+
     }
 }

@@ -40,6 +40,7 @@ class DirectionalLightNativeTest {
 
     @Test
     void shadesControlledSceneWithOneUnshadowedDirectionalLight() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T13 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T13 native acceptance targets Windows x64");
 
@@ -48,12 +49,15 @@ class DirectionalLightNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
 
@@ -120,17 +124,21 @@ class DirectionalLightNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -153,9 +161,11 @@ class DirectionalLightNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int[] baseline) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T13", "result=PASS", "light.type=directional-unshadowed", "light.direction.semantic=world-space-ray-travel-direction",
             "light.direction.normalized=0.0,-0.70710677,-0.70710677", "light.color.linear=1.0,1.0,1.0", "light.intensity=0.8", "surface.normal=0.0,0.0,1.0",
@@ -164,23 +174,30 @@ class DirectionalLightNativeTest {
             "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
             "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=one fixed renderer-owned unshadowed directional light shades the current two-material reference scene in linear space before the existing P5-T08 presentation encode; no shadows, local lights, HDR, PBR, public light API, world ownership, asset pipeline, or performance claim"));
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

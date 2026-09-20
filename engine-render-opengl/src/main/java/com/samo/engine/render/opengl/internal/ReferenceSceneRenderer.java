@@ -43,6 +43,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         OpenGlBuffer cameraBuffer, OpenGlBuffer perFrameBuffer, OpenGlBuffer localLightBuffer, OpenGlTexture referenceTexture, OpenGlSampler referenceSampler,
         OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program, DebugLineRenderer debugLineRenderer, ViewModelRenderer viewModelRenderer,
         RenderMaterialDescriptor baselineMaterial, SrgbPresentationMode presentationMode, EngineLogger logger, int maxLocalLights) {
+
         this.threadGuard = threadGuard;
         this.vertexArray = vertexArray;
         this.vertexBuffer = vertexBuffer;
@@ -61,34 +62,44 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         this.frameUniformUploader = new RendererFrameUniformUploader(backends.resourceBackend(), cameraBuffer.handle(), perFrameBuffer.handle(), localLightBuffer.handle());
         this.visibilityPlanner = new ReferenceSceneVisibilityPlanner(baselineMaterial, new CpuFrustumCuller(), new DrawSubmissionSorter());
         this.drawExecutor = new ReferenceSceneDrawExecutor(backends.drawBackend(), program.handle(), vertexArray.handle(), debugLineRenderer, viewModelRenderer, presentationMode);
+
     }
 
     public static ReferenceSceneRenderer createProduction(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, String vertexSource, String fragmentSource,
         String debugVertexSource, String debugFragmentSource, String viewModelVertexSource, String viewModelFragmentSource) {
+
         return createProduction(threadGuard, registry, new EngineLogger(event -> {
         }), LocalLightSelector.SHADER_CAPACITY, vertexSource, fragmentSource, debugVertexSource, debugFragmentSource, viewModelVertexSource, viewModelFragmentSource);
+
     }
 
     public static ReferenceSceneRenderer createProduction(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, EngineLogger logger, int maxLocalLights,
         String vertexSource, String fragmentSource, String debugVertexSource, String debugFragmentSource, String viewModelVertexSource, String viewModelFragmentSource) {
+
         return create(threadGuard, registry, OpenGlBackendSet.production(), logger, maxLocalLights, vertexSource, fragmentSource, debugVertexSource, debugFragmentSource,
             viewModelVertexSource, viewModelFragmentSource);
+
     }
 
     static ReferenceSceneRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, String vertexSource, String fragmentSource) {
+
         return create(threadGuard, registry, backends, new EngineLogger(event -> {
         }), LocalLightSelector.SHADER_CAPACITY, vertexSource, fragmentSource, "#version 460 core\nvoid main() {}", "#version 460 core\nvoid main() {}",
             "#version 460 core\nvoid main() {}", "#version 460 core\nvoid main() {}");
+
     }
 
     static ReferenceSceneRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, EngineLogger logger, int maxLocalLights,
         String vertexSource, String fragmentSource) {
+
         return create(threadGuard, registry, backends, logger, maxLocalLights, vertexSource, fragmentSource, "#version 460 core\nvoid main() {}",
             "#version 460 core\nvoid main() {}", "#version 460 core\nvoid main() {}", "#version 460 core\nvoid main() {}");
+
     }
 
     static ReferenceSceneRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, EngineLogger logger, int maxLocalLights,
         String vertexSource, String fragmentSource, String debugVertexSource, String debugFragmentSource, String viewModelVertexSource, String viewModelFragmentSource) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
@@ -183,9 +194,11 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             suppressClose(failure, vao);
             throw failure;
         }
+
     }
 
     public void render(RenderFramePacket frame) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
         RenderFramePacket snapshot = Objects.requireNonNull(frame, "frame");
@@ -193,14 +206,18 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         snapshot.copyViewTo(submittedView);
         snapshot.copyProjectionTo(submittedProjection);
         renderSnapshot(submittedView, submittedProjection, snapshot.framebufferWidth(), snapshot.framebufferHeight(), selectedLights, snapshot.debugFrame());
+
     }
 
     public void render(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight) {
+
         render(new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight));
+
     }
 
     private void renderSnapshot(Matrix4fc viewMatrix, Matrix4fc projectionMatrix, int framebufferWidth, int framebufferHeight, List<RenderLocalLight> localLights,
         DebugFrame debugFrame) {
+
         Frustum3f frustum = visibilityPlanner.extractFrustum(viewMatrix, projectionMatrix);
 
         frameUniformUploader.upload(viewMatrix, projectionMatrix, framebufferWidth, framebufferHeight, localLights);
@@ -210,24 +227,32 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         int submittedDraws = drawExecutor.execute(visibilityPlan.orderedSubmissions(), debugFrame, framebufferWidth, framebufferHeight);
 
         frameDiagnostics.publish(visibilityPlan, submittedDraws, debugFrame);
+
     }
 
     public RenderCullingCounters lastCullingCounters() {
+
         return frameDiagnostics.lastCullingCounters();
+
     }
 
     public List<DebugTextCounter> lastDebugTextCounters() {
+
         return frameDiagnostics.lastDebugTextCounters();
+
     }
 
     private void requireOpen() {
+
         if (closeAttempted) {
             throw new IllegalStateException("OpenGL renderer is closed");
         }
+
     }
 
     @Override
     public void close() {
+
         if (closeAttempted) {
             return;
         }
@@ -249,9 +274,11 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         closeInto(failures, vertexBuffer);
         closeInto(failures, vertexArray);
         throwCleanupFailure(failures);
+
     }
 
     private static void suppressClose(Throwable failure, AutoCloseable resource) {
+
         if (resource == null) {
             return;
         }
@@ -264,9 +291,11 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void closeInto(List<Throwable> failures, AutoCloseable resource) {
+
         try {
             resource.close();
         } catch (RuntimeException | Error failure) {
@@ -274,9 +303,11 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -291,5 +322,6 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             throw runtimeFailure;
         }
         throw (Error) first;
+
     }
 }

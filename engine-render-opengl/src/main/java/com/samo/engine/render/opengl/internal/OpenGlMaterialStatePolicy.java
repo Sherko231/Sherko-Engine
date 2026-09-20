@@ -8,6 +8,7 @@ record OpenGlMaterialStatePolicy(boolean blendEnabled, int blendEquation, int bl
     int depthFunction, boolean cullEnabled, int cullFace, int frontFace) {
 
     static OpenGlMaterialStatePolicy from(RenderMaterialDescriptor material) {
+
         RenderMaterialDescriptor value = Objects.requireNonNull(material, "material");
 
         boolean blendEnabled;
@@ -65,5 +66,6 @@ record OpenGlMaterialStatePolicy(boolean blendEnabled, int blendEquation, int bl
 
         return new OpenGlMaterialStatePolicy(blendEnabled, GL14.GL_FUNC_ADD, blendSource, blendDestination, depthEnabled, depthWrite, GL11.GL_LESS, cullEnabled, cullFace,
             GL11.GL_CCW);
+
     }
 }

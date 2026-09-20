@@ -28,6 +28,7 @@ class GlfwWindowSizeNativeTest {
 
     @Test
     void productionWindowDeliversLogicalAndFramebufferSizesFromRealGlfw() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T02 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T02 native acceptance targets Windows x64");
 
@@ -97,54 +98,66 @@ class GlfwWindowSizeNativeTest {
         }
 
         writeReport(logical, framebuffer, scaleX, scaleY);
+
     }
 
     private static void assertMatchesDirectGlfw(long handle, RecordingSizeListener listener) {
+
         Dimensions logical = logicalSize(handle);
         Dimensions framebuffer = framebufferSize(handle);
         assertEquals(logical.width(), listener.logicalWidth);
         assertEquals(logical.height(), listener.logicalHeight);
         assertEquals(framebuffer.width(), listener.framebufferWidth);
         assertEquals(framebuffer.height(), listener.framebufferHeight);
+
     }
 
     private static Dimensions logicalSize(long handle) {
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);
             IntBuffer height = stack.mallocInt(1);
             glfwGetWindowSize(handle, width, height);
             return new Dimensions(width.get(0), height.get(0));
         }
+
     }
 
     private static Dimensions framebufferSize(long handle) {
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);
             IntBuffer height = stack.mallocInt(1);
             glfwGetFramebufferSize(handle, width, height);
             return new Dimensions(width.get(0), height.get(0));
         }
+
     }
 
     private static float[] contentScale(long handle) {
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             var xScale = stack.mallocFloat(1);
             var yScale = stack.mallocFloat(1);
             glfwGetWindowContentScale(handle, xScale, yScale);
             return new float[]{xScale.get(0), yScale.get(0)};
         }
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport(Dimensions logical, Dimensions framebuffer, float scaleX, float scaleY) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         boolean distinct = logical.width() != framebuffer.width() || logical.height() != framebuffer.height();
         List<String> lines = List.of("task=P3-T02", "result=PASS", "logical.width=" + logical.width(), "logical.height=" + logical.height(),
@@ -153,11 +166,14 @@ class GlfwWindowSizeNativeTest {
             "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"), "native.resource.registry.empty.after.cleanup=true",
             "evidence.scope=production GLFW logical/framebuffer size separation; not renderer, P0-T13 soak, or P0-T14 repeated lifecycle evidence");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 
     private record Dimensions(int width, int height) {
@@ -171,14 +187,18 @@ class GlfwWindowSizeNativeTest {
 
         @Override
         public void onLogicalWindowSizeChanged(int width, int height) {
+
             logicalWidth = width;
             logicalHeight = height;
+
         }
 
         @Override
         public void onFramebufferSizeChanged(int width, int height) {
+
             framebufferWidth = width;
             framebufferHeight = height;
+
         }
     }
 }

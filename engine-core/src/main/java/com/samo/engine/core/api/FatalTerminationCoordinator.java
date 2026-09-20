@@ -35,12 +35,16 @@ public final class FatalTerminationCoordinator {
      *             if {@code logger} is null
      */
     public FatalTerminationCoordinator(EngineLogger logger) {
+
         this(logger, System::exit);
+
     }
 
     FatalTerminationCoordinator(EngineLogger logger, IntConsumer terminator) {
+
         this.logger = Objects.requireNonNull(logger, "logger");
         this.terminator = Objects.requireNonNull(terminator, "terminator");
+
     }
 
     /**
@@ -70,6 +74,7 @@ public final class FatalTerminationCoordinator {
      *             test termination action returns normally
      */
     public void terminate(String message, EngineLogger.Context context, List<EngineSubsystem> initializationOrder, NativeResourceRegistry resourceRegistry) {
+
         String fatalMessage = Objects.requireNonNull(message, "message");
         if (fatalMessage.isBlank()) {
             throw new IllegalArgumentException("message must not be blank");
@@ -102,9 +107,11 @@ public final class FatalTerminationCoordinator {
 
         captureFailure(failures, logger::flush);
         terminateProcess(failures);
+
     }
 
     private static List<EngineSubsystem> snapshotAndValidate(List<EngineSubsystem> initializationOrder) {
+
         List<EngineSubsystem> snapshot = List.copyOf(Objects.requireNonNull(initializationOrder, "initializationOrder"));
         Set<EngineSubsystem> identities = Collections.newSetFromMap(new IdentityHashMap<>());
         for (EngineSubsystem subsystem : snapshot) {
@@ -113,21 +120,27 @@ public final class FatalTerminationCoordinator {
             }
         }
         return snapshot;
+
     }
 
     private static String failureMessage(int index, Throwable failure) {
+
         return "Fatal cleanup failure " + index + ": " + failure.getClass().getName() + ": " + String.valueOf(failure.getMessage());
+
     }
 
     private static void captureFailure(List<Throwable> failures, Runnable action) {
+
         try {
             action.run();
         } catch (RuntimeException | Error failure) {
             failures.add(failure);
         }
+
     }
 
     private void terminateProcess(List<Throwable> failures) {
+
         try {
             terminator.accept(FATAL_EXIT_STATUS);
         } catch (RuntimeException | Error terminationFailure) {
@@ -140,14 +153,17 @@ public final class FatalTerminationCoordinator {
         state.set(State.TERMINATED);
         addSuppressedFailures(returned, failures);
         throw returned;
+
     }
 
     private static void addSuppressedFailures(Throwable primary, List<Throwable> failures) {
+
         for (Throwable failure : failures) {
             if (failure != primary) {
                 primary.addSuppressed(failure);
             }
         }
+
     }
 
     private enum State {

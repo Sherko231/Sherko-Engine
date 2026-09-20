@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 class PlayerInputCommandSamplerTest {
     @Test
     void retainsPendingEdgesAndLookUntilNextTickThenConsumesThemOnce() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
 
         sampler.submit(snapshot(10L, 0.0d, 0.5d, 2.0d, 0.0d, true, false, true, 0.0d));
@@ -30,10 +31,12 @@ class PlayerInputCommandSamplerTest {
         assertThat(second.lookY()).isZero();
         assertThat(second.digitalState(PlayerInputCommand.DigitalAction.JUMP).pressed()).isFalse();
         assertThat(second.digitalState(PlayerInputCommand.DigitalAction.JUMP).released()).isFalse();
+
     }
 
     @Test
     void repeatsLatestHeldAndScalarStateAcrossTicks() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(1L, 0.25d, -0.75d, 0.0d, 0.0d, true, true, false, 2.0d));
 
@@ -48,10 +51,12 @@ class PlayerInputCommandSamplerTest {
         assertThat(second.digitalState(PlayerInputCommand.DigitalAction.JUMP).held()).isTrue();
         assertThat(first.digitalState(PlayerInputCommand.DigitalAction.JUMP).pressed()).isTrue();
         assertThat(second.digitalState(PlayerInputCommand.DigitalAction.JUMP).pressed()).isFalse();
+
     }
 
     @Test
     void rejectsOutOfOrderFrameAndTickWithoutConsumingPendingState() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(5L, 0.0d, 0.0d, 4.0d, 0.0d, true, false, true, 0.0d));
 
@@ -67,10 +72,12 @@ class PlayerInputCommandSamplerTest {
         sampler.submit(snapshot(6L, 0, 0, 2.0d, 0, false, false, false, 0));
         PlayerInputCommand after = sampler.nextCommand(10L);
         assertThat(after.lookX()).isEqualTo(2.0d);
+
     }
 
     @Test
     void rejectsLookAccumulationOverflowWithoutAdvancingFrameOrConsumingPendingState() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(20L, 0.0d, 0.0d, Double.MAX_VALUE, 0.0d, true, false, true, 0.0d));
 
@@ -86,10 +93,12 @@ class PlayerInputCommandSamplerTest {
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).pressed()).isTrue();
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).released()).isTrue();
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).held()).isFalse();
+
     }
 
     @Test
     void rejectsInvalidTickBeforeConsumingPendingState() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(1L, 0, 0, 2.0d, 0, true, false, true, 0));
 
@@ -99,16 +108,20 @@ class PlayerInputCommandSamplerTest {
         assertThat(command.lookX()).isEqualTo(2.0d);
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).pressed()).isTrue();
         assertThat(command.digitalState(PlayerInputCommand.DigitalAction.JUMP).released()).isTrue();
+
     }
 
     @Test
     void requiresAFrameBeforeFirstCommand() {
+
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         assertThatThrownBy(() -> sampler.nextCommand(0L)).isInstanceOf(IllegalStateException.class);
+
     }
 
     private static InputActionSnapshot snapshot(long frameId, double moveX, double moveY, double lookX, double lookY, boolean jumpPressed, boolean jumpHeld, boolean jumpReleased,
         double jumpValue) {
+
         EnumMap<InputAction, InputActionState> states = new EnumMap<>(InputAction.class);
         for (InputAction action : InputAction.values()) {
             if (action == InputAction.MOVE) {
@@ -122,5 +135,6 @@ class PlayerInputCommandSamplerTest {
             }
         }
         return new InputActionSnapshot(frameId, states);
+
     }
 }

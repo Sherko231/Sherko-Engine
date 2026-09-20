@@ -27,6 +27,7 @@ class BoundedDynamicBufferUploaderNativeTest {
 
     @Test
     void uploadsWrapsSynchronizesAndReadsBackOnRealOpenGl46() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T04 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T04 native acceptance targets Windows x64");
 
@@ -92,30 +93,38 @@ class BoundedDynamicBufferUploaderNativeTest {
 
         registry.assertNoOpenResources();
         writeReport();
+
     }
 
     private static ByteBuffer bytes(int... values) {
+
         ByteBuffer buffer = ByteBuffer.allocateDirect(values.length);
         for (int value : values) {
             buffer.put((byte) value);
         }
         return buffer.flip();
+
     }
 
     private static byte[] slice(byte[] source, int offset, int length) {
+
         return java.util.Arrays.copyOfRange(source, offset, offset + length);
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport() throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH,
             List.of("task=P5-T04", "result=PASS", "strategy=fixed-slot ring with per-submitted-slot GLsync fence", "slot.count=3", "slot.capacity.bytes=8",
@@ -124,10 +133,13 @@ class BoundedDynamicBufferUploaderNativeTest {
                 "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
                 "evidence.scope=bounded upload correctness only; no performance or persistent-mapping claim"),
             StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

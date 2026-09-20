@@ -28,7 +28,9 @@ interface OpenGlResourceBackend {
     void deleteTexture(int handle);
 
     default void allocateRgba8Texture(int handle, TextureColorEncoding colorEncoding, int width, int height, java.nio.ByteBuffer rgbaBytes) {
+
         throw new UnsupportedOperationException("RGBA8 texture allocation is not implemented by this backend");
+
     }
 
     int createSampler();
@@ -36,7 +38,9 @@ interface OpenGlResourceBackend {
     void deleteSampler(int handle);
 
     default void configureLinearClampSampler(int handle) {
+
         throw new UnsupportedOperationException("Sampler configuration is not implemented by this backend");
+
     }
 
     int createFramebuffer();

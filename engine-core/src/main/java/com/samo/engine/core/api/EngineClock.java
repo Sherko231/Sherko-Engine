@@ -20,7 +20,9 @@ public final class EngineClock {
      * Creates a clock backed by {@link System#nanoTime()}.
      */
     public EngineClock() {
+
         this(System::nanoTime);
+
     }
 
     /**
@@ -32,7 +34,9 @@ public final class EngineClock {
      *             if the source is null
      */
     public EngineClock(LongSupplier nanoTimeSource) {
+
         this.nanoTimeSource = Objects.requireNonNull(nanoTimeSource, "nanoTimeSource");
+
     }
 
     /**
@@ -53,6 +57,7 @@ public final class EngineClock {
      *             if the configured source throws one
      */
     public long sampleElapsedNanos() {
+
         long current = nanoTimeSource.getAsLong();
         if (!sampled) {
             previousAccepted = current;
@@ -67,5 +72,6 @@ public final class EngineClock {
 
         previousAccepted = current;
         return elapsed;
+
     }
 }

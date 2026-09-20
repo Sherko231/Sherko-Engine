@@ -20,19 +20,23 @@ public final class TransformQuantization {
     private static final long ROTATION_UNIT_SQUARED_CODE_LIMIT = 2L * Short.MAX_VALUE * Short.MAX_VALUE;
 
     private TransformQuantization() {
+
     }
 
     /** Quantizes canonical engine-space position in meters into three signed 16-bit values. */
     public static QuantizedPosition quantizePosition(Vector3fc position) {
+
         Objects.requireNonNull(position, "position");
         short x = quantizePositionComponent(position.x(), "position.x");
         short y = quantizePositionComponent(position.y(), "position.y");
         short z = quantizePositionComponent(position.z(), "position.z");
         return new QuantizedPosition(x, y, z);
+
     }
 
     /** Dequantizes position into the supplied caller-owned destination. */
     public static Vector3f dequantizePosition(QuantizedPosition quantized, Vector3f destination) {
+
         Objects.requireNonNull(quantized, "quantized");
         Objects.requireNonNull(destination, "destination");
 
@@ -40,6 +44,7 @@ public final class TransformQuantization {
         float y = quantized.y() * POSITION_STEP_METERS;
         float z = quantized.z() * POSITION_STEP_METERS;
         return destination.set(x, y, z);
+
     }
 
     /**
@@ -51,6 +56,7 @@ public final class TransformQuantization {
      * non-negative. Equivalent {@code q} and {@code -q} orientations therefore encode identically.
      */
     public static QuantizedRotation quantizeRotation(Quaternionfc rotation) {
+
         Objects.requireNonNull(rotation, "rotation");
 
         double x = rotation.x();
@@ -125,10 +131,12 @@ public final class TransformQuantization {
             default -> throw new AssertionError("unexpected omitted quaternion component");
         }
         return new QuantizedRotation(omittedComponent, a, b, c);
+
     }
 
     /** Dequantizes a smallest-three rotation into the supplied caller-owned destination. */
     public static Quaternionf dequantizeRotation(QuantizedRotation quantized, Quaternionf destination) {
+
         Objects.requireNonNull(quantized, "quantized");
         Objects.requireNonNull(destination, "destination");
 
@@ -195,9 +203,11 @@ public final class TransformQuantization {
         requireFinite(outputZ, "decoded rotation.z");
         requireFinite(outputW, "decoded rotation.w");
         return destination.set(outputX, outputY, outputZ, outputW);
+
     }
 
     private static short quantizePositionComponent(float value, String name) {
+
         requireFinite(value, name);
         if (value < POSITION_MIN_METERS || value > POSITION_MAX_METERS) {
             throw new IllegalArgumentException(name + " must be within [" + POSITION_MIN_METERS + ", " + POSITION_MAX_METERS + "] meters");
@@ -207,17 +217,21 @@ public final class TransformQuantization {
             throw new IllegalArgumentException(name + " cannot be represented by position quantization");
         }
         return (short) encoded;
+
     }
 
     private static short quantizeRotationComponent(double value) {
+
         long encoded = Math.round(value * ROTATION_ENCODE_SCALE);
         if (encoded < -Short.MAX_VALUE || encoded > Short.MAX_VALUE) {
             throw new IllegalArgumentException("normalized rotation component exceeds smallest-three representable range");
         }
         return (short) encoded;
+
     }
 
     private static double component(int index, double x, double y, double z, double w) {
+
         return switch (index) {
             case 0 -> x;
             case 1 -> y;
@@ -225,18 +239,23 @@ public final class TransformQuantization {
             case 3 -> w;
             default -> throw new AssertionError("unexpected quaternion component index");
         };
+
     }
 
     private static void requireFinite(float value, String name) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 
     private static void requireFinite(double value, String name) {
+
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 
     /** Signed-short quantized canonical position values. */
@@ -246,12 +265,14 @@ public final class TransformQuantization {
     /** Smallest-three quaternion values with one omitted canonical non-negative component. */
     public record QuantizedRotation(int omittedComponent, short a, short b, short c) {
         public QuantizedRotation {
+
             if (omittedComponent < 0 || omittedComponent > 3) {
                 throw new IllegalArgumentException("omittedComponent must be within [0, 3]");
             }
             if (a == Short.MIN_VALUE || b == Short.MIN_VALUE || c == Short.MIN_VALUE) {
                 throw new IllegalArgumentException("quantized rotation component must not use reserved Short.MIN_VALUE");
             }
+
         }
     }
 }

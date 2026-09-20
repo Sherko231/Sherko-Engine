@@ -16,6 +16,7 @@ final class SandboxCamera {
     private float pitchRadians;
 
     void apply(PlayerInputCommand command) {
+
         double moveX = command.moveX();
         double moveY = command.moveY();
 
@@ -32,31 +33,43 @@ final class SandboxCamera {
 
         yawRadians = wrapYaw(yawRadians + (float) command.lookX() * LOOK_RADIANS_PER_UNIT);
         pitchRadians = clampPitch(pitchRadians - (float) command.lookY() * LOOK_RADIANS_PER_UNIT);
+
     }
 
     Matrix4f view(Matrix4f destination) {
+
         float cosPitch = (float) Math.cos(pitchRadians);
         Vector3f forward = new Vector3f((float) Math.sin(yawRadians) * cosPitch, (float) Math.sin(pitchRadians), (float) -Math.cos(yawRadians) * cosPitch);
         return CameraMatrices.view(position, forward, new Vector3f(0.0f, 1.0f, 0.0f), destination);
+
     }
 
     Vector3f position(Vector3f destination) {
+
         return destination.set(position);
+
     }
 
     float yawRadians() {
+
         return yawRadians;
+
     }
 
     float pitchRadians() {
+
         return pitchRadians;
+
     }
 
     private static float clampPitch(float pitch) {
+
         return Math.max(-MAX_PITCH_RADIANS, Math.min(MAX_PITCH_RADIANS, pitch));
+
     }
 
     private static float wrapYaw(float yaw) {
+
         float twoPi = (float) (Math.PI * 2.0);
         float wrapped = yaw % twoPi;
         if (wrapped > Math.PI) {
@@ -65,5 +78,6 @@ final class SandboxCamera {
             wrapped += twoPi;
         }
         return wrapped;
+
     }
 }

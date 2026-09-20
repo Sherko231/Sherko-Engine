@@ -20,9 +20,11 @@ public final class OpenGL46Spike {
     private static final long DEFAULT_DURATION_SECONDS = 600;
 
     private OpenGL46Spike() {
+
     }
 
     public static void main(String[] args) {
+
         long durationSeconds = Long.getLong("spike.durationSeconds", DEFAULT_DURATION_SECONDS);
         if (durationSeconds <= 0) {
             throw new IllegalArgumentException("spike.durationSeconds must be greater than zero");
@@ -126,9 +128,11 @@ public final class OpenGL46Spike {
             glfwSetErrorCallback(null);
             errorCallback.free();
         }
+
     }
 
     private static void centerWindow(long window) {
+
         long monitor = glfwGetPrimaryMonitor();
         if (monitor == MemoryUtil.NULL) {
             return;
@@ -148,5 +152,6 @@ public final class OpenGL46Spike {
             int y = (videoMode.height() - height.get(0)) / 2;
             glfwSetWindowPos(window, Math.max(x, 0), Math.max(y, 0));
         }
+
     }
 }

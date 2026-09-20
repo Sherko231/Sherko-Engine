@@ -13,16 +13,19 @@ import org.junit.jupiter.api.Test;
 class SubsystemStartupCoordinatorTest {
     @Test
     void acceptsEmptyOrderAndRejectsNullsBeforeHooks() {
+
         assertDoesNotThrow(() -> SubsystemStartupCoordinator.start(List.of()));
 
         Probe probe = new Probe("only", new ArrayList<>());
         assertThrows(NullPointerException.class, () -> SubsystemStartupCoordinator.start(null));
         assertThrows(NullPointerException.class, () -> SubsystemStartupCoordinator.start(java.util.Arrays.asList(probe, null)));
         assertEquals(List.of(), probe.trace);
+
     }
 
     @Test
     void startsInSuppliedOrderAndLeavesSuccessfulLifetimeWithCaller() {
+
         List<String> trace = new ArrayList<>();
         Probe assets = new Probe("assets", trace);
         Probe renderer = new Probe("renderer", trace);
@@ -41,10 +44,12 @@ class SubsystemStartupCoordinatorTest {
 
         assertEquals(List.of("assets.initialize", "assets.start", "renderer.initialize", "renderer.start", "gameplay.initialize", "gameplay.start", "gameplay.stop",
             "gameplay.close", "renderer.stop", "renderer.close", "assets.stop", "assets.close"), trace);
+
     }
 
     @Test
     void initializationFailureClosesFailingSubsystemThenRollsBackStartedSubsystemsInReverse() {
+
         List<String> trace = new ArrayList<>();
         Probe assets = new Probe("assets", trace);
         Probe renderer = new Probe("renderer", trace);
@@ -59,10 +64,12 @@ class SubsystemStartupCoordinatorTest {
         assertEquals(1, gameplay.closeCalls);
         assertEquals(1, renderer.closeCalls);
         assertEquals(1, assets.closeCalls);
+
     }
 
     @Test
     void startFailureClosesCurrentThenRollsBackEarlierStartedSubsystems() {
+
         List<String> trace = new ArrayList<>();
         Probe first = new Probe("first", trace);
         Probe second = new Probe("second", trace);
@@ -72,10 +79,12 @@ class SubsystemStartupCoordinatorTest {
         assertSame(failure, assertThrows(AssertionError.class, () -> SubsystemStartupCoordinator.start(List.of(first, second))));
 
         assertEquals(List.of("first.initialize", "first.start", "second.initialize", "second.start", "second.close", "first.stop", "first.close"), trace);
+
     }
 
     @Test
     void firstFailureDoesNotTouchLaterSubsystems() {
+
         List<String> trace = new ArrayList<>();
         Probe first = new Probe("first", trace);
         Probe later = new Probe("later", trace);
@@ -86,10 +95,12 @@ class SubsystemStartupCoordinatorTest {
 
         assertEquals(List.of("first.initialize", "first.close"), trace);
         assertEquals(0, later.initializeCalls);
+
     }
 
     @Test
     void cleanupFailuresAreSuppressedWithoutReplacingOriginalFailure() {
+
         List<String> trace = new ArrayList<>();
         Probe first = new Probe("first", trace);
         Probe second = new Probe("second", trace);
@@ -113,10 +124,12 @@ class SubsystemStartupCoordinatorTest {
         assertArrayEquals(new Throwable[]{failedClose, secondStop, secondClose, firstClose}, thrown.getSuppressed());
         assertEquals(List.of("first.initialize", "first.start", "second.initialize", "second.start", "third.initialize", "third.close", "second.stop", "second.close", "first.stop",
             "first.close"), trace);
+
     }
 
     @Test
     void snapshotsInputBeforeHooksCanMutateCallerList() {
+
         List<String> trace = new ArrayList<>();
         List<EngineSubsystem> mutable = new ArrayList<>();
         Probe first = new Probe("first", trace);
@@ -134,10 +147,12 @@ class SubsystemStartupCoordinatorTest {
         second.close();
         first.stop();
         first.close();
+
     }
 
     @Test
     void doesNotSelfSuppressWhenCleanupRethrowsPrimaryFailureInstance() {
+
         List<String> trace = new ArrayList<>();
         Probe probe = new Probe("only", trace);
         RuntimeException failure = new RuntimeException("same instance");
@@ -148,6 +163,7 @@ class SubsystemStartupCoordinatorTest {
 
         assertSame(failure, thrown);
         assertEquals(0, thrown.getSuppressed().length);
+
     }
 
     private static final class Probe extends EngineSubsystem {
@@ -160,46 +176,61 @@ class SubsystemStartupCoordinatorTest {
         private int closeCalls;
 
         private Probe(String id, List<String> trace) {
+
             this.id = id;
             this.trace = trace;
+
         }
 
         private void fail(String phase, Throwable failure) {
+
             failures.put(phase, failure);
+
         }
 
         @Override
         protected void onInitialize() {
+
             initializeCalls++;
             record("initialize");
             onInitializeAction.run();
             throwIfConfigured("initialize");
+
         }
 
         @Override
         protected void onStart() {
+
             record("start");
             throwIfConfigured("start");
+
         }
 
         @Override
         protected void onStop() {
+
             record("stop");
             throwIfConfigured("stop");
+
         }
 
         @Override
         protected void onClose() {
+
             closeCalls++;
             record("close");
             throwIfConfigured("close");
+
         }
 
         private void record(String phase) {
+
             trace.add(id + "." + phase);
+
         }
 
         private void throwIfConfigured(String phase) {
+
             Throwable failure = failures.get(phase);
             if (failure instanceof RuntimeException runtime) {
                 throw runtime;
@@ -207,6 +238,7 @@ class SubsystemStartupCoordinatorTest {
             if (failure instanceof Error error) {
                 throw error;
             }
+
         }
     }
 }

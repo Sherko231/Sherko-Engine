@@ -16,15 +16,18 @@ final class ReferenceSceneDrawExecutor {
 
     ReferenceSceneDrawExecutor(OpenGlDrawBackend drawBackend, int programHandle, int vertexArrayHandle, DebugLineRenderer debugLineRenderer, ViewModelRenderer viewModelRenderer,
         SrgbPresentationMode presentationMode) {
+
         this.drawBackend = Objects.requireNonNull(drawBackend, "drawBackend");
         this.programHandle = programHandle;
         this.vertexArrayHandle = vertexArrayHandle;
         this.debugLineRenderer = Objects.requireNonNull(debugLineRenderer, "debugLineRenderer");
         this.viewModelRenderer = Objects.requireNonNull(viewModelRenderer, "viewModelRenderer");
         this.presentationMode = Objects.requireNonNull(presentationMode, "presentationMode");
+
     }
 
     int execute(List<DrawSubmission> orderedSubmissions, DebugFrame debugFrame, int framebufferWidth, int framebufferHeight) {
+
         List<DrawSubmission> submissions = Objects.requireNonNull(orderedSubmissions, "orderedSubmissions");
         DebugFrame diagnostics = Objects.requireNonNull(debugFrame, "debugFrame");
 
@@ -44,9 +47,11 @@ final class ReferenceSceneDrawExecutor {
             drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
             drawBackend.setFramebufferSrgbEnabled(false);
         }
+
     }
 
     private void drawMaterial(RenderMaterialDescriptor material, int x, int y, int width, int height) {
+
         int materialProgram = programFor(material.shaderVariant());
         drawBackend.setViewport(x, y, width, height);
         drawBackend.applyMaterialState(material);
@@ -66,11 +71,14 @@ final class ReferenceSceneDrawExecutor {
                 drawBackend.bindTextureAndSampler(textureBinding.unit(), 0, 0);
             }
         }
+
     }
 
     private int programFor(MaterialShaderVariant shaderVariant) {
+
         return switch (shaderVariant) {
             case TEXTURED_REFERENCE -> programHandle;
         };
+
     }
 }

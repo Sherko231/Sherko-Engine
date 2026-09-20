@@ -36,14 +36,19 @@ public final class OpenGlRenderer implements AutoCloseable {
     private final ReferenceSceneRenderer referenceSceneRenderer;
 
     private OpenGlRenderer(ReferenceSceneRenderer referenceSceneRenderer) {
+
         this.referenceSceneRenderer = referenceSceneRenderer;
+
     }
 
     public static OpenGlRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry nativeResources) {
+
         return create(threadGuard, nativeResources, new EngineLogger(event -> System.err.printf("[%s] [%s] %s%n", event.level(), event.context().subsystem(), event.message())), 8);
+
     }
 
     public static OpenGlRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry nativeResources, EngineLogger logger, int maxLocalLights) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry registry = Objects.requireNonNull(nativeResources, "nativeResources");
         EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
@@ -53,10 +58,13 @@ public final class OpenGlRenderer implements AutoCloseable {
         return new OpenGlRenderer(ReferenceSceneRenderer.createProduction(guard, registry, engineLogger, maxLocalLights, loadShader("shaders/p5/basic.vert"),
             loadShader("shaders/p5/basic.frag"), loadShader("shaders/p5/debug-lines.vert"), loadShader("shaders/p5/debug-lines.frag"), loadShader("shaders/p5/view-model.vert"),
             loadShader("shaders/p5/view-model.frag")));
+
     }
 
     public void render(RenderFramePacket frame) {
+
         referenceSceneRenderer.render(Objects.requireNonNull(frame, "frame"));
+
     }
 
     /**
@@ -66,7 +74,9 @@ public final class OpenGlRenderer implements AutoCloseable {
      * A failed render does not replace the previously published counters.
      */
     public RenderCullingCounters lastCullingCounters() {
+
         return referenceSceneRenderer.lastCullingCounters();
+
     }
 
     /**
@@ -76,19 +86,26 @@ public final class OpenGlRenderer implements AutoCloseable {
      * A failed render leaves the previously published snapshot unchanged.
      */
     public List<DebugTextCounter> lastDebugTextCounters() {
+
         return referenceSceneRenderer.lastDebugTextCounters();
+
     }
 
     public void render(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight) {
+
         render(new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight));
+
     }
 
     @Override
     public void close() {
+
         referenceSceneRenderer.close();
+
     }
 
     private static String loadShader(String path) {
+
         try (InputStream stream = OpenGlRenderer.class.getClassLoader().getResourceAsStream(path)) {
             if (stream == null) {
                 throw new IllegalStateException("Missing renderer shader resource: " + path);
@@ -97,5 +114,6 @@ public final class OpenGlRenderer implements AutoCloseable {
         } catch (IOException failure) {
             throw new IllegalStateException("Failed to load renderer shader resource: " + path, failure);
         }
+
     }
 }

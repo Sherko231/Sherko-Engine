@@ -35,6 +35,7 @@ public final class SubsystemGraph {
      *             instances, or missing dependencies
      */
     public SubsystemGraph(List<Registration> registrations) {
+
         Map<EngineSubsystem, String> identities = new IdentityHashMap<>();
         for (Registration registration : List.copyOf(registrations)) {
             String id = registration.id();
@@ -53,6 +54,7 @@ public final class SubsystemGraph {
                 }
             }
         }
+
     }
 
     /**
@@ -71,6 +73,7 @@ public final class SubsystemGraph {
      *             caller to print or log, and no partial order is returned
      */
     public List<EngineSubsystem> initializationOrder() {
+
         Map<String, Visit> visits = new HashMap<>();
         List<EngineSubsystem> ordered = new ArrayList<>();
         List<String> path = new ArrayList<>();
@@ -102,12 +105,15 @@ public final class SubsystemGraph {
             }
         }
         return List.copyOf(ordered);
+
     }
 
     private static void enter(Registration registration, Map<String, Visit> visits, List<String> path, ArrayDeque<Frame> stack) {
+
         visits.put(registration.id(), Visit.ACTIVE);
         path.add(registration.id());
         stack.push(new Frame(registration, registration.dependencies().iterator()));
+
     }
 
     /**
@@ -131,6 +137,7 @@ public final class SubsystemGraph {
          *             for blank IDs or repeated dependency IDs
          */
         public Registration {
+
             requireId(id);
             Objects.requireNonNull(subsystem, "subsystem");
             dependencies = List.copyOf(dependencies);
@@ -141,12 +148,15 @@ public final class SubsystemGraph {
                     throw new IllegalArgumentException("Subsystem " + id + " repeats dependency " + dependency);
                 }
             }
+
         }
 
         private static void requireId(String id) {
+
             if (Objects.requireNonNull(id, "subsystem ID").isBlank()) {
                 throw new IllegalArgumentException("Subsystem ID must not be blank");
             }
+
         }
     }
 

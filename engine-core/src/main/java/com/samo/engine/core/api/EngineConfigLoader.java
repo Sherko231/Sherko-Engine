@@ -16,9 +16,11 @@ public final class EngineConfigLoader {
     private final EngineConfigSchema schema = new EngineConfigSchema();
 
     public EngineConfigLoader() {
+
     }
 
     public Map<ConfigKey<?>, Object> load(Path gameConfig, Path userConfig, Map<String, String> commandLineOverrides) throws IOException {
+
         Objects.requireNonNull(gameConfig, "gameConfig");
         Objects.requireNonNull(userConfig, "userConfig");
         Objects.requireNonNull(commandLineOverrides, "commandLineOverrides");
@@ -29,16 +31,20 @@ public final class EngineConfigLoader {
         mergeFile(effective, userConfig);
         mergeCommandLine(effective, commandLineOverrides);
         return schema.validate(effective);
+
     }
 
     private static void validateCommandLineEntries(Map<String, String> commandLineOverrides) {
+
         for (Map.Entry<String, String> entry : commandLineOverrides.entrySet()) {
             Objects.requireNonNull(entry.getKey(), "commandLineOverrides key");
             Objects.requireNonNull(entry.getValue(), "commandLineOverrides value");
         }
+
     }
 
     private static void mergeFile(Map<String, ConfigEntry> effective, Path path) throws IOException {
+
         Path normalized = path.toAbsolutePath().normalize();
         if (Files.notExists(normalized)) {
             return;
@@ -72,20 +78,27 @@ public final class EngineConfigLoader {
                 replaceEffective(effective, key, new ConfigEntry(value, new ConfigSource(normalized + ":" + lineNumber)));
             }
         }
+
     }
 
     private static void mergeCommandLine(Map<String, ConfigEntry> effective, Map<String, String> commandLineOverrides) {
+
         for (Map.Entry<String, String> entry : commandLineOverrides.entrySet()) {
             replaceEffective(effective, entry.getKey(), new ConfigEntry(entry.getValue(), new ConfigSource("command line")));
         }
+
     }
 
     private static void replaceEffective(Map<String, ConfigEntry> effective, String key, ConfigEntry value) {
+
         effective.remove(key);
         effective.put(key, value);
+
     }
 
     private static IllegalArgumentException malformed(Path path, int lineNumber, String detail) {
+
         return new IllegalArgumentException("Malformed configuration file " + path + ":" + lineNumber + ": " + detail);
+
     }
 }

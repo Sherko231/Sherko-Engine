@@ -12,21 +12,28 @@ final class OpenGlShader implements AutoCloseable {
         private final int nativeType;
 
         Stage(int nativeType) {
+
             this.nativeType = nativeType;
+
         }
     }
 
     private final OwnedOpenGlHandle owned;
 
     private OpenGlShader(OwnedOpenGlHandle owned) {
+
         this.owned = owned;
+
     }
 
     static OpenGlShader compile(Stage stage, String source, OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
+
         return compile(stage, "<inline>", source, guard, registry, backend);
+
     }
 
     static OpenGlShader compile(Stage stage, String sourceName, String source, OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
+
         Stage shaderStage = Objects.requireNonNull(stage, "stage");
         String name = Objects.requireNonNull(sourceName, "sourceName");
         String shaderSource = Objects.requireNonNull(source, "source");
@@ -49,14 +56,19 @@ final class OpenGlShader implements AutoCloseable {
         }
 
         return new OpenGlShader(OwnedOpenGlHandle.register("OpenGL shader", handle, guard, registry, backend::deleteShader));
+
     }
 
     int handle() {
+
         return owned.handle();
+
     }
 
     @Override
     public void close() {
+
         owned.close();
+
     }
 }

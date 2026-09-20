@@ -36,6 +36,7 @@ class GlfwWindowModeNativeTest {
 
     @Test
     void productionWindowSurvivesTwentyModeTransitionsWithSameContext() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T03 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T03 native acceptance targets Windows x64");
 
@@ -105,9 +106,11 @@ class GlfwWindowModeNativeTest {
         }
 
         writeReport(initialGeometry, monitorGeometry, glVersion, transitions);
+
     }
 
     private static void assertMode(long handle, WindowMode requested, WindowGeometry initial, MonitorGeometry monitor) {
+
         WindowGeometry actual = windowGeometry(handle);
         assertTrue(actual.width() > 0 && actual.height() > 0, "logical window dimensions must stay positive after each transition");
         switch (requested) {
@@ -127,9 +130,11 @@ class GlfwWindowModeNativeTest {
                 assertEquals(monitor.height(), actual.height());
             }
         }
+
     }
 
     private static WindowGeometry windowGeometry(long handle) {
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1);
             IntBuffer y = stack.mallocInt(1);
@@ -139,27 +144,33 @@ class GlfwWindowModeNativeTest {
             glfwGetWindowSize(handle, width, height);
             return new WindowGeometry(x.get(0), y.get(0), width.get(0), height.get(0));
         }
+
     }
 
     private static Position monitorPosition(long monitor) {
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1);
             IntBuffer y = stack.mallocInt(1);
             glfwGetMonitorPos(monitor, x, y);
             return new Position(x.get(0), y.get(0));
         }
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport(WindowGeometry initial, MonitorGeometry monitor, String glVersion, int transitions) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         List<String> lines = List.of("task=P3-T03", "result=PASS", "transition.count=" + transitions,
             "transition.sequence=BORDERLESS_FULLSCREEN,WINDOWED,EXCLUSIVE_FULLSCREEN,WINDOWED x5", "initial.window.x=" + initial.x(), "initial.window.y=" + initial.y(),
@@ -171,11 +182,14 @@ class GlfwWindowModeNativeTest {
             "native.resource.registry.empty.after.cleanup=true",
             "evidence.scope=one production 20-transition window-mode acceptance run; not P0-T13 soak or P0-T14 repeated lifecycle evidence");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 
     private record Position(int x, int y) {

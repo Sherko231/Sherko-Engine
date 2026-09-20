@@ -13,14 +13,18 @@ final class GlslOfflineValidator {
         private final int shadercKind;
 
         Stage(int shadercKind) {
+
             this.shadercKind = shadercKind;
+
         }
     }
 
     private GlslOfflineValidator() {
+
     }
 
     static ValidationResult validate(Stage stage, String sourceName, String source) {
+
         Stage shaderStage = Objects.requireNonNull(stage, "stage");
         String name = Objects.requireNonNull(sourceName, "sourceName");
         String shaderSource = Objects.requireNonNull(source, "source");
@@ -69,5 +73,6 @@ final class GlslOfflineValidator {
             }
             Shaderc.shaderc_compiler_release(compiler);
         }
+
     }
 }

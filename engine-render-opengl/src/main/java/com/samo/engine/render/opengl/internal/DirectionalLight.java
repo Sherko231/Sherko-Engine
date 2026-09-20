@@ -6,6 +6,7 @@ import org.joml.Vector3fc;
 record DirectionalLight(float directionX, float directionY, float directionZ, float red, float green, float blue, float intensity) {
 
     DirectionalLight {
+
         requireFinite("directionX", directionX);
         requireFinite("directionY", directionY);
         requireFinite("directionZ", directionZ);
@@ -22,15 +23,19 @@ record DirectionalLight(float directionX, float directionY, float directionZ, fl
         requireUnit("green", green);
         requireUnit("blue", blue);
         requireUnit("intensity", intensity);
+
     }
 
     static DirectionalLight from(Vector3fc direction, Vector3fc linearColor, float intensity) {
+
         Vector3fc directionValue = Objects.requireNonNull(direction, "direction");
         Vector3fc colorValue = Objects.requireNonNull(linearColor, "linearColor");
         return new DirectionalLight(directionValue.x(), directionValue.y(), directionValue.z(), colorValue.x(), colorValue.y(), colorValue.z(), intensity);
+
     }
 
     float diffuseFactor(Vector3fc surfaceNormal) {
+
         Vector3fc normal = Objects.requireNonNull(surfaceNormal, "surfaceNormal");
         float nx = normal.x();
         float ny = normal.y();
@@ -49,17 +54,22 @@ record DirectionalLight(float directionX, float directionY, float directionZ, fl
 
         float facing = nx * -directionX + ny * -directionY + nz * -directionZ;
         return Math.max(facing, 0.0f) * intensity;
+
     }
 
     private static void requireFinite(String name, float value) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 
     private static void requireUnit(String name, float value) {
+
         if (!Float.isFinite(value) || value < 0.0f || value > 1.0f) {
             throw new IllegalArgumentException(name + " must be finite and within [0,1]");
         }
+
     }
 }

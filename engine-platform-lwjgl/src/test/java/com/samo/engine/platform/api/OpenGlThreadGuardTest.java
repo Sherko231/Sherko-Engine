@@ -9,13 +9,16 @@ import org.junit.jupiter.api.Test;
 class OpenGlThreadGuardTest {
     @Test
     void rejectsBeforeBinding() {
+
         OpenGlThreadGuard guard = new OpenGlThreadGuard();
 
         assertThrows(IllegalStateException.class, guard::assertOwnerThread);
+
     }
 
     @Test
     void bindsOnceAllowsOwnerAndRejectsWorkerWithoutPoisoningOwner() throws Exception {
+
         OpenGlThreadGuard guard = new OpenGlThreadGuard();
         Thread owner = Thread.currentThread();
         guard.bindOwnerThread(owner);
@@ -35,13 +38,16 @@ class OpenGlThreadGuardTest {
 
         assertSame(IllegalStateException.class, result.get().getClass());
         guard.assertOwnerThread();
+
     }
 
     @Test
     void rejectsNullOwnerBindingWithoutMutatingState() {
+
         OpenGlThreadGuard guard = new OpenGlThreadGuard();
 
         assertThrows(NullPointerException.class, () -> guard.bindOwnerThread(null));
         assertThrows(IllegalStateException.class, guard::assertOwnerThread);
+
     }
 }

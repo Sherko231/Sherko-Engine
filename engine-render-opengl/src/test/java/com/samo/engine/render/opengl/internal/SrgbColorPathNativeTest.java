@@ -40,6 +40,7 @@ class SrgbColorPathNativeTest {
 
     @Test
     void decodesSrgbTextureAndEncodesDefaultFramebufferExactlyOnce() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T08 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T08 native acceptance targets Windows x64");
 
@@ -48,12 +49,15 @@ class SrgbColorPathNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
 
@@ -119,22 +123,28 @@ class SrgbColorPathNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static void assertReferenceByte(String channel, int actual) {
+
         assertTrue(Math.abs(actual - REFERENCE_OUTPUT_SRGB_BYTE) <= BYTE_TOLERANCE,
             channel + " expected " + REFERENCE_OUTPUT_SRGB_BYTE + "±" + BYTE_TOLERANCE + " but was " + actual);
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -158,9 +168,11 @@ class SrgbColorPathNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int framebufferEncoding, int red, int green, int blue) throws IOException {
+
         double litLinear = srgbToLinear(REFERENCE_INPUT_SRGB_BYTE / 255.0) * REFERENCE_DIFFUSE_FACTOR;
         int missingEncode = (int) Math.round(litLinear * 255.0);
         int missingDecodeOrDoubleGamma = srgbByteFromLinear((REFERENCE_INPUT_SRGB_BYTE / 255.0) * REFERENCE_DIFFUSE_FACTOR);
@@ -176,33 +188,44 @@ class SrgbColorPathNativeTest {
             "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"),
             "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=fixed renderer reference texture decode, known P5-T13 linear diffuse multiplication, plus exactly one presentation sRGB encode; hardware on GL_SRGB default buffers, fragment fallback on GL_LINEAR default buffers; no HDR, tonemapping, arbitrary materials, assets, or post-processing claim"));
+
     }
 
     private static int litSrgbByte(int srgbByte, double diffuseFactor) {
+
         double linear = srgbToLinear(srgbByte / 255.0) * diffuseFactor;
         return srgbByteFromLinear(linear);
+
     }
 
     private static double srgbToLinear(double encoded) {
+
         return encoded <= 0.04045 ? encoded / 12.92 : Math.pow((encoded + 0.055) / 1.055, 2.4);
+
     }
 
     private static int srgbByteFromLinear(double linear) {
+
         double encoded = linear <= 0.0031308 ? linear * 12.92 : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055;
         return (int) Math.round(encoded * 255.0);
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

@@ -46,6 +46,7 @@ class SrgbPresentationNativeTest {
 
     @Test
     void presentsKnownLinearClearAndLitReferenceWithExactlyOneSrgbEncode() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T15 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T15 native acceptance targets Windows x64");
 
@@ -54,12 +55,15 @@ class SrgbPresentationNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
 
@@ -136,9 +140,11 @@ class SrgbPresentationNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static void assertWrongReferencesOutsideTolerance(int[] actual) {
+
         int[] missing = {Math.round(CLEAR_RED_LINEAR * 255.0f), Math.round(CLEAR_GREEN_LINEAR * 255.0f), Math.round(CLEAR_BLUE_LINEAR * 255.0f)};
         int[] doubled = {encodedByte(independentEncodedScalar(CLEAR_RED_LINEAR)), encodedByte(independentEncodedScalar(CLEAR_GREEN_LINEAR)),
             encodedByte(independentEncodedScalar(CLEAR_BLUE_LINEAR))};
@@ -146,21 +152,27 @@ class SrgbPresentationNativeTest {
             assertTrue(Math.abs(actual[channel] - missing[channel]) > BYTE_TOLERANCE);
             assertTrue(Math.abs(actual[channel] - doubled[channel]) > BYTE_TOLERANCE);
         }
+
     }
 
     private static void assertByte(String label, int actual, int expected) {
+
         assertTrue(Math.abs(actual - expected) <= BYTE_TOLERANCE, label + " expected " + expected + "±" + BYTE_TOLERANCE + " but was " + actual);
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -181,9 +193,11 @@ class SrgbPresentationNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int framebufferEncoding, int[] clearPixel, int[] baselinePixel) throws IOException {
+
         int missingRed = Math.round(CLEAR_RED_LINEAR * 255.0f);
         int missingGreen = Math.round(CLEAR_GREEN_LINEAR * 255.0f);
         int missingBlue = Math.round(CLEAR_BLUE_LINEAR * 255.0f);
@@ -201,37 +215,50 @@ class SrgbPresentationNativeTest {
             "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
             "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"), "clear.sample.controlled.camera.looks.away.from.room=true",
             "evidence.scope=known linear clear from a controlled camera that culls the room, followed by the accepted lit room reference sample through exactly one IEC sRGB presentation encode; no HDR, tonemapping, fog, bloom, exposure, color grading, offscreen framebuffer, or post-processing claim"));
+
     }
 
     private static int litSrgbByte(int srgbByte, double diffuseFactor) {
+
         double encoded = srgbByte / 255.0;
         double linear = encoded <= 0.04045 ? encoded / 12.92 : Math.pow((encoded + 0.055) / 1.055, 2.4);
         return encodedByte((float) (linear * diffuseFactor));
+
     }
 
     private static int encodedByte(float linear) {
+
         return (int) Math.round(independentEncodedScalar(linear) * 255.0);
+
     }
 
     private static float independentEncodedScalar(float linear) {
+
         return (float) (linear <= 0.0031308 ? linear * 12.92 : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055);
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error failure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

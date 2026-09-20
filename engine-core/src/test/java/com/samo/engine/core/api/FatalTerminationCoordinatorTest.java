@@ -23,6 +23,7 @@ class FatalTerminationCoordinatorTest {
 
     @Test
     void happyPathLogsCleansReverseOrderVerifiesFlushesThenTerminates() {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem first = new ProbeSubsystem("first", registry, trace, 11L);
@@ -44,10 +45,12 @@ class FatalTerminationCoordinatorTest {
             List.of("log:FATAL:fatal", "second:stop", "second:close", "second:resource-close", "first:stop", "first:close", "first:resource-close", "flush", "terminate:1"), trace);
         assertEquals(1, first.resourceCloses.get());
         assertEquals(1, second.resourceCloses.get());
+
     }
 
     @Test
     void stopFailureStillClosesAndReportsBeforeFlushAndTermination() {
+
         List<String> trace = new ArrayList<>();
         List<EngineLogger.Event> events = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -80,10 +83,12 @@ class FatalTerminationCoordinatorTest {
         assertTrue(error.message().contains("1"));
         assertTrue(error.message().contains(second.stopFailure.getClass().getName()));
         assertTrue(error.message().contains("stop failed"));
+
     }
 
     @Test
     void closeFailureRemainsTrackedAndRegistryFailureAlsoReachesTerminator() {
+
         List<String> trace = new ArrayList<>();
         List<EngineLogger.Event> events = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -108,16 +113,20 @@ class FatalTerminationCoordinatorTest {
         assertTrue(actual.getSuppressed()[1].getMessage().contains("CLOSE_FAILED"));
         assertEquals(2, events.stream().filter(event -> event.level() == EngineLogger.Level.ERROR).count());
         assertTrue(trace.indexOf("flush") < trace.indexOf("terminate:1"));
+
     }
 
     @Test
     void initialFatalWriteRuntimeExceptionAndErrorDoNotSkipCleanupOrTermination() {
+
         verifyInitialFatalWriteFailure(new IllegalStateException("fatal write runtime"));
         verifyInitialFatalWriteFailure(new AssertionError("fatal write error"));
+
     }
 
     @Test
     void errorReportingFailureIsCapturedOnceWithoutRecursiveRetry() {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 3L);
@@ -130,16 +139,20 @@ class FatalTerminationCoordinatorTest {
         EngineLogger logger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
                 trace.add("log:" + event.level());
                 if (event.level() == EngineLogger.Level.ERROR) {
                     errorWrites.incrementAndGet();
                     throw reportFailure;
                 }
+
             }
 
             @Override
             public void flush() {
+
                 trace.add("flush");
+
             }
         });
         TerminationSignal signal = new TerminationSignal();
@@ -155,22 +168,28 @@ class FatalTerminationCoordinatorTest {
         assertSame(subsystem.stopFailure, actual.getSuppressed()[0]);
         assertSame(reportFailure, actual.getSuppressed()[1]);
         assertTrue(trace.indexOf("flush") < trace.indexOf("terminate:1"));
+
     }
 
     @Test
     void flushRuntimeExceptionAndErrorDoNotPreventTermination() {
+
         verifyFlushFailure(new IllegalStateException("flush runtime"));
         verifyFlushFailure(new AssertionError("flush error"));
+
     }
 
     @Test
     void terminatorRuntimeExceptionAndErrorPropagateByIdentityWithPriorFailuresSuppressed() {
+
         verifyTerminatorFailure(new IllegalStateException("terminate runtime"));
         verifyTerminatorFailure(new AssertionError("terminate error"));
+
     }
 
     @Test
     void returningTerminatorIsTerminalAndCarriesPriorFailures() {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 4L);
@@ -193,10 +212,12 @@ class FatalTerminationCoordinatorTest {
         assertThrows(IllegalStateException.class, () -> fatal.terminate("again", CONTEXT, List.of(subsystem), registry));
         assertEquals(traceSize, trace.size());
         assertEquals(1, terminations.get());
+
     }
 
     @Test
     void invalidInputsAndDuplicateSubsystemsFailBeforeAnySideEffect() {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 5L);
@@ -213,10 +234,12 @@ class FatalTerminationCoordinatorTest {
 
         assertEquals(List.of(), trace);
         assertEquals(0, terminations.get());
+
     }
 
     @Test
     void reentrantAndLaterCallsCannotDuplicateCleanupOrTermination() {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         EngineLogger logger = new EngineLogger(new TraceSink(trace));
@@ -244,10 +267,12 @@ class FatalTerminationCoordinatorTest {
         assertThrows(IllegalStateException.class, () -> fatal.terminate("later", CONTEXT, List.of(subsystem), registry));
         assertEquals(traceSize, trace.size());
         assertEquals(1, terminations.get());
+
     }
 
     @Test
     void concurrentSecondCallIsRejectedWhileFirstOwnsFatalSequence() throws Exception {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
         CountDownLatch fatalWriteEntered = new CountDownLatch(1);
         CountDownLatch releaseFatalWrite = new CountDownLatch(1);
@@ -279,10 +304,12 @@ class FatalTerminationCoordinatorTest {
 
         assertTrue(firstResult.get() instanceof TerminationSignal);
         assertEquals(1, terminations.get());
+
     }
 
     @Test
     void publicConstructorExitsChildJvmOnlyAfterResourceCleanupAndFlush(@TempDir Path tempDir) throws Exception {
+
         Path marker = tempDir.resolve("fatal-order.txt");
         String javaExecutable = Path.of(System.getProperty("java.home"), "bin", isWindows() ? "java.exe" : "java").toString();
         String childClasspath = String.join(File.pathSeparator, codeSourcePath(FatalTerminationCoordinatorChildProcess.class), codeSourcePath(FatalTerminationCoordinator.class));
@@ -297,13 +324,17 @@ class FatalTerminationCoordinatorTest {
         assertTrue(finished, "child JVM must terminate within the bounded timeout");
         assertEquals(1, process.exitValue());
         assertEquals(List.of("fatal", "stop", "close", "resource-close", "flush"), Files.readAllLines(marker));
+
     }
 
     private static String codeSourcePath(Class<?> type) throws Exception {
+
         return Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+
     }
 
     private static void verifyInitialFatalWriteFailure(Throwable failure) {
+
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 31L);
@@ -313,15 +344,19 @@ class FatalTerminationCoordinatorTest {
         EngineLogger logger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
                 trace.add("log:" + event.level());
                 if (writes.getAndIncrement() == 0) {
                     throwUnchecked(failure);
                 }
+
             }
 
             @Override
             public void flush() {
+
                 trace.add("flush");
+
             }
         });
         TerminationSignal signal = new TerminationSignal();
@@ -337,18 +372,23 @@ class FatalTerminationCoordinatorTest {
         assertEquals(2, writes.get());
         assertTrue(trace.contains("one:close"));
         assertTrue(trace.indexOf("flush") < trace.indexOf("terminate:1"));
+
     }
 
     private static void verifyFlushFailure(Throwable failure) {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
         EngineLogger logger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
             }
 
             @Override
             public void flush() {
+
                 throwUnchecked(failure);
+
             }
         });
         TerminationSignal signal = new TerminationSignal();
@@ -361,9 +401,11 @@ class FatalTerminationCoordinatorTest {
 
         assertEquals(1, actual.getSuppressed().length);
         assertSame(failure, actual.getSuppressed()[0]);
+
     }
 
     private static void verifyTerminatorFailure(Throwable terminationFailure) {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RuntimeException earlier = new IllegalStateException("fatal write failed");
         EngineLogger logger = new EngineLogger(event -> {
@@ -383,16 +425,20 @@ class FatalTerminationCoordinatorTest {
         assertSame(terminationFailure, actual);
         assertEquals(1, actual.getSuppressed().length);
         assertSame(earlier, actual.getSuppressed()[0]);
+
     }
 
     private static void start(ProbeSubsystem... subsystems) {
+
         for (ProbeSubsystem subsystem : subsystems) {
             subsystem.initialize();
             subsystem.start();
         }
+
     }
 
     private static void await(CountDownLatch latch) {
+
         try {
             if (!latch.await(5, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("test latch timed out");
@@ -401,34 +447,45 @@ class FatalTerminationCoordinatorTest {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(interrupted);
         }
+
     }
 
     private static void throwUnchecked(Throwable failure) {
+
         if (failure instanceof RuntimeException runtime) {
             throw runtime;
         }
         throw (Error) failure;
+
     }
 
     private static boolean isWindows() {
+
         return System.getProperty("os.name").toLowerCase().contains("win");
+
     }
 
     private static class TraceSink implements EngineLogger.Sink {
         protected final List<String> trace;
 
         TraceSink(List<String> trace) {
+
             this.trace = trace;
+
         }
 
         @Override
         public void write(EngineLogger.Event event) {
+
             trace.add("log:" + event.level() + ":" + event.message());
+
         }
 
         @Override
         public void flush() {
+
             trace.add("flush");
+
         }
     }
 
@@ -436,14 +493,18 @@ class FatalTerminationCoordinatorTest {
         private final List<EngineLogger.Event> events;
 
         CapturingSink(List<EngineLogger.Event> events, List<String> trace) {
+
             super(trace);
             this.events = events;
+
         }
 
         @Override
         public void write(EngineLogger.Event event) {
+
             events.add(event);
             super.write(event);
+
         }
     }
 
@@ -459,14 +520,17 @@ class FatalTerminationCoordinatorTest {
         private Runnable onStopCallback;
 
         ProbeSubsystem(String name, NativeResourceRegistry registry, List<String> trace, long handle) {
+
             this.name = name;
             this.registry = registry;
             this.trace = trace;
             this.handle = handle;
+
         }
 
         @Override
         protected void onInitialize() {
+
             resource = registry.register(name, handle, () -> {
                 trace.add(name + ":resource-close");
                 resourceCloses.incrementAndGet();
@@ -474,14 +538,17 @@ class FatalTerminationCoordinatorTest {
                     throwUnchecked(resourceCloseFailure);
                 }
             });
+
         }
 
         @Override
         protected void onStart() {
+
         }
 
         @Override
         protected void onStop() {
+
             trace.add(name + ":stop");
             if (onStopCallback != null) {
                 onStopCallback.run();
@@ -489,12 +556,15 @@ class FatalTerminationCoordinatorTest {
             if (stopFailure != null) {
                 throwUnchecked(stopFailure);
             }
+
         }
 
         @Override
         protected void onClose() {
+
             trace.add(name + ":close");
             resource.close();
+
         }
     }
 

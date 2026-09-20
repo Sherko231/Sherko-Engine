@@ -20,9 +20,11 @@ public final class SteamInitSpike {
     private static final long CALLBACK_PUMP_SLEEP_MILLIS = 50L;
 
     private SteamInitSpike() {
+
     }
 
     public static void main(String[] args) throws Exception {
+
         int timeoutSeconds = Integer.getInteger("spike.timeoutSeconds", DEFAULT_TIMEOUT_SECONDS);
         if (timeoutSeconds <= 0) {
             throw new IllegalArgumentException("spike.timeoutSeconds must be greater than zero");
@@ -53,15 +55,19 @@ public final class SteamInitSpike {
             steamUserStats = new SteamUserStats(new SteamUserStatsCallback() {
                 @Override
                 public void onNumberOfCurrentPlayersReceived(boolean success, int players) {
+
                     callbackReceived.set(true);
                     System.out.printf("Steam callback: onNumberOfCurrentPlayersReceived success=%s players=%d%n", success, players);
+
                 }
 
                 @Override
                 public void onUserStatsReceived(long gameId, SteamID steamIDUser, SteamResult result) {
+
                     callbackReceived.set(true);
                     System.out.printf("Steam callback: onUserStatsReceived gameId=%d user=%s result=%s%n", gameId,
                         Long.toUnsignedString(SteamNativeHandle.getNativeHandle(steamIDUser)), result);
+
                 }
             });
 
@@ -101,5 +107,6 @@ public final class SteamInitSpike {
         }
 
         System.out.println("P0-T07 passed: Steam initialized, identity printed, callback received, and shutdown completed.");
+
     }
 }

@@ -23,6 +23,7 @@ final class DebugLineRenderer implements AutoCloseable {
 
     private DebugLineRenderer(OpenGlThreadGuard threadGuard, OpenGlResourceBackend resourceBackend, OpenGlDrawBackend drawBackend, OpenGlVertexArray vertexArray,
         OpenGlBuffer vertexBuffer, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program) {
+
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -31,10 +32,12 @@ final class DebugLineRenderer implements AutoCloseable {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.program = program;
+
     }
 
     static DebugLineRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, int cameraBufferHandle,
         SrgbPresentationMode presentationMode, String vertexSource, String fragmentSource) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
@@ -73,9 +76,11 @@ final class DebugLineRenderer implements AutoCloseable {
             suppressClose(failure, vao);
             throw failure;
         }
+
     }
 
     void render(DebugFrame frame, int framebufferWidth, int framebufferHeight) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
         DebugFrame debugFrame = Objects.requireNonNull(frame, "frame");
@@ -98,16 +103,20 @@ final class DebugLineRenderer implements AutoCloseable {
             drawBackend.bindDefaultVertexArray();
             drawBackend.useDefaultProgram();
         }
+
     }
 
     private void requireOpen() {
+
         if (closeAttempted) {
             throw new IllegalStateException("debug line renderer is closed");
         }
+
     }
 
     @Override
     public void close() {
+
         if (closeAttempted) {
             return;
         }
@@ -121,9 +130,11 @@ final class DebugLineRenderer implements AutoCloseable {
         closeInto(failures, vertexBuffer);
         closeInto(failures, vertexArray);
         throwCleanupFailure(failures);
+
     }
 
     private static void suppressClose(Throwable failure, AutoCloseable resource) {
+
         if (resource == null) {
             return;
         }
@@ -134,9 +145,11 @@ final class DebugLineRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void closeInto(List<Throwable> failures, AutoCloseable resource) {
+
         try {
             resource.close();
         } catch (RuntimeException | Error failure) {
@@ -144,9 +157,11 @@ final class DebugLineRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -158,5 +173,6 @@ final class DebugLineRenderer implements AutoCloseable {
             throw runtimeFailure;
         }
         throw (Error) first;
+
     }
 }

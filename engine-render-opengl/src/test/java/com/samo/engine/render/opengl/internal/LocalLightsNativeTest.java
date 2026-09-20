@@ -60,6 +60,7 @@ class LocalLightsNativeTest {
 
     @Test
     void rendersFirstBoundedPointAndSpotLightsAndDropsOverflowDeterministically() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T14 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T14 native acceptance targets Windows x64");
 
@@ -70,12 +71,15 @@ class LocalLightsNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
 
@@ -157,17 +161,21 @@ class LocalLightsNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -190,9 +198,11 @@ class LocalLightsNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int[] baseline) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T14", "result=PASS", "configured.max.local.lights=" + MAX_LOCAL_LIGHTS, "submitted.local.lights=3", "accepted.local.lights=2",
             "dropped.local.lights=1", "warning.count=1", "point.position=0.0,0.0,1.0", "point.range.meters=" + LOCAL_RANGE_METERS, "point.intensity=" + LOCAL_INTENSITY,
@@ -205,31 +215,40 @@ class LocalLightsNativeTest {
             "capture=p5-t14-local-lights.png", "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
             "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=bounded first-two local-light submission with one point and one centered spot plus deterministic dropped overflow red light; additive linear Lambert/range/cone lighting before the accepted presentation encode; no shadows, Forward+, clustered lighting, PBR, HDR, world ownership, or performance claim"));
+
     }
 
     private static int litSrgbByte(int srgbByte, double illumination) {
+
         double encoded = srgbByte / 255.0;
         double linear = encoded <= 0.04045 ? encoded / 12.92 : Math.pow((encoded + 0.055) / 1.055, 2.4);
         double litLinear = Math.min(1.0, linear * illumination);
         double output = litLinear <= 0.0031308 ? litLinear * 12.92 : 1.055 * Math.pow(litLinear, 1.0 / 2.4) - 0.055;
         return (int) Math.round(output * 255.0);
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

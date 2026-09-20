@@ -6,6 +6,7 @@ record DrawSubmission(RenderMaterialDescriptor material, int programKey, int mat
     int viewportWidth, int viewportHeight) {
 
     DrawSubmission {
+
         Objects.requireNonNull(material, "material");
         if (programKey < 0) {
             throw new IllegalArgumentException("programKey must be non-negative");
@@ -28,9 +29,12 @@ record DrawSubmission(RenderMaterialDescriptor material, int programKey, int mat
         if (viewportWidth <= 0 || viewportHeight <= 0) {
             throw new IllegalArgumentException("viewport dimensions must be positive");
         }
+
     }
 
     boolean transparent() {
+
         return material.blendMode() == MaterialBlendMode.ALPHA_BLEND;
+
     }
 }

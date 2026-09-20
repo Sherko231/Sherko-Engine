@@ -14,6 +14,7 @@ public final class Ray3f {
     private final float directionZ;
 
     public Ray3f(Vector3fc origin, Vector3fc direction) {
+
         Objects.requireNonNull(origin, "origin");
         Objects.requireNonNull(direction, "direction");
         requireFinite(origin.x(), "origin.x");
@@ -33,9 +34,11 @@ public final class Ray3f {
         directionX = (float) (direction.x() * inverseLength);
         directionY = (float) (direction.y() * inverseLength);
         directionZ = (float) (direction.z() * inverseLength);
+
     }
 
     Ray3f(float originX, float originY, float originZ, float directionX, float directionY, float directionZ) {
+
         requireFinite(originX, "origin.x");
         requireFinite(originY, "origin.y");
         requireFinite(originZ, "origin.z");
@@ -53,26 +56,34 @@ public final class Ray3f {
         this.directionX = (float) (directionX * inverseLength);
         this.directionY = (float) (directionY * inverseLength);
         this.directionZ = (float) (directionZ * inverseLength);
+
     }
 
     public Vector3f origin(Vector3f destination) {
+
         return Objects.requireNonNull(destination, "destination").set(originX, originY, originZ);
+
     }
 
     public Vector3f direction(Vector3f destination) {
+
         return Objects.requireNonNull(destination, "destination").set(directionX, directionY, directionZ);
+
     }
 
     public Vector3f pointAt(float distance, Vector3f destination) {
+
         Objects.requireNonNull(destination, "destination");
         requireFinite(distance, "distance");
         if (distance < 0.0f) {
             throw new IllegalArgumentException("distance must be >= 0");
         }
         return destination.set(originX + directionX * distance, originY + directionY * distance, originZ + directionZ * distance);
+
     }
 
     public float intersectPlane(Plane3f plane) {
+
         Objects.requireNonNull(plane, "plane");
         float signedDistance = plane.signedDistance(originX, originY, originZ);
         if (signedDistance == 0.0f) {
@@ -84,9 +95,11 @@ public final class Ray3f {
         }
         double t = -signedDistance / denominator;
         return t >= 0.0 && t <= Float.MAX_VALUE ? (float) t : Float.NaN;
+
     }
 
     public float intersectSphere(Sphere3f sphere) {
+
         Objects.requireNonNull(sphere, "sphere");
         double mx = (double) originX - sphere.centerX();
         double my = (double) originY - sphere.centerY();
@@ -106,9 +119,11 @@ public final class Ray3f {
         }
         double t = -b - Math.sqrt(discriminant);
         return t >= 0.0 && t <= Float.MAX_VALUE ? (float) t : Float.NaN;
+
     }
 
     public float intersectAabb(Aabb3f aabb) {
+
         Objects.requireNonNull(aabb, "aabb");
         if (originX >= aabb.minX() && originX <= aabb.maxX() && originY >= aabb.minY() && originY <= aabb.maxY() && originZ >= aabb.minZ() && originZ <= aabb.maxZ()) {
             return 0.0f;
@@ -169,11 +184,14 @@ public final class Ray3f {
         }
 
         return tMin <= Float.MAX_VALUE ? (float) tMin : Float.NaN;
+
     }
 
     private static void requireFinite(float value, String name) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 }

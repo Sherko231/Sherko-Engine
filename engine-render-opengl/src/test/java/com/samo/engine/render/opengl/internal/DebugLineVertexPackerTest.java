@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 class DebugLineVertexPackerTest {
     @Test
     void packsRepresentativePrimitiveFamiliesDeterministically() {
+
         DebugColor red = new DebugColor(1.0f, 0.0f, 0.0f);
         DebugColor green = new DebugColor(0.0f, 1.0f, 0.0f);
         DebugColor blue = new DebugColor(0.0f, 0.0f, 1.0f);
@@ -44,24 +45,29 @@ class DebugLineVertexPackerTest {
         bytes.position(rayOffsetVertices * DebugLineVertexPacker.VERTEX_STRIDE_BYTES);
         assertVertex(bytes, 5.0f, 6.0f, 7.0f, 1.0f, 1.0f, 1.0f);
         assertVertex(bytes, 5.0f, 6.0f, 5.0f, 1.0f, 1.0f, 1.0f);
+
     }
 
     @Test
     void worstCaseSphereCountFitsDeclaredCapacityExactly() {
+
         DebugSphere sphere = new DebugSphere(new Sphere3f(new Vector3f(), 1.0f), new DebugColor(1.0f, 1.0f, 1.0f));
         DebugFrame frame = new DebugFrame(java.util.Collections.nCopies(DebugFrame.MAX_PRIMITIVES, sphere), List.of());
         ByteBuffer bytes = ByteBuffer.allocateDirect(DebugLineVertexPacker.MAX_BYTES).order(ByteOrder.nativeOrder());
 
         assertEquals(DebugLineVertexPacker.MAX_VERTEX_COUNT, DebugLineVertexPacker.write(frame, bytes));
         assertEquals(DebugLineVertexPacker.MAX_BYTES, bytes.position());
+
     }
 
     private static void assertVertex(ByteBuffer bytes, float x, float y, float z, float red, float green, float blue) {
+
         assertEquals(x, bytes.getFloat());
         assertEquals(y, bytes.getFloat());
         assertEquals(z, bytes.getFloat());
         assertEquals(red, bytes.getFloat());
         assertEquals(green, bytes.getFloat());
         assertEquals(blue, bytes.getFloat());
+
     }
 }

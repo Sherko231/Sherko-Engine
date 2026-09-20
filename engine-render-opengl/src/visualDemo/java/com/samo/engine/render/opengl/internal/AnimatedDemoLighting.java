@@ -17,9 +17,11 @@ final class AnimatedDemoLighting {
     private static final DebugColor SPOT_DEBUG = new DebugColor(0.10f, 0.75f, 1.0f);
 
     private AnimatedDemoLighting() {
+
     }
 
     static LightingFrame at(double seconds) {
+
         float pointX = (float) (Math.sin(seconds * 0.85) * 1.35);
         float pointY = 0.45f + (float) (Math.cos(seconds * 1.10) * 0.30);
         float pointZ = -0.55f + (float) (Math.cos(seconds * 0.85) * 0.35);
@@ -41,12 +43,15 @@ final class AnimatedDemoLighting {
         debug.add(new DebugRay(new Ray3f(spotPosition, spotDirection), 2.3f, SPOT_DEBUG));
 
         return new LightingFrame(List.of(point, spot), List.copyOf(debug));
+
     }
 
     private static void addCross(List<DebugPrimitive> destination, Vector3f center, float halfExtent, DebugColor color) {
+
         destination.add(new DebugLine(center.x - halfExtent, center.y, center.z, center.x + halfExtent, center.y, center.z, color));
         destination.add(new DebugLine(center.x, center.y - halfExtent, center.z, center.x, center.y + halfExtent, center.z, color));
         destination.add(new DebugLine(center.x, center.y, center.z - halfExtent, center.x, center.y, center.z + halfExtent, color));
+
     }
 
     record LightingFrame(List<RenderLocalLight> lights, List<DebugPrimitive> debugPrimitives) {

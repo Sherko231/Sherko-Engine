@@ -11,17 +11,23 @@ final class RendererFrameDiagnostics {
     private List<DebugTextCounter> lastDebugTextCounters = List.of();
 
     void publish(ReferenceSceneVisibilityPlanner.VisibilityPlan visibilityPlan, int submittedDraws, DebugFrame debugFrame) {
+
         ReferenceSceneVisibilityPlanner.VisibilityPlan plan = Objects.requireNonNull(visibilityPlan, "visibilityPlan");
         DebugFrame diagnostics = Objects.requireNonNull(debugFrame, "debugFrame");
         lastCullingCounters = new RenderCullingCounters(plan.testedCandidates(), plan.visibleCandidates(), plan.culledCandidates(), submittedDraws);
         lastDebugTextCounters = diagnostics.textCounters();
+
     }
 
     RenderCullingCounters lastCullingCounters() {
+
         return lastCullingCounters;
+
     }
 
     List<DebugTextCounter> lastDebugTextCounters() {
+
         return lastDebugTextCounters;
+
     }
 }

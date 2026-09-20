@@ -4,6 +4,7 @@ package com.samo.engine.core.api;
 public record InputResponseSettings(double mouseSensitivity, boolean invertMouseY, double controllerDeadZone, double controllerCurveExponent) {
 
     public InputResponseSettings {
+
         if (!Double.isFinite(mouseSensitivity) || mouseSensitivity < 0.0d) {
             throw new IllegalArgumentException("mouseSensitivity must be finite and >= 0");
         }
@@ -13,21 +14,29 @@ public record InputResponseSettings(double mouseSensitivity, boolean invertMouse
         if (!Double.isFinite(controllerCurveExponent) || controllerCurveExponent <= 0.0d) {
             throw new IllegalArgumentException("controllerCurveExponent must be finite and > 0");
         }
+
     }
 
     public static InputResponseSettings defaults() {
+
         return new InputResponseSettings(1.0d, false, 0.0d, 1.0d);
+
     }
 
     public double applyMouseX(double rawDelta) {
+
         return applyMouse(rawDelta, false);
+
     }
 
     public double applyMouseY(double rawDelta) {
+
         return applyMouse(rawDelta, invertMouseY);
+
     }
 
     public double applyControllerAxis(double rawAxis) {
+
         if (!Double.isFinite(rawAxis)) {
             throw new IllegalArgumentException("rawAxis must be finite");
         }
@@ -46,9 +55,11 @@ public record InputResponseSettings(double mouseSensitivity, boolean invertMouse
             throw new IllegalArgumentException("controller response result must be finite");
         }
         return Math.copySign(curved, rawAxis);
+
     }
 
     private double applyMouse(double rawDelta, boolean invert) {
+
         if (!Double.isFinite(rawDelta)) {
             throw new IllegalArgumentException("mouse delta must be finite");
         }
@@ -57,5 +68,6 @@ public record InputResponseSettings(double mouseSensitivity, boolean invertMouse
             throw new IllegalArgumentException("mouse response result must be finite");
         }
         return invert ? -scaled : scaled;
+
     }
 }

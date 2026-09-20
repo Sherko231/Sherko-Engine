@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 class RendererFrameDiagnosticsTest {
     @Test
     void startsEmptyAndPublishesOnlyTheCompletedFrameSnapshot() {
+
         RendererFrameDiagnostics diagnostics = new RendererFrameDiagnostics();
 
         assertEquals(RenderCullingCounters.EMPTY, diagnostics.lastCullingCounters());
@@ -23,5 +24,6 @@ class RendererFrameDiagnosticsTest {
 
         assertEquals(new RenderCullingCounters(1, 0, 1, 0), diagnostics.lastCullingCounters());
         assertEquals(List.of(counter), diagnostics.lastDebugTextCounters());
+
     }
 }

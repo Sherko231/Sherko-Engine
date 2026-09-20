@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 class OpenGlRendererConfigurationTest {
     @Test
     void rejectsLocalLightMaximumBeforeCreatingNativeResources() {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = new GlfwWindow(1, 1, "renderer config fixture", new EngineLogger(event -> {
         }), registry);
@@ -21,5 +22,6 @@ class OpenGlRendererConfigurationTest {
 
         assertThrows(IllegalArgumentException.class, () -> OpenGlRenderer.create(window.openGlThreadGuard(), registry, logger, 9));
         registry.assertNoOpenResources();
+
     }
 }

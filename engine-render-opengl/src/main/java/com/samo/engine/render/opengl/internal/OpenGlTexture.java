@@ -7,17 +7,22 @@ final class OpenGlTexture implements AutoCloseable {
     private final OwnedOpenGlHandle owned;
 
     private OpenGlTexture(OwnedOpenGlHandle owned) {
+
         this.owned = owned;
+
     }
 
     static OpenGlTexture create(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
+
         guard.assertOwnerThread();
         int handle = backend.createTexture();
         return new OpenGlTexture(OwnedOpenGlHandle.register("OpenGL texture", handle, guard, registry, backend::deleteTexture));
+
     }
 
     static OpenGlTexture createRgba8(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend, TextureColorEncoding colorEncoding, int width,
         int height, java.nio.ByteBuffer rgbaBytes) {
+
         if (colorEncoding == null) {
             throw new NullPointerException("colorEncoding");
         }
@@ -40,14 +45,19 @@ final class OpenGlTexture implements AutoCloseable {
             CleanupFailureSuppression.runAndSuppress(failure, texture::close);
             throw failure;
         }
+
     }
 
     int handle() {
+
         return owned.handle();
+
     }
 
     @Override
     public void close() {
+
         owned.close();
+
     }
 }

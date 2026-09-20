@@ -19,9 +19,11 @@ final class DebugLineVertexPacker {
     static final int MAX_BYTES = MAX_VERTEX_COUNT * VERTEX_STRIDE_BYTES;
 
     private DebugLineVertexPacker() {
+
     }
 
     static int write(DebugFrame frame, ByteBuffer destination) {
+
         DebugFrame debugFrame = Objects.requireNonNull(frame, "frame");
         ByteBuffer target = Objects.requireNonNull(destination, "destination");
         int start = target.position();
@@ -42,9 +44,11 @@ final class DebugLineVertexPacker {
 
         int bytes = target.position() - start;
         return bytes / VERTEX_STRIDE_BYTES;
+
     }
 
     private static void putAabb(ByteBuffer target, DebugAabb debugAabb) {
+
         Vector3f min = debugAabb.bounds().minimum(new Vector3f());
         Vector3f max = debugAabb.bounds().maximum(new Vector3f());
         DebugColor color = debugAabb.color();
@@ -63,9 +67,11 @@ final class DebugLineVertexPacker {
         putSegment(target, max.x, min.y, min.z, max.x, min.y, max.z, color);
         putSegment(target, max.x, max.y, min.z, max.x, max.y, max.z, color);
         putSegment(target, min.x, max.y, min.z, min.x, max.y, max.z, color);
+
     }
 
     private static void putSphere(ByteBuffer target, DebugSphere debugSphere) {
+
         Vector3f center = debugSphere.sphere().center(new Vector3f());
         float radius = debugSphere.sphere().radius();
         DebugColor color = debugSphere.color();
@@ -73,9 +79,11 @@ final class DebugLineVertexPacker {
         putCircle(target, center, radius, color, 0);
         putCircle(target, center, radius, color, 1);
         putCircle(target, center, radius, color, 2);
+
     }
 
     private static void putCircle(ByteBuffer target, Vector3f center, float radius, DebugColor color, int plane) {
+
         for (int segment = 0; segment < SPHERE_SEGMENTS_PER_CIRCLE; segment++) {
             double a0 = Math.PI * 2.0 * segment / SPHERE_SEGMENTS_PER_CIRCLE;
             double a1 = Math.PI * 2.0 * (segment + 1) / SPHERE_SEGMENTS_PER_CIRCLE;
@@ -90,21 +98,28 @@ final class DebugLineVertexPacker {
                 default -> throw new IllegalArgumentException("unsupported sphere plane");
             }
         }
+
     }
 
     private static void putRay(ByteBuffer target, DebugRay debugRay) {
+
         Vector3f origin = debugRay.ray().origin(new Vector3f());
         Vector3f end = debugRay.ray().pointAt(debugRay.lengthMeters(), new Vector3f());
         putSegment(target, origin.x, origin.y, origin.z, end.x, end.y, end.z, debugRay.color());
+
     }
 
     private static void putSegment(ByteBuffer target, float ax, float ay, float az, float bx, float by, float bz, DebugColor color) {
+
         putVertex(target, ax, ay, az, color);
         putVertex(target, bx, by, bz, color);
+
     }
 
     private static void putVertex(ByteBuffer target, float x, float y, float z, DebugColor color) {
+
         target.putFloat(x).putFloat(y).putFloat(z);
         target.putFloat(color.red()).putFloat(color.green()).putFloat(color.blue());
+
     }
 }

@@ -11,9 +11,11 @@ final class RendererVisualDemoApplication {
     private static final int HEIGHT = 720;
 
     private RendererVisualDemoApplication() {
+
     }
 
     static void run() {
+
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RendererVisualDemoFramebufferSize framebuffer = new RendererVisualDemoFramebufferSize(WIDTH, HEIGHT);
 
@@ -58,14 +60,17 @@ final class RendererVisualDemoApplication {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static void printOwnerInstructions() {
+
         System.out.println("Renderer visual demo");
         System.out.println("  LEFT panel  = OPAQUE");
         System.out.println("  RIGHT panel = TRANSPARENT (alpha blended)");
         System.out.println("  Orange cross = moving POINT light");
         System.out.println("  Cyan cross + ray = moving SPOT light");
         System.out.println("  ESC or Ctrl+Q = exit");
+
     }
 }

@@ -21,6 +21,7 @@ class OpenGlResourceNativeTest {
 
     @Test
     void createsAndDestroysAllOwnedResourceTypesOnRealOpenGl46() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T03 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T03 native acceptance targets Windows x64");
 
@@ -68,18 +69,22 @@ class OpenGlResourceNativeTest {
 
         registry.assertNoOpenResources();
         writeReport();
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport() throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH,
             java.util.List.of("task=P5-T03", "result=PASS", "resources=buffer,vertex-array,texture,sampler,framebuffer,vertex-shader,fragment-shader,program",
@@ -87,10 +92,13 @@ class OpenGlResourceNativeTest {
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"), "evidence.scope=resource ownership lifecycle only; no draw, upload, material, asset, or renderer-loop claim"),
             StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

@@ -29,6 +29,7 @@ class GlfwWindowFocusNativeTest {
 
     @Test
     void productionWindowReleasesCaptureOnRealFocusTransferAndRequiresExplicitRecapture() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T04 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T04 native acceptance targets Windows x64");
 
@@ -101,9 +102,11 @@ class GlfwWindowFocusNativeTest {
         }
 
         writeReport(capturedMode, lostMode, regainedMode, recapturedMode);
+
     }
 
     private static void pumpUntil(GlfwWindow window, Condition condition) throws InterruptedException {
+
         for (int attempt = 0; attempt < 100; attempt++) {
             window.pollEvents();
             if (condition.test()) {
@@ -112,18 +115,22 @@ class GlfwWindowFocusNativeTest {
             Thread.sleep(10L);
         }
         assertTrue(condition.test(), "focus transition did not complete within bounded polling");
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport(int capturedMode, int lostMode, int regainedMode, int recapturedMode) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         List<String> lines = List.of("task=P3-T04", "result=PASS", "focus.transfer=test-only second GLFW helper window via glfwFocusWindow",
             "cursor.mode.initial.capture=" + capturedMode, "cursor.mode.after.focus.loss=" + lostMode, "cursor.mode.after.focus.regain=" + regainedMode,
@@ -133,11 +140,14 @@ class GlfwWindowFocusNativeTest {
             "manual.alt.tab.scenario=Capture cursor, hold movement key, Alt+Tab away, release key while unfocused, Alt+Tab back; P3-T06 must later observe released state rather than a stuck key.",
             "evidence.limit=focus/cursor production path proven; public InputSnapshot is not implemented by P3-T04");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 
     @FunctionalInterface

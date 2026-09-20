@@ -45,6 +45,7 @@ class Phase5ExitNativeTest {
 
     @Test
     void provesIntegratedTexturedRoomDepthCameraLightingDebugAndViewModel() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T18 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"));
 
@@ -53,12 +54,15 @@ class Phase5ExitNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
         GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5 Exit", new EngineLogger(event -> {
@@ -154,17 +158,21 @@ class Phase5ExitNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static void assertNeutralNearPanel(int[] pixel) {
+
         for (int channel = 0; channel < 3; channel++) {
             assertTrue(Math.abs(pixel[channel] - EXPECTED_NEAR_PANEL_BYTE) <= BYTE_TOLERANCE,
                 "Depth-writing near panel expected " + EXPECTED_NEAR_PANEL_BYTE + "±" + BYTE_TOLERANCE + " but was " + rgb(pixel));
         }
         assertTrue(channelSpread(pixel) <= 2, "Near panel reference sample must remain neutral");
+
     }
 
     private static int[] findGreenDominantPixel(int width, int height, int centerX, int centerY, int radius) {
+
         for (int y = Math.max(0, centerY - radius); y <= Math.min(height - 1, centerY + radius); y++) {
             for (int x = Math.max(0, centerX - radius); x <= Math.min(width - 1, centerX + radius); x++) {
                 int[] pixel = readPixel(x, y);
@@ -174,9 +182,11 @@ class Phase5ExitNativeTest {
             }
         }
         return null;
+
     }
 
     private static int[] findOrangePixel(int width, int height, int centerX, int centerY, int halfWidth, int halfHeight) {
+
         int expectedRed = encodedByte(0.95f);
         int expectedGreen = encodedByte(0.55f);
         int expectedBlue = encodedByte(0.15f);
@@ -194,17 +204,21 @@ class Phase5ExitNativeTest {
             }
         }
         return null;
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height, Path path) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -225,9 +239,11 @@ class Phase5ExitNativeTest {
         if (!ImageIO.write(image, "png", path.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int[] nearPanel, int[] floor, int[] ceiling, int[] shiftedCenter, int[] debugGreen, int[] viewModelOrange) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T18", "result=PASS", "room.fixture=renderer-owned-fixed-validation-room", "room.texture=4x4-non-uniform-srgb-mapped-uv",
             "room.surfaces=back-wall,floor,ceiling,left-wall,right-wall,near-depth-panel", "room.near.panel.expected.srgb.byte=" + EXPECTED_NEAR_PANEL_BYTE,
@@ -239,48 +255,65 @@ class Phase5ExitNativeTest {
             "capture.pose.b=p5-t18-room-camera-b.png", "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
             "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=Phase 5 exit integration only: fixed internal textured room, depth occlusion, known camera poses, accepted directional lighting, D-063 presentation, P5-T16 debug geometry and P5-T17 view-model coexistence; no public asset/resource API, world/ECS ownership, gameplay, physics, HUD, render graph, shadows, HDR, tonemapping, fog, or performance claim"));
+
     }
 
     private static int maxChannel(int[] rgb) {
+
         return Math.max(rgb[0], Math.max(rgb[1], rgb[2]));
+
     }
 
     private static int channelSpread(int[] rgb) {
+
         int max = Math.max(rgb[0], Math.max(rgb[1], rgb[2]));
         int min = Math.min(rgb[0], Math.min(rgb[1], rgb[2]));
         return max - min;
+
     }
 
     private static int colorDistance(int[] left, int[] right) {
+
         return Math.max(Math.abs(left[0] - right[0]), Math.max(Math.abs(left[1] - right[1]), Math.abs(left[2] - right[2])));
+
     }
 
     private static int litSrgbByte(int srgbByte, double diffuseFactor) {
+
         double encoded = srgbByte / 255.0;
         double linear = encoded <= 0.04045 ? encoded / 12.92 : Math.pow((encoded + 0.055) / 1.055, 2.4);
         return encodedByte((float) (linear * diffuseFactor));
+
     }
 
     private static int encodedByte(float linear) {
+
         double encoded = linear <= 0.0031308 ? linear * 12.92 : 1.055 * Math.pow(linear, 1.0 / 2.4) - 0.055;
         return (int) Math.round(encoded * 255.0);
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error failure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

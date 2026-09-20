@@ -9,6 +9,7 @@ final class GlfwMouseMotionTracker {
     private double accumulatedDeltaY;
 
     void onCursorPosition(boolean focused, boolean cursorCaptured, double x, double y) {
+
         if (!focused || !cursorCaptured) {
             return;
         }
@@ -22,32 +23,43 @@ final class GlfwMouseMotionTracker {
         accumulatedDeltaY += y - previousY;
         previousX = x;
         previousY = y;
+
     }
 
     double accumulatedDeltaX() {
+
         return accumulatedDeltaX;
+
     }
 
     double accumulatedDeltaY() {
+
         return accumulatedDeltaY;
+
     }
 
     void clearAccumulatedDelta() {
+
         accumulatedDeltaX = 0.0;
         accumulatedDeltaY = 0.0;
+
     }
 
     void reset() {
+
         baselineValid = false;
         previousX = 0.0;
         previousY = 0.0;
         clearAccumulatedDelta();
+
     }
 
     MouseDelta drainForTest() {
+
         MouseDelta motion = new MouseDelta(accumulatedDeltaX, accumulatedDeltaY);
         clearAccumulatedDelta();
         return motion;
+
     }
 
     record MouseDelta(double x, double y) {

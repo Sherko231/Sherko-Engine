@@ -19,6 +19,7 @@ final class TransformTest {
 
     @Test
     void defaultsToIdentityLocalAndWorldTransform() {
+
         Transform transform = new Transform();
 
         assertNull(transform.parent());
@@ -26,20 +27,24 @@ final class TransformTest {
         assertQuaternion(transform.localRotation(new Quaternionf()), 0.0f, 0.0f, 0.0f, 1.0f);
         assertVector(transform.localScale(new Vector3f()), 1.0f, 1.0f, 1.0f);
         assertTransformedPoint(transform, 2.0f, -3.0f, 4.0f, 2.0f, -3.0f, 4.0f);
+
     }
 
     @Test
     void localTrsPreservesCanonicalRightHandedRotation() {
+
         Transform transform = new Transform();
         transform.setLocalPosition(3.0f, 2.0f, -5.0f);
         transform.setLocalRotation(new Quaternionf().rotationY((float) (Math.PI / 2.0)));
         transform.setLocalScale(2.0f, 3.0f, 4.0f);
 
         assertTransformedPoint(transform, 0.0f, 0.0f, -1.0f, -1.0f, 2.0f, -5.0f);
+
     }
 
     @Test
     void parentTranslationMovesChildOrigin() {
+
         Transform parent = new Transform();
         parent.setLocalPosition(5.0f, -2.0f, 7.0f);
         Transform child = new Transform();
@@ -47,10 +52,12 @@ final class TransformTest {
         child.setParent(parent);
 
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 6.0f, 1.0f, 3.0f);
+
     }
 
     @Test
     void parentPositiveYRotationRotatesChildLocalTranslation() {
+
         Transform parent = new Transform();
         parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f, (float) Math.cos(Math.PI / 4.0));
         Transform child = new Transform();
@@ -58,10 +65,12 @@ final class TransformTest {
         child.setParent(parent);
 
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, -2.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void parentNonUniformScaleAffectsChildLocalTranslation() {
+
         Transform parent = new Transform();
         parent.setLocalScale(2.0f, 3.0f, 4.0f);
         Transform child = new Transform();
@@ -69,10 +78,12 @@ final class TransformTest {
         child.setParent(parent);
 
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 2.0f, 6.0f, -4.0f);
+
     }
 
     @Test
     void combinedParentAndChildTrsMatchesIndependentPointOracle() {
+
         Transform parent = new Transform();
         parent.setLocalPosition(10.0f, 1.0f, -5.0f);
         parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f, (float) Math.cos(Math.PI / 4.0));
@@ -85,10 +96,12 @@ final class TransformTest {
         child.setParent(parent);
 
         assertTransformedPoint(child, 2.0f, 1.0f, -3.0f, -6.0f, 10.0f, -3.0f);
+
     }
 
     @Test
     void parentMutationInvalidatesChildCache() {
+
         Transform parent = new Transform();
         Transform child = new Transform();
         child.setLocalPosition(1.0f, 0.0f, 0.0f);
@@ -97,18 +110,22 @@ final class TransformTest {
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
         parent.setLocalPosition(5.0f, 0.0f, 0.0f);
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void localMutationInvalidatesCachedWorldMatrix() {
+
         Transform transform = new Transform();
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         transform.setLocalPosition(-4.0f, 2.0f, 8.0f);
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, -4.0f, 2.0f, 8.0f);
+
     }
 
     @Test
     void parentReassignmentAndDetachPreserveLocalTransform() {
+
         Transform firstParent = new Transform();
         firstParent.setLocalPosition(1.0f, 0.0f, 0.0f);
         Transform secondParent = new Transform();
@@ -128,10 +145,12 @@ final class TransformTest {
         assertNull(child.parent());
         assertTransformedPoint(child, 0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f);
         assertVector(child.localPosition(new Vector3f()), 2.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void rejectsSelfParentAtomically() {
+
         Transform originalParent = new Transform();
         originalParent.setLocalPosition(4.0f, 0.0f, 0.0f);
         Transform transform = new Transform();
@@ -144,10 +163,12 @@ final class TransformTest {
         assertEquals(CYCLE_ERROR_MESSAGE, error.getMessage());
         assertSame(originalParent, transform.parent());
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void rejectsIndirectCycleAndKeepsExistingHierarchyIntact() {
+
         Transform rootParent = new Transform();
         rootParent.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform a = new Transform();
@@ -168,10 +189,12 @@ final class TransformTest {
         assertSame(a, b.parent());
         assertSame(b, c.parent());
         assertTransformedPoint(c, 0.0f, 0.0f, 0.0f, 16.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void allowsLegalReparentToExistingAncestor() {
+
         Transform root = new Transform();
         root.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middle = new Transform();
@@ -185,10 +208,12 @@ final class TransformTest {
 
         assertSame(root, leaf.parent());
         assertTransformedPoint(leaf, 0.0f, 0.0f, 0.0f, 12.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void detachStillWorksAfterRejectedCycle() {
+
         Transform a = new Transform();
         a.setLocalPosition(1.0f, 0.0f, 0.0f);
         Transform b = new Transform();
@@ -202,10 +227,12 @@ final class TransformTest {
         assertSame(a, b.parent());
         assertTransformedPoint(a, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
         assertTransformedPoint(b, 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f);
+
     }
 
     @Test
     void leafMutationRecomputesOnlyThatLeaf() {
+
         Transform rootA = new Transform();
         rootA.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middleA = new Transform();
@@ -237,10 +264,12 @@ final class TransformTest {
         assertEquals(leafABefore + 1L, worldRevision(leafA));
         assertEquals(rootBBefore, worldRevision(rootB));
         assertEquals(leafBBefore, worldRevision(leafB));
+
     }
 
     @Test
     void ancestorMutationRecomputesOnlyItsSubtree() {
+
         Transform rootA = new Transform();
         rootA.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middleA = new Transform();
@@ -269,10 +298,12 @@ final class TransformTest {
         assertEquals(leafABefore + 1L, worldRevision(leafA));
         assertEquals(rootBBefore, worldRevision(rootB));
         assertEquals(leafBBefore, worldRevision(leafB));
+
     }
 
     @Test
     void middleMutationDoesNotRecomputeParentOrSiblingBranch() {
+
         Transform root = new Transform();
         root.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middle = new Transform();
@@ -299,10 +330,12 @@ final class TransformTest {
         assertEquals(middleBefore + 1L, worldRevision(middle));
         assertEquals(leafBefore + 1L, worldRevision(leaf));
         assertEquals(siblingBefore, worldRevision(sibling));
+
     }
 
     @Test
     void reparentInvalidatesOnlyMovedSubtree() {
+
         Transform oldRoot = new Transform();
         oldRoot.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform newRoot = new Transform();
@@ -328,10 +361,12 @@ final class TransformTest {
         assertEquals(newRootBefore, worldRevision(newRoot));
         assertEquals(middleBefore + 1L, worldRevision(middle));
         assertEquals(leafBefore + 1L, worldRevision(leaf));
+
     }
 
     @Test
     void detachInvalidatesOnlyDetachedSubtree() {
+
         Transform root = new Transform();
         root.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middle = new Transform();
@@ -352,10 +387,12 @@ final class TransformTest {
         assertEquals(rootBefore, worldRevision(root));
         assertEquals(middleBefore + 1L, worldRevision(middle));
         assertEquals(leafBefore + 1L, worldRevision(leaf));
+
     }
 
     @Test
     void sameParentAssignmentDoesNotRecomputeAnything() {
+
         Transform parent = new Transform();
         Transform child = new Transform();
         child.setLocalPosition(2.0f, 0.0f, 0.0f);
@@ -369,10 +406,12 @@ final class TransformTest {
 
         assertEquals(parentBefore, worldRevision(parent));
         assertEquals(childBefore, worldRevision(child));
+
     }
 
     @Test
     void rejectedCycleDoesNotDirtyOrCorruptChildTracking() {
+
         Transform root = new Transform();
         root.setLocalPosition(10.0f, 0.0f, 0.0f);
         Transform middle = new Transform();
@@ -397,10 +436,12 @@ final class TransformTest {
         assertEquals(rootBefore, worldRevision(root));
         assertEquals(middleBefore + 1L, worldRevision(middle));
         assertEquals(leafBefore + 1L, worldRevision(leaf));
+
     }
 
     @Test
     void inputsAndDestinationsAreNotRetainedOrAliased() {
+
         Transform transform = new Transform();
         Vector3f positionInput = new Vector3f(1.0f, 2.0f, 3.0f);
         Quaternionf rotationInput = new Quaternionf().rotationY(0.5f);
@@ -430,17 +471,21 @@ final class TransformTest {
         Matrix4f worldDestination = transform.worldMatrix(new Matrix4f());
         worldDestination.zero();
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 3.0f);
+
     }
 
     @Test
     void rotationInputIsNormalized() {
+
         Transform transform = new Transform();
         transform.setLocalRotation(0.0f, 0.0f, 0.0f, 2.0f);
         assertQuaternion(transform.localRotation(new Quaternionf()), 0.0f, 0.0f, 0.0f, 1.0f);
+
     }
 
     @Test
     void invalidRotationDoesNotPartiallyMutateState() {
+
         Transform transform = new Transform();
         transform.setLocalRotation(0.0f, 0.0f, 1.0f, 1.0f);
         Quaternionf before = transform.localRotation(new Quaternionf());
@@ -450,10 +495,12 @@ final class TransformTest {
 
         Quaternionf after = transform.localRotation(new Quaternionf());
         assertQuaternion(after, before.x, before.y, before.z, before.w);
+
     }
 
     @Test
     void nonFinitePositionAndScaleFailBeforeMutation() {
+
         Transform transform = new Transform();
         transform.setLocalPosition(1.0f, 2.0f, 3.0f);
         transform.setLocalScale(4.0f, 5.0f, 6.0f);
@@ -463,17 +510,21 @@ final class TransformTest {
 
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
         assertVector(transform.localScale(new Vector3f()), 4.0f, 5.0f, 6.0f);
+
     }
 
     @Test
     void zeroAndNegativeScaleAreAllowedForForwardComposition() {
+
         Transform transform = new Transform();
         transform.setLocalScale(-2.0f, 0.0f, 3.0f);
         assertTransformedPoint(transform, 1.0f, 2.0f, 1.0f, -2.0f, 0.0f, 3.0f);
+
     }
 
     @Test
     void repeatedWorldReadsAreStableAndDoNotMutateLocalState() {
+
         Transform transform = new Transform();
         transform.setLocalPosition(2.0f, 3.0f, -4.0f);
         transform.setLocalRotation(0.2f, -0.4f, 0.1f, 0.8f);
@@ -485,10 +536,12 @@ final class TransformTest {
         assertArrayEquals(matrixValues(first), matrixValues(second), EPSILON);
         assertVector(transform.localPosition(new Vector3f()), 2.0f, 3.0f, -4.0f);
         assertVector(transform.localScale(new Vector3f()), 1.5f, 0.75f, 2.25f);
+
     }
 
     @Test
     void nullInputsAndDestinationsAreRejected() {
+
         Transform transform = new Transform();
 
         assertThrows(NullPointerException.class, () -> transform.localPosition(null));
@@ -498,24 +551,30 @@ final class TransformTest {
         assertThrows(NullPointerException.class, () -> transform.setLocalPosition((Vector3f) null));
         assertThrows(NullPointerException.class, () -> transform.setLocalRotation((Quaternionf) null));
         assertThrows(NullPointerException.class, () -> transform.setLocalScale((Vector3f) null));
+
     }
 
     private static void assertTransformedPoint(Transform transform, float inputX, float inputY, float inputZ, float expectedX, float expectedY, float expectedZ) {
+
         Matrix4f matrix = transform.worldMatrix(new Matrix4f());
         Vector3f actual = new Vector3f(inputX, inputY, inputZ);
         matrix.transformPosition(actual);
         assertVector(actual, expectedX, expectedY, expectedZ);
+
     }
 
     private static long worldRevision(Transform transform) {
+
         try {
             return WORLD_REVISION_FIELD.getLong(transform);
         } catch (IllegalAccessException error) {
             throw new AssertionError(error);
         }
+
     }
 
     private static Field worldRevisionField() {
+
         try {
             Field field = Transform.class.getDeclaredField("worldRevision");
             field.setAccessible(true);
@@ -523,22 +582,29 @@ final class TransformTest {
         } catch (ReflectiveOperationException error) {
             throw new ExceptionInInitializerError(error);
         }
+
     }
 
     private static void assertVector(Vector3f actual, float x, float y, float z) {
+
         assertEquals(x, actual.x, EPSILON);
         assertEquals(y, actual.y, EPSILON);
         assertEquals(z, actual.z, EPSILON);
+
     }
 
     private static void assertQuaternion(Quaternionf actual, float x, float y, float z, float w) {
+
         assertEquals(x, actual.x, EPSILON);
         assertEquals(y, actual.y, EPSILON);
         assertEquals(z, actual.z, EPSILON);
         assertEquals(w, actual.w, EPSILON);
+
     }
 
     private static float[] matrixValues(Matrix4f matrix) {
+
         return matrix.get(new float[16]);
+
     }
 }

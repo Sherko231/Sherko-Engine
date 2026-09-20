@@ -23,6 +23,7 @@ class Phase2IntegratedGateTest {
 
     @Test
     void runsIntegratedHeadlessLoopForSixtySecondsWithBoundedCatchUpAndVerifiedCleanup() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the 60-second Phase 2 exit gate");
 
         List<String> lifecycleTrace = new ArrayList<>();
@@ -100,17 +101,21 @@ class Phase2IntegratedGateTest {
         assertFalse(subsystem.resourceCloseRepeated, "the registered resource must close exactly once");
 
         writeReport(new GateEvidence(wallDurationNanos, loopUpdates, totalTicks, maxStepsObserved, stallElapsedNanos, stallSteps, lifecycleTrace));
+
     }
 
     private static void shutdownReverse(List<EngineSubsystem> initializationOrder) {
+
         for (int index = initializationOrder.size() - 1; index >= 0; index--) {
             EngineSubsystem subsystem = initializationOrder.get(index);
             subsystem.stop();
             subsystem.close();
         }
+
     }
 
     private static void writeReport(GateEvidence evidence) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         String commit = environmentOr("GITHUB_SHA", "unknown");
         List<String> lines = List.of("gate=P2 integrated exit", "result=PASS", "configured.duration.seconds=60", "observed.duration.nanos=" + evidence.wallDurationNanos(),
@@ -123,11 +128,14 @@ class Phase2IntegratedGateTest {
             "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=Java headless integration correctness; not native soak/stability evidence", "p0.t13.p0.t14.replaced=false");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 
     private record GateEvidence(long wallDurationNanos, long loopUpdates, long totalTicks, long maxStepsObserved, long stallElapsedNanos, long stallSteps,
@@ -142,12 +150,15 @@ class Phase2IntegratedGateTest {
         private boolean resourceCloseRepeated;
 
         private GateSubsystem(NativeResourceRegistry registry, List<String> trace) {
+
             this.registry = registry;
             this.trace = trace;
+
         }
 
         @Override
         protected void onInitialize() {
+
             trace.add("initialize");
             registration = registry.register("phase2-gate", 135L, () -> {
                 if (resourceClosed) {
@@ -156,22 +167,29 @@ class Phase2IntegratedGateTest {
                 resourceClosed = true;
                 trace.add("resource-close");
             });
+
         }
 
         @Override
         protected void onStart() {
+
             trace.add("start");
+
         }
 
         @Override
         protected void onStop() {
+
             trace.add("stop");
+
         }
 
         @Override
         protected void onClose() {
+
             trace.add("close");
             registration.close();
+
         }
     }
 }

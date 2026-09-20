@@ -8,15 +8,20 @@ final class OpenGlProgram implements AutoCloseable {
     private final OwnedOpenGlHandle owned;
 
     private OpenGlProgram(OwnedOpenGlHandle owned) {
+
         this.owned = owned;
+
     }
 
     static OpenGlProgram link(OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
+
         return link("<program>", vertexShader, fragmentShader, guard, registry, backend);
+
     }
 
     static OpenGlProgram link(String programLabel, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlThreadGuard guard, NativeResourceRegistry registry,
         OpenGlResourceBackend backend) {
+
         String label = Objects.requireNonNull(programLabel, "programLabel");
         OpenGlShader vertex = Objects.requireNonNull(vertexShader, "vertexShader");
         OpenGlShader fragment = Objects.requireNonNull(fragmentShader, "fragmentShader");
@@ -54,18 +59,25 @@ final class OpenGlProgram implements AutoCloseable {
         }
 
         return new OpenGlProgram(OwnedOpenGlHandle.register("OpenGL program", handle, guard, registry, backend::deleteProgram));
+
     }
 
     int handle() {
+
         return owned.handle();
+
     }
 
     private static void suppressCleanup(Throwable failure, Runnable cleanup) {
+
         CleanupFailureSuppression.runAndSuppress(failure, cleanup);
+
     }
 
     @Override
     public void close() {
+
         owned.close();
+
     }
 }

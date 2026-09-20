@@ -17,14 +17,17 @@ import org.junit.jupiter.params.provider.ValueSource;
 class SubsystemGraphTest {
     @Test
     void emptyAndSingletonGraphsResolveWithoutLifecycleCalls() {
+
         assertEquals(List.of(), new SubsystemGraph(List.of()).initializationOrder());
         Probe only = new Probe("only", new ArrayList<>());
         assertEquals(List.of(only), graph(registration("only", only)).initializationOrder());
         assertTrue(only.calls.isEmpty());
+
     }
 
     @Test
     void ownerUsesForwardReferenceOrderWithRealLifecycleGuards() {
+
         List<String> calls = new ArrayList<>();
         Probe gameplay = new Probe("gameplay", calls);
         Probe renderer = new Probe("renderer", calls);
@@ -46,10 +49,12 @@ class SubsystemGraphTest {
             "renderer.stop", "assets.stop", "gameplay.close", "renderer.close", "assets.close"), calls);
         assertEquals(ordered, graph.initializationOrder(), "Resolution does not inspect lifecycle state");
         assertEquals(12, calls.size());
+
     }
 
     @Test
     void diamondAndDisconnectedRootsFollowDeclaredDepthFirstOrder() {
+
         List<String> calls = new ArrayList<>();
         Probe app = new Probe("app", calls);
         Probe left = new Probe("left", calls);
@@ -62,17 +67,21 @@ class SubsystemGraphTest {
         assertEquals(List.of(shared, right, left, app, isolated), graph.initializationOrder());
         assertEquals(List.of(shared, right, left, app, isolated), graph.initializationOrder());
         assertTrue(calls.isEmpty());
+
     }
 
     @Test
     void independentRootsKeepRegistrationOrderRatherThanLexicographicOrder() {
+
         Probe z = new Probe("z", new ArrayList<>());
         Probe a = new Probe("a", new ArrayList<>());
         assertEquals(List.of(z, a), graph(registration("z", z), registration("a", a)).initializationOrder());
+
     }
 
     @Test
     void cycleInLaterComponentFailsBeforeOwnerInitializesEvenValidRoots() {
+
         List<String> calls = new ArrayList<>();
         SubsystemGraph graph = graph(registration("valid", new Probe("valid", calls)), registration("tail", new Probe("tail", calls), "A"),
             registration("A", new Probe("A", calls), "B"), registration("B", new Probe("B", calls), "C"), registration("C", new Probe("C", calls), "A"));
@@ -85,26 +94,32 @@ class SubsystemGraphTest {
             System.err.print(diagnostic);
             assertTrue(calls.isEmpty(), "No hooks may run, including for the earlier valid component");
         }
+
     }
 
     @Test
     void selfDependencyReportsAClosedCycleWithoutHooks() {
+
         Probe self = new Probe("self", new ArrayList<>());
         SubsystemGraph graph = graph(registration("self", self, "self"));
         assertEquals("Subsystem dependency cycle: self -> self", assertThrows(IllegalStateException.class, graph::initializationOrder).getMessage());
         assertTrue(self.calls.isEmpty());
+
     }
 
     @Test
     void rejectsMissingDependencyBeforeLifecycleWork() {
+
         Probe caller = new Probe("caller", new ArrayList<>());
         IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () -> graph(registration("caller", caller, "missing")));
         assertEquals("Subsystem caller depends on missing subsystem missing", failure.getMessage());
         assertTrue(caller.calls.isEmpty());
+
     }
 
     @Test
     void rejectsDuplicateIdsAndDuplicateInstancesWithoutHooks() {
+
         List<String> calls = new ArrayList<>();
         Probe first = new Probe("first", calls);
         Probe second = new Probe("second", calls);
@@ -113,10 +128,12 @@ class SubsystemGraphTest {
         assertEquals("Subsystem instance registered as both first and alias",
             assertThrows(IllegalArgumentException.class, () -> graph(registration("first", first), registration("alias", first))).getMessage());
         assertTrue(calls.isEmpty());
+
     }
 
     @Test
     void distinctInstancesThatCompareEqualAreNotDeduplicated() {
+
         List<String> calls = new ArrayList<>();
         EqualProbe first = new EqualProbe("first", calls);
         EqualProbe second = new EqualProbe("second", calls);
@@ -125,10 +142,12 @@ class SubsystemGraphTest {
         assertSame(second, ordered.get(0));
         assertSame(first, ordered.get(1));
         assertTrue(calls.isEmpty());
+
     }
 
     @Test
     void snapshotsBothListsAndReturnsUnmodifiableViews() {
+
         Probe dependent = new Probe("dependent", new ArrayList<>());
         Probe dependency = new Probe("dependency", new ArrayList<>());
         List<String> dependencies = new ArrayList<>(List.of("dependency"));
@@ -145,36 +164,44 @@ class SubsystemGraphTest {
         assertEquals(List.of(dependency, dependent), order);
         assertThrows(UnsupportedOperationException.class, order::clear);
         assertEquals(List.of(dependency, dependent), graph.initializationOrder());
+
     }
 
     @Test
     void idsRemainCaseSensitiveAndAreNotTrimmed() {
+
         Probe upper = new Probe("A", new ArrayList<>());
         Probe lower = new Probe("a", new ArrayList<>());
         Probe spaced = new Probe(" A ", new ArrayList<>());
         assertEquals(List.of(spaced, lower, upper), graph(registration("A", upper, "a"), registration("a", lower, " A "), registration(" A ", spaced)).initializationOrder());
         assertThrows(IllegalArgumentException.class, () -> graph(registration("A", upper, "a")));
         assertThrows(IllegalArgumentException.class, () -> graph(registration("A", upper, " A ")));
+
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "\t", "\n", "\u2003"})
     void rejectsBlankRegistrationAndDependencyIds(String blank) {
+
         Probe probe = new Probe("probe", new ArrayList<>());
         assertThrows(IllegalArgumentException.class, () -> registration(blank, probe));
         assertThrows(IllegalArgumentException.class, () -> registration("probe", probe, blank));
         assertTrue(probe.calls.isEmpty());
+
     }
 
     @Test
     void rejectsRepeatedDependencyIdsAtDeclarationTime() {
+
         Probe probe = new Probe("probe", new ArrayList<>());
         assertEquals("Subsystem probe repeats dependency base", assertThrows(IllegalArgumentException.class, () -> registration("probe", probe, "base", "base")).getMessage());
         assertTrue(probe.calls.isEmpty());
+
     }
 
     @Test
     void rejectsAllNullInputs() {
+
         Probe probe = new Probe("probe", new ArrayList<>());
         assertThrows(NullPointerException.class, () -> new SubsystemGraph(null));
         assertThrows(NullPointerException.class, () -> new SubsystemGraph(Arrays.asList((SubsystemGraph.Registration) null)));
@@ -183,10 +210,12 @@ class SubsystemGraphTest {
         assertThrows(NullPointerException.class, () -> new SubsystemGraph.Registration("probe", probe, null));
         assertThrows(NullPointerException.class, () -> registration("probe", probe, (String) null));
         assertTrue(probe.calls.isEmpty());
+
     }
 
     @Test
     void longForwardChainDoesNotUseTheJavaCallStack() {
+
         int count = 10_000;
         List<Probe> probes = new ArrayList<>();
         List<SubsystemGraph.Registration> registrations = new ArrayList<>();
@@ -202,14 +231,19 @@ class SubsystemGraphTest {
             assertSame(probes.get(count - index - 1), order.get(index));
         }
         assertTrue(calls.isEmpty());
+
     }
 
     private static SubsystemGraph graph(SubsystemGraph.Registration... registrations) {
+
         return new SubsystemGraph(List.of(registrations));
+
     }
 
     private static SubsystemGraph.Registration registration(String id, EngineSubsystem subsystem, String... dependencies) {
+
         return new SubsystemGraph.Registration(id, subsystem, Arrays.asList(dependencies));
+
     }
 
     private static class Probe extends EngineSubsystem {
@@ -217,44 +251,60 @@ class SubsystemGraphTest {
         private final List<String> calls;
 
         private Probe(String name, List<String> calls) {
+
             this.name = name;
             this.calls = calls;
+
         }
 
         @Override
         protected void onInitialize() {
+
             calls.add(name + ".initialize");
+
         }
 
         @Override
         protected void onStart() {
+
             calls.add(name + ".start");
+
         }
 
         @Override
         protected void onStop() {
+
             calls.add(name + ".stop");
+
         }
 
         @Override
         protected void onClose() {
+
             calls.add(name + ".close");
+
         }
     }
 
     private static final class EqualProbe extends Probe {
         private EqualProbe(String name, List<String> calls) {
+
             super(name, calls);
+
         }
 
         @Override
         public boolean equals(Object other) {
+
             return other instanceof EqualProbe;
+
         }
 
         @Override
         public int hashCode() {
+
             return 1;
+
         }
     }
 }

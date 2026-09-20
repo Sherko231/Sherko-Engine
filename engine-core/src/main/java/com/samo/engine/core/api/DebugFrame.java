@@ -13,6 +13,7 @@ public final class DebugFrame {
     private final List<DebugTextCounter> textCounters;
 
     public DebugFrame(List<? extends DebugPrimitive> primitives, List<DebugTextCounter> textCounters) {
+
         List<? extends DebugPrimitive> primitiveValues = Objects.requireNonNull(primitives, "primitives");
         List<DebugTextCounter> counterValues = Objects.requireNonNull(textCounters, "textCounters");
         if (primitiveValues.size() > MAX_PRIMITIVES) {
@@ -29,13 +30,18 @@ public final class DebugFrame {
         }
         this.primitives = List.copyOf(primitiveValues);
         this.textCounters = List.copyOf(counterValues);
+
     }
 
     public List<DebugPrimitive> primitives() {
+
         return primitives;
+
     }
 
     public List<DebugTextCounter> textCounters() {
+
         return textCounters;
+
     }
 }

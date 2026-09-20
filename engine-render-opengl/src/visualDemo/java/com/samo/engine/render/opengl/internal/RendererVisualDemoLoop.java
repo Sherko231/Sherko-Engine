@@ -14,9 +14,11 @@ import org.joml.Vector3f;
 
 final class RendererVisualDemoLoop {
     private RendererVisualDemoLoop() {
+
     }
 
     static void run(GlfwWindow window, OpenGlRenderer renderer, MaterialComparisonOverlay overlay, RendererVisualDemoFramebufferSize framebuffer) {
+
         Matrix4f view = CameraMatrices.view(new Vector3f(0.0f, 0.0f, 2.0f), new Vector3f(0.0f, 0.0f, -1.0f), new Vector3f(0.0f, 1.0f, 0.0f), new Matrix4f());
         Matrix4f projection = new Matrix4f();
 
@@ -47,12 +49,15 @@ final class RendererVisualDemoLoop {
                 window.present();
             }
         }
+
     }
 
     static long saturatingAdd(long left, long right) {
+
         if (right > 0L && left > Long.MAX_VALUE - right) {
             return Long.MAX_VALUE;
         }
         return left + right;
+
     }
 }

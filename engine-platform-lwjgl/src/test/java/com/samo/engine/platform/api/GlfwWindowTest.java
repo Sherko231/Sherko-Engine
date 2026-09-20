@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL43;
 class GlfwWindowTest {
     @Test
     void constructorRejectsInvalidInputsBeforeBackendActivity() {
+
         FakeBackend backend = new FakeBackend();
         EngineLogger logger = new EngineLogger(event -> {
         });
@@ -34,10 +35,12 @@ class GlfwWindowTest {
         assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", logger, registry, (WindowSizeListener) null, backend));
         assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", logger, registry, listener, null, backend));
         assertEquals(List.of(), backend.trace);
+
     }
 
     @Test
     void initializeAppliesExactHintsAndRegistersOwnedWindow() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -54,10 +57,12 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     @Test
     void debugModeRequestsDebugContextInstallsCallbackAndSurfacesHighSeverityOnce() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         List<EngineLogger.Event> events = new ArrayList<>();
@@ -91,10 +96,12 @@ class GlfwWindowTest {
         assertEquals(1, backend.debugReleaseCount);
         assertTrue(backend.trace.indexOf("debug-callback-release") < backend.trace.indexOf("context:0"));
         assertTrue(backend.trace.indexOf("debug-callback-release") < backend.trace.indexOf("capabilities-clear"));
+
     }
 
     @Test
     void debugModeReportsNonHighSeverityWithoutFailing() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         List<EngineLogger.Event> events = new ArrayList<>();
@@ -114,10 +121,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void enabledDebugModeRequiresActualDebugContextAndCleansFailedStart() {
+
         FakeBackend backend = new FakeBackend();
         backend.debugContext = false;
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -133,10 +142,12 @@ class GlfwWindowTest {
         assertTrue(backend.trace.contains("capabilities-clear"));
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void debugCallbackLoggingFailureIsStagedInsteadOfEscapingCallback() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RuntimeException loggingFailure = new IllegalStateException("debug log failed");
@@ -155,10 +166,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void successfulLifecycleLogsActualStringsAndCleansInOwnershipOrder() {
+
         FakeBackend backend = new FakeBackend();
         backend.version = "4.6 fixture";
         backend.renderer = "fixture renderer";
@@ -180,10 +193,12 @@ class GlfwWindowTest {
             hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE), hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE), hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE), "create:1280x720:  title  ",
             "context:101", "capabilities-create", "size-callbacks-install:101", "logical-query:101", "framebuffer-query:101", "show:101", "size-callbacks-release:101", "hide:101",
             "context:0", "capabilities-clear", "destroy:101", "glfw-terminate", "callback-restore", "callback-free"), backend.trace);
+
     }
 
     @Test
     void initialLogicalAndFramebufferSizesStayIndependentUntilPoll() {
+
         FakeBackend backend = new FakeBackend();
         backend.logicalSize = new GlfwDimensions(800, 600);
         backend.framebufferSize = new GlfwDimensions(1200, 900);
@@ -202,10 +217,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void nativeSizeCallbacksCoalesceIndependentlyAndAllowZeroFramebuffer() {
+
         FakeBackend backend = new FakeBackend();
         RecordingSizeListener listener = new RecordingSizeListener();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -225,10 +242,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void negativeNativeDimensionsFailBeforePublicReceiver() {
+
         FakeBackend backend = new FakeBackend();
         RecordingSizeListener listener = new RecordingSizeListener();
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -246,10 +265,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void negativeInitialDimensionsFailStartAndReleaseCallbacks() {
+
         FakeBackend backend = new FakeBackend();
         backend.framebufferSize = new GlfwDimensions(-1, 720);
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -264,10 +285,12 @@ class GlfwWindowTest {
         assertTrue(backend.trace.contains("capabilities-clear"));
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void exposesStableGuardBoundToTheWindowLifecycleOwner() throws Exception {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -298,10 +321,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void pollEventsRequiresStartedOwnerThreadAndNeverPollsWhenIllegal() throws Exception {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -333,21 +358,27 @@ class GlfwWindowTest {
         assertEquals(1, backend.pollCount);
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void receiverFailurePropagatesUnchangedAfterNativePoll() {
+
         FakeBackend backend = new FakeBackend();
         RuntimeException receiverFailure = new IllegalStateException("receiver failed");
         WindowSizeListener listener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
                 throw receiverFailure;
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 throw new AssertionError("framebuffer delivery must not run after logical failure");
+
             }
         };
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -362,10 +393,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void windowModeRejectsIllegalCallsBeforeTransitionActivity() throws Exception {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -398,10 +431,12 @@ class GlfwWindowTest {
         assertEquals(0, backend.modeTransitionCount);
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void windowModeCycleCapturesAndRestoresOriginalGeometry() {
+
         FakeBackend backend = new FakeBackend();
         backend.windowPosition = new GlfwPosition(-120, 75);
         backend.logicalSize = new GlfwDimensions(1111, 777);
@@ -441,10 +476,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void borderlessAndExclusiveUsePrimaryMonitorCurrentMode() {
+
         FakeBackend backend = new FakeBackend();
         backend.monitorPosition = new GlfwPosition(-2560, 40);
         backend.videoMode = new GlfwVideoMode(2560, 1440, 144);
@@ -463,10 +500,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void invalidMonitorStateFailsBeforeModeTransition() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -487,10 +526,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void transitionFailurePropagatesAndAttemptsRollbackWithSuppressedFailure() {
+
         FakeBackend backend = new FakeBackend();
         RuntimeException transitionFailure = new IllegalStateException("transition failed");
         RuntimeException rollbackFailure = new IllegalArgumentException("rollback failed");
@@ -518,10 +559,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void sizeSetupFailureCleansContextAndLaterCloseDestroysOnce() {
+
         FakeBackend backend = new FakeBackend();
         RuntimeException sizeFailure = new IllegalStateException("size setup failed");
         backend.sizeInstallFailure = sizeFailure;
@@ -537,10 +580,12 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     @Test
     void stopContinuesCleanupAndDoesNotRetryFailedSizeCallbackRelease() {
+
         FakeBackend backend = new FakeBackend();
         RuntimeException releaseFailure = new IllegalStateException("callback release failed");
         backend.sizeReleaseFailure = releaseFailure;
@@ -560,10 +605,12 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.sizeReleaseCount);
+
     }
 
     @Test
     void initFailureRestoresCallbackWithoutPretendingGlfwWasInitialized() {
+
         FakeBackend backend = new FakeBackend();
         backend.initResult = false;
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -577,10 +624,12 @@ class GlfwWindowTest {
         registry.assertNoOpenResources();
         assertEquals(0, backend.destroyCount);
         assertEquals(0, backend.terminateCount);
+
     }
 
     @Test
     void zeroWindowRollsBackGlfwAndCallback() {
+
         FakeBackend backend = new FakeBackend();
         backend.windowHandle = 0L;
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -593,10 +642,12 @@ class GlfwWindowTest {
         assertEquals("callback-free", backend.trace.getLast());
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void registryFailureDestroysUnregisteredWindowDirectlyThenRollsBack() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         NativeResourceRegistry.Registration existing = registry.register("GLFW window", 101L, () -> {
@@ -612,10 +663,12 @@ class GlfwWindowTest {
         existing.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     @Test
     void startCapabilityFailureDetachesAndLaterCloseDestroysOnce() {
+
         FakeBackend backend = new FakeBackend();
         backend.openGl46 = false;
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -631,16 +684,20 @@ class GlfwWindowTest {
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
         assertEquals(1, backend.terminateCount);
+
     }
 
     @Test
     void loggingFailuresDoNotLeakAfterOwnerCloses() {
+
         verifyLoggingFailure(new IllegalStateException("log runtime"));
         verifyLoggingFailure(new AssertionError("log error"));
+
     }
 
     @Test
     void stopContinuesCleanupWhenHideFails() {
+
         FakeBackend backend = new FakeBackend();
         RuntimeException hideFailure = new IllegalStateException("hide failed");
         backend.hideFailure = hideFailure;
@@ -657,10 +714,12 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     @Test
     void wrongThreadStartFailsBeforeBackendStartAndOwnerCanClose() throws Exception {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -682,10 +741,12 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     @Test
     void presentRequiresStartedWindow() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -697,10 +758,12 @@ class GlfwWindowTest {
         assertFalse(backend.trace.contains("swap:101"));
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void presentSwapsOwnedWindowOnOwnerThread() {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -713,10 +776,12 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void wrongThreadPresentRejectsBeforeSwapAndOwnerCanStillPresent() throws Exception {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         GlfwWindow window = window(backend, registry, new ArrayList<>());
@@ -742,9 +807,11 @@ class GlfwWindowTest {
         window.stop();
         window.close();
         registry.assertNoOpenResources();
+
     }
 
     private static void verifyLoggingFailure(Throwable loggingFailure) {
+
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         EngineLogger logger = new EngineLogger(event -> throwUnchecked(loggingFailure));
@@ -764,17 +831,23 @@ class GlfwWindowTest {
         window.close();
         registry.assertNoOpenResources();
         assertEquals(1, backend.destroyCount);
+
     }
 
     private static GlfwWindow window(FakeBackend backend, NativeResourceRegistry registry, List<EngineLogger.Event> events) {
+
         return window(backend, registry, events, new RecordingSizeListener());
+
     }
 
     private static GlfwWindow window(FakeBackend backend, NativeResourceRegistry registry, List<EngineLogger.Event> events, WindowSizeListener listener) {
+
         return new GlfwWindow(1280, 720, "  title  ", new EngineLogger(events::add), registry, listener, backend);
+
     }
 
     private static void assertEvent(EngineLogger.Event event, String expectedMessage) {
+
         assertEquals(EngineLogger.Level.INFO, event.level());
         assertEquals(expectedMessage, event.message());
         assertEquals("platform", event.context().subsystem());
@@ -782,17 +855,22 @@ class GlfwWindowTest {
         assertEquals(null, event.context().simulationTick());
         assertEquals(null, event.context().connection());
         assertEquals(null, event.context().entity());
+
     }
 
     private static String hint(int hint, int value) {
+
         return "hint:" + hint + "=" + value;
+
     }
 
     private static void throwUnchecked(Throwable failure) {
+
         if (failure instanceof RuntimeException runtime) {
             throw runtime;
         }
         throw (Error) failure;
+
     }
 
     private static final class RecordingSizeListener implements WindowSizeListener {
@@ -800,12 +878,16 @@ class GlfwWindowTest {
 
         @Override
         public void onLogicalWindowSizeChanged(int width, int height) {
+
             events.add("logical:" + width + "x" + height);
+
         }
 
         @Override
         public void onFramebufferSizeChanged(int width, int height) {
+
             events.add("framebuffer:" + width + "x" + height);
+
         }
     }
 
@@ -840,184 +922,245 @@ class GlfwWindowTest {
         private int terminateCount;
 
         void emitDebug(int source, int type, int id, int severity, String message) {
+
             if (debugEventSink == null) {
                 throw new IllegalStateException("debug callback not installed");
             }
             debugEventSink.onMessage(source, type, id, severity, message);
+
         }
 
         void queueLogicalSize(int width, int height) {
+
             queuedEvents.add(() -> sizeEventSink.onLogicalSize(width, height));
+
         }
 
         void queueFramebufferSize(int width, int height) {
+
             queuedEvents.add(() -> sizeEventSink.onFramebufferSize(width, height));
+
         }
 
         @Override
         public GlfwErrorCallbackRegistration installErrorCallback() {
+
             trace.add("callback-install");
             return new GlfwErrorCallbackRegistration(new Object(), new Object());
+
         }
 
         @Override
         public void restoreErrorCallback(GlfwErrorCallbackRegistration state) {
+
             trace.add("callback-restore");
+
         }
 
         @Override
         public void freeOwnedErrorCallback(GlfwErrorCallbackRegistration state) {
+
             trace.add("callback-free");
+
         }
 
         @Override
         public boolean initGlfw() {
+
             trace.add("glfw-init");
             return initResult;
+
         }
 
         @Override
         public void terminateGlfw() {
+
             trace.add("glfw-terminate");
             terminateCount++;
+
         }
 
         @Override
         public void defaultWindowHints() {
+
             trace.add("hints-default");
+
         }
 
         @Override
         public void windowHint(int hint, int value) {
+
             trace.add(GlfwWindowTest.hint(hint, value));
+
         }
 
         @Override
         public long createWindow(int width, int height, String title) {
+
             trace.add("create:" + width + "x" + height + ":" + title);
             return windowHandle;
+
         }
 
         @Override
         public void destroyWindow(long handle) {
+
             trace.add("destroy:" + handle);
             destroyCount++;
+
         }
 
         @Override
         public void makeContextCurrent(long handle) {
+
             trace.add("context:" + handle);
+
         }
 
         @Override
         public void createCapabilities() {
+
             trace.add("capabilities-create");
+
         }
 
         @Override
         public void clearCapabilities() {
+
             trace.add("capabilities-clear");
+
         }
 
         @Override
         public boolean openGl46Supported() {
+
             return openGl46;
+
         }
 
         @Override
         public String glVersion() {
+
             return version;
+
         }
 
         @Override
         public String glRenderer() {
+
             return renderer;
+
         }
 
         @Override
         public boolean openGlDebugContext() {
+
             trace.add("debug-context-query");
             return debugContext;
+
         }
 
         @Override
         public OpenGlDebugCallbackRegistration installOpenGlDebugCallback(OpenGlDebugEventSink sink) {
+
             trace.add("debug-callback-install");
             debugInstallCount++;
             debugEventSink = sink;
             return new OpenGlDebugCallbackRegistration(new Object());
+
         }
 
         @Override
         public void releaseOpenGlDebugCallback(OpenGlDebugCallbackRegistration state) {
+
             trace.add("debug-callback-release");
             debugReleaseCount++;
             debugEventSink = null;
+
         }
 
         @Override
         public GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink) {
+
             trace.add("size-callbacks-install:" + handle);
             if (sizeInstallFailure != null) {
                 throw sizeInstallFailure;
             }
             sizeEventSink = sink;
             return new GlfwSizeCallbackRegistration(new Object(), new Object());
+
         }
 
         @Override
         public void releaseSizeCallbacks(long handle, GlfwSizeCallbackRegistration state) {
+
             trace.add("size-callbacks-release:" + handle);
             sizeReleaseCount++;
             if (sizeReleaseFailure != null) {
                 throw sizeReleaseFailure;
             }
             sizeEventSink = null;
+
         }
 
         @Override
         public GlfwDimensions queryLogicalSize(long handle) {
+
             trace.add("logical-query:" + handle);
             return logicalSize;
+
         }
 
         @Override
         public GlfwDimensions queryFramebufferSize(long handle) {
+
             trace.add("framebuffer-query:" + handle);
             return framebufferSize;
+
         }
 
         @Override
         public GlfwPosition queryWindowPosition(long handle) {
+
             trace.add("position-query:" + handle);
             return windowPosition;
+
         }
 
         @Override
         public long primaryMonitor() {
+
             trace.add("primary-monitor");
             return primaryMonitor;
+
         }
 
         @Override
         public GlfwVideoMode queryVideoMode(long monitor) {
+
             trace.add("video-mode:" + monitor);
             return videoMode;
+
         }
 
         @Override
         public GlfwPosition queryMonitorPosition(long monitor) {
+
             trace.add("monitor-position:" + monitor);
             return monitorPosition;
+
         }
 
         @Override
         public void setDecorated(long handle, boolean decorated) {
+
             trace.add("decorated:" + decorated);
+
         }
 
         @Override
         public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
+
             trace.add("window-monitor:" + handle + ":" + monitor + ":" + x + "," + y + ":" + width + "x" + height + "@" + refreshRate);
             modeTransitionCount++;
             if (!transitionFailures.isEmpty()) {
@@ -1026,33 +1169,42 @@ class GlfwWindowTest {
             attachedMonitor = monitor;
             windowPosition = new GlfwPosition(x, y);
             logicalSize = new GlfwDimensions(width, height);
+
         }
 
         @Override
         public void swapBuffers(long handle) {
+
             trace.add("swap:" + handle);
+
         }
 
         @Override
         public void pollEvents() {
+
             trace.add("poll-events");
             pollCount++;
             List<Runnable> current = List.copyOf(queuedEvents);
             queuedEvents.clear();
             current.forEach(Runnable::run);
+
         }
 
         @Override
         public void showWindow(long handle) {
+
             trace.add("show:" + handle);
+
         }
 
         @Override
         public void hideWindow(long handle) {
+
             trace.add("hide:" + handle);
             if (hideFailure != null) {
                 throw hideFailure;
             }
+
         }
     }
 }

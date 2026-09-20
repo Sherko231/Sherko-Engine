@@ -9,9 +9,12 @@ package com.samo.engine.render.opengl.internal;
  */
 public final class RendererVisualDemo {
     private RendererVisualDemo() {
+
     }
 
     public static void main(String[] args) {
+
         RendererVisualDemoApplication.run();
+
     }
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 class InputSnapshotTest {
     @Test
     void snapshotCopiesAllSourceSetsAndRemainsStable() {
+
         EnumSet<InputKey> heldKeys = EnumSet.of(InputKey.W);
         EnumSet<InputKey> pressedKeys = EnumSet.of(InputKey.A);
         EnumSet<InputKey> releasedKeys = EnumSet.of(InputKey.S);
@@ -38,10 +39,12 @@ class InputSnapshotTest {
         assertTrue(snapshot.mouseButtonReleased(InputMouseButton.MIDDLE));
         assertEquals(3.5, snapshot.mouseDeltaX(), 0.0);
         assertEquals(-2.25, snapshot.mouseDeltaY(), 0.0);
+
     }
 
     @Test
     void queriesRejectNullWithoutMutatingSnapshot() {
+
         InputSnapshot snapshot = emptySnapshot();
 
         assertThrows(NullPointerException.class, () -> snapshot.keyHeld(null));
@@ -53,16 +56,21 @@ class InputSnapshotTest {
 
         assertFalse(snapshot.keyHeld(InputKey.W));
         assertFalse(snapshot.mouseButtonHeld(InputMouseButton.LEFT));
+
     }
 
     @Test
     void negativeFrameIdentityIsRejected() {
+
         assertThrows(IllegalArgumentException.class, () -> new InputSnapshot(-1L, true, false, EnumSet.noneOf(InputKey.class), EnumSet.noneOf(InputKey.class),
             EnumSet.noneOf(InputKey.class), EnumSet.noneOf(InputMouseButton.class), EnumSet.noneOf(InputMouseButton.class), EnumSet.noneOf(InputMouseButton.class), 0.0, 0.0));
+
     }
 
     private static InputSnapshot emptySnapshot() {
+
         return new InputSnapshot(0L, false, false, EnumSet.noneOf(InputKey.class), EnumSet.noneOf(InputKey.class), EnumSet.noneOf(InputKey.class),
             EnumSet.noneOf(InputMouseButton.class), EnumSet.noneOf(InputMouseButton.class), EnumSet.noneOf(InputMouseButton.class), 0.0, 0.0);
+
     }
 }

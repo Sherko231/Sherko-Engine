@@ -11,6 +11,7 @@ class DirectionalLightTest {
 
     @Test
     void normalizesDirectionAndMatchesHandCalculatedDiffuseResponse() {
+
         DirectionalLight light = DirectionalLight.from(new Vector3f(0.0f, -2.0f, -2.0f), new Vector3f(1.0f, 0.8f, 0.6f), 0.8f);
 
         float inverseSqrtTwo = (float) (1.0 / Math.sqrt(2.0));
@@ -21,10 +22,12 @@ class DirectionalLightTest {
         assertEquals(0.8f, light.diffuseFactor(new Vector3f(0.0f, 1.0f, 1.0f)), TOLERANCE);
         assertEquals(0.0f, light.diffuseFactor(new Vector3f(1.0f, 0.0f, 0.0f)), TOLERANCE);
         assertEquals(0.0f, light.diffuseFactor(new Vector3f(0.0f, 0.0f, -1.0f)), TOLERANCE);
+
     }
 
     @Test
     void rejectsInvalidDirectionColorIntensityAndNormal() {
+
         assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f));
         assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(Float.NaN, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
         assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(0.0f, 0.0f, -1.0f, -0.01f, 1.0f, 1.0f, 1.0f));
@@ -32,5 +35,6 @@ class DirectionalLightTest {
 
         DirectionalLight valid = new DirectionalLight(0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         assertThrows(IllegalArgumentException.class, () -> valid.diffuseFactor(new Vector3f(0.0f, 0.0f, 0.0f)));
+
     }
 }

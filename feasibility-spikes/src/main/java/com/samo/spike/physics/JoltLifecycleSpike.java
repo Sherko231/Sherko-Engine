@@ -36,9 +36,11 @@ public final class JoltLifecycleSpike {
     private static final int NUM_BROAD_PHASE_LAYERS = 2;
 
     private JoltLifecycleSpike() {
+
     }
 
     public static void main(String[] args) {
+
         int cycles = Integer.getInteger("spike.cycles", DEFAULT_CYCLES);
         if (cycles < 1) {
             throw new IllegalArgumentException("spike.cycles must be >= 1");
@@ -74,9 +76,11 @@ public final class JoltLifecycleSpike {
         }
 
         System.out.printf("P0-T04 passed: %d repeated Jolt start/stop cycles completed.%n", cycles);
+
     }
 
     private static void runCycle(int cycle) {
+
         if (!Jolt.newFactory()) {
             throw new IllegalStateException("Failed to create Jolt factory");
         }
@@ -165,13 +169,17 @@ public final class JoltLifecycleSpike {
             Jolt.unregisterTypes();
             Jolt.destroyFactory();
         }
+
     }
 
     private static long allocationBalance() {
+
         return (long) Jolt.countNews() - Jolt.countDeletes();
+
     }
 
     private static void close(AutoCloseable closeable) {
+
         if (closeable == null) {
             return;
         }
@@ -180,9 +188,11 @@ public final class JoltLifecycleSpike {
         } catch (Exception exception) {
             throw new RuntimeException("Failed to release Jolt native object", exception);
         }
+
     }
 
     private static void loadNativeLibrary() {
+
         LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
         NativeBinaryLoader loader = new NativeBinaryLoader(info);
         NativeDynamicLibrary[] libraries = {new NativeDynamicLibrary("windows/x86-64/com/github/stephengold", PlatformPredicate.WIN_X86_64)};
@@ -192,5 +202,6 @@ public final class JoltLifecycleSpike {
         } catch (Exception exception) {
             throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
         }
+
     }
 }

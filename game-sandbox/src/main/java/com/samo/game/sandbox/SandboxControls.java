@@ -5,9 +5,11 @@ import java.util.EnumSet;
 /** Pure owner-control mapping for the persistent sandbox playground. */
 final class SandboxControls {
     private SandboxControls() {
+
     }
 
     static EnumSet<SandboxAction> resolve(SandboxControlInput input) {
+
         EnumSet<SandboxAction> actions = EnumSet.noneOf(SandboxAction.class);
         if (input.qPressed() && (input.leftControlHeld() || input.rightControlHeld())) {
             actions.add(SandboxAction.EXIT);
@@ -19,6 +21,7 @@ final class SandboxControls {
             actions.add(input.rightShiftHeld() ? SandboxAction.TOGGLE_MOUSE_Y_INVERSION : SandboxAction.TOGGLE_CURSOR_CAPTURE);
         }
         return actions;
+
     }
 
     enum SandboxAction {

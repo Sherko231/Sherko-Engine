@@ -23,9 +23,11 @@ public final class SandboxMain {
     private static final String SANDBOX_SUBSYSTEM = "game-sandbox";
 
     private SandboxMain() {
+
     }
 
     public static void main(String[] args) throws InterruptedException {
+
         printControls();
 
         EngineLogger logger = createLogger();
@@ -56,9 +58,11 @@ public final class SandboxMain {
         } finally {
             cleanup(window, renderer, nativeResources, logger, started, primaryFailure);
         }
+
     }
 
     private static EngineLogger createLogger() {
+
         return new EngineLogger(event -> {
             Long simulationTick = event.context().simulationTick();
             if (simulationTick == null) {
@@ -67,24 +71,32 @@ public final class SandboxMain {
                 System.out.printf("[%s] [%s] [tick=%d] %s%n", event.level(), event.context().subsystem(), simulationTick, event.message());
             }
         });
+
     }
 
     private static WindowSizeListener createSizeListener(SandboxFramebufferSize framebufferSize, EngineLogger logger) {
+
         return new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
                 log(logger, EngineLogger.Level.INFO, "Logical window size changed to %dx%d".formatted(width, height));
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize.update(width, height);
                 log(logger, EngineLogger.Level.INFO, "Framebuffer size changed to %dx%d".formatted(width, height));
+
             }
         };
+
     }
 
     private static InputActionBindings loadSandboxBindings() {
+
         try (InputStream source = Objects.requireNonNull(SandboxMain.class.getResourceAsStream("/input/action-bindings-v1.json"), "sandbox action bindings resource")) {
             Path tempFile = Files.createTempFile("sherko-engine-sandbox-bindings-", ".json");
             try {
@@ -96,18 +108,22 @@ public final class SandboxMain {
         } catch (IOException failure) {
             throw new IllegalStateException("Failed to materialize sandbox action bindings", failure);
         }
+
     }
 
     private static void deleteSandboxBindingsTempFile(Path tempFile) {
+
         try {
             Files.deleteIfExists(tempFile);
         } catch (IOException cleanupFailure) {
             tempFile.toFile().deleteOnExit();
         }
+
     }
 
     private static void cleanup(GlfwWindow window, OpenGlRenderer renderer, NativeResourceRegistry nativeResources, EngineLogger logger, boolean started,
         Throwable primaryFailure) {
+
         Throwable cleanupFailure = null;
 
         if (renderer != null) {
@@ -132,9 +148,11 @@ public final class SandboxMain {
             return;
         }
         rethrow(cleanupFailure);
+
     }
 
     private static Throwable attempt(Throwable accumulated, Runnable action) {
+
         try {
             action.run();
             return accumulated;
@@ -147,28 +165,38 @@ public final class SandboxMain {
             }
             return accumulated;
         }
+
     }
 
     private static void rethrow(Throwable failure) {
+
         if (failure instanceof RuntimeException runtimeFailure) {
             throw runtimeFailure;
         }
         throw (Error) failure;
+
     }
 
     static void log(EngineLogger logger, EngineLogger.Level level, String message) {
+
         logger.log(level, message, sandboxContext(null));
+
     }
 
     static void log(EngineLogger logger, EngineLogger.Level level, String message, long simulationTick) {
+
         logger.log(level, message, sandboxContext(simulationTick));
+
     }
 
     private static EngineLogger.Context sandboxContext(Long simulationTick) {
+
         return new EngineLogger.Context(null, simulationTick, SANDBOX_SUBSYSTEM, null, null);
+
     }
 
     private static void printControls() {
+
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
         System.out.println("The production renderer draws the internal mapped-texture Phase 5 room fixture.");
@@ -184,5 +212,6 @@ public final class SandboxMain {
         System.out.println();
         System.out.println("W/A/S/D move the rendered camera and mouse LOOK changes yaw/pitch; other input bindings remain active.");
         System.out.println();
+
     }
 }

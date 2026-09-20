@@ -14,6 +14,7 @@ import java.util.Objects;
  */
 public final class SubsystemStartupCoordinator {
     private SubsystemStartupCoordinator() {
+
     }
 
     /**
@@ -34,6 +35,7 @@ public final class SubsystemStartupCoordinator {
      *             if a lifecycle hook throws an error
      */
     public static void start(List<EngineSubsystem> initializationOrder) {
+
         List<EngineSubsystem> ordered = List.copyOf(initializationOrder);
         List<EngineSubsystem> started = new ArrayList<>(ordered.size());
 
@@ -48,18 +50,22 @@ public final class SubsystemStartupCoordinator {
                 throw failure;
             }
         }
+
     }
 
     private static void rollback(Throwable primary, EngineSubsystem failed, List<EngineSubsystem> started) {
+
         tryCleanup(primary, failed::close);
         for (int index = started.size() - 1; index >= 0; index--) {
             EngineSubsystem subsystem = started.get(index);
             tryCleanup(primary, subsystem::stop);
             tryCleanup(primary, subsystem::close);
         }
+
     }
 
     private static void tryCleanup(Throwable primary, Runnable cleanup) {
+
         try {
             cleanup.run();
         } catch (RuntimeException | Error cleanupFailure) {
@@ -67,5 +73,6 @@ public final class SubsystemStartupCoordinator {
                 primary.addSuppressed(cleanupFailure);
             }
         }
+
     }
 }

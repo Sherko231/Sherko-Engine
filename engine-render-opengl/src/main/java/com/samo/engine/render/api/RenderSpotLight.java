@@ -12,6 +12,7 @@ public record RenderSpotLight(float positionX, float positionY, float positionZ,
     float intensity, float rangeMeters, float innerConeRadians, float outerConeRadians) implements RenderLocalLight {
 
     public RenderSpotLight {
+
         RenderPointLight.requireFinite("positionX", positionX);
         RenderPointLight.requireFinite("positionY", positionY);
         RenderPointLight.requireFinite("positionZ", positionZ);
@@ -40,5 +41,6 @@ public record RenderSpotLight(float positionX, float positionY, float positionZ,
         if (innerConeRadians < 0.0f || !(innerConeRadians < outerConeRadians) || !(outerConeRadians < halfPi)) {
             throw new IllegalArgumentException("cone angles must satisfy 0 <= innerConeRadians < outerConeRadians < PI/2");
         }
+
     }
 }

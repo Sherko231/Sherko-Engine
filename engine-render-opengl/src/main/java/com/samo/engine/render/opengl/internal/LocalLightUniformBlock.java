@@ -20,9 +20,11 @@ final class LocalLightUniformBlock {
     static final int SIZE_BYTES = META_OFFSET_BYTES + 4 * Integer.BYTES;
 
     private LocalLightUniformBlock() {
+
     }
 
     static void write(List<RenderLocalLight> lights, ByteBuffer destination) {
+
         List<RenderLocalLight> values = Objects.requireNonNull(lights, "lights");
         ByteBuffer buffer = Objects.requireNonNull(destination, "destination");
         if (values.size() > CAPACITY) {
@@ -55,12 +57,15 @@ final class LocalLightUniformBlock {
 
         buffer.putInt(base + META_OFFSET_BYTES, values.size());
         buffer.position(base + SIZE_BYTES);
+
     }
 
     private static void putVec4(ByteBuffer buffer, int offset, float x, float y, float z, float w) {
+
         buffer.putFloat(offset, x);
         buffer.putFloat(offset + Float.BYTES, y);
         buffer.putFloat(offset + 2 * Float.BYTES, z);
         buffer.putFloat(offset + 3 * Float.BYTES, w);
+
     }
 }

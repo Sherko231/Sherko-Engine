@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 class AnimatedDemoLightingTest {
     @Test
     void producesTwoMovingLightsAndSevenDebugPrimitives() {
+
         AnimatedDemoLighting.LightingFrame start = AnimatedDemoLighting.at(0.0);
         AnimatedDemoLighting.LightingFrame later = AnimatedDemoLighting.at(1.5);
 
@@ -37,10 +38,12 @@ class AnimatedDemoLightingTest {
         assertInstanceOf(DebugLine.class, start.debugPrimitives().get(0));
         assertInstanceOf(DebugLine.class, start.debugPrimitives().get(5));
         assertInstanceOf(DebugRay.class, start.debugPrimitives().get(6));
+
     }
 
     @Test
     void preservesAcceptedInitialLightAndDebugValues() {
+
         AnimatedDemoLighting.LightingFrame frame = AnimatedDemoLighting.at(0.0);
         RenderPointLight point = assertInstanceOf(RenderPointLight.class, frame.lights().get(0));
         RenderSpotLight spot = assertInstanceOf(RenderSpotLight.class, frame.lights().get(1));
@@ -59,5 +62,6 @@ class AnimatedDemoLightingTest {
         assertEquals(5.0f, spot.rangeMeters(), 0.000001f);
 
         assertEquals(2.3f, ray.lengthMeters(), 0.000001f);
+
     }
 }

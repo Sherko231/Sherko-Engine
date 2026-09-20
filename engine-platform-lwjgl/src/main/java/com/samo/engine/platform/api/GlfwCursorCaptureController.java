@@ -17,32 +17,43 @@ final class GlfwCursorCaptureController {
     private boolean rawMouseMotionEnabled;
 
     GlfwCursorCaptureController(GlfwNativeBackend backend, GlfwMouseMotionTracker mouseMotion) {
+
         this.backend = backend;
         this.mouseMotion = mouseMotion;
+
     }
 
     boolean effectivelyCaptured() {
+
         return captureEffective;
+
     }
 
     boolean rawMouseMotionEnabled() {
+
         return rawMouseMotionEnabled;
+
     }
 
     boolean rawMouseMotionSupported() {
+
         return backend.rawMouseMotionSupported();
+
     }
 
     void reset() {
+
         mouseMotion.reset();
         captureRequested = false;
         captureEffective = false;
         captureNeedsExplicitRearm = false;
         cursorNormalizationPending = false;
         rawMouseMotionEnabled = false;
+
     }
 
     void setCaptured(long windowHandle, boolean focused, boolean captured) {
+
         if (captured) {
             if (!focused) {
                 mouseMotion.reset();
@@ -65,9 +76,11 @@ final class GlfwCursorCaptureController {
         }
 
         releaseDirect(windowHandle);
+
     }
 
     void onFocusLost(long windowHandle, Consumer<Throwable> failureSink) {
+
         mouseMotion.reset();
         if (captureRequested) {
             captureNeedsExplicitRearm = true;
@@ -93,9 +106,11 @@ final class GlfwCursorCaptureController {
                 failureSink.accept(failure);
             }
         }
+
     }
 
     void releaseForCleanup(long windowHandle, List<Throwable> failures) {
+
         mouseMotion.reset();
         captureEffective = false;
         if (rawMouseMotionEnabled && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
@@ -106,9 +121,11 @@ final class GlfwCursorCaptureController {
         }
         captureRequested = false;
         captureNeedsExplicitRearm = false;
+
     }
 
     private void captureWithRawMotion(long windowHandle) {
+
         boolean previousRequested = captureRequested;
         boolean previousEffective = captureEffective;
         boolean previousRearm = captureNeedsExplicitRearm;
@@ -157,9 +174,11 @@ final class GlfwCursorCaptureController {
             rawMouseMotionEnabled = previousRaw;
             throw failure;
         }
+
     }
 
     private void releaseDirect(long windowHandle) {
+
         mouseMotion.reset();
         captureRequested = false;
         captureEffective = false;
@@ -173,9 +192,11 @@ final class GlfwCursorCaptureController {
             cursorNormalizationPending = false;
         }
         throwCleanupFailure(failures);
+
     }
 
     private static boolean runCleanup(List<Throwable> failures, Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
@@ -183,9 +204,11 @@ final class GlfwCursorCaptureController {
             failures.add(failure);
             return false;
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -197,11 +220,14 @@ final class GlfwCursorCaptureController {
             throw runtimeFailure;
         }
         throw (Error) primary;
+
     }
 
     private static void addSuppressedUnlessSame(Throwable primary, Throwable suppressed) {
+
         if (primary != suppressed) {
             primary.addSuppressed(suppressed);
         }
+
     }
 }

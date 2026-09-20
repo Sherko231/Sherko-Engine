@@ -24,6 +24,7 @@ public record RenderPointLight(float positionX, float positionY, float positionZ
     float rangeMeters) implements RenderLocalLight {
 
     public RenderPointLight {
+
         requireFinite("positionX", positionX);
         requireFinite("positionY", positionY);
         requireFinite("positionZ", positionZ);
@@ -32,23 +33,30 @@ public record RenderPointLight(float positionX, float positionY, float positionZ
         requireUnit("blue", blue);
         requireUnit("intensity", intensity);
         requirePositiveFinite("rangeMeters", rangeMeters);
+
     }
 
     static void requireFinite(String name, float value) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 
     static void requireUnit(String name, float value) {
+
         if (!Float.isFinite(value) || value < 0.0f || value > 1.0f) {
             throw new IllegalArgumentException(name + " must be finite and within [0,1]");
         }
+
     }
 
     static void requirePositiveFinite(String name, float value) {
+
         if (!Float.isFinite(value) || !(value > 0.0f)) {
             throw new IllegalArgumentException(name + " must be finite and positive");
         }
+
     }
 }

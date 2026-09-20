@@ -32,6 +32,7 @@ import org.lwjgl.opengl.GL21;
 class ReferenceSceneRendererTest {
     @Test
     void configuresKnownIndexedMeshAndExactDrawState() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -83,10 +84,12 @@ class ReferenceSceneRendererTest {
         assertEquals(3, resources.deletedPrograms);
         assertEquals(1, resources.deletedTextures);
         assertEquals(1, resources.deletedSamplers);
+
     }
 
     @Test
     void overMaxPacketWarnsOnceAndUploadsOnlyFirstConfiguredLights() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -116,10 +119,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void overflowLoggerFailureHappensBeforeUploadOrDrawMutation() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -144,10 +149,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void debugFrameUploadsLinesDrawsAfterSceneAndPublishesCounters() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -178,10 +185,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void debugDrawFailureDoesNotPublishDebugOrCullingCounters() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -204,10 +213,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void viewModelFailureDoesNotPublishNewDiagnosticsAndRestoresWorldCameraBinding() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -237,10 +248,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void packetConsumptionUsesCapturedMatricesAfterSourceMutation() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -268,10 +281,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void offCameraReferenceCandidatesProduceNoDrawSubmission() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -291,10 +306,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void failedRenderDoesNotPublishPartialCullingCounters() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -312,10 +329,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void unsupportedDefaultFramebufferEncodingFailsBeforeFragmentOrProgramCreation() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -332,10 +351,12 @@ class ReferenceSceneRendererTest {
         assertEquals(1, resources.deletedSamplers);
         assertEquals(5, resources.deletedBuffers);
         assertEquals(1, resources.deletedVertexArrays);
+
     }
 
     @Test
     void linearDefaultFramebufferUsesSingleManualSrgbEncode() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -354,10 +375,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void fragmentVariantInjectsManualEncodeOnlyForLinearDefaultFramebuffer() {
+
         String source = "#version 460 core\nvoid main() {}";
 
         assertEquals(source, SrgbPresentationMode.HARDWARE_SRGB.fragmentSource(source));
@@ -365,10 +388,12 @@ class ReferenceSceneRendererTest {
         String fallback = SrgbPresentationMode.MANUAL_SRGB.fragmentSource(source);
         assertTrue(fallback.startsWith("#version 460 core" + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
         assertTrue(fallback.endsWith("\nvoid main() {}"));
+
     }
 
     @Test
     void drawFailureStillDisablesFramebufferSrgbAndUnbindsTextureState() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -388,10 +413,12 @@ class ReferenceSceneRendererTest {
 
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void invalidFramebufferSizeFailsBeforeUploadOrDrawMutation() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -406,10 +433,12 @@ class ReferenceSceneRendererTest {
         assertTrue(draw.trace.isEmpty());
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void wrongThreadRenderFailsBeforeUploadOrDrawMutation() throws Exception {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -435,10 +464,12 @@ class ReferenceSceneRendererTest {
         pipeline.render(new Matrix4f(), new Matrix4f(), 800, 600);
         pipeline.close();
         registry.assertNoOpenResources();
+
     }
 
     @Test
     void partialCreationFailureClosesAlreadyOwnedResources() {
+
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeResourceBackend resources = new FakeResourceBackend();
@@ -452,18 +483,22 @@ class ReferenceSceneRendererTest {
         assertEquals(1, resources.deletedVertexArrays);
         assertEquals(0, resources.deletedShaders);
         assertEquals(0, resources.deletedPrograms);
+
     }
 
     private static void assertVertexData(byte[] bytes) {
+
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
         assertRoomVertex(data, -2.0f, -1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
         assertRoomVertex(data, 2.0f, -1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f);
         assertRoomVertex(data, 2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
         assertRoomVertex(data, -2.0f, 1.5f, -3.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
         assertEquals(20 * 8 * Float.BYTES, data.remaining());
+
     }
 
     private static void assertRoomVertex(ByteBuffer data, float x, float y, float z, float nx, float ny, float nz, float u, float v) {
+
         assertEquals(x, data.getFloat());
         assertEquals(y, data.getFloat());
         assertEquals(z, data.getFloat());
@@ -472,9 +507,11 @@ class ReferenceSceneRendererTest {
         assertEquals(nz, data.getFloat());
         assertEquals(u, data.getFloat());
         assertEquals(v, data.getFloat());
+
     }
 
     private static void assertIndexData(byte[] bytes) {
+
         ByteBuffer data = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
         for (int quad = 0; quad < 6; quad++) {
             int base = quad * 4;
@@ -486,9 +523,11 @@ class ReferenceSceneRendererTest {
             assertEquals(base + 3, data.getInt());
         }
         assertEquals(0, data.remaining());
+
     }
 
     private static OpenGlThreadGuard boundGuard() {
+
         GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
         }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
@@ -502,6 +541,7 @@ class ReferenceSceneRendererTest {
         } catch (InvocationTargetException failure) {
             throw new AssertionError(failure.getCause());
         }
+
     }
 
     private record Upload(int handle, long offset, byte[] bytes) {
@@ -516,27 +556,33 @@ class ReferenceSceneRendererTest {
 
         @Override
         public int uniformBlockIndex(int programHandle, String blockName) {
+
             return indices.getOrDefault(blockName, -1);
+
         }
 
         @Override
         public int uniformBlockDataSize(int programHandle, int blockIndex) {
+
             return switch (blockIndex) {
                 case 0 -> CameraMatricesUniformBlock.SIZE_BYTES;
                 case 1 -> FramebufferMetricsUniformBlock.SIZE_BYTES;
                 case 2 -> LocalLightUniformBlock.SIZE_BYTES;
                 default -> -1;
             };
+
         }
 
         @Override
         public int uniformBlockBinding(int programHandle, int blockIndex) {
+
             return switch (blockIndex) {
                 case 0 -> CameraMatricesUniformBlock.BINDING;
                 case 1 -> FramebufferMetricsUniformBlock.BINDING;
                 case 2 -> LocalLightUniformBlock.BINDING;
                 default -> -1;
             };
+
         }
     }
 
@@ -550,126 +596,172 @@ class ReferenceSceneRendererTest {
 
         @Override
         public void configurePositionNormalUvAttributes(int vertexArray, int vertexBuffer) {
+
             trace.add("position:" + vertexArray + ":" + vertexBuffer);
+
         }
 
         @Override
         public void configureDebugLineAttributes(int vertexArray, int vertexBuffer) {
+
             trace.add("debug-position:" + vertexArray + ":" + vertexBuffer);
+
         }
 
         @Override
         public void configureViewModelAttributes(int vertexArray, int vertexBuffer) {
+
             trace.add("view-model-position:" + vertexArray + ":" + vertexBuffer);
+
         }
 
         @Override
         public void bindElementBuffer(int vertexArray, int indexBuffer) {
+
             trace.add("element:" + vertexArray + ":" + indexBuffer);
+
         }
 
         @Override
         public void bindUniformBuffer(int bindingIndex, int buffer) {
+
             trace.add("ubo:" + bindingIndex + ":" + buffer);
+
         }
 
         @Override
         public void setViewport(int x, int y, int width, int height) {
+
             trace.add("viewport:" + x + ":" + y + ":" + width + "x" + height);
+
         }
 
         @Override
         public void applyMaterialState(RenderMaterialDescriptor material) {
+
             trace.add("state:blend=" + material.blendMode() + ":depth=" + material.depthMode() + ":cull=" + material.cullMode());
+
         }
 
         @Override
         public void applyDebugLineState() {
+
             trace.add("debug-state");
+
         }
 
         @Override
         public void clearDepthOnly() {
+
             trace.add("depth-clear");
+
         }
 
         @Override
         public void applyViewModelState() {
+
             trace.add("view-model-state");
+
         }
 
         @Override
         public int defaultFramebufferColorEncoding() {
+
             return defaultFramebufferEncoding;
+
         }
 
         @Override
         public void setFramebufferSrgbEnabled(boolean enabled) {
+
             trace.add("srgb:" + enabled);
+
         }
 
         @Override
         public void clearFrame(SrgbPresentationMode presentationMode) {
+
             trace.add("clear:" + presentationMode.framebufferSrgbEnabled());
+
         }
 
         @Override
         public void bindTextureAndSampler(int unit, int texture, int sampler) {
+
             trace.add("texture:" + unit + ":" + texture + ":" + sampler);
+
         }
 
         @Override
         public void setMaterialScalars(int program, MaterialScalars scalars) {
+
             trace.add("scalars:" + program + ":" + scalars.redMultiplier() + "," + scalars.greenMultiplier() + "," + scalars.blueMultiplier() + "," + scalars.alphaMultiplier());
+
         }
 
         @Override
         public void setDirectionalLight(int program, DirectionalLight light) {
+
             lastDirectionalLight = light;
+
         }
 
         @Override
         public void useProgram(int program) {
+
             trace.add("program:" + program);
+
         }
 
         @Override
         public void bindVertexArray(int vertexArray) {
+
             trace.add("vao:" + vertexArray);
+
         }
 
         @Override
         public void drawIndexedTriangles(int indexCount) {
+
             trace.add("draw:triangles:" + indexCount + ":uint:0");
             if (drawFailure != null) {
                 throw drawFailure;
             }
+
         }
 
         @Override
         public void drawDebugLines(int vertexCount) {
+
             trace.add("draw:lines:" + vertexCount);
             if (debugDrawFailure != null) {
                 throw debugDrawFailure;
             }
+
         }
 
         @Override
         public void drawViewModelTriangles(int vertexCount) {
+
             trace.add("draw:view-model:" + vertexCount);
             if (viewModelDrawFailure != null) {
                 throw viewModelDrawFailure;
             }
+
         }
 
         @Override
         public void bindDefaultVertexArray() {
+
             trace.add("vao:0");
+
         }
 
         @Override
         public void useDefaultProgram() {
+
             trace.add("program:0");
+
         }
     }
 
@@ -695,163 +787,220 @@ class ReferenceSceneRendererTest {
 
         @Override
         public int createBuffer() {
+
             return nextBuffer++;
+
         }
 
         @Override
         public void deleteBuffer(int handle) {
+
             deletedBuffers++;
+
         }
 
         @Override
         public void allocateDynamicBufferStorage(int handle, long capacityBytes) {
+
             allocationCalls++;
             if (allocationCalls == failAllocationCall) {
                 throw new IllegalStateException("fixture allocation failure");
             }
             allocations.add(capacityBytes);
+
         }
 
         @Override
         public void uploadBufferSubData(int handle, long offsetBytes, ByteBuffer data) {
+
             ByteBuffer copy = data.duplicate();
             byte[] bytes = new byte[copy.remaining()];
             copy.get(bytes);
             uploads.add(new Upload(handle, offsetBytes, bytes));
+
         }
 
         @Override
         public long createFence() {
+
             throw unsupported();
+
         }
 
         @Override
         public FenceStatus fenceStatus(long fenceHandle) {
+
             throw unsupported();
+
         }
 
         @Override
         public void deleteFence(long fenceHandle) {
+
             throw unsupported();
+
         }
 
         @Override
         public int createVertexArray() {
+
             return nextVertexArray++;
+
         }
 
         @Override
         public void deleteVertexArray(int handle) {
+
             deletedVertexArrays++;
+
         }
 
         @Override
         public int createTexture() {
+
             return nextTexture++;
+
         }
 
         @Override
         public void deleteTexture(int handle) {
+
             deletedTextures++;
+
         }
 
         @Override
         public void allocateRgba8Texture(int handle, TextureColorEncoding colorEncoding, int width, int height, ByteBuffer rgbaBytes) {
+
             ByteBuffer copy = rgbaBytes.duplicate();
             List<Integer> bytes = new ArrayList<>();
             while (copy.hasRemaining()) {
                 bytes.add(Byte.toUnsignedInt(copy.get()));
             }
             textureAllocations.add(new TextureAllocation(colorEncoding, width, height, List.copyOf(bytes)));
+
         }
 
         @Override
         public int createSampler() {
+
             return nextSampler++;
+
         }
 
         @Override
         public void deleteSampler(int handle) {
+
             deletedSamplers++;
+
         }
 
         @Override
         public void configureLinearClampSampler(int handle) {
+
             configuredSamplers++;
+
         }
 
         @Override
         public int createFramebuffer() {
+
             throw unsupported();
+
         }
 
         @Override
         public void deleteFramebuffer(int handle) {
+
             throw unsupported();
+
         }
 
         @Override
         public int createShader(int shaderType) {
+
             return nextShader++;
+
         }
 
         @Override
         public void shaderSource(int shader, String source) {
+
         }
 
         @Override
         public void compileShader(int shader) {
+
         }
 
         @Override
         public boolean shaderCompileSucceeded(int shader) {
+
             return true;
+
         }
 
         @Override
         public String shaderInfoLog(int shader) {
+
             return "";
+
         }
 
         @Override
         public void deleteShader(int shader) {
+
             deletedShaders++;
+
         }
 
         @Override
         public int createProgram() {
+
             return nextProgram++;
+
         }
 
         @Override
         public void attachShader(int program, int shader) {
+
         }
 
         @Override
         public void linkProgram(int program) {
+
         }
 
         @Override
         public boolean programLinkSucceeded(int program) {
+
             return true;
+
         }
 
         @Override
         public String programInfoLog(int program) {
+
             return "";
+
         }
 
         @Override
         public void detachShader(int program, int shader) {
+
         }
 
         @Override
         public void deleteProgram(int program) {
+
             deletedPrograms++;
+
         }
 
         private static UnsupportedOperationException unsupported() {
+
             return new UnsupportedOperationException("not used by P5-T07 fixture");
+
         }
     }
 }

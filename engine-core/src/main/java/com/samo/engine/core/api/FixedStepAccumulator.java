@@ -17,6 +17,7 @@ public final class FixedStepAccumulator {
 
     /** Creates an empty 60 Hz fixed-step accumulator. */
     public FixedStepAccumulator() {
+
     }
 
     /**
@@ -34,6 +35,7 @@ public final class FixedStepAccumulator {
      *             if {@code elapsedNanos} is negative
      */
     public long advance(long elapsedNanos) {
+
         if (elapsedNanos < 0L) {
             throw new IllegalArgumentException("elapsedNanos must be non-negative");
         }
@@ -47,6 +49,7 @@ public final class FixedStepAccumulator {
         ticks += scaledProgress / NANOS_PER_SECOND;
         scaledRemainder = scaledProgress % NANOS_PER_SECOND;
         return ticks;
+
     }
 
     /**
@@ -60,6 +63,8 @@ public final class FixedStepAccumulator {
      * @return retained fractional progress normalized to {@code [0.0, 1.0)}
      */
     public double interpolationAlpha() {
+
         return scaledRemainder / (double) NANOS_PER_SECOND;
+
     }
 }

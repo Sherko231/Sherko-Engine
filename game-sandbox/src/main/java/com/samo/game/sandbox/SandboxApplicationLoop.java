@@ -38,6 +38,7 @@ final class SandboxApplicationLoop {
 
     SandboxApplicationLoop(GlfwWindow window, OpenGlRenderer renderer, SandboxFramebufferSize framebufferSize, EngineLogger logger, InputActionEvaluator actionEvaluator,
         PlayerInputCommandSampler commandSampler, InputResponseSettings initialResponseSettings) {
+
         this.window = Objects.requireNonNull(window, "window");
         this.renderer = Objects.requireNonNull(renderer, "renderer");
         this.framebufferSize = Objects.requireNonNull(framebufferSize, "framebufferSize");
@@ -45,9 +46,11 @@ final class SandboxApplicationLoop {
         this.actionEvaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
         this.commandSampler = Objects.requireNonNull(commandSampler, "commandSampler");
         controlState = new SandboxControlState(initialResponseSettings);
+
     }
 
     void run() throws InterruptedException {
+
         boolean exitRequested = false;
         clock.sampleElapsedNanos();
 
@@ -91,5 +94,6 @@ final class SandboxApplicationLoop {
         }
 
         SandboxMain.log(logger, EngineLogger.Level.INFO, "Sandbox exit requested by Ctrl+Q", cumulativeTicks);
+
     }
 }

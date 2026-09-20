@@ -34,6 +34,7 @@ class ReferenceSceneRendererNativeTest {
 
     @Test
     void rendersTwoMaterialInstancesOfTheIndexedReferenceMeshThroughPublicRenderer() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T07 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T07 native acceptance targets Windows x64");
 
@@ -42,12 +43,15 @@ class ReferenceSceneRendererNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
         GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5-T07 Native Acceptance", new EngineLogger(event -> {
@@ -96,9 +100,11 @@ class ReferenceSceneRendererNativeTest {
 
         registry.assertNoOpenResources();
         writeReport();
+
     }
 
     private static int captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -132,18 +138,22 @@ class ReferenceSceneRendererNativeTest {
             throw new IOException("PNG writer unavailable");
         }
         return visibleTrianglePixels;
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport() throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T07", "result=PASS", "renderer.api=OpenGlRenderer", "mesh=indexed-room-fixture", "draw.elements.count=36",
             "world.submitted.draws=1", "material.baseline.depth=GL_LESS-write", "material.baseline.cull=GL_BACK", "material.tinted.depth=GL_LESS-no-write",
@@ -152,10 +162,13 @@ class ReferenceSceneRendererNativeTest {
             "srgb.claim=verified-separately-by-p5-t08", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
             "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=indexed world-submission regression uses latest-success culling diagnostics so later render layers do not invalidate the two-world-draw contract; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

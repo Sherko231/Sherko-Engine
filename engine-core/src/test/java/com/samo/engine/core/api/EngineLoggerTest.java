@@ -20,6 +20,7 @@ class EngineLoggerTest {
 
     @Test
     void eventPreservesLevelMessageContextAndCallerThreadIdentity() {
+
         List<EngineLogger.Event> captured = new ArrayList<>();
         EngineLogger logger = new EngineLogger(captured::add);
         EngineLogger.Context context = new EngineLogger.Context(120L, 240L, " network ", " conn-a ", " player-7 ");
@@ -40,10 +41,12 @@ class EngineLoggerTest {
         assertEquals(caller.threadId(), event.threadId());
         assertEquals(caller.getName(), event.threadName());
         assertTrue(event.timestamp() != null);
+
     }
 
     @Test
     void emptyContextUsesNullAsTheOnlyMissingRepresentation() {
+
         EngineLogger.Context context = EngineLogger.Context.empty();
 
         assertNull(context.frame());
@@ -51,10 +54,12 @@ class EngineLoggerTest {
         assertNull(context.subsystem());
         assertNull(context.connection());
         assertNull(context.entity());
+
     }
 
     @Test
     void contextAcceptsAbsentAndZeroNumericFieldsAndRejectsNegativeValues() {
+
         EngineLogger.Context absent = new EngineLogger.Context(null, null, null, null, null);
         EngineLogger.Context zero = new EngineLogger.Context(0L, 0L, null, null, null);
 
@@ -64,10 +69,12 @@ class EngineLoggerTest {
         assertEquals(0L, zero.simulationTick());
         assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(-1L, 0L, null, null, null));
         assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(0L, -1L, null, null, null));
+
     }
 
     @Test
     void contextNormalizesOptionalStringsAndRejectsBlankPresentValues() {
+
         EngineLogger.Context context = new EngineLogger.Context(null, null, "  render  ", "  connection-2  ", "  entity-9  ");
 
         assertEquals("render", context.subsystem());
@@ -76,10 +83,12 @@ class EngineLoggerTest {
         assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, "   ", null, null));
         assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, null, "\t", null));
         assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, null, null, "\n"));
+
     }
 
     @Test
     void connectionFilteringUsesStructuredFieldNotMessageText() {
+
         List<EngineLogger.Event> captured = new ArrayList<>();
         EngineLogger logger = new EngineLogger(captured::add);
 
@@ -93,10 +102,12 @@ class EngineLoggerTest {
         assertEquals(List.of("entity-a", "entity-c"), connA.stream().map(event -> event.context().entity()).toList());
         assertTrue(connA.stream().allMatch(event -> "same message".equals(event.message())));
         assertFalse(connA.stream().anyMatch(event -> "conn-b".equals(event.context().connection())));
+
     }
 
     @Test
     void everySeverityIsForwardedWithoutThresholdFiltering() {
+
         List<EngineLogger.Event> captured = new ArrayList<>();
         EngineLogger logger = new EngineLogger(captured::add);
 
@@ -106,10 +117,12 @@ class EngineLoggerTest {
 
         assertEquals(EngineLogger.Level.values().length, captured.size());
         assertEquals(EnumSet.allOf(EngineLogger.Level.class), EnumSet.copyOf(captured.stream().map(EngineLogger.Event::level).toList()));
+
     }
 
     @Test
     void invalidLogArgumentsFailBeforeSinkInvocation() {
+
         AtomicInteger writes = new AtomicInteger();
         EngineLogger logger = new EngineLogger(event -> writes.incrementAndGet());
 
@@ -119,10 +132,12 @@ class EngineLoggerTest {
         assertThrows(NullPointerException.class, () -> logger.log(EngineLogger.Level.INFO, "message", null));
         assertThrows(IllegalArgumentException.class, () -> logger.log(EngineLogger.Level.INFO, " \t\n ", EngineLogger.Context.empty()));
         assertEquals(0, writes.get());
+
     }
 
     @Test
     void writeRuntimeExceptionPropagatesByIdentityWithOneAttempt() {
+
         RuntimeException expected = new RuntimeException("write failed");
         AtomicInteger attempts = new AtomicInteger();
         EngineLogger logger = new EngineLogger(event -> {
@@ -134,10 +149,12 @@ class EngineLoggerTest {
 
         assertSame(expected, actual);
         assertEquals(1, attempts.get());
+
     }
 
     @Test
     void writeErrorPropagatesByIdentityWithOneAttempt() {
+
         AssertionError expected = new AssertionError("write failed");
         AtomicInteger attempts = new AtomicInteger();
         EngineLogger logger = new EngineLogger(event -> {
@@ -149,19 +166,24 @@ class EngineLoggerTest {
 
         assertSame(expected, actual);
         assertEquals(1, attempts.get());
+
     }
 
     @Test
     void flushDelegatesExactlyOnceAndPreservesFailureIdentity() {
+
         AtomicInteger successfulFlushes = new AtomicInteger();
         EngineLogger successful = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
             }
 
             @Override
             public void flush() {
+
                 successfulFlushes.incrementAndGet();
+
             }
         });
         successful.flush();
@@ -172,12 +194,15 @@ class EngineLoggerTest {
         EngineLogger runtimeLogger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
             }
 
             @Override
             public void flush() {
+
                 runtimeAttempts.incrementAndGet();
                 throw runtimeFailure;
+
             }
         });
         assertSame(runtimeFailure, assertThrows(RuntimeException.class, runtimeLogger::flush));
@@ -188,20 +213,25 @@ class EngineLoggerTest {
         EngineLogger errorLogger = new EngineLogger(new EngineLogger.Sink() {
             @Override
             public void write(EngineLogger.Event event) {
+
             }
 
             @Override
             public void flush() {
+
                 errorAttempts.incrementAndGet();
                 throw errorFailure;
+
             }
         });
         assertSame(errorFailure, assertThrows(AssertionError.class, errorLogger::flush));
         assertEquals(1, errorAttempts.get());
+
     }
 
     @Test
     void concurrentCallersAreSerializedAtSinkAndRetainOriginalCallerThread() throws Exception {
+
         AtomicInteger activeCallbacks = new AtomicInteger();
         AtomicInteger maxActiveCallbacks = new AtomicInteger();
         CountDownLatch firstEntered = new CountDownLatch(1);
@@ -273,5 +303,6 @@ class EngineLoggerTest {
         assertEquals(first.getName(), firstEvent.threadName());
         assertEquals(second.threadId(), secondEvent.threadId());
         assertEquals(second.getName(), secondEvent.threadName());
+
     }
 }

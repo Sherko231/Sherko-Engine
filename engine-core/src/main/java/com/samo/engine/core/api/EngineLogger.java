@@ -24,7 +24,9 @@ public final class EngineLogger {
      *             if {@code sink} is null
      */
     public EngineLogger(Sink sink) {
+
         this.sink = Objects.requireNonNull(sink, "sink");
+
     }
 
     /**
@@ -42,6 +44,7 @@ public final class EngineLogger {
      *             if message is blank
      */
     public void log(Level level, String message, Context context) {
+
         Level eventLevel = Objects.requireNonNull(level, "level");
         String eventMessage = Objects.requireNonNull(message, "message");
         Context eventContext = Objects.requireNonNull(context, "context");
@@ -55,13 +58,16 @@ public final class EngineLogger {
         synchronized (sinkLock) {
             sink.write(event);
         }
+
     }
 
     /** Flushes the caller-owned sink synchronously. */
     public void flush() {
+
         synchronized (sinkLock) {
             sink.flush();
         }
+
     }
 
     /** Fixed severity labels. The logger performs no threshold filtering. */
@@ -77,6 +83,7 @@ public final class EngineLogger {
 
         /** Validates numeric fields and normalizes present string fields with {@link String#strip()}. */
         public Context {
+
             if (frame != null && frame < 0L) {
                 throw new IllegalArgumentException("frame must be non-negative when present");
             }
@@ -86,14 +93,18 @@ public final class EngineLogger {
             subsystem = normalizeOptional("subsystem", subsystem);
             connection = normalizeOptional("connection", connection);
             entity = normalizeOptional("entity", entity);
+
         }
 
         /** Returns a context with every optional field absent. */
         public static Context empty() {
+
             return new Context(null, null, null, null, null);
+
         }
 
         private static String normalizeOptional(String fieldName, String value) {
+
             if (value == null) {
                 return null;
             }
@@ -102,6 +113,7 @@ public final class EngineLogger {
                 throw new IllegalArgumentException(fieldName + " must not be blank when present");
             }
             return normalized;
+
         }
     }
 
@@ -117,6 +129,7 @@ public final class EngineLogger {
 
         /** Flushes any sink-owned buffered state. The default sink has nothing to flush. */
         default void flush() {
+
         }
     }
 }

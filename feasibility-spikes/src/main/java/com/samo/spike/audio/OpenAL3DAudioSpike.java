@@ -20,9 +20,11 @@ public final class OpenAL3DAudioSpike {
     private static final float RIGHT_X = 4.0f;
 
     private OpenAL3DAudioSpike() {
+
     }
 
     public static void main(String[] args) throws InterruptedException {
+
         int durationSeconds = Integer.getInteger("spike.durationSeconds", DEFAULT_DURATION_SECONDS);
         if (durationSeconds <= 0) {
             throw new IllegalArgumentException("spike.durationSeconds must be greater than zero");
@@ -143,9 +145,11 @@ public final class OpenAL3DAudioSpike {
         }
 
         System.out.println("P0-T05 passed: moving mono source completed and source/buffer counts returned to zero.");
+
     }
 
     private static ShortBuffer generateMonoTone(int sampleRate, float frequency) {
+
         int sampleCount = sampleRate;
         ShortBuffer samples = BufferUtils.createShortBuffer(sampleCount);
 
@@ -156,12 +160,15 @@ public final class OpenAL3DAudioSpike {
         }
         samples.flip();
         return samples;
+
     }
 
     private static void checkAl(String operation) {
+
         int error = alGetError();
         if (error != AL_NO_ERROR) {
             throw new IllegalStateException(operation + " failed with OpenAL error 0x" + Integer.toHexString(error));
         }
+
     }
 }

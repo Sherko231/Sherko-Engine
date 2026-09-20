@@ -25,6 +25,7 @@ class GlfwWindowDebugNativeTest {
 
     @Test
     void capturesRealHighSeverityOpenGlErrorAndSurfacesOwnerThreadFailure() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T01 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T01 native acceptance targets Windows x64");
 
@@ -75,18 +76,22 @@ class GlfwWindowDebugNativeTest {
         }
 
         writeReport(observedFailure, events);
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport(IllegalStateException observedFailure, List<EngineLogger.Event> events) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         EngineLogger.Event debugEvent = events.stream().filter(event -> event.message().startsWith("OpenGL debug")).findFirst().orElseThrow();
         List<String> lines = List.of("task=P5-T01", "result=PASS", "debug.context.flag=PASS", "intentional.invalid.call=glEnable(-1)", "debug.event.level=" + debugEvent.level(),
@@ -96,10 +101,13 @@ class GlfwWindowDebugNativeTest {
             "os.arch=" + System.getProperty("os.arch"), "native.resource.registry.empty.after.cleanup=true",
             "evidence.scope=single production OpenGL debug callback acceptance; not renderer correctness, soak, or release-performance evidence");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

@@ -58,9 +58,11 @@ public final class IntegratedNativeEvidenceHarness {
     private static final int BP_LAYER_MOVING = 1;
 
     private IntegratedNativeEvidenceHarness() {
+
     }
 
     public static void main(String[] args) throws Exception {
+
         int durationSeconds = Integer.getInteger("spike.durationSeconds", DEFAULT_DURATION_SECONDS);
         if (durationSeconds <= 0) {
             throw new IllegalArgumentException("spike.durationSeconds must be > 0");
@@ -348,13 +350,17 @@ public final class IntegratedNativeEvidenceHarness {
         }
 
         System.out.printf("%s passed: integrated native %s completed and all subsystems shut down cleanly.%n", evidenceTask, runKind);
+
     }
 
     private static ByteBuffer packetBuffer() {
+
         return ByteBuffer.allocateDirect(PACKET_BYTES).order(ByteOrder.BIG_ENDIAN);
+
     }
 
     private static ShortBuffer generateTone() {
+
         int sampleRate = 48_000;
         ShortBuffer samples = BufferUtils.createShortBuffer(sampleRate);
         double angularStep = 2.0 * Math.PI * 440.0 / sampleRate;
@@ -363,20 +369,26 @@ public final class IntegratedNativeEvidenceHarness {
         }
         samples.flip();
         return samples;
+
     }
 
     private static void checkAl(String operation) {
+
         int error = alGetError();
         if (error != AL_NO_ERROR) {
             throw new IllegalStateException(operation + " failed with OpenAL error 0x" + Integer.toHexString(error));
         }
+
     }
 
     private static long allocationBalance() {
+
         return (long) Jolt.countNews() - Jolt.countDeletes();
+
     }
 
     private static void close(AutoCloseable closeable) {
+
         if (closeable == null) {
             return;
         }
@@ -385,9 +397,11 @@ public final class IntegratedNativeEvidenceHarness {
         } catch (Exception exception) {
             throw new RuntimeException("Failed to release native object", exception);
         }
+
     }
 
     private static void loadJoltNativeLibrary() {
+
         LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
         NativeBinaryLoader loader = new NativeBinaryLoader(info);
         loader.registerNativeLibraries(new NativeDynamicLibrary[]{new NativeDynamicLibrary("windows/x86-64/com/github/stephengold", PlatformPredicate.WIN_X86_64)})
@@ -397,5 +411,6 @@ public final class IntegratedNativeEvidenceHarness {
         } catch (Exception exception) {
             throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
         }
+
     }
 }

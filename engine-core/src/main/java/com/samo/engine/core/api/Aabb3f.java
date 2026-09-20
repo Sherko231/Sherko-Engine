@@ -14,6 +14,7 @@ public final class Aabb3f {
     private final float maxZ;
 
     public Aabb3f(Vector3fc minimum, Vector3fc maximum) {
+
         Objects.requireNonNull(minimum, "minimum");
         Objects.requireNonNull(maximum, "maximum");
         requireFinite(minimum.x(), "minimum.x");
@@ -31,30 +32,40 @@ public final class Aabb3f {
         maxX = maximum.x();
         maxY = maximum.y();
         maxZ = maximum.z();
+
     }
 
     public Vector3f minimum(Vector3f destination) {
+
         return Objects.requireNonNull(destination, "destination").set(minX, minY, minZ);
+
     }
 
     public Vector3f maximum(Vector3f destination) {
+
         return Objects.requireNonNull(destination, "destination").set(maxX, maxY, maxZ);
+
     }
 
     public boolean containsPoint(Vector3fc point) {
+
         Objects.requireNonNull(point, "point");
         requireFinite(point.x(), "point.x");
         requireFinite(point.y(), "point.y");
         requireFinite(point.z(), "point.z");
         return point.x() >= minX && point.x() <= maxX && point.y() >= minY && point.y() <= maxY && point.z() >= minZ && point.z() <= maxZ;
+
     }
 
     public boolean intersects(Aabb3f other) {
+
         Objects.requireNonNull(other, "other");
         return maxX >= other.minX && minX <= other.maxX && maxY >= other.minY && minY <= other.maxY && maxZ >= other.minZ && minZ <= other.maxZ;
+
     }
 
     public boolean intersects(Sphere3f sphere) {
+
         Objects.requireNonNull(sphere, "sphere");
         double x = clamp(sphere.centerX(), minX, maxX);
         double y = clamp(sphere.centerY(), minY, maxY);
@@ -63,39 +74,56 @@ public final class Aabb3f {
         double dy = sphere.centerY() - y;
         double dz = sphere.centerZ() - z;
         return dx * dx + dy * dy + dz * dz <= (double) sphere.radius() * sphere.radius();
+
     }
 
     float minX() {
+
         return minX;
+
     }
 
     float minY() {
+
         return minY;
+
     }
 
     float minZ() {
+
         return minZ;
+
     }
 
     float maxX() {
+
         return maxX;
+
     }
 
     float maxY() {
+
         return maxY;
+
     }
 
     float maxZ() {
+
         return maxZ;
+
     }
 
     private static double clamp(double value, double minimum, double maximum) {
+
         return Math.max(minimum, Math.min(maximum, value));
+
     }
 
     private static void requireFinite(float value, String name) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 }

@@ -14,22 +14,29 @@ public final class InputActionEvaluator {
     private long lastFrameId;
 
     public InputActionEvaluator(InputActionBindings bindings) {
+
         this(bindings, InputResponseSettings.defaults());
+
     }
 
     public InputActionEvaluator(InputActionBindings bindings, InputResponseSettings responseSettings) {
+
         this.bindings = Objects.requireNonNull(bindings, "bindings");
         this.responseSettings = Objects.requireNonNull(responseSettings, "responseSettings");
         for (InputAction action : InputAction.values()) {
             previouslyActive.put(action, false);
         }
+
     }
 
     public void setResponseSettings(InputResponseSettings responseSettings) {
+
         this.responseSettings = Objects.requireNonNull(responseSettings, "responseSettings");
+
     }
 
     public InputActionSnapshot evaluate(InputSnapshot snapshot) {
+
         Objects.requireNonNull(snapshot, "snapshot");
         long frameId = snapshot.frameId();
         if (hasPreviousFrame && frameId <= lastFrameId) {
@@ -65,9 +72,11 @@ public final class InputActionEvaluator {
         hasPreviousFrame = true;
         lastFrameId = frameId;
         return new InputActionSnapshot(frameId, evaluatedStates);
+
     }
 
     private static Evaluation evaluateAction(InputAction action, List<InputBinding> actionBindings, InputSnapshot snapshot, InputResponseSettings responseSettings) {
+
         double value = 0.0d;
         double x = 0.0d;
         double y = 0.0d;
@@ -87,9 +96,11 @@ public final class InputActionEvaluator {
 
         boolean active = action.valueType() == InputActionValueType.DIGITAL ? value != 0.0d : x != 0.0d || y != 0.0d;
         return new Evaluation(value, x, y, active, sawCompleteTap);
+
     }
 
     private static BindingSample sample(InputBinding binding, InputSnapshot snapshot, InputResponseSettings responseSettings) {
+
         InputBinding.Control control = binding.control();
         if (control instanceof InputBinding.KeyControl keyControl) {
             InputKey key = keyControl.key();
@@ -104,22 +115,27 @@ public final class InputActionEvaluator {
             ? responseSettings.applyMouseX(snapshot.mouseDeltaX())
             : responseSettings.applyMouseY(snapshot.mouseDeltaY());
         return new BindingSample(amount, false, false);
+
     }
 
     private static double multiplyFinite(double left, double right) {
+
         double result = left * right;
         if (!Double.isFinite(result)) {
             throw new IllegalArgumentException("action binding contribution must be finite");
         }
         return result;
+
     }
 
     private static double addFinite(double left, double right) {
+
         double result = left + right;
         if (!Double.isFinite(result)) {
             throw new IllegalArgumentException("aggregated action value must be finite");
         }
         return result;
+
     }
 
     private record BindingSample(double amount, boolean pressed, boolean released) {

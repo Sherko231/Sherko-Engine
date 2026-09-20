@@ -16,10 +16,12 @@ public final class GlfwWindow extends EngineSubsystem {
     private static final WindowSizeListener NO_OP_SIZE_LISTENER = new WindowSizeListener() {
         @Override
         public void onLogicalWindowSizeChanged(int width, int height) {
+
         }
 
         @Override
         public void onFramebufferSizeChanged(int width, int height) {
+
         }
     };
 
@@ -53,36 +55,51 @@ public final class GlfwWindow extends EngineSubsystem {
     private Throwable pendingOpenGlDebugFailure;
 
     public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources) {
+
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, OpenGlDebugMode.DISABLED);
+
     }
 
     public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, OpenGlDebugMode openGlDebugMode) {
+
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, openGlDebugMode);
+
     }
 
     public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener) {
+
         this(width, height, title, logger, nativeResources, sizeListener, OpenGlDebugMode.DISABLED);
+
     }
 
     public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener,
         OpenGlDebugMode openGlDebugMode) {
+
         this(width, height, title, logger, nativeResources, sizeListener, openGlDebugMode, new LwjglGlfwNativeBackend());
+
     }
 
     GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, GlfwNativeBackend backend) {
+
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, OpenGlDebugMode.DISABLED, backend);
+
     }
 
     GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, OpenGlDebugMode openGlDebugMode, GlfwNativeBackend backend) {
+
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, openGlDebugMode, backend);
+
     }
 
     GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener, GlfwNativeBackend backend) {
+
         this(width, height, title, logger, nativeResources, sizeListener, OpenGlDebugMode.DISABLED, backend);
+
     }
 
     GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener, OpenGlDebugMode openGlDebugMode,
         GlfwNativeBackend backend) {
+
         if (width <= 0) {
             throw new IllegalArgumentException("width must be positive");
         }
@@ -104,23 +121,29 @@ public final class GlfwWindow extends EngineSubsystem {
         this.sizeDelivery = new GlfwDeferredSizeDelivery(suppliedSizeListener);
         this.windowModeController = new GlfwWindowModeController(this.backend);
         this.cursorCapture = new GlfwCursorCaptureController(this.backend, mouseMotion);
+
     }
 
     /** Returns the stable non-owning guard for production OpenGL thread affinity. */
     public OpenGlThreadGuard openGlThreadGuard() {
+
         return openGlThreadGuard;
+
     }
 
     /** Presents the current OpenGL back buffer for this started window. */
     public void present() {
+
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW presentation requires a started window");
         }
         requireOwnerThread();
         backend.swapBuffers(windowHandle);
+
     }
 
     public void pollEvents() {
+
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW event polling requires a started window");
         }
@@ -141,10 +164,12 @@ public final class GlfwWindow extends EngineSubsystem {
         throwPendingOpenGlDebugFailure();
         throwPendingInputFailure();
         sizeDelivery.dispatchPending();
+
     }
 
     /** Captures and consumes the pending per-frame hardware edges and mouse motion. */
     public InputSnapshot captureInputSnapshot(long frameId) {
+
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW input snapshots require a started window");
         }
@@ -153,28 +178,34 @@ public final class GlfwWindow extends EngineSubsystem {
         InputSnapshot snapshot = inputState.captureSnapshot(frameId, cursorCapture.effectivelyCaptured(), mouseMotion.accumulatedDeltaX(), mouseMotion.accumulatedDeltaY());
         mouseMotion.clearAccumulatedDelta();
         return snapshot;
+
     }
 
     /** Requests or releases gameplay cursor capture for this started window. */
     public void setCursorCaptured(boolean captured) {
+
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW cursor capture requires a started window");
         }
         requireOwnerThread();
         cursorCapture.setCaptured(windowHandle, inputState.focused(), captured);
+
     }
 
     public void setWindowMode(WindowMode mode) {
+
         WindowMode requestedMode = Objects.requireNonNull(mode, "mode");
         if (!eventPollingEnabled) {
             throw new IllegalStateException("GLFW window mode changes require a started window");
         }
         requireOwnerThread();
         windowModeController.setMode(windowHandle, requestedMode);
+
     }
 
     @Override
     protected void onInitialize() {
+
         openGlThreadGuard.bindOwnerThread(Thread.currentThread());
         try {
             callbackState = backend.installErrorCallback();
@@ -217,10 +248,12 @@ public final class GlfwWindow extends EngineSubsystem {
             rollbackInitialization(failure);
             throw failure;
         }
+
     }
 
     @Override
     protected void onStart() {
+
         requireOwnerThread();
         try {
             backend.makeContextCurrent(windowHandle);
@@ -247,29 +280,39 @@ public final class GlfwWindow extends EngineSubsystem {
             sizeCallbackState = backend.installSizeCallbacks(windowHandle, new GlfwSizeEventSink() {
                 @Override
                 public void onLogicalSize(int logicalWidth, int logicalHeight) {
+
                     sizeDelivery.stageLogical(logicalWidth, logicalHeight);
+
                 }
 
                 @Override
                 public void onFramebufferSize(int framebufferWidth, int framebufferHeight) {
+
                     sizeDelivery.stageFramebuffer(framebufferWidth, framebufferHeight);
+
                 }
             });
 
             inputCallbackState = backend.installInputCallbacks(windowHandle, new GlfwInputEventSink() {
                 @Override
                 public void onFocus(boolean focused) {
+
                     handleFocusChanged(focused);
+
                 }
 
                 @Override
                 public void onKey(int key, int action) {
+
                     inputState.onKeyChanged(key, action);
+
                 }
 
                 @Override
                 public void onMouseButton(int button, int action) {
+
                     inputState.onMouseButtonChanged(button, action);
+
                 }
             });
             motionCallbackState = backend.installCursorPositionCallback(windowHandle,
@@ -295,10 +338,12 @@ public final class GlfwWindow extends EngineSubsystem {
             cleanupStartedContext(failure);
             throw failure;
         }
+
     }
 
     @Override
     protected void onStop() {
+
         requireOwnerThread();
         eventPollingEnabled = false;
         sizeDelivery.clear();
@@ -322,10 +367,12 @@ public final class GlfwWindow extends EngineSubsystem {
             capabilitiesCreated = false;
         }
         throwCleanupFailure(failures);
+
     }
 
     @Override
     protected void onClose() {
+
         if (!hasOwnedNativeState()) {
             return;
         }
@@ -367,44 +414,62 @@ public final class GlfwWindow extends EngineSubsystem {
         }
         releaseCallback(failures);
         throwCleanupFailure(failures);
+
     }
 
     boolean isKeyHeldForTest(int key) {
+
         return inputState.isKeyHeld(key);
+
     }
 
     boolean isMouseButtonHeldForTest(int button) {
+
         return inputState.isMouseButtonHeld(button);
+
     }
 
     boolean isFocusedForTest() {
+
         return inputState.focused();
+
     }
 
     boolean isCursorEffectivelyCapturedForTest() {
+
         return cursorCapture.effectivelyCaptured();
+
     }
 
     boolean isRawMouseMotionEnabledForTest() {
+
         return cursorCapture.rawMouseMotionEnabled();
+
     }
 
     boolean isRawMouseMotionSupportedForTest() {
+
         return cursorCapture.rawMouseMotionSupported();
+
     }
 
     GlfwMouseMotionTracker.MouseDelta drainMouseMotionForTest() {
+
         return mouseMotion.drainForTest();
+
     }
 
     private void handleFocusChanged(boolean focused) {
+
         inputState.onFocusChanged(focused);
         if (!focused) {
             cursorCapture.onFocusLost(windowHandle, this::stageInputFailure);
         }
+
     }
 
     private void handleOpenGlDebugMessage(int source, int type, int id, int severity, String message) {
+
         String diagnostic = "OpenGL debug [source=" + debugSourceName(source) + ", type=" + debugTypeName(type) + ", severity=" + debugSeverityName(severity) + ", id=" + id + "]: "
             + message;
         if (severity == GL43.GL_DEBUG_SEVERITY_HIGH) {
@@ -424,17 +489,21 @@ public final class GlfwWindow extends EngineSubsystem {
         } catch (RuntimeException | Error loggingFailure) {
             stageOpenGlDebugFailure(loggingFailure);
         }
+
     }
 
     private void stageOpenGlDebugFailure(Throwable failure) {
+
         if (pendingOpenGlDebugFailure == null) {
             pendingOpenGlDebugFailure = failure;
         } else {
             addSuppressedUnlessSame(pendingOpenGlDebugFailure, failure);
         }
+
     }
 
     private void throwPendingOpenGlDebugFailure() {
+
         Throwable failure = takePendingOpenGlDebugFailure();
         if (failure == null) {
             return;
@@ -443,15 +512,19 @@ public final class GlfwWindow extends EngineSubsystem {
             throw runtimeFailure;
         }
         throw (Error) failure;
+
     }
 
     private Throwable takePendingOpenGlDebugFailure() {
+
         Throwable failure = pendingOpenGlDebugFailure;
         pendingOpenGlDebugFailure = null;
         return failure;
+
     }
 
     private static String debugSourceName(int source) {
+
         return switch (source) {
             case GL43.GL_DEBUG_SOURCE_API -> "API";
             case GL43.GL_DEBUG_SOURCE_WINDOW_SYSTEM -> "WINDOW_SYSTEM";
@@ -461,9 +534,11 @@ public final class GlfwWindow extends EngineSubsystem {
             case GL43.GL_DEBUG_SOURCE_OTHER -> "OTHER";
             default -> "UNKNOWN(" + source + ")";
         };
+
     }
 
     private static String debugTypeName(int type) {
+
         return switch (type) {
             case GL43.GL_DEBUG_TYPE_ERROR -> "ERROR";
             case GL43.GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR -> "DEPRECATED_BEHAVIOR";
@@ -476,9 +551,11 @@ public final class GlfwWindow extends EngineSubsystem {
             case GL43.GL_DEBUG_TYPE_OTHER -> "OTHER";
             default -> "UNKNOWN(" + type + ")";
         };
+
     }
 
     private static String debugSeverityName(int severity) {
+
         return switch (severity) {
             case GL43.GL_DEBUG_SEVERITY_HIGH -> "HIGH";
             case GL43.GL_DEBUG_SEVERITY_MEDIUM -> "MEDIUM";
@@ -486,17 +563,21 @@ public final class GlfwWindow extends EngineSubsystem {
             case GL43.GL_DEBUG_SEVERITY_NOTIFICATION -> "NOTIFICATION";
             default -> "UNKNOWN(" + severity + ")";
         };
+
     }
 
     private void stageInputFailure(Throwable failure) {
+
         if (pendingInputFailure == null) {
             pendingInputFailure = failure;
         } else {
             addSuppressedUnlessSame(pendingInputFailure, failure);
         }
+
     }
 
     private void throwPendingInputFailure() {
+
         Throwable failure = takePendingInputFailure();
         if (failure == null) {
             return;
@@ -505,15 +586,19 @@ public final class GlfwWindow extends EngineSubsystem {
             throw runtimeFailure;
         }
         throw (Error) failure;
+
     }
 
     private Throwable takePendingInputFailure() {
+
         Throwable failure = pendingInputFailure;
         pendingInputFailure = null;
         return failure;
+
     }
 
     private void rollbackInitialization(Throwable primary) {
+
         List<Throwable> failures = new ArrayList<>();
         if (windowRegistration != null) {
             NativeResourceRegistry.Registration registration = windowRegistration;
@@ -534,9 +619,11 @@ public final class GlfwWindow extends EngineSubsystem {
         for (Throwable failure : failures) {
             addSuppressedUnlessSame(primary, failure);
         }
+
     }
 
     private void cleanupStartedContext(Throwable primary) {
+
         eventPollingEnabled = false;
         sizeDelivery.clear();
         windowModeController.clearRestoreGeometry();
@@ -559,45 +646,55 @@ public final class GlfwWindow extends EngineSubsystem {
         for (Throwable failure : failures) {
             addSuppressedUnlessSame(primary, failure);
         }
+
     }
 
     private void releaseOpenGlDebugCallback(List<Throwable> failures) {
+
         if (debugCallbackState == null) {
             return;
         }
         OpenGlDebugCallbackRegistration state = debugCallbackState;
         debugCallbackState = null;
         runCleanup(failures, () -> backend.releaseOpenGlDebugCallback(state));
+
     }
 
     private void releaseMotionCallback(List<Throwable> failures) {
+
         if (motionCallbackState == null) {
             return;
         }
         GlfwCursorPositionCallbackRegistration state = motionCallbackState;
         motionCallbackState = null;
         runCleanup(failures, () -> backend.releaseCursorPositionCallback(windowHandle, state));
+
     }
 
     private void releaseInputCallbacks(List<Throwable> failures) {
+
         if (inputCallbackState == null) {
             return;
         }
         GlfwInputCallbackRegistration state = inputCallbackState;
         inputCallbackState = null;
         runCleanup(failures, () -> backend.releaseInputCallbacks(windowHandle, state));
+
     }
 
     private void releaseSizeCallbacks(List<Throwable> failures) {
+
         if (sizeCallbackState == null) {
             return;
         }
         GlfwSizeCallbackRegistration state = sizeCallbackState;
         sizeCallbackState = null;
         runCleanup(failures, () -> backend.releaseSizeCallbacks(windowHandle, state));
+
     }
 
     private void releaseCallback(List<Throwable> failures) {
+
         if (callbackState == null) {
             return;
         }
@@ -605,25 +702,33 @@ public final class GlfwWindow extends EngineSubsystem {
         callbackState = null;
         runCleanup(failures, () -> backend.restoreErrorCallback(state));
         runCleanup(failures, () -> backend.freeOwnedErrorCallback(state));
+
     }
 
     private boolean hasOwnedNativeState() {
+
         return callbackState != null || debugCallbackState != null || sizeCallbackState != null || inputCallbackState != null || motionCallbackState != null || glfwInitialized
             || windowHandle != 0L || windowRegistration != null || contextCurrent || capabilitiesCreated;
+
     }
 
     private void requireOwnerThread() {
+
         openGlThreadGuard.assertOwnerThread();
+
     }
 
     private static String requireGlString(String name, String value) {
+
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(name + " is unavailable for the current OpenGL context");
         }
         return value;
+
     }
 
     private static boolean runCleanup(List<Throwable> failures, Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
@@ -631,9 +736,11 @@ public final class GlfwWindow extends EngineSubsystem {
             failures.add(failure);
             return false;
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -645,12 +752,15 @@ public final class GlfwWindow extends EngineSubsystem {
             throw runtimeFailure;
         }
         throw (Error) primary;
+
     }
 
     private static void addSuppressedUnlessSame(Throwable primary, Throwable suppressed) {
+
         if (primary != suppressed) {
             primary.addSuppressed(suppressed);
         }
+
     }
 
 }

@@ -11,9 +11,11 @@ final class FramebufferMetricsUniformBlock {
     static final int SIZE_BYTES = 16;
 
     private FramebufferMetricsUniformBlock() {
+
     }
 
     static void write(int framebufferWidth, int framebufferHeight, ByteBuffer destination) {
+
         ByteBuffer output = Objects.requireNonNull(destination, "destination");
         if (framebufferWidth <= 0) {
             throw new IllegalArgumentException("framebufferWidth must be positive");
@@ -33,5 +35,6 @@ final class FramebufferMetricsUniformBlock {
         target.putFloat(1.0f / framebufferWidth);
         target.putFloat(1.0f / framebufferHeight);
         output.position(start + SIZE_BYTES);
+
     }
 }

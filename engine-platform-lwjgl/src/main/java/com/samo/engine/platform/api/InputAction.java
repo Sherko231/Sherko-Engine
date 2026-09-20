@@ -9,10 +9,14 @@ public enum InputAction {
     private final InputActionValueType valueType;
 
     InputAction(InputActionValueType valueType) {
+
         this.valueType = valueType;
+
     }
 
     public InputActionValueType valueType() {
+
         return valueType;
+
     }
 }

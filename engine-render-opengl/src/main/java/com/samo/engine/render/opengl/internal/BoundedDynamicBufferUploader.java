@@ -20,27 +20,37 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         private final long generation;
 
         private Slice(BoundedDynamicBufferUploader owner, int slotIndex, long offsetBytes, int lengthBytes, long generation) {
+
             this.owner = owner;
             this.slotIndex = slotIndex;
             this.offsetBytes = offsetBytes;
             this.lengthBytes = lengthBytes;
             this.generation = generation;
+
         }
 
         int slotIndex() {
+
             return slotIndex;
+
         }
 
         long offsetBytes() {
+
             return offsetBytes;
+
         }
 
         int lengthBytes() {
+
             return lengthBytes;
+
         }
 
         long generation() {
+
             return generation;
+
         }
     }
 
@@ -63,6 +73,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
 
     private BoundedDynamicBufferUploader(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlResourceBackend backend, OpenGlBuffer buffer, int slotCount,
         long slotCapacityBytes) {
+
         this.threadGuard = threadGuard;
         this.registry = registry;
         this.backend = backend;
@@ -72,10 +83,12 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         for (int index = 0; index < slotCount; index++) {
             slots[index] = new Slot();
         }
+
     }
 
     static BoundedDynamicBufferUploader create(int slotCount, long slotCapacityBytes, OpenGlThreadGuard threadGuard, NativeResourceRegistry registry,
         OpenGlResourceBackend backend) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlResourceBackend gl = Objects.requireNonNull(backend, "backend");
@@ -103,9 +116,11 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             CleanupFailureSuppression.runAndSuppress(failure, buffer::close);
             throw failure;
         }
+
     }
 
     Slice upload(ByteBuffer data) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
         ByteBuffer source = Objects.requireNonNull(data, "data");
@@ -130,9 +145,11 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         Slice slice = new Slice(this, nextSlot, offsetBytes, lengthBytes, slot.generation);
         nextSlot = (nextSlot + 1) % slots.length;
         return slice;
+
     }
 
     void markSubmitted(Slice slice) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
         Slice actual = Objects.requireNonNull(slice, "slice");
@@ -165,9 +182,11 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         slot.fenceHandle = fenceHandle;
         slot.fenceRegistration = registration;
         slot.state = SlotState.SUBMITTED;
+
     }
 
     private void prepareSlotForReuse(Slot slot, int slotIndex) {
+
         if (slot.state == SlotState.UPLOADED) {
             throw new IllegalStateException("slot " + slotIndex + " was uploaded but not submitted");
         }
@@ -186,9 +205,11 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         releaseFence(slot);
         slot.state = SlotState.FREE;
         slot.lengthBytes = 0;
+
     }
 
     private void releaseFence(Slot slot) {
+
         NativeResourceRegistry.Registration registration = slot.fenceRegistration;
         if (registration == null) {
             throw new IllegalStateException("submitted slot is missing its sync registration");
@@ -196,20 +217,26 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         slot.fenceRegistration = null;
         slot.fenceHandle = 0L;
         registration.close();
+
     }
 
     int bufferHandle() {
+
         return buffer.handle();
+
     }
 
     private void requireOpen() {
+
         if (closeAttempted) {
             throw new IllegalStateException("dynamic buffer uploader is closed");
         }
+
     }
 
     @Override
     public void close() {
+
         if (closeAttempted) {
             return;
         }
@@ -236,9 +263,11 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         }
 
         throwCleanupFailure(failures);
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -253,5 +282,6 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             throw runtimeFailure;
         }
         throw (Error) first;
+
     }
 }

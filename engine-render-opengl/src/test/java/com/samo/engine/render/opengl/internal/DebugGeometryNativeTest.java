@@ -49,6 +49,7 @@ class DebugGeometryNativeTest {
 
     @Test
     void rendersBoundedDebugGeometryAndPublishesTextCounters() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T16 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"));
 
@@ -57,12 +58,15 @@ class DebugGeometryNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
         GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5-T16 Debug Geometry", new EngineLogger(event -> {
@@ -135,9 +139,11 @@ class DebugGeometryNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static int[] findGreenDominantPixel(int centerX, int centerY, int radius) {
+
         for (int y = centerY - radius; y <= centerY + radius; y++) {
             for (int x = centerX - radius; x <= centerX + radius; x++) {
                 int[] pixel = readPixel(x, y);
@@ -147,17 +153,21 @@ class DebugGeometryNativeTest {
             }
         }
         return null;
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -178,9 +188,11 @@ class DebugGeometryNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int[] greenPixel) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T16", "result=PASS", "debug.primitives=line,aabb,sphere,ray", "debug.primitive.count=4",
             "debug.text.counters=tick=42,net/rtt_ms=17", "debug.expected.vertex.count=124", "debug.green.sample.rgb=" + rgb(greenPixel), "scene.indexed.draws=1",
@@ -188,23 +200,30 @@ class DebugGeometryNativeTest {
             "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
             "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=bounded per-frame renderer-neutral line/AABB/sphere/ray geometry plus published text counters through the production renderer; no font/UI renderer, retained debug scene, physics/network implementation, editor, or performance claim"));
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error failure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

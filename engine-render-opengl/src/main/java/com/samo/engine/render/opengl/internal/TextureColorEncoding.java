@@ -9,10 +9,14 @@ enum TextureColorEncoding {
     private final int internalFormat;
 
     TextureColorEncoding(int internalFormat) {
+
         this.internalFormat = internalFormat;
+
     }
 
     int internalFormat() {
+
         return internalFormat;
+
     }
 }

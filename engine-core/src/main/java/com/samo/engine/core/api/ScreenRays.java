@@ -7,9 +7,11 @@ import org.joml.Matrix4fc;
 /** Builds world-space rays from top-left-origin screen/viewport coordinates. */
 public final class ScreenRays {
     private ScreenRays() {
+
     }
 
     public static Ray3f worldRay(float screenX, float screenY, int viewportX, int viewportY, int viewportWidth, int viewportHeight, Matrix4fc view, Matrix4fc projection) {
+
         Objects.requireNonNull(view, "view");
         Objects.requireNonNull(projection, "projection");
         requireFinite(screenX, "screenX");
@@ -67,25 +69,35 @@ public final class ScreenRays {
         requireFinite(farZ, "far world z");
 
         return new Ray3f(nearX, nearY, nearZ, farX - nearX, farY - nearY, farZ - nearZ);
+
     }
 
     private static float transformX(Matrix4fc matrix, float x, float y, float z) {
+
         return matrix.m00() * x + matrix.m10() * y + matrix.m20() * z + matrix.m30();
+
     }
 
     private static float transformY(Matrix4fc matrix, float x, float y, float z) {
+
         return matrix.m01() * x + matrix.m11() * y + matrix.m21() * z + matrix.m31();
+
     }
 
     private static float transformZ(Matrix4fc matrix, float x, float y, float z) {
+
         return matrix.m02() * x + matrix.m12() * y + matrix.m22() * z + matrix.m32();
+
     }
 
     private static float transformW(Matrix4fc matrix, float x, float y, float z) {
+
         return matrix.m03() * x + matrix.m13() * y + matrix.m23() * z + matrix.m33();
+
     }
 
     private static void requireFinite(Matrix4fc matrix, String name) {
+
         requireFinite(matrix.m00(), name + ".m00");
         requireFinite(matrix.m01(), name + ".m01");
         requireFinite(matrix.m02(), name + ".m02");
@@ -102,17 +114,22 @@ public final class ScreenRays {
         requireFinite(matrix.m31(), name + ".m31");
         requireFinite(matrix.m32(), name + ".m32");
         requireFinite(matrix.m33(), name + ".m33");
+
     }
 
     private static void requireFinite(float value, String name) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 
     private static void requireFiniteNonZero(float value, String name) {
+
         if (!Float.isFinite(value) || value == 0.0f) {
             throw new IllegalArgumentException(name + " must be finite and non-zero");
         }
+
     }
 }

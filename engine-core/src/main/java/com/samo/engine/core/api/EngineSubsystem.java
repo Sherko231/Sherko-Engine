@@ -25,6 +25,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
 
     /** Creates an uninitialized subsystem without acquiring resources. */
     protected EngineSubsystem() {
+
     }
 
     /**
@@ -34,7 +35,9 @@ public abstract class EngineSubsystem implements AutoCloseable {
      *             unless this instance is new
      */
     public final void initialize() {
+
         transition("initialize", State.NEW, State.INITIALIZING, State.INITIALIZED, this::onInitialize);
+
     }
 
     /**
@@ -44,7 +47,9 @@ public abstract class EngineSubsystem implements AutoCloseable {
      *             unless initialization completed successfully
      */
     public final void start() {
+
         transition("start", State.INITIALIZED, State.STARTING, State.STARTED, this::onStart);
+
     }
 
     /**
@@ -54,7 +59,9 @@ public abstract class EngineSubsystem implements AutoCloseable {
      *             unless starting completed successfully
      */
     public final void stop() {
+
         transition("stop", State.STARTED, State.STOPPING, State.STOPPED, this::onStop);
+
     }
 
     /**
@@ -66,6 +73,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
      */
     @Override
     public final void close() {
+
         if (state == State.CLOSED) {
             return;
         }
@@ -80,6 +88,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
             }
             default -> throw invalidOperation("close");
         }
+
     }
 
     /** Acquires resources, retaining ownership information even if setup fails. */
@@ -99,6 +108,7 @@ public abstract class EngineSubsystem implements AutoCloseable {
     protected abstract void onClose();
 
     private void transition(String operation, State expected, State entering, State completed, Runnable hook) {
+
         if (state != expected) {
             throw invalidOperation(operation);
         }
@@ -110,10 +120,13 @@ public abstract class EngineSubsystem implements AutoCloseable {
             state = State.FAILED;
             throw failure;
         }
+
     }
 
     private IllegalStateException invalidOperation(String operation) {
+
         return new IllegalStateException("Cannot " + operation + " subsystem in state " + state);
+
     }
 
     private enum State {

@@ -39,6 +39,7 @@ class RenderMaterialDescriptorNativeTest {
 
     @Test
     void fullFrameBaselineMaterialRemainsStableWithoutLeakingDrawBindings() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T09 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T09 native acceptance targets Windows x64");
 
@@ -47,12 +48,15 @@ class RenderMaterialDescriptorNativeTest {
         WindowSizeListener sizeListener = new WindowSizeListener() {
             @Override
             public void onLogicalWindowSizeChanged(int width, int height) {
+
             }
 
             @Override
             public void onFramebufferSizeChanged(int width, int height) {
+
                 framebufferSize[0] = width;
                 framebufferSize[1] = height;
+
             }
         };
 
@@ -121,17 +125,21 @@ class RenderMaterialDescriptorNativeTest {
         }
 
         registry.assertNoOpenResources();
+
     }
 
     private static int[] readPixel(int x, int y) {
+
         ByteBuffer pixel = ByteBuffer.allocateDirect(4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
         return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
+
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
+
         ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -154,9 +162,11 @@ class RenderMaterialDescriptorNativeTest {
         if (!ImageIO.write(image, "png", CAPTURE_PATH.toFile())) {
             throw new IOException("PNG writer unavailable");
         }
+
     }
 
     private static void writeReport(int[] baseline) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH, List.of("task=P5-T09", "result=PASS", "mesh=indexed-room-fixture", "runtime.materials.drawn=1", "frames.rendered=2",
             "second.frame.world.submitted.draws=1", "baseline.blend=OPAQUE", "baseline.depth=TEST_WRITE", "baseline.cull=BACK", "baseline.rgb=" + rgb(baseline),
@@ -165,23 +175,30 @@ class RenderMaterialDescriptorNativeTest {
             "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"),
             "os.arch=" + System.getProperty("os.arch"),
             "evidence.scope=two consecutive production frames preserve the single full-frame baseline room draw and clean GL state; alternate tinted material state remains covered by deterministic material tests without being forced into normal runtime presentation; no public material/light API, asset pipeline, submission resource identity, or performance claim"));
+
     }
 
     private static String rgb(int[] pixel) {
+
         return pixel[0] + "," + pixel[1] + "," + pixel[2];
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

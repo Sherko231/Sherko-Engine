@@ -22,7 +22,9 @@ public final class FixedStepCatchUpPolicy {
 
     /** Creates the default 250 ms / 5-step catch-up policy. */
     public FixedStepCatchUpPolicy() {
+
         this(DEFAULT_MAX_FRAME_GAP_NANOS, DEFAULT_MAX_STEPS_PER_UPDATE);
+
     }
 
     /**
@@ -36,6 +38,7 @@ public final class FixedStepCatchUpPolicy {
      *             if either limit is not strictly positive
      */
     public FixedStepCatchUpPolicy(long maxFrameGapNanos, int maxStepsPerUpdate) {
+
         if (maxFrameGapNanos <= 0L) {
             throw new IllegalArgumentException("maxFrameGapNanos must be positive");
         }
@@ -44,6 +47,7 @@ public final class FixedStepCatchUpPolicy {
         }
         this.maxFrameGapNanos = maxFrameGapNanos;
         this.maxStepsPerUpdate = maxStepsPerUpdate;
+
     }
 
     /**
@@ -65,6 +69,7 @@ public final class FixedStepCatchUpPolicy {
      *             if {@code elapsedNanos} is negative
      */
     public long advance(FixedStepAccumulator accumulator, long elapsedNanos) {
+
         Objects.requireNonNull(accumulator, "accumulator");
         if (elapsedNanos < 0L) {
             throw new IllegalArgumentException("elapsedNanos must be non-negative");
@@ -73,5 +78,6 @@ public final class FixedStepCatchUpPolicy {
         long acceptedElapsedNanos = Math.min(elapsedNanos, maxFrameGapNanos);
         long dueSteps = accumulator.advance(acceptedElapsedNanos);
         return Math.min(dueSteps, (long) maxStepsPerUpdate);
+
     }
 }

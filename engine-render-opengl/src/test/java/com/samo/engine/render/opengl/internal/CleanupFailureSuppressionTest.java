@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 class CleanupFailureSuppressionTest {
     @Test
     void successfulCleanupLeavesPrimaryUnchanged() {
+
         RuntimeException primary = new IllegalStateException("primary");
         AtomicBoolean cleaned = new AtomicBoolean();
 
@@ -16,10 +17,12 @@ class CleanupFailureSuppressionTest {
 
         assertEquals(true, cleaned.get());
         assertEquals(0, primary.getSuppressed().length);
+
     }
 
     @Test
     void distinctCleanupFailureIsSuppressedOnPrimary() {
+
         RuntimeException primary = new IllegalStateException("primary");
         RuntimeException cleanupFailure = new IllegalStateException("cleanup");
 
@@ -29,10 +32,12 @@ class CleanupFailureSuppressionTest {
 
         assertEquals(1, primary.getSuppressed().length);
         assertSame(cleanupFailure, primary.getSuppressed()[0]);
+
     }
 
     @Test
     void sameThrowableIsNotSelfSuppressed() {
+
         RuntimeException primary = new IllegalStateException("shared");
 
         CleanupFailureSuppression.runAndSuppress(primary, () -> {
@@ -40,5 +45,6 @@ class CleanupFailureSuppressionTest {
         });
 
         assertEquals(0, primary.getSuppressed().length);
+
     }
 }

@@ -28,6 +28,7 @@ class GlfwWindowNativeTest {
 
     @Test
     void createsRealOpenGl46WindowLogsActualIdentityAndCleansOwnership() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T01 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T01 native acceptance targets Windows x64");
 
@@ -77,24 +78,30 @@ class GlfwWindowNativeTest {
         }
 
         writeReport(actualMajor, actualMinor, actualVersion, actualRenderer);
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void assertLog(EngineLogger.Event event, String message) {
+
         assertEquals(EngineLogger.Level.INFO, event.level());
         assertEquals(message, event.message());
         assertEquals("platform", event.context().subsystem());
+
     }
 
     private static void writeReport(int actualMajor, int actualMinor, String actualVersion, String actualRenderer) throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         List<String> lines = List.of("task=P3-T01", "result=PASS", "requested.context=4.6 Core", "actual.major=" + actualMajor, "actual.minor=" + actualMinor,
             "actual.version=" + actualVersion, "actual.renderer=" + actualRenderer, "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
@@ -102,10 +109,13 @@ class GlfwWindowNativeTest {
             "native.resource.registry.empty.after.cleanup=true",
             "evidence.scope=single production GLFW/OpenGL window-context lifecycle; not P0-T13 soak or P0-T14 repeated lifecycle evidence");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

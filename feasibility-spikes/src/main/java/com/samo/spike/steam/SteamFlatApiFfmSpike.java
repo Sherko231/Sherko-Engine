@@ -34,9 +34,11 @@ public final class SteamFlatApiFfmSpike {
     );
 
     private SteamFlatApiFfmSpike() {
+
     }
 
     public static void main(String[] args) throws Throwable {
+
         requireWindowsX64();
 
         Path workingDirectory = Path.of("").toAbsolutePath().normalize();
@@ -94,9 +96,11 @@ public final class SteamFlatApiFfmSpike {
         }
 
         System.out.println("P0-T09 passed: Java FFM loaded the official Steam redistributable and called ISteamNetworkingSockets without authored C/C++ glue.");
+
     }
 
     private static Path resolveRedistributable(Path workingDirectory) throws IOException {
+
         String explicitPath = System.getProperty("spike.steamApi64Path");
         if (explicitPath != null && !explicitPath.isBlank()) {
             Path path = Path.of(explicitPath).toAbsolutePath().normalize();
@@ -116,9 +120,11 @@ public final class SteamFlatApiFfmSpike {
         }
 
         return extracted.toAbsolutePath().normalize();
+
     }
 
     private static Accessor findNetworkingSocketsAccessor(SymbolLookup lookup) {
+
         for (int version = 13; version >= 9; version--) {
             String suffix = String.format(Locale.ROOT, "v%03d", version);
             String[] candidates = {"SteamAPI_SteamNetworkingSockets_" + suffix, "SteamAPI_SteamNetworkingSockets_SteamAPI_" + suffix};
@@ -132,9 +138,11 @@ public final class SteamFlatApiFfmSpike {
         }
 
         throw new IllegalStateException("No supported SteamNetworkingSockets flat-API accessor symbol was found in steam_api64.dll");
+
     }
 
     private static String initResultName(int value) {
+
         return switch (value) {
             case 0 -> "OK";
             case 1 -> "FailedGeneric";
@@ -142,9 +150,11 @@ public final class SteamFlatApiFfmSpike {
             case 3 -> "VersionMismatch";
             default -> "Unrecognized";
         };
+
     }
 
     private static String availabilityName(int value) {
+
         return switch (value) {
             case -102 -> "CannotTry";
             case -101 -> "Failed";
@@ -157,9 +167,11 @@ public final class SteamFlatApiFfmSpike {
             case 100 -> "Current";
             default -> "Unrecognized";
         };
+
     }
 
     private static void requireWindowsX64() {
+
         String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
         String architecture = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT);
 
@@ -169,6 +181,7 @@ public final class SteamFlatApiFfmSpike {
         if (!(architecture.contains("amd64") || architecture.contains("x86_64"))) {
             throw new IllegalStateException("P0-T09 requires a 64-bit x86 JVM; detected os.arch=" + architecture);
         }
+
     }
 
     private record Accessor(String name, MemorySegment symbol) {

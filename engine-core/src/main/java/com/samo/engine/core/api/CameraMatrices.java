@@ -13,9 +13,11 @@ import org.joml.Vector3fc;
  */
 public final class CameraMatrices {
     private CameraMatrices() {
+
     }
 
     public static Matrix4f view(Vector3fc position, Vector3fc forward, Vector3fc up, Matrix4f destination) {
+
         Objects.requireNonNull(position, "position");
         Objects.requireNonNull(forward, "forward");
         Objects.requireNonNull(up, "up");
@@ -78,9 +80,11 @@ public final class CameraMatrices {
         float translationZ = fx * px + fy * py + fz * pz;
 
         return destination.set(rx, correctedUpX, -fx, 0.0f, ry, correctedUpY, -fy, 0.0f, rz, correctedUpZ, -fz, 0.0f, translationX, translationY, translationZ, 1.0f);
+
     }
 
     public static Matrix4f perspective(float verticalFovRadians, float aspectRatio, float nearPlane, float farPlane, Matrix4f destination) {
+
         Objects.requireNonNull(destination, "destination");
         requireFinite(verticalFovRadians, "verticalFovRadians");
         requireFinite(aspectRatio, "aspectRatio");
@@ -105,11 +109,14 @@ public final class CameraMatrices {
 
         return destination.set(focalLength / aspectRatio, 0.0f, 0.0f, 0.0f, 0.0f, focalLength, 0.0f, 0.0f, 0.0f, 0.0f, (farPlane + nearPlane) / depthDenominator, -1.0f, 0.0f, 0.0f,
             (2.0f * farPlane * nearPlane) / depthDenominator, 0.0f);
+
     }
 
     private static void requireFinite(float value, String name) {
+
         if (!Float.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
         }
+
     }
 }

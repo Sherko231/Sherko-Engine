@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 class InputActionEvaluatorEdgeTest {
     @Test
     void pressAndReleaseFromDifferentBindingsDoNotSynthesizeOneFrameTap() {
+
         EnumMap<InputAction, List<InputBinding>> bindings = new EnumMap<>(InputAction.class);
         for (InputAction action : InputAction.values()) {
             InputActionComponent component = action.valueType() == InputActionValueType.DIGITAL ? InputActionComponent.VALUE : InputActionComponent.X;
@@ -27,9 +28,12 @@ class InputActionEvaluatorEdgeTest {
         assertThat(interact.held()).isFalse();
         assertThat(interact.released()).isFalse();
         assertThat(interact.value()).isZero();
+
     }
 
     private static InputBinding key(InputKey key, InputActionComponent component, double scale) {
+
         return new InputBinding(new InputBinding.KeyControl(key), component, scale);
+
     }
 }

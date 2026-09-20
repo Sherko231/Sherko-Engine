@@ -11,19 +11,26 @@ final class GlfwWindowModeController {
     private GlfwWindowGeometry windowedRestoreGeometry;
 
     GlfwWindowModeController(GlfwNativeBackend backend) {
+
         this.backend = backend;
+
     }
 
     void reset() {
+
         currentMode = WindowMode.WINDOWED;
         windowedRestoreGeometry = null;
+
     }
 
     void clearRestoreGeometry() {
+
         windowedRestoreGeometry = null;
+
     }
 
     void setMode(long windowHandle, WindowMode requestedMode) {
+
         if (requestedMode == currentMode) {
             return;
         }
@@ -54,18 +61,22 @@ final class GlfwWindowModeController {
             windowedRestoreGeometry = previousRestoreGeometry;
             throw failure;
         }
+
     }
 
     private GlfwWindowGeometry captureWindowedGeometry(long windowHandle) {
+
         GlfwPosition position = backend.queryWindowPosition(windowHandle);
         GlfwDimensions logicalSize = backend.queryLogicalSize(windowHandle);
         if (logicalSize.width() <= 0 || logicalSize.height() <= 0) {
             throw new IllegalStateException("GLFW reported non-positive windowed restore dimensions: " + logicalSize.width() + "x" + logicalSize.height());
         }
         return new GlfwWindowGeometry(position.x(), position.y(), logicalSize.width(), logicalSize.height());
+
     }
 
     private GlfwWindowTransitionPlan planTransition(WindowMode mode, GlfwWindowGeometry restoreGeometry) {
+
         return switch (mode) {
             case WINDOWED -> {
                 if (restoreGeometry == null) {
@@ -86,9 +97,11 @@ final class GlfwWindowModeController {
                     monitor.videoMode().refreshRate());
             }
         };
+
     }
 
     private GlfwMonitorTarget queryPrimaryMonitorTarget() {
+
         long monitor = backend.primaryMonitor();
         if (monitor == MemoryUtil.NULL) {
             throw new IllegalStateException("GLFW primary monitor is unavailable");
@@ -102,24 +115,31 @@ final class GlfwWindowModeController {
         }
         GlfwPosition position = backend.queryMonitorPosition(monitor);
         return new GlfwMonitorTarget(monitor, position, videoMode);
+
     }
 
     private void applyTransition(long windowHandle, GlfwWindowTransitionPlan plan) {
+
         if (plan.decorated() != null) {
             backend.setDecorated(windowHandle, plan.decorated());
         }
         backend.setWindowMonitor(windowHandle, plan.monitor(), plan.x(), plan.y(), plan.width(), plan.height(), plan.refreshRate());
+
     }
 
     private static void validateRestoreGeometry(GlfwWindowGeometry geometry) {
+
         if (geometry.width() <= 0 || geometry.height() <= 0) {
             throw new IllegalStateException("Windowed restore dimensions must be positive: " + geometry.width() + "x" + geometry.height());
         }
+
     }
 
     private static void addSuppressedUnlessSame(Throwable primary, Throwable suppressed) {
+
         if (primary != suppressed) {
             primary.addSuppressed(suppressed);
         }
+
     }
 }

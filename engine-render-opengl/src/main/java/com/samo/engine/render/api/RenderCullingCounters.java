@@ -6,6 +6,7 @@ public record RenderCullingCounters(int testedCandidates, int visibleCandidates,
     public static final RenderCullingCounters EMPTY = new RenderCullingCounters(0, 0, 0, 0);
 
     public RenderCullingCounters {
+
         if (testedCandidates < 0) {
             throw new IllegalArgumentException("testedCandidates must be non-negative");
         }
@@ -24,5 +25,6 @@ public record RenderCullingCounters(int testedCandidates, int visibleCandidates,
         if (submittedDraws > visibleCandidates) {
             throw new IllegalArgumentException("submittedDraws must not exceed visibleCandidates");
         }
+
     }
 }

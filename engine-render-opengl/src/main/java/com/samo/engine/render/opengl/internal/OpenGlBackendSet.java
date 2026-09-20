@@ -13,12 +13,16 @@ import java.util.Objects;
 record OpenGlBackendSet(OpenGlResourceBackend resourceBackend, OpenGlDrawBackend drawBackend, OpenGlUniformBlockReflectionBackend reflectionBackend) {
 
     OpenGlBackendSet {
+
         Objects.requireNonNull(resourceBackend, "resourceBackend");
         Objects.requireNonNull(drawBackend, "drawBackend");
         Objects.requireNonNull(reflectionBackend, "reflectionBackend");
+
     }
 
     static OpenGlBackendSet production() {
+
         return new OpenGlBackendSet(new LwjglOpenGlResourceBackend(), new LwjglOpenGlDrawBackend(), new LwjglOpenGlUniformBlockReflectionBackend());
+
     }
 }

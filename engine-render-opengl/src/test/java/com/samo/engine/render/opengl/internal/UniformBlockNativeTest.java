@@ -29,6 +29,7 @@ class UniformBlockNativeTest {
 
     @Test
     void reflectsExpectedBlocksAndPacksCameraDataOnRealOpenGl46() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T06 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T06 native acceptance targets Windows x64");
 
@@ -91,27 +92,33 @@ class UniformBlockNativeTest {
 
         registry.assertNoOpenResources();
         writeReport();
+
     }
 
     private static String resource(String path) throws IOException {
+
         try (InputStream stream = UniformBlockNativeTest.class.getClassLoader().getResourceAsStream(path)) {
             if (stream == null) {
                 throw new IOException("Missing classpath resource: " + path);
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport() throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH,
             List.of("task=P5-T06", "result=PASS", "camera.block.name=CameraBlock", "camera.block.binding=0", "camera.block.size.bytes=128", "camera.view.offset.bytes=0",
@@ -120,10 +127,13 @@ class UniformBlockNativeTest {
                 "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"),
                 "os.arch=" + System.getProperty("os.arch"), "evidence.scope=uniform block ABI/reflection only; no draw, world camera, material, or UBO allocator claim"),
             StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

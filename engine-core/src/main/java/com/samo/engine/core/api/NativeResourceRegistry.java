@@ -17,6 +17,7 @@ public final class NativeResourceRegistry {
 
     /** Creates an empty registry. */
     public NativeResourceRegistry() {
+
     }
 
     /**
@@ -37,6 +38,7 @@ public final class NativeResourceRegistry {
      *             if the same live resource type/handle pair is already tracked
      */
     public Registration register(String resourceType, long handle, Runnable closer) {
+
         String normalizedType = Objects.requireNonNull(resourceType, "resourceType").strip();
         if (normalizedType.isEmpty()) {
             throw new IllegalArgumentException("resourceType must not be blank");
@@ -53,6 +55,7 @@ public final class NativeResourceRegistry {
         Registration registration = new Registration(this, key, releaseAction, captureAllocationSite());
         registrations.put(key, registration);
         return registration;
+
     }
 
     /**
@@ -66,6 +69,7 @@ public final class NativeResourceRegistry {
      *             when at least one resource is still tracked
      */
     public void assertNoOpenResources() {
+
         if (registrations.isEmpty()) {
             return;
         }
@@ -77,21 +81,26 @@ public final class NativeResourceRegistry {
                 .append(", state=").append(registration.state).append(", allocatedAt=").append(registration.allocationSite);
         }
         throw new IllegalStateException(message.toString());
+
     }
 
     private void removeSuccessful(Registration registration) {
+
         Registration removed = registrations.remove(registration.key);
         if (removed != registration) {
             throw new IllegalStateException("Native resource registry ownership mismatch");
         }
+
     }
 
     private static StackTraceElement captureAllocationSite() {
+
         String registryClass = NativeResourceRegistry.class.getName();
         return StackWalker.getInstance().walk(frames -> frames.filter(frame -> {
             String className = frame.getClassName();
             return !className.equals(registryClass) && !className.startsWith(registryClass + "$");
         }).findFirst().orElseThrow(() -> new IllegalStateException("Unable to capture native resource allocation site")).toStackTraceElement());
+
     }
 
     private record ResourceKey(String resourceType, long handle) {
@@ -106,10 +115,12 @@ public final class NativeResourceRegistry {
         private State state = State.OPEN;
 
         private Registration(NativeResourceRegistry owner, ResourceKey key, Runnable closer, StackTraceElement allocationSite) {
+
             this.owner = owner;
             this.key = key;
             this.closer = closer;
             this.allocationSite = allocationSite;
+
         }
 
         /**
@@ -118,6 +129,7 @@ public final class NativeResourceRegistry {
          */
         @Override
         public void close() {
+
             if (state == State.CLOSED || state == State.CLOSE_FAILED) {
                 return;
             }
@@ -134,6 +146,7 @@ public final class NativeResourceRegistry {
                 state = State.CLOSE_FAILED;
                 throw failure;
             }
+
         }
     }
 

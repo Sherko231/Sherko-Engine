@@ -18,9 +18,11 @@ public final class EngineConfigSchema {
     private static final int MAX_HEIGHT = 16_384;
 
     public EngineConfigSchema() {
+
     }
 
     public Map<ConfigKey<?>, Object> validate(Map<String, ConfigEntry> entries) {
+
         Objects.requireNonNull(entries, "entries");
 
         for (Map.Entry<String, ConfigEntry> entry : entries.entrySet()) {
@@ -53,9 +55,11 @@ public final class EngineConfigSchema {
             throw new ConfigValidationException(errors);
         }
         return Map.copyOf(validated);
+
     }
 
     private static void parseBoundedInteger(ConfigKey<Integer> key, ConfigEntry entry, int minimum, int maximum, Map<ConfigKey<?>, Object> validated, List<ConfigError> errors) {
+
         Integer parsed = parseInteger(key, entry, errors);
         if (parsed == null) {
             return;
@@ -65,9 +69,11 @@ public final class EngineConfigSchema {
             return;
         }
         validated.put(key, parsed);
+
     }
 
     private static void parseLockedTickRate(ConfigEntry entry, Map<ConfigKey<?>, Object> validated, List<ConfigError> errors) {
+
         Integer parsed = parseInteger(TICK_RATE, entry, errors);
         if (parsed == null) {
             return;
@@ -77,14 +83,17 @@ public final class EngineConfigSchema {
             return;
         }
         validated.put(TICK_RATE, parsed);
+
     }
 
     private static Integer parseInteger(ConfigKey<Integer> key, ConfigEntry entry, List<ConfigError> errors) {
+
         try {
             return Integer.valueOf(entry.value().trim());
         } catch (NumberFormatException exception) {
             errors.add(new ConfigError(key.name(), entry.source(), "must be a valid integer"));
             return null;
         }
+
     }
 }

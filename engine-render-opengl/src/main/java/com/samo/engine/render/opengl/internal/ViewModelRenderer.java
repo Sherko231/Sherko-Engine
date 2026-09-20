@@ -27,6 +27,7 @@ final class ViewModelRenderer implements AutoCloseable {
 
     private ViewModelRenderer(OpenGlThreadGuard threadGuard, OpenGlResourceBackend resourceBackend, OpenGlDrawBackend drawBackend, OpenGlVertexArray vertexArray,
         OpenGlBuffer vertexBuffer, OpenGlBuffer cameraBuffer, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program, int worldCameraBufferHandle) {
+
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -37,10 +38,12 @@ final class ViewModelRenderer implements AutoCloseable {
         this.fragmentShader = fragmentShader;
         this.program = program;
         this.worldCameraBufferHandle = worldCameraBufferHandle;
+
     }
 
     static ViewModelRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, int worldCameraBufferHandle,
         SrgbPresentationMode presentationMode, String vertexSource, String fragmentSource) {
+
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
@@ -87,9 +90,11 @@ final class ViewModelRenderer implements AutoCloseable {
             suppressClose(failure, vao);
             throw failure;
         }
+
     }
 
     void render(int framebufferWidth, int framebufferHeight) {
+
         threadGuard.assertOwnerThread();
         requireOpen();
 
@@ -112,21 +117,27 @@ final class ViewModelRenderer implements AutoCloseable {
             drawBackend.useDefaultProgram();
             drawBackend.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, worldCameraBufferHandle);
         }
+
     }
 
     private static ByteBuffer fixtureVertices() {
+
         ByteBuffer data = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES).order(ByteOrder.nativeOrder());
         return ViewModelFixtureVertexPacker.write(data).flip();
+
     }
 
     private void requireOpen() {
+
         if (closeAttempted) {
             throw new IllegalStateException("view-model renderer is closed");
         }
+
     }
 
     @Override
     public void close() {
+
         if (closeAttempted) {
             return;
         }
@@ -141,9 +152,11 @@ final class ViewModelRenderer implements AutoCloseable {
         closeInto(failures, vertexBuffer);
         closeInto(failures, vertexArray);
         throwCleanupFailure(failures);
+
     }
 
     private static void suppressClose(Throwable failure, AutoCloseable resource) {
+
         if (resource == null) {
             return;
         }
@@ -154,9 +167,11 @@ final class ViewModelRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void closeInto(List<Throwable> failures, AutoCloseable resource) {
+
         try {
             resource.close();
         } catch (RuntimeException | Error failure) {
@@ -164,9 +179,11 @@ final class ViewModelRenderer implements AutoCloseable {
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     private static void throwCleanupFailure(List<Throwable> failures) {
+
         if (failures.isEmpty()) {
             return;
         }
@@ -178,5 +195,6 @@ final class ViewModelRenderer implements AutoCloseable {
             throw runtimeFailure;
         }
         throw (Error) first;
+
     }
 }

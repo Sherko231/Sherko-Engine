@@ -19,9 +19,11 @@ import org.joml.Matrix4fc;
 
 final class RendererPublicApiConsumerFixture {
     private RendererPublicApiConsumerFixture() {
+
     }
 
     static void compileOnlyUsage(OpenGlThreadGuard threadGuard, NativeResourceRegistry nativeResources, Matrix4fc view, Matrix4fc projection) {
+
         RenderLocalLight point = new RenderPointLight(0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.25f, 0.5f, 4.0f);
         RenderLocalLight spot = new RenderSpotLight(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.25f, 0.5f, 1.0f, 0.5f, 5.0f, 0.2f, 0.5f);
         DebugFrame debugFrame = new DebugFrame(List.of(new DebugLine(-1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, new DebugColor(0.0f, 1.0f, 0.0f))),
@@ -35,9 +37,12 @@ final class RendererPublicApiConsumerFixture {
             counters.submittedDraws();
             renderer.lastDebugTextCounters().getFirst().value();
         }
+
     }
 
     static Matrix4fc jomlRemainsTransitivelyAvailable() {
+
         return new Matrix4f();
+
     }
 }

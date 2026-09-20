@@ -23,6 +23,7 @@ class GlslRuntimeValidationNativeTest {
 
     @Test
     void compilesAndLinksCommittedShadersOnRealOpenGl46() throws Exception {
+
         assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T05 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T05 native acceptance targets Windows x64");
 
@@ -66,27 +67,33 @@ class GlslRuntimeValidationNativeTest {
 
         registry.assertNoOpenResources();
         writeReport();
+
     }
 
     private static String resource(String path) throws IOException {
+
         try (InputStream stream = GlslRuntimeValidationNativeTest.class.getClassLoader().getResourceAsStream(path)) {
             if (stream == null) {
                 throw new IOException("Missing classpath resource: " + path);
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
+
     }
 
     private static boolean attemptCleanup(Runnable cleanup) {
+
         try {
             cleanup.run();
             return true;
         } catch (RuntimeException | Error cleanupFailure) {
             return false;
         }
+
     }
 
     private static void writeReport() throws IOException {
+
         Files.createDirectories(REPORT_PATH.getParent());
         Files.write(REPORT_PATH,
             List.of("task=P5-T05", "result=PASS", "vertex.source=shaders/p5/basic.vert", "fragment.source=shaders/p5/basic.frag", "runtime.compile=PASS", "runtime.link=PASS",
@@ -94,10 +101,13 @@ class GlslRuntimeValidationNativeTest {
                 "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
                 "evidence.scope=GLSL offline/runtime validation only; no material, reflection, variant, hot-reload, or draw claim"),
             StandardCharsets.UTF_8);
+
     }
 
     private static String environmentOr(String key, String fallback) {
+
         String value = System.getenv(key);
         return value == null || value.isBlank() ? fallback : value;
+
     }
 }

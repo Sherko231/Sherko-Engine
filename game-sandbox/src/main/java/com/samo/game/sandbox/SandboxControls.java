@@ -8,7 +8,7 @@ final class SandboxControls {
     }
 
     static EnumSet<SandboxAction> resolve(SandboxControlInput input) {
-        EnumSet<SandboxAction> actions = EnumSet.noneOf(SandboxSandboxAction.class);
+        EnumSet<SandboxAction> actions = EnumSet.noneOf(SandboxAction.class);
         if (input.qPressed() && (input.leftControlHeld() || input.rightControlHeld())) {
             actions.add(SandboxAction.EXIT);
         }

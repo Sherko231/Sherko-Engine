@@ -15,27 +15,27 @@ class LocalLightSelectorTest {
     @Test
     void zeroAndExactlyMaxCountsDoNotWarn() {
         List<EngineLogger.Event> events = new ArrayList<>();
-        LocalLightSelector selection =
+        LocalLightSelector selector =
                 new LocalLightSelector(new EngineLogger(events::add), 2);
 
-        assertEquals(List.of(), selection.select(List.of()));
+        assertEquals(List.of(), selector.select(List.of()));
 
         RenderLocalLight first = point(1.0f);
         RenderLocalLight second = point(2.0f);
-        assertEquals(List.of(first, second), selection.select(List.of(first, second)));
+        assertEquals(List.of(first, second), selector.select(List.of(first, second)));
         assertEquals(List.of(), events);
     }
 
     @Test
     void overMaxKeepsFirstLightsAndEmitsExactlyOneBoundedWarning() {
         List<EngineLogger.Event> events = new ArrayList<>();
-        LocalLightSelector selection =
+        LocalLightSelector selector =
                 new LocalLightSelector(new EngineLogger(events::add), 2);
         RenderLocalLight first = point(1.0f);
         RenderLocalLight second = point(2.0f);
         RenderLocalLight third = point(3.0f);
 
-        List<RenderLocalLight> accepted = selection.select(List.of(first, second, third));
+        List<RenderLocalLight> accepted = selector.select(List.of(first, second, third));
 
         assertEquals(2, accepted.size());
         assertSame(first, accepted.get(0));
@@ -54,11 +54,11 @@ class LocalLightSelectorTest {
         EngineLogger logger = new EngineLogger(event -> {
             throw new IllegalStateException("fixture logger failure");
         });
-        LocalLightSelector selection = new LocalLightSelector(logger, 1);
+        LocalLightSelector selector = new LocalLightSelector(logger, 1);
 
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
-                () -> selection.select(List.of(point(1.0f), point(2.0f))));
+                () -> selector.select(List.of(point(1.0f), point(2.0f))));
 
         assertEquals("fixture logger failure", failure.getMessage());
     }

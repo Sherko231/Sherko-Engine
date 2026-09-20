@@ -697,3 +697,18 @@ Durable decision impact: none — current package-private cohesion is retained r
 
 
 Accepted P5R-T23 evidence: Markdown-only PR #351 merged final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` as `36352d874c04c383ce53527001e279f7634f973b`. The accepted result is KEEP for the current package layout; no Java visibility, package, module edge, public API, runtime behavior, wiki, or sandbox contract changed.
+
+
+## Phase 5R pattern/scalability hardening — P5R-T24 / Issue #304
+
+T24 strengthens the existing renderer Adapter + composition/DI seam without broadening any adapter responsibility. The package-private `OpenGlBackendSet` composes the existing `OpenGlResourceBackend`, `OpenGlDrawBackend`, and `OpenGlUniformBlockReflectionBackend` references so renderer construction passes one cohesive backend dependency instead of three parallel positional parameters.
+
+`OpenGlBackendSet.production()` creates exactly the existing LWJGL implementations. Tests may inject the same focused fake interfaces by constructing a backend set. `ReferenceSceneRenderer`, `DebugLineRenderer`, and `ViewModelRenderer` consume the set but retain the individual backend contracts internally.
+
+The concrete problem solved is construction-signature scaling: the same adapter triple previously appeared across the renderer composition root and directly coupled helpers/tests. Adding another renderer-wide adapter concern would have multiplied signature churn. The set localizes that composition concern without creating a selector, registry, container, or mega-interface.
+
+Fresh T24 review explicitly rejects speculative Singleton, Service Locator, Object Pool, ECS, job-system/command-bus, public DI container/backend registry, and merged mega-backend designs because current P1-P5 code provides no evidence requiring them.
+
+Wiki impact: none — `OpenGlBackendSet` is package-private and no supported API changes.
+Sandbox impact: none — public renderer behavior/usage is unchanged.
+Durable decision impact: none — existing internal Adapter boundaries are retained and composed more cleanly.

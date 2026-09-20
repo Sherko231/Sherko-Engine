@@ -661,3 +661,16 @@ Wiki impact: none — these are executable/internal surfaces, not supported engi
 Sandbox impact: none — no engine capability or persistent sandbox behavior changes.
 
 Accepted P5R-T19 evidence: final head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed all five required jobs in run #487 / `35524411941`; PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`; exact merged-master Lightweight verification passed in run #488 / `35524646827`, including dependency locks, headless-server runtime isolation, and exact-merge client/server version reporting.
+
+
+## Phase 5R feasibility-spike naming and isolation — P5R-T20 / Issue #280
+
+The T20 candidate keeps `feasibility-spikes` as a separate experimental Gradle subproject with external native/network dependencies only for reproducible evidence. Production engine/game/support modules remain forbidden from depending on it, and the existing root `run*Spike` / harness aliases remain historical build conveniences rather than classpath/module dependencies.
+
+A complete top-level naming audit keeps `OpenGL46Spike`, `JoltLifecycleSpike`, `OpenAL3DAudioSpike`, `LocalhostUdpSpike`, `NetworkImpairmentHarness`, `SteamInitSpike`, `SteamFlatApiFfmSpike`, and `WindowsNativeCiSmoke`. The sole rename is `IntegratedNativeSoakSpike` -> `IntegratedNativeEvidenceHarness`, because that one executable backs both the P0-T12 smoke task and P0-T13 sustained task. `runIntegratedNativeSmoke`, `runIntegratedNativeSoak`, evidence-task labels, duration/property semantics, JFR paths, subsystem lifecycle/cleanup behavior, and feasibility conclusions remain unchanged.
+
+The module now owns `verifyFeasibilitySpikeIsolation`, wired into its `check` task, which rejects project dependencies from any other declared subproject to `:feasibility-spikes`. This reinforces rather than changes the existing architecture rule that feasibility evidence must not become production architecture.
+
+Wiki impact: none — feasibility spikes are explicitly not engine-consumer API.
+Sandbox impact: none — experimental evidence executables are not the persistent public-API sandbox.
+Durable decision impact: none — existing experimental isolation is enforced; no new architecture decision is introduced.

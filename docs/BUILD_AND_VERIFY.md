@@ -1942,3 +1942,6 @@ If those conditions hold, the AGENTS.md Markdown-only exemption applies. Do not 
 
 Wiki impact: none — no supported API/usage change.
 Sandbox impact: none — no capability or owner-facing behavior change.
+
+
+Accepted P5R-T25 verification evidence: final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged through PR #355 as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown paths only. Repository search/reference review found no live stale implementation name, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. The documented Markdown-only exemption therefore required neither the heavy PR matrix nor post-merge Lightweight verification; neither unrun check is claimed as passing.

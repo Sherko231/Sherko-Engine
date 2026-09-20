@@ -7,25 +7,25 @@ final class SandboxControls {
     private SandboxControls() {
     }
 
-    static EnumSet<Action> resolve(Input input) {
-        EnumSet<Action> actions = EnumSet.noneOf(Action.class);
+    static EnumSet<SandboxAction> resolve(SandboxControlInput input) {
+        EnumSet<SandboxAction> actions = EnumSet.noneOf(SandboxSandboxAction.class);
         if (input.qPressed() && (input.leftControlHeld() || input.rightControlHeld())) {
-            actions.add(Action.EXIT);
+            actions.add(SandboxAction.EXIT);
         }
         if (input.fPressed()) {
             actions.add(input.rightShiftHeld()
-                    ? Action.CYCLE_MOUSE_SENSITIVITY
-                    : Action.CYCLE_WINDOW_MODE);
+                    ? SandboxAction.CYCLE_MOUSE_SENSITIVITY
+                    : SandboxAction.CYCLE_WINDOW_MODE);
         }
         if (input.rPressed()) {
             actions.add(input.rightShiftHeld()
-                    ? Action.TOGGLE_MOUSE_Y_INVERSION
-                    : Action.TOGGLE_CURSOR_CAPTURE);
+                    ? SandboxAction.TOGGLE_MOUSE_Y_INVERSION
+                    : SandboxAction.TOGGLE_CURSOR_CAPTURE);
         }
         return actions;
     }
 
-    enum Action {
+    enum SandboxAction {
         CYCLE_WINDOW_MODE,
         TOGGLE_CURSOR_CAPTURE,
         CYCLE_MOUSE_SENSITIVITY,
@@ -33,7 +33,7 @@ final class SandboxControls {
         EXIT
     }
 
-    record Input(
+    record SandboxControlInput(
             boolean fPressed,
             boolean rPressed,
             boolean qPressed,

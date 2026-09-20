@@ -14,10 +14,6 @@ final class GlfwWindowModeController {
         this.backend = backend;
     }
 
-    WindowMode currentMode() {
-        return currentMode;
-    }
-
     void reset() {
         currentMode = WindowMode.WINDOWED;
         windowedRestoreGeometry = null;

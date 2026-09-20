@@ -364,7 +364,7 @@ Highest-risk future proposals are intentionally deferred:
 3. Spatial/quantization types — retained by default to avoid semantic churn around D-041/D-045/D-046/D-047.
 4. Renderer uniform/presentation/resource names — any vocabulary cleanup must preserve GLSL ABI, binding/layout, sRGB encoding, draw ordering, and native cleanup.
 5. Client/server version-report names — output consumed by CI/runtime compatibility verification must remain unchanged.
-6. Legacy `EngineDemoMain` — removal only after P5R-T17 proves there are no required references/commands.
+6. Legacy `EngineDemoMain` — T17 reference audit found no required executable consumer; the compatibility class/task are removed while `runSandbox` remains canonical.
 
 ## Verification record for T01
 

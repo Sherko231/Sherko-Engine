@@ -62,7 +62,7 @@ final class ReferenceSceneDrawExecutor {
         }
     }
 
-    private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {
+    private void drawMaterial(RenderMaterialDescriptor material, int x, int y, int width, int height) {
         int materialProgram = programFor(material.shaderVariant());
         drawBackend.setViewport(x, y, width, height);
         drawBackend.applyMaterialState(material);

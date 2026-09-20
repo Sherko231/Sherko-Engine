@@ -196,7 +196,7 @@ The accepted P5R-T03 implementation extracts the replaceable/testing boundary fr
 - `LwjglGlfwNativeBackend`
 - responsibility-specific callback registration values and event sinks for GLFW error, size, input, cursor-position, and OpenGL debug callbacks.
 
-The extracted seam remains implementation-only despite being colocated with the public facade. `GlfwWindow` keeps its public signatures and lifecycle/thread-affinity orchestration; the adapter keeps native callback installation/release and LWJGL/GLFW/OpenGL platform calls. Accepted T04 collaborators own input/focus/cursor state, while the T05 candidate owns window-mode/restore/monitor/rollback state plus deferred logical/framebuffer size delivery. All remain package-private in the same package, and package reorganization remains deferred to T23.
+The extracted seam remains implementation-only despite being colocated with the public facade. `GlfwWindow` keeps its public signatures and lifecycle/thread-affinity orchestration; the adapter keeps native callback installation/release and LWJGL/GLFW/OpenGL platform calls. Accepted T04 collaborators own input/focus/cursor state, while the accepted T05 collaborators own window-mode/restore/monitor/rollback state plus deferred logical/framebuffer size delivery. All remain package-private in the same package, and package reorganization remains deferred to T23.
 
 ### Renderer OpenGL adapters
 

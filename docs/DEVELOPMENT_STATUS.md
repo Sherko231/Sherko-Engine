@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T25 / Issue #305 is accepted; freshly refine P5R-T26 / Issue #306 against current `master` before execution |
+| Active executable task | P5R-T26 / Issue #306 — Phase 5R exit review active; static/contract review complete, automated candidate/merge verification pending |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,10 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Freshly refine **P5R-T26 / Issue #306** against current `master`, then execute the Phase 5R exit review. P6-T01 remains blocked until T26 records PASS.
+Complete **P5R-T26 / Issue #306** by obtaining all five heavy jobs on the exact final candidate, merging only that verified candidate, and requiring Lightweight verification on the exact merge SHA. Record PASS only after both automated gates succeed. P6-T01 remains blocked until then.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
+
+
+P5R-T26 / Issue #306 is active from baseline `69c860f02aa54bdb8e8d32055f9e582dc19942b9`. T01-T25 are accepted. Static exit reconciliation found the sandbox and standalone renderer demo still wired to their canonical entry points; supported public/internal/module/native-ownership/spatial/persisted/config/wire/protocol boundaries remain consistent with accepted decisions/audits; T25 reports no unresolved stale compatibility or refactor residue; and the current Phase 6 asset-pipeline/resource-lifetime plan still fits the demonstrated P1-P5 foundation. Interactive windows were not executed in this review environment and are not claimed as passing. Overall Phase 5R status remains PENDING until exact-candidate five-job CI and exact-merge Lightweight verification succeed.

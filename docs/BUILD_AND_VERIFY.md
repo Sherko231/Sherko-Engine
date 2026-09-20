@@ -1945,3 +1945,26 @@ Sandbox impact: none — no capability or owner-facing behavior change.
 
 
 Accepted P5R-T25 verification evidence: final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged through PR #355 as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown paths only. Repository search/reference review found no live stale implementation name, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. The documented Markdown-only exemption therefore required neither the heavy PR matrix nor post-merge Lightweight verification; neither unrun check is claimed as passing.
+
+
+## P5R-T26 Phase 5R exit review
+
+Issue #306 is the mandatory Phase 5R gate before P6-T01 may be materialized. The durable review record is `docs/refactor/PHASE_5R_EXIT_REVIEW.md`.
+
+The candidate intentionally includes `docs/refactor/P5R_EXIT_REVIEW_EVIDENCE.txt`, a non-executable text manifest. Because the complete diff is therefore not Markdown-only, the normal PR workflow must run rather than being suppressed by `paths-ignore`.
+
+Required final-candidate evidence:
+
+1. Confirm P5R-T01 through T25 are accepted and no open predecessor maintenance Issue restores deferred behavior.
+2. Reconcile the current `:game-sandbox:runSandbox` -> `SandboxMain` and `:engine-render-opengl:runRendererVisualDemo` -> `RendererVisualDemo` wiring, README guidance, deterministic sandbox/visual-demo tests, visual-demo compilation, and retained Phase 5 native integration. Interactive execution may be recorded only if actually performed.
+3. Reconcile public/internal/module/native-ownership/spatial/persisted/config/wire/protocol boundaries against current source/tests/decisions/audits.
+4. Review Phase 6 assumptions without implementing or materializing P6 work.
+5. Open the final non-draft PR and require all five workflow jobs on its exact head/base: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, Windows native smoke.
+6. Merge only that verified exact candidate.
+7. Require Lightweight master verification on the exact merge SHA.
+8. Only then change the review disposition from PENDING to PASS, mark T26 accepted, close Issue #306, and unblock P6-T01 for fresh materialization/refinement.
+
+Any discovered source/behavior/contract defect blocks PASS and must be split into a separate bounded maintenance Issue rather than repaired inside T26.
+
+Wiki impact: none expected — review/status only.
+Sandbox impact: review only — no source/behavior change authorized.

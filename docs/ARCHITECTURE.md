@@ -715,3 +715,12 @@ Durable decision impact: none — existing internal Adapter boundaries are retai
 
 
 Accepted P5R-T24 evidence: PR #353 final head `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005` passed the five-job matrix in run #493 / `35534567287`, merged as `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`, and exact-merge Lightweight verification passed in run #494 / `35534881306`. The accepted result strengthens only internal renderer Adapter composition through package-private `OpenGlBackendSet`; public and runtime architecture contracts remain unchanged.
+
+
+## Phase 5R exit reconciliation — P5R-T26 / Issue #306
+
+The exit review on baseline `69c860f02aa54bdb8e8d32055f9e582dc19942b9` finds no architecture contradiction requiring a new decision before Phase 6. Supported consumer roots remain `com.samo.engine.core.api`, `com.samo.engine.platform.api`, and `com.samo.engine.render.api`; P5R-T23's current internal-package KEEP result and D-016/D-055 module/artifact boundaries remain valid. Native ownership remains explicit in the accepted GLFW/OpenGL owners and wrappers, while extracted P5R collaborators remain non-owning unless already documented otherwise. D-041/D-045/D-046/D-047 spatial conventions remain unchanged, and P5R introduced no persisted/config/wire/protocol semantic migration beyond the already accepted public type-name correction D-066.
+
+The persistent sandbox remains `SandboxMain` via `:game-sandbox:runSandbox`. The standalone renderer observation surface remains `RendererVisualDemo` via `:engine-render-opengl:runRendererVisualDemo`. No Phase 6 asset identity/resource contract is introduced by this review.
+
+This is a reconciliation result, not a new durable architecture decision. Final Phase 5R PASS still depends on the exact-candidate and exact-merge automated verification required by Issue #306.

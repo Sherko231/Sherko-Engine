@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T15 / Issue #275 is accepted; freshly refine P5R-T16 / Issue #276 against current `master` before implementation |
+| Active executable task | P5R-T16 / Issue #276 — `SandboxMain` responsibility decomposition candidate on `p5r-t16-sandbox-main-decomposition`; P5R-T17 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -152,6 +152,8 @@ P5R-T14 / Issue #274 is accepted through PR #333. Final head `c82e0276b57773d152
 
 P5R-T15 / Issue #275 is accepted through PR #335. Final head `96510a58644eea158c75c3327d3ac1959c0ab9ef` passed all five required final-candidate jobs in run #471 / `35512198379`, including P5-T16 debug geometry, P5-T17 view-model, and P5-T18 Phase 5 exit integration. PR #335 merged as `9c41a1db72834d162f58f503a9d03aa0fd00add3`, and exact merged `master` passed Lightweight verification in run #472 / `35512467254`. The accepted refactor keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` unchanged, renames only `ViewModelProjection` -> `ViewModelProjectionFactory`, and extracts the fixed six-vertex validation fixture packing into `ViewModelFixtureVertexPacker`. D-041/D-045/D-064/D-065 spatial semantics, 55° / 0.01 m / 10 m projection, fixture bytes/color, world -> debug -> depth-reset -> view-model ordering, GL state restoration, shaders, native ownership, and public API remain unchanged.
 
+P5R-T16 / Issue #276 is the active candidate from baseline `db5bcce610d071125853d3ca314fb844121678b3`. Initial PR head `58a6ee520f3f3c9ebdce7a7611da2b06ea2f49e6` reached run #473 / `35514092541`; Unit tests correctly failed because three new tests imported platform/renderer types that are intentionally absent from the `game-sandbox` test compile classpath. The correction removes those boundary-expanding tests, adds `SandboxFramebufferSizeTest`, and keeps Gradle/dependency metadata unchanged; run #473 is superseded and cannot be acceptance evidence. `SandboxMain` remains the public bootstrap/lifecycle owner while package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize` own the extracted per-frame/application responsibilities. `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged; T17-owned `SandboxControls.Action/Input`, `EngineDemoMain`, `runEngineDemo`, helper naming cleanup, and compatibility removal are not pulled forward. Owner controls, focus/cursor behavior, 60 Hz tick/camera flow, 70° / 0.1 m / 100 m world projection, fixed lights/debug scene, once-per-second diagnostic wording/meaning, renderer/present ordering, shutdown cleanup, and public-engine-only sandbox boundary remain unchanged pending verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T16 / Issue #276** against current `master` before implementation. Keep it bounded to decomposing `SandboxMain` into explicit application-loop/input/scene/diagnostic responsibilities while preserving all current controls, focus/camera behavior, renderer usage, diagnostics, and sandbox observability. P6-T01 remains blocked.
+Complete implementation/self-review/verification for **P5R-T16 / Issue #276** on `p5r-t16-sandbox-main-decomposition`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T17 and P6-T01 remain blocked.

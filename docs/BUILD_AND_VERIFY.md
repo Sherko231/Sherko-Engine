@@ -1702,3 +1702,32 @@ Because Java/test source changes, the exact final PR head requires the normal fi
 Accepted P5R-T15 evidence: final PR head `96510a58644eea158c75c3327d3ac1959c0ab9ef` passed all five required jobs in run #471 / `35512198379`, including P5-T16 debug geometry, P5-T17 view-model, and P5-T18 integration. PR #335 merged as `9c41a1db72834d162f58f503a9d03aa0fd00add3`; exact merged-master Lightweight verification passed in run #472 / `35512467254`.
 
 Wiki impact: none — supported debug/render APIs and consumer usage are unchanged. Sandbox impact: none — observable debug/view-model behavior and controls are unchanged.
+
+
+## P5R-T16 SandboxMain decomposition verification
+
+Issue #276 decomposes only `game-sandbox` package-private responsibilities. Public `SandboxMain`, the `runSandbox` task, owner controls, README instructions, camera/focus behavior, renderer usage, diagnostics, and shutdown behavior remain unchanged. T17-owned compatibility/naming cleanup is explicitly deferred.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxCameraTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxControlsTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticFormatterTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxFramebufferSizeTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :game-sandbox:classes --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Direct sandbox unit tests remain inside the existing test dependency boundary. `engine-platform-lwjgl` and `engine-render-opengl` are intentional `compileOnly` / sandbox-runtime dependencies for `game-sandbox`; T16 does not add Gradle test dependencies just to reference extracted package-private collaborators from tests. The preserved camera/control/diagnostic formatter tests, the new framebuffer-state test, full sandbox tests/classes, full repository build, and heavy CI remain the bounded verification set.
+
+Source review must confirm `SandboxMain` no longer owns the per-frame loop, owner-control state application, fixed-scene construction, periodic diagnostic state, or nested framebuffer-size state. It must also confirm `EngineDemoMain`, `runEngineDemo`, `SandboxControls.Action/Input`, sandbox resource paths, build dependencies, and owner-facing controls are unchanged.
+
+Spatial review must confirm the D-041/D-045 camera basis is unchanged, W/A/S/D plus mouse LOOK still flow through `PlayerInputCommand` -> `SandboxCamera`, and the world projection remains 70° vertical FOV, framebuffer aspect, 0.1 m near, and 100 m far. Scene review must retain the same fixed local lights, debug primitive order/values/colors, and debug text-counter order. Diagnostic review must retain field order/wording/meaning, mouse-delta reset only after publication, deadline catch-up semantics, and the explicit non-FPS/non-benchmark qualifier.
+
+Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix. The Windows native Phase 5 integration remains a regression check for sandbox-driven camera/render assumptions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #276 can close.
+
+Wiki impact: none — no supported public engine API or consumer usage changes. Sandbox impact: structural only — `runSandbox`, controls, README instructions, output, and observable behavior remain unchanged, so no owner-facing README content change is required.

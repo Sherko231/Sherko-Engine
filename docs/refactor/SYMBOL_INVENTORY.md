@@ -155,7 +155,12 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `SandboxCamera` | package-private class | **KEEP** | — | Sandbox-only camera state/control helper; name is clear in sandbox package. | Sandbox behavior/spatial controls. |
 | `SandboxControls` | package-private class | **KEEP** | — | Owner control mapping for persistent sandbox; exact. | Sandbox controls must remain unchanged. |
 | `SandboxDiagnosticFormatter` | package-private class | **KEEP** | — | Pure owner diagnostic formatter; exact. | Sandbox output wording/meaning may be acceptance-sensitive. |
-| `SandboxMain` | public class | **DECOMPOSE** | `Keep SandboxMain entry point; extract application loop, input/control application, scene/debug construction, and diagnostic publication` | 540-line persistent playground entry point owns several unrelated responsibilities; P5R-T16 explicitly requires decomposition. | Sandbox public entry point and observable controls/behavior must remain stable. |
+| `SandboxMain` | public class | **KEEP** | — | T16 canonical bootstrap/lifecycle entry point after extracting per-frame application responsibilities. | Sandbox public entry point and observable controls/behavior must remain stable. |
+| `SandboxApplicationLoop` | package-private class | **KEEP** | — | T16 owner for frame/tick sequencing, public input evaluation, camera command application, render/present ordering, and non-exit sleep. | Sandbox ordering/timing behavior. |
+| `SandboxControlState` | package-private class | **KEEP** | — | T16 owner for current window mode/input-response settings and application of already-resolved owner controls. | Owner-control side effects/log ordering; T17 still owns nested control type naming. |
+| `SandboxSceneSetup` | package-private class | **KEEP** | — | T16 owner for fixed sandbox lights/debug primitives, world projection, and per-frame render-packet construction. | Sandbox spatial/scene values must remain unchanged. |
+| `SandboxDiagnostics` | package-private class | **KEEP** | — | T16 owner for periodic diagnostic timing, mouse accumulation, render/debug counter assembly, and publication. | Owner diagnostic wording/meaning/cadence. |
+| `SandboxFramebufferSize` | package-private class | **KEEP** | — | T16 top-level owner for mutable current framebuffer pixel dimensions consumed by the application loop. | DPI/framebuffer dimension semantics. |
 | `EngineDemoMain` | public class | **REMOVE** | `Remove legacy compatibility entry point after reference verification` | Source explicitly marks it legacy and redirects to SandboxMain/runSandbox; P5R-T17 owns compatibility cleanup. | Compatibility risk; delete only after repo/reference/owner-facing command verification. |
 | `ServerMain` | public class | **KEEP** | — | Executable headless server bootstrap entry point is clear. | Headless/runtime verification boundary. |
 | `game-server.internal.VersionReport` | public class in internal package | **RENAME** | `ServerVersionReport` | Generic VersionReport is ambiguous outside package/import context; P5R-T19 targets bootstrap/report naming. | Internal package but public modifier; emitted output must remain byte/meaning compatible. |
@@ -205,7 +210,6 @@ They are not permission to add Phase 6+ implementation during P5R.
 | `SandboxControls` | `Action` | package-level nested enum | RENAME | `SandboxAction` | Bare `Action` is ambiguous when extracted/used outside owner context; P5R-T17 may retain nested form if no extraction occurs. |
 | `SandboxControls` | `Input` | package-level nested record | RENAME | `SandboxControlInput` | Bare `Input` is vague; exact name should follow T16/T17 decomposition. |
 | `SandboxDiagnosticFormatter` | `DiagnosticValues` | package-level nested record | KEEP | — | Clear in owner context; no need to churn unless moved. |
-| `SandboxMain` | `SandboxFramebufferSize` | private nested class | MOVE | Provisional sandbox window/framebuffer state collaborator | Small mutable state belongs with extracted application/window loop if T16 confirms the boundary. |
 
 Private implementation-only enums/records that do not materially affect later Phase 5R planning are intentionally not promoted into the inventory merely to create churn.
 
@@ -385,3 +389,8 @@ T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fr
 ### P5R-T15 accepted implementation
 
 T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` unchanged after fresh review. It renames only `ViewModelProjection` -> `ViewModelProjectionFactory` and extracts fixed six-vertex fixture packing into `ViewModelFixtureVertexPacker`; D-041/D-045/D-064/D-065 spatial/rendering/order/ownership behavior remains unchanged.
+
+
+### P5R-T16 active implementation
+
+T16 keeps public `SandboxMain` as the bootstrap/lifecycle entry point and extracts package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize`. `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged; T17-owned control/helper naming and `EngineDemoMain` / `runEngineDemo` compatibility cleanup remain deferred. Owner controls, spatial/camera semantics, fixed scene values, diagnostics, renderer/present ordering, and shutdown behavior remain unchanged.

@@ -10,20 +10,20 @@ final class SandboxControlsTest {
     @Test
     void plainControlsOperateThePersistentPlayground() {
         assertEquals(
-                EnumSet.of(SandboxControls.Action.CYCLE_WINDOW_MODE),
+                EnumSet.of(SandboxControls.SandboxAction.CYCLE_WINDOW_MODE),
                 SandboxControls.resolve(input(true, false, false, false, false, false)));
         assertEquals(
-                EnumSet.of(SandboxControls.Action.TOGGLE_CURSOR_CAPTURE),
+                EnumSet.of(SandboxControls.SandboxAction.TOGGLE_CURSOR_CAPTURE),
                 SandboxControls.resolve(input(false, true, false, false, false, false)));
     }
 
     @Test
     void rightShiftSelectsResponseSettingsControlsInsteadOfWindowControls() {
         assertEquals(
-                EnumSet.of(SandboxControls.Action.CYCLE_MOUSE_SENSITIVITY),
+                EnumSet.of(SandboxControls.SandboxAction.CYCLE_MOUSE_SENSITIVITY),
                 SandboxControls.resolve(input(true, false, false, true, false, false)));
         assertEquals(
-                EnumSet.of(SandboxControls.Action.TOGGLE_MOUSE_Y_INVERSION),
+                EnumSet.of(SandboxControls.SandboxAction.TOGGLE_MOUSE_Y_INVERSION),
                 SandboxControls.resolve(input(false, true, false, true, false, false)));
     }
 
@@ -31,10 +31,10 @@ final class SandboxControlsTest {
     void controlQIsTheOnlyQCombinationThatRequestsExit() {
         assertTrue(SandboxControls.resolve(input(false, false, true, false, false, false)).isEmpty());
         assertEquals(
-                EnumSet.of(SandboxControls.Action.EXIT),
+                EnumSet.of(SandboxControls.SandboxAction.EXIT),
                 SandboxControls.resolve(input(false, false, true, false, true, false)));
         assertEquals(
-                EnumSet.of(SandboxControls.Action.EXIT),
+                EnumSet.of(SandboxControls.SandboxAction.EXIT),
                 SandboxControls.resolve(input(false, false, true, false, false, true)));
     }
 
@@ -42,20 +42,20 @@ final class SandboxControlsTest {
     void independentControlsCanBeRequestedInTheSameFrame() {
         assertEquals(
                 EnumSet.of(
-                        SandboxControls.Action.CYCLE_WINDOW_MODE,
-                        SandboxControls.Action.TOGGLE_CURSOR_CAPTURE,
-                        SandboxControls.Action.EXIT),
+                        SandboxControls.SandboxAction.CYCLE_WINDOW_MODE,
+                        SandboxControls.SandboxAction.TOGGLE_CURSOR_CAPTURE,
+                        SandboxControls.SandboxAction.EXIT),
                 SandboxControls.resolve(input(true, true, true, false, true, false)));
     }
 
-    private static SandboxControls.Input input(
+    private static SandboxControls.SandboxControlInput input(
             boolean fPressed,
             boolean rPressed,
             boolean qPressed,
             boolean rightShiftHeld,
             boolean leftControlHeld,
             boolean rightControlHeld) {
-        return new SandboxControls.Input(
+        return new SandboxControls.SandboxControlInput(
                 fPressed,
                 rPressed,
                 qPressed,

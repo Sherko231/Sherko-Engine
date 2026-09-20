@@ -217,9 +217,9 @@ The accepted T03 implementation preserves public `GlfwWindow` and extracts the n
 
 The T01 `GlfwWindow` decomposition classification remains active for T04/T05: input/focus/cursor state and window-mode/size transition model types intentionally remain inside the facade for their bounded later tasks. No T03 helper is public and no package reorganization is performed.
 
-### P5R-T04 candidate
+### P5R-T04 accepted implementation
 
-The T04 candidate preserves the public `GlfwWindow` facade and resolves the T01 input/focus/cursor decomposition into three package-private top-level responsibility owners in the same package:
+The accepted T04 implementation preserves the public `GlfwWindow` facade and resolves the T01 input/focus/cursor decomposition into three package-private top-level responsibility owners in the same package:
 
 - `GlfwInputState` owns focus state, held keyboard/mouse state, frame edges, focus-loss release synthesis, native-to-engine input mapping, and snapshot edge consumption;
 - `GlfwMouseMotionTracker` owns cursor baseline/previous samples and accumulated relative delta; its package-private `MouseDelta` replaces the former `GlfwWindow.MouseMotion` test value;

@@ -1714,15 +1714,15 @@ Focused verification:
 .\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxCameraTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxControlsTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticFormatterTest" --rerun-tasks
-.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxSceneSetupTest" --rerun-tasks
-.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxControlStateTest" --rerun-tasks
-.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticsTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxFramebufferSizeTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --rerun-tasks
 .\gradlew.bat :game-sandbox:classes --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 .\gradlew.bat resolveAndLockAllDependencies
 ```
+
+Direct sandbox unit tests remain inside the existing test dependency boundary. `engine-platform-lwjgl` and `engine-render-opengl` are intentional `compileOnly` / sandbox-runtime dependencies for `game-sandbox`; T16 does not add Gradle test dependencies just to reference extracted package-private collaborators from tests. The preserved camera/control/diagnostic formatter tests, the new framebuffer-state test, full sandbox tests/classes, full repository build, and heavy CI remain the bounded verification set.
 
 Source review must confirm `SandboxMain` no longer owns the per-frame loop, owner-control state application, fixed-scene construction, periodic diagnostic state, or nested framebuffer-size state. It must also confirm `EngineDemoMain`, `runEngineDemo`, `SandboxControls.Action/Input`, sandbox resource paths, build dependencies, and owner-facing controls are unchanged.
 

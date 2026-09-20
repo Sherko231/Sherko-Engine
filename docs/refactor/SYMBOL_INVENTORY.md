@@ -227,6 +227,17 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
+### P5R-T06 candidate
+
+The T06 candidate resolves the T01 `InputActionBindingsLoader` decomposition without changing the supported public input API or schema:
+
+- `InputActionBindingsLoader` is retained and narrowed to readable-file checks, UTF-8 reader lifetime, and I/O failure wrapping;
+- `InputActionBindingsJsonParser` owns strict Jackson parsing, schema-v1 shape/version/field/control decoding, document-level duplicates, scale validation, and path/context load diagnostics;
+- `InputActionBindingsValidator` owns complete action coverage, non-empty/non-null/duplicate binding checks, action/component compatibility, unsupported-entry rejection, and defensive immutable copying;
+- `InputActionBindings` retains its public constructor/load/query signatures and delegates only internal responsibilities.
+
+All new collaborators remain package-private in `com.samo.engine.platform.api`; no schema fixture, dependency, lockfile, module edge, package, evaluator/sampler behavior, wiki contract, or sandbox behavior changes.
+
 ### P5R-T05 accepted implementation
 
 The accepted T05 implementation completes the bounded P3/T03-T05 `GlfwWindow` decomposition while preserving the public facade:

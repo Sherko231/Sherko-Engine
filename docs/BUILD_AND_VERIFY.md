@@ -645,6 +645,30 @@ Before the final PR, run every applicable routine command from the matrix when t
 
 P3-T07 itself adds no native operation. The existing `Windows native smoke` final-candidate job must still regress P3-T01 through P3-T05 native behavior on the same candidate. After merge, one lightweight exact-merge `master` verifier is required before Issue #90 may close. P3-T08 remains planning-only until then.
 
+## P5R-T06 input-binding loading/parsing/validation decomposition verification
+
+Issue #266 refactors only the package-private implementation behind the accepted P3-T07 action-binding contract. Public APIs, strict JSON schema version 1, error semantics, committed fixture, Jackson dependency/version, module edges, action evaluation, tick-command behavior, wiki usage, and sandbox behavior remain unchanged.
+
+Run the focused deterministic acceptance suite:
+
+```powershell
+.\\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.InputActionBindingsTest" --rerun-tasks
+```
+
+Run the architecture/headless checks:
+
+```powershell
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+Require no dependency-lock drift. Repository/source review must confirm the public `InputActionBindings`, `InputBinding`, `InputBindingLoadException`, action/component/value/control declaration set is unchanged; `InputActionBindingsJsonParser` and `InputActionBindingsValidator` are package-private; `InputActionBindingsLoader` is narrowed to file loading; the committed schema-v1 fixture is unchanged; and no P5R-T07+ work appears.
+
+Behavioral review must preserve missing/unreadable/null-path behavior, malformed JSON and duplicate-object-field wrapping, exact schema version/field/control vocabulary, document-level duplicate detection, component/scale validation, complete-action validation, public-constructor exception types/messages, and existing `InputBindingLoadException` path/context/cause meaning.
+
+The task changes Java source, so the exact final PR head requires the normal five-job heavy matrix. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #266 can close. Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
+
 ## P3-T04A historical sandbox-origin verification
 
 Issue #149 originally turned the `game-sandbox` skeleton into the canonical manual owner-observation surface without changing any public engine API. Its original acceptance used a scripted timeline and `EngineDemoTimelineTest`. That historical evidence remains valid for the task as it merged, but **it is not the current sandbox contract**. Issue #165 supersedes the presentation/maintenance model with the persistent cumulative playground described in `AGENTS.md` and `game-sandbox/README.md`.

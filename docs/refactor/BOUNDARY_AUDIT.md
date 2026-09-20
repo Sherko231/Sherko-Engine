@@ -179,7 +179,7 @@ Current important examples:
 
 | Surface | Status | Later owner |
 | --- | --- | --- |
-| `InputActionBindingsLoader` in `com.samo.engine.platform.api` | Package-private JSON/load/semantic implementation behind `InputActionBindings.load(...)`. | T06 may split parser/validator responsibilities; new helpers remain non-public. |
+| `InputActionBindingsLoader`, `InputActionBindingsJsonParser`, and `InputActionBindingsValidator` in `com.samo.engine.platform.api` | Package-private implementation behind `InputActionBindings.load(...)` / constructor validation. T06 narrows file loading, JSON/schema parsing, and domain validation/copying into named responsibilities without public promotion. | T06 owns this bounded split; T23 may later reconsider stable internal package grouping without widening consumer API. |
 | `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, callback registration/sink types, `GlfwInputState`, `GlfwMouseMotionTracker`, `GlfwCursorCaptureController`, `GlfwWindowModeController`, `GlfwDeferredSizeDelivery`, and GLFW window value records | Package-private implementation/testing surface colocated with the public facade; T03-T05 extract native/backend, input/focus/cursor, and mode/size responsibilities without public promotion. | T03-T05 own the bounded decomposition; T23 may later reconsider stable internal package grouping without widening consumer API. |
 | Renderer material/submission/culling/light/uniform/color/view-model helpers | Package-private under `com.samo.engine.render.opengl.internal`. | T10-T15. |
 | Sandbox camera/control/diagnostic helpers | Package-private game composition, not engine-library API. | T16-T17. |
@@ -234,7 +234,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | `FatalTermination` -> `FatalTerminationCoordinator` | Supported public engine API rename. | **T21**, unless a later active Issue explicitly authorizes earlier public contract work. |
 | `SubsystemStartup` -> `SubsystemStartupCoordinator` | Supported public engine API rename. | **T21**, unless explicitly authorized earlier. |
 | `GlfwWindow` decomposition | Public facade retained; extracted collaborators are implementation. | T03-T05, with no public signature/name change. |
-| `InputActionBindingsLoader` decomposition | Package-private implementation. | T06. |
+| `InputActionBindingsLoader` decomposition | Package-private implementation; T06 candidate splits file loading, strict JSON/schema parsing, and domain validation/copying into named package-private collaborators. | T06. |
 | Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. | T10-T15. |
 | `SandboxMain` decomposition | Game/playground entry point, not engine consumer API; entry point retained. | T16. |
 | `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 after reference verification. |

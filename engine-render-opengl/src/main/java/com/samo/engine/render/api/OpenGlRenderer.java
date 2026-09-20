@@ -4,7 +4,7 @@ import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
-import com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline;
+import com.samo.engine.render.opengl.internal.ReferenceSceneRenderer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,9 +32,9 @@ import org.joml.Matrix4fc;
  * components, or asset loading.
  */
 public final class OpenGlRenderer implements AutoCloseable {
-    private final IndexedStaticMeshPipeline pipeline;
+    private final ReferenceSceneRenderer pipeline;
 
-    private OpenGlRenderer(IndexedStaticMeshPipeline pipeline) {
+    private OpenGlRenderer(ReferenceSceneRenderer pipeline) {
         this.pipeline = pipeline;
     }
 
@@ -63,7 +63,7 @@ public final class OpenGlRenderer implements AutoCloseable {
         if (maxLocalLights < 1 || maxLocalLights > 8) {
             throw new IllegalArgumentException("maxLocalLights must be within [1,8]");
         }
-        return new OpenGlRenderer(IndexedStaticMeshPipeline.createProduction(
+        return new OpenGlRenderer(ReferenceSceneRenderer.createProduction(
                 guard,
                 registry,
                 engineLogger,

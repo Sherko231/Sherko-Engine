@@ -13,9 +13,9 @@ final class RendererFrameUniformUploader {
     private final int perFrameBuffer;
     private final int localLightBuffer;
     private final ByteBuffer cameraBytes =
-            ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+            ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer perFrameBytes =
-            ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+            ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final ByteBuffer localLightBytes =
             ByteBuffer.allocateDirect(LocalLightUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
 
@@ -37,12 +37,12 @@ final class RendererFrameUniformUploader {
             int framebufferHeight,
             List<RenderLocalLight> localLights) {
         cameraBytes.clear();
-        CameraUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
+        CameraMatricesUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
         cameraBytes.flip();
         resourceBackend.uploadBufferSubData(cameraBuffer, 0L, cameraBytes);
 
         perFrameBytes.clear();
-        PerFrameUniformBlock.write(framebufferWidth, framebufferHeight, perFrameBytes);
+        FramebufferMetricsUniformBlock.write(framebufferWidth, framebufferHeight, perFrameBytes);
         perFrameBytes.flip();
         resourceBackend.uploadBufferSubData(perFrameBuffer, 0L, perFrameBytes);
 

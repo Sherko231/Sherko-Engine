@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL43;
-import org.lwjgl.system.MemoryUtil;
 
 /** Owns one GLFW window and OpenGL 4.6 Core context for one subsystem lifetime. */
 public final class GlfwWindow extends EngineSubsystem {
@@ -30,9 +29,10 @@ public final class GlfwWindow extends EngineSubsystem {
     private final String title;
     private final EngineLogger logger;
     private final NativeResourceRegistry nativeResources;
-    private final WindowSizeListener sizeListener;
     private final OpenGlDebugMode openGlDebugMode;
     private final GlfwNativeBackend backend;
+    private final GlfwDeferredSizeDelivery sizeDelivery;
+    private final GlfwWindowModeController windowModeController;
     private final GlfwInputState inputState = new GlfwInputState();
     private final GlfwMouseMotionTracker mouseMotion = new GlfwMouseMotionTracker();
     private final GlfwCursorCaptureController cursorCapture;
@@ -50,14 +50,6 @@ public final class GlfwWindow extends EngineSubsystem {
     private boolean contextCurrent;
     private boolean capabilitiesCreated;
     private boolean eventPollingEnabled;
-    private boolean logicalSizePending;
-    private int pendingLogicalWidth;
-    private int pendingLogicalHeight;
-    private boolean framebufferSizePending;
-    private int pendingFramebufferWidth;
-    private int pendingFramebufferHeight;
-    private WindowMode windowMode = WindowMode.WINDOWED;
-    private WindowGeometry windowedRestoreGeometry;
     private Throwable pendingInputFailure;
     private Throwable pendingOpenGlDebugFailure;
 
@@ -157,9 +149,10 @@ public final class GlfwWindow extends EngineSubsystem {
         this.title = suppliedTitle;
         this.logger = Objects.requireNonNull(logger, "logger");
         this.nativeResources = Objects.requireNonNull(nativeResources, "nativeResources");
-        this.sizeListener = Objects.requireNonNull(sizeListener, "sizeListener");
         this.openGlDebugMode = Objects.requireNonNull(openGlDebugMode, "openGlDebugMode");
         this.backend = Objects.requireNonNull(backend, "backend");
+        this.sizeDelivery = new GlfwDeferredSizeDelivery(Objects.requireNonNull(sizeListener, "sizeListener"));
+        this.windowModeController = new GlfwWindowModeController(this.backend);
         this.cursorCapture = new GlfwCursorCaptureController(this.backend, mouseMotion);
     }
 
@@ -197,7 +190,7 @@ public final class GlfwWindow extends EngineSubsystem {
         }
         throwPendingOpenGlDebugFailure();
         throwPendingInputFailure();
-        dispatchPendingSizes();
+        sizeDelivery.dispatchPending();
     }
 
     /** Captures and consumes the pending per-frame hardware edges and mouse motion. */
@@ -231,36 +224,7 @@ public final class GlfwWindow extends EngineSubsystem {
             throw new IllegalStateException("GLFW window mode changes require a started window");
         }
         requireOwnerThread();
-        if (requestedMode == windowMode) {
-            return;
-        }
-
-        WindowMode previousMode = windowMode;
-        WindowGeometry previousRestoreGeometry = windowedRestoreGeometry;
-        WindowGeometry candidateRestoreGeometry = previousRestoreGeometry;
-        if (previousMode == WindowMode.WINDOWED) {
-            candidateRestoreGeometry = captureWindowedGeometry();
-        }
-
-        TransitionPlan requestedPlan = planTransition(requestedMode, candidateRestoreGeometry);
-        try {
-            applyTransition(requestedPlan);
-            windowMode = requestedMode;
-            if (requestedMode == WindowMode.WINDOWED) {
-                windowedRestoreGeometry = null;
-            } else if (previousMode == WindowMode.WINDOWED) {
-                windowedRestoreGeometry = candidateRestoreGeometry;
-            }
-        } catch (RuntimeException | Error failure) {
-            try {
-                applyTransition(planTransition(previousMode, candidateRestoreGeometry));
-            } catch (RuntimeException | Error rollbackFailure) {
-                addSuppressedUnlessSame(failure, rollbackFailure);
-            }
-            windowMode = previousMode;
-            windowedRestoreGeometry = previousRestoreGeometry;
-            throw failure;
-        }
+        windowModeController.setMode(windowHandle, requestedMode);
     }
 
     @Override
@@ -340,12 +304,12 @@ public final class GlfwWindow extends EngineSubsystem {
             sizeCallbackState = backend.installSizeCallbacks(windowHandle, new GlfwSizeEventSink() {
                 @Override
                 public void onLogicalSize(int logicalWidth, int logicalHeight) {
-                    stageLogicalSize(logicalWidth, logicalHeight);
+                    sizeDelivery.stageLogical(logicalWidth, logicalHeight);
                 }
 
                 @Override
                 public void onFramebufferSize(int framebufferWidth, int framebufferHeight) {
-                    stageFramebufferSize(framebufferWidth, framebufferHeight);
+                    sizeDelivery.stageFramebuffer(framebufferWidth, framebufferHeight);
                 }
             });
 
@@ -374,16 +338,15 @@ public final class GlfwWindow extends EngineSubsystem {
                             y));
             inputState.onFocusChanged(backend.queryWindowFocused(windowHandle));
 
-            Dimensions logicalSize = backend.queryLogicalSize(windowHandle);
-            validatePlatformDimensions("logical window", logicalSize);
-            stageLogicalSize(logicalSize.width(), logicalSize.height());
+            GlfwDimensions logicalSize = backend.queryLogicalSize(windowHandle);
+            GlfwDeferredSizeDelivery.validateDimensions("logical window", logicalSize);
+            sizeDelivery.stageLogical(logicalSize.width(), logicalSize.height());
 
-            Dimensions framebufferSize = backend.queryFramebufferSize(windowHandle);
-            validatePlatformDimensions("framebuffer", framebufferSize);
-            stageFramebufferSize(framebufferSize.width(), framebufferSize.height());
+            GlfwDimensions framebufferSize = backend.queryFramebufferSize(windowHandle);
+            GlfwDeferredSizeDelivery.validateDimensions("framebuffer", framebufferSize);
+            sizeDelivery.stageFramebuffer(framebufferSize.width(), framebufferSize.height());
 
-            windowMode = WindowMode.WINDOWED;
-            windowedRestoreGeometry = null;
+            windowModeController.reset();
             pendingOpenGlDebugFailure = null;
             inputState.clearForLifecycle();
             cursorCapture.reset();
@@ -400,8 +363,8 @@ public final class GlfwWindow extends EngineSubsystem {
     protected void onStop() {
         requireOwnerThread();
         eventPollingEnabled = false;
-        clearPendingSizes();
-        windowedRestoreGeometry = null;
+        sizeDelivery.clear();
+        windowModeController.clearRestoreGeometry();
         inputState.clearForLifecycle();
         mouseMotion.reset();
         pendingInputFailure = null;
@@ -430,8 +393,8 @@ public final class GlfwWindow extends EngineSubsystem {
         }
         requireOwnerThread();
         eventPollingEnabled = false;
-        clearPendingSizes();
-        windowedRestoreGeometry = null;
+        sizeDelivery.clear();
+        windowModeController.clearRestoreGeometry();
         inputState.clearForLifecycle();
         mouseMotion.reset();
         pendingInputFailure = null;
@@ -616,127 +579,6 @@ public final class GlfwWindow extends EngineSubsystem {
         return failure;
     }
 
-    private WindowGeometry captureWindowedGeometry() {
-        Position position = backend.queryWindowPosition(windowHandle);
-        Dimensions logicalSize = backend.queryLogicalSize(windowHandle);
-        if (logicalSize.width() <= 0 || logicalSize.height() <= 0) {
-            throw new IllegalStateException(
-                    "GLFW reported non-positive windowed restore dimensions: "
-                            + logicalSize.width() + "x" + logicalSize.height());
-        }
-        return new WindowGeometry(position.x(), position.y(), logicalSize.width(), logicalSize.height());
-    }
-
-    private TransitionPlan planTransition(WindowMode mode, WindowGeometry restoreGeometry) {
-        return switch (mode) {
-            case WINDOWED -> {
-                if (restoreGeometry == null) {
-                    throw new IllegalStateException("Windowed restore geometry is unavailable");
-                }
-                validateRestoreGeometry(restoreGeometry);
-                yield new TransitionPlan(
-                        WindowMode.WINDOWED,
-                        true,
-                        MemoryUtil.NULL,
-                        restoreGeometry.x(),
-                        restoreGeometry.y(),
-                        restoreGeometry.width(),
-                        restoreGeometry.height(),
-                        GLFW.GLFW_DONT_CARE);
-            }
-            case BORDERLESS_FULLSCREEN -> {
-                MonitorTarget monitor = queryPrimaryMonitorTarget();
-                yield new TransitionPlan(
-                        WindowMode.BORDERLESS_FULLSCREEN,
-                        false,
-                        MemoryUtil.NULL,
-                        monitor.position().x(),
-                        monitor.position().y(),
-                        monitor.videoMode().width(),
-                        monitor.videoMode().height(),
-                        GLFW.GLFW_DONT_CARE);
-            }
-            case EXCLUSIVE_FULLSCREEN -> {
-                MonitorTarget monitor = queryPrimaryMonitorTarget();
-                yield new TransitionPlan(
-                        WindowMode.EXCLUSIVE_FULLSCREEN,
-                        null,
-                        monitor.handle(),
-                        0,
-                        0,
-                        monitor.videoMode().width(),
-                        monitor.videoMode().height(),
-                        monitor.videoMode().refreshRate());
-            }
-        };
-    }
-
-    private MonitorTarget queryPrimaryMonitorTarget() {
-        long monitor = backend.primaryMonitor();
-        if (monitor == MemoryUtil.NULL) {
-            throw new IllegalStateException("GLFW primary monitor is unavailable");
-        }
-        VideoMode videoMode = backend.queryVideoMode(monitor);
-        if (videoMode == null) {
-            throw new IllegalStateException("GLFW primary monitor video mode is unavailable");
-        }
-        if (videoMode.width() <= 0 || videoMode.height() <= 0 || videoMode.refreshRate() <= 0) {
-            throw new IllegalStateException(
-                    "GLFW reported invalid primary monitor video mode: "
-                            + videoMode.width() + "x" + videoMode.height() + "@" + videoMode.refreshRate());
-        }
-        Position position = backend.queryMonitorPosition(monitor);
-        return new MonitorTarget(monitor, position, videoMode);
-    }
-
-    private void applyTransition(TransitionPlan plan) {
-        if (plan.decorated() != null) {
-            backend.setDecorated(windowHandle, plan.decorated());
-        }
-        backend.setWindowMonitor(
-                windowHandle,
-                plan.monitor(),
-                plan.x(),
-                plan.y(),
-                plan.width(),
-                plan.height(),
-                plan.refreshRate());
-    }
-
-    private void dispatchPendingSizes() {
-        if (logicalSizePending) {
-            int logicalWidth = pendingLogicalWidth;
-            int logicalHeight = pendingLogicalHeight;
-            logicalSizePending = false;
-            validatePlatformDimensions("logical window", new Dimensions(logicalWidth, logicalHeight));
-            sizeListener.onLogicalWindowSizeChanged(logicalWidth, logicalHeight);
-        }
-        if (framebufferSizePending) {
-            int framebufferWidth = pendingFramebufferWidth;
-            int framebufferHeight = pendingFramebufferHeight;
-            framebufferSizePending = false;
-            validatePlatformDimensions("framebuffer", new Dimensions(framebufferWidth, framebufferHeight));
-            sizeListener.onFramebufferSizeChanged(framebufferWidth, framebufferHeight);
-        }
-    }
-
-    private void stageLogicalSize(int logicalWidth, int logicalHeight) {
-        pendingLogicalWidth = logicalWidth;
-        pendingLogicalHeight = logicalHeight;
-        logicalSizePending = true;
-    }
-
-    private void stageFramebufferSize(int framebufferWidth, int framebufferHeight) {
-        pendingFramebufferWidth = framebufferWidth;
-        pendingFramebufferHeight = framebufferHeight;
-        framebufferSizePending = true;
-    }
-
-    private void clearPendingSizes() {
-        logicalSizePending = false;
-        framebufferSizePending = false;
-    }
-
     private void rollbackInitialization(Throwable primary) {
         List<Throwable> failures = new ArrayList<>();
         if (windowRegistration != null) {
@@ -762,8 +604,8 @@ public final class GlfwWindow extends EngineSubsystem {
 
     private void cleanupStartedContext(Throwable primary) {
         eventPollingEnabled = false;
-        clearPendingSizes();
-        windowedRestoreGeometry = null;
+        sizeDelivery.clear();
+        windowModeController.clearRestoreGeometry();
         inputState.clearForLifecycle();
         mouseMotion.reset();
         pendingInputFailure = null;
@@ -848,22 +690,6 @@ public final class GlfwWindow extends EngineSubsystem {
         openGlThreadGuard.assertOwnerThread();
     }
 
-    private static void validatePlatformDimensions(String kind, Dimensions dimensions) {
-        if (dimensions.width() < 0 || dimensions.height() < 0) {
-            throw new IllegalStateException(
-                    "GLFW reported negative " + kind + " dimensions: "
-                            + dimensions.width() + "x" + dimensions.height());
-        }
-    }
-
-    private static void validateRestoreGeometry(WindowGeometry geometry) {
-        if (geometry.width() <= 0 || geometry.height() <= 0) {
-            throw new IllegalStateException(
-                    "Windowed restore dimensions must be positive: "
-                            + geometry.width() + "x" + geometry.height());
-        }
-    }
-
     private static String requireGlString(String name, String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(name + " is unavailable for the current OpenGL context");
@@ -901,30 +727,5 @@ public final class GlfwWindow extends EngineSubsystem {
         }
     }
 
-    record Dimensions(int width, int height) {
-    }
-
-    record Position(int x, int y) {
-    }
-
-    record VideoMode(int width, int height, int refreshRate) {
-    }
-
-    record WindowGeometry(int x, int y, int width, int height) {
-    }
-
-    record MonitorTarget(long handle, Position position, VideoMode videoMode) {
-    }
-
-    record TransitionPlan(
-            WindowMode mode,
-            Boolean decorated,
-            long monitor,
-            int x,
-            int y,
-            int width,
-            int height,
-            int refreshRate) {
-    }
 
 }

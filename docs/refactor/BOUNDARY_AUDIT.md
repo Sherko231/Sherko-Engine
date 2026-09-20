@@ -56,7 +56,7 @@ This makes Java visibility discipline important during P5R: implementation helpe
 
 ## Supported engine-consumer API
 
-Source has changed through bounded P5R implementation since the T01 inventory baseline. The tables below track the current accepted/candidate consumer boundary against the live boundary registry and `wiki/API_INDEX.md`; T07 changes only the two explicitly authorized public lifecycle coordinator names.
+Source has changed through bounded P5R implementation since the T01 inventory baseline. The tables below track the current accepted consumer boundary against the live boundary registry and `wiki/API_INDEX.md`; accepted T07 changes only the two explicitly authorized public lifecycle coordinator names.
 
 ### `engine-core` — `com.samo.engine.core.api`
 
@@ -64,7 +64,7 @@ Source has changed through bounded P5R implementation since the T01 inventory ba
 | --- | --- | --- |
 | `EngineSubsystem` | Base lifecycle contract for one engine subsystem. | KEEP public contract; T07 may refactor lifecycle internals only unless T21 authorizes a public rename. |
 | `SubsystemGraph` | Declares named subsystem dependencies and resolves safe order. | KEEP; public nested `Registration` remains part of the contract. |
-| `SubsystemStartupCoordinator` | Coordinates ordered startup and rollback on partial failure. | KEEP after the P5R-T07 public rename; behavior remains D-020-compatible. |
+| `SubsystemStartupCoordinator` | Coordinates ordered startup and rollback on partial failure. | KEEP after the accepted P5R-T07 public rename; behavior remains D-020-compatible. |
 | `EngineClock` | Monotonic elapsed-time sampling. | KEEP. |
 | `FixedStepAccumulator` | Exact fixed-rate tick accumulation/interpolation progress. | KEEP. |
 | `FixedStepCatchUpPolicy` | Bounds elapsed spikes and per-update catch-up work. | KEEP. |
@@ -97,7 +97,7 @@ Source has changed through bounded P5R implementation since the T01 inventory ba
 | `ConfigValidationException` | Aggregates config validation failures. | KEEP. |
 | `EngineLogger` | Structured synchronous logging boundary. | KEEP; nested public logging vocabulary remains consumer API. |
 | `NativeResourceRegistry` | Explicit native ownership registration/terminal diagnostics. | KEEP; nested `Registration` remains lifecycle-sensitive public API. |
-| `FatalTerminationCoordinator` | One-shot orderly fatal shutdown coordination. | KEEP after the P5R-T07 public rename; behavior remains D-029-compatible. |
+| `FatalTerminationCoordinator` | One-shot orderly fatal shutdown coordination. | KEEP after the accepted P5R-T07 public rename; behavior remains D-029-compatible. |
 
 Public nested engine-core types that remain supported consumer API:
 

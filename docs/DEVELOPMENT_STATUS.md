@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T18 / Issue #278 is accepted; freshly refine P5R-T19 / Issue #279 against current `master` before implementation |
+| Active executable task | P5R-T19 / Issue #279 — rename executable-specific internal version-report helpers while preserving entry points/output |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -158,6 +158,8 @@ P5R-T17 / Issue #277 is accepted through PR #339. Final head `31172c12de2eb1a5c7
 
 P5R-T18 / Issue #278 is accepted through PR #341. The first final-candidate attempt, run #484 / `35523166142`, is superseded: malformed literal `\\n` text in `AnimatedDemoLightingTest` caused test-source compilation/parsing failures in Build, Unit, and Architecture jobs; production `compileVisualDemoJava` had already succeeded. Corrected final head `5f6ff0c1dfb05a078486abf05f4f10860f14dac4` passed all five required jobs in run #485 / `35523275737`: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. PR #341 merged as `9fa3a5c831cd0d9884b7b6a89c26029a3d41a6dd`, and exact merged `master` passed Lightweight verification in run #486 / `35523595439`. The accepted decomposition keeps public `RendererVisualDemo` and `runRendererVisualDemo` unchanged while extracting package-private `RendererVisualDemoApplication`, `RendererVisualDemoLoop`, `RendererVisualDemoFramebufferSize`, `AnimatedDemoLighting`, and `MaterialComparisonOverlay`; production renderer source/API, Gradle task wiring, material/shader values, light trajectories, draw order, GL cleanup order, module edges, dependencies, and Phase 6 scope remain unchanged.
 
+P5R-T19 / Issue #279 is active from baseline `674785a0daaed5249a529b9ded0e14c9f6ed5c7f`. Fresh review retained `ClientMain` and `ServerMain` because their bootstrap responsibilities are already minimal and clear, and limits implementation to renaming the two ambiguous internal executable helpers: `VersionReport` -> `ClientVersionReport` in `game-client` and `VersionReport` -> `ServerVersionReport` in `game-server`. `runClient`, `runServer`, default startup output, the six `--version` keys/value sources/order, metadata resource/generation, dependency graphs, and server headless-runtime boundary remain unchanged.
+
 ## Exact next action
 
-Freshly refine **P5R-T19 / Issue #279** against current `master` before implementation. Preserve version-report keys/output semantics, avoid a new client/server dependency edge for trivial deduplication, and keep P6-T01 blocked.
+Complete self-review and final-candidate verification for **P5R-T19 / Issue #279** on `p5r-t19-version-report-naming`. P5R-T20 and P6-T01 remain blocked until T19 acceptance.

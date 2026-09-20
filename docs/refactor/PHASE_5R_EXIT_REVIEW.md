@@ -6,9 +6,9 @@ Issue: #306 — execute the mandatory Phase 5R Architecture & Refactor Hardening
 
 ## Review state
 
-**PENDING automated final-candidate and exact-merge verification.**
+**PASS. Phase 5R exit gate is satisfied.**
 
-This document deliberately does not record PASS until the exact final PR candidate passes the required five-job GitHub Actions matrix and the exact resulting merged `master` commit passes Lightweight master verification.
+Final candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in PR run #495 / `35537699489`. PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`, and exact-merge Lightweight master verification passed in run #496 / `35537989459`.
 
 ## Exit contract
 
@@ -187,14 +187,21 @@ Static/contract review: **PASS**.
 
 Owner-facing entry-point/source/docs reconciliation: **PASS**, with no interactive-window execution claimed.
 
-Automated final-candidate verification: **PENDING**.
+Automated final-candidate verification: **PASS** — run #495 / `35537699489`, all five required jobs succeeded on exact head `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0`.
 
-Exact-merge verification: **PENDING**.
+Exact-merge verification: **PASS** — run #496 / `35537989459`, Lightweight master verification succeeded on exact merge `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`.
 
-Overall Phase 5R exit: **PENDING**.
+Overall Phase 5R exit: **PASS**.
 
 Wiki impact: none — no supported API/consumer usage change.
 
 Sandbox impact: review only — no sandbox source or owner-facing contract change.
 
 Architecture/decision impact: none — reconciliation found no new durable decision requirement.
+
+
+## Acceptance record
+
+P5R-T26 / Issue #306 Phase 5R exit review PASSED. Exact final candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in PR run #495 / `35537699489`. PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`, and exact-merge Lightweight master verification passed in run #496 / `35537989459`. Static/contract reconciliation found no unresolved public/internal/module/native-ownership/spatial/persisted/config/wire/protocol contradiction, no stale-name/refactor residue, and no Phase 6 readiness blocker. Interactive sandbox/visual-demo windows were not run in this connected review environment and are not claimed as manual visual evidence; their canonical entry wiring, deterministic tests/compilation, and retained native renderer regression coverage remain verified.
+
+Phase 6 may now be activated only by freshly materializing/refining P6-T01 against the then-current `master`. No Phase 6 implementation was performed by T26.

@@ -1968,3 +1968,6 @@ Any discovered source/behavior/contract defect blocks PASS and must be split int
 
 Wiki impact: none expected — review/status only.
 Sandbox impact: review only — no source/behavior change authorized.
+
+
+Accepted P5R-T26 Phase 5R exit evidence: final candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in PR run #495 / `35537699489`. PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`; exact merged-master Lightweight verification passed in run #496 / `35537989459`, including committed dependency locks, headless-server runtime isolation, and exact-merge client/server version reporting. Phase 5R exit result: PASS. Interactive sandbox/visual-demo windows were not executed in the connected review environment and are not claimed as manual visual evidence; entry wiring, deterministic tests/compilation, and retained native renderer regressions were reconciled and verified.

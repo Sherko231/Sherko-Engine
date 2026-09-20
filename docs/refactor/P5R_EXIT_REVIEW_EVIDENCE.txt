@@ -1,7 +1,7 @@
 P5R-T26 PHASE 5R EXIT REVIEW EVIDENCE MANIFEST
 baseline_master=69c860f02aa54bdb8e8d32055f9e582dc19942b9
 issue=306
-review_state=PENDING
+review_state=PASS
 p5r_predecessors=T01-T25_ACCEPTED
 sandbox_task=:game-sandbox:runSandbox
 sandbox_main=com.samo.game.sandbox.SandboxMain
@@ -11,5 +11,14 @@ required_candidate_jobs=Build and quality gates|Unit tests|Architecture tests|Ja
 required_merge_job=Lightweight master verification
 interactive_sandbox_claim=NOT_RUN_NOT_CLAIMED
 interactive_visual_demo_claim=NOT_RUN_NOT_CLAIMED
-p6_t01_state=BLOCKED_UNTIL_T26_PASS
+p6_t01_state=READY_FOR_FRESH_MATERIALIZATION_AFTER_T26_PASS
 purpose=Non-executable verification manifest intentionally makes the exit-review candidate non-Markdown so required full PR CI is triggered.
+candidate_head=40f2bb91ae3afeeee07d7f8be92dd7b088419fa0
+candidate_run=35537699489
+candidate_run_number=495
+candidate_result=ALL_FIVE_REQUIRED_JOBS_SUCCESS
+merge_sha=5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce
+merge_run=35537989459
+merge_run_number=496
+merge_result=LIGHTWEIGHT_MASTER_VERIFICATION_SUCCESS
+phase_5r_exit=PASS

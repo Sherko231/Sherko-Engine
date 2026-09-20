@@ -712,3 +712,6 @@ Fresh T24 review explicitly rejects speculative Singleton, Service Locator, Obje
 Wiki impact: none — `OpenGlBackendSet` is package-private and no supported API changes.
 Sandbox impact: none — public renderer behavior/usage is unchanged.
 Durable decision impact: none — existing internal Adapter boundaries are retained and composed more cleanly.
+
+
+Accepted P5R-T24 evidence: PR #353 final head `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005` passed the five-job matrix in run #493 / `35534567287`, merged as `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`, and exact-merge Lightweight verification passed in run #494 / `35534881306`. The accepted result strengthens only internal renderer Adapter composition through package-private `OpenGlBackendSet`; public and runtime architecture contracts remain unchanged.

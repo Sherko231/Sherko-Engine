@@ -461,9 +461,9 @@ Accepted T23 review selects **KEEP** for the current package layout.
 No symbol/package/visibility/API/wiki/sandbox change is introduced. The detailed package evidence is in `INTERNAL_PACKAGE_AUDIT.md`.
 
 
-## P5R-T24 pattern/scalability candidate
+## P5R-T24 accepted pattern/scalability result
 
-T24 introduces one package-private internal composition value:
+Accepted T24 introduces one package-private internal composition value:
 
 - `OpenGlBackendSet` — immutable grouping of the existing resource/draw/uniform-reflection renderer adapter interfaces, with null validation and a `production()` factory for the current LWJGL implementations.
 

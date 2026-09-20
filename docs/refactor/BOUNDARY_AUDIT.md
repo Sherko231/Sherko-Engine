@@ -252,6 +252,17 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | broad public engine naming review | Supported engine consumer API. | T21. |
 | internal package moves | Implementation package organization after responsibilities stabilize. | T23. |
 
+## P5R-T20 feasibility-spike isolation
+
+The `feasibility-spikes` subproject is an experimental evidence container, not a production dependency surface. Its Java remains under `com.samo.spike.*`, and no `.api` package is treated as supported consumer API merely because the generic module-boundary registry requires an API-root entry.
+
+The T20 candidate reinforces the already documented boundary in two ways:
+
+- `IntegratedNativeSoakSpike` is renamed to `IntegratedNativeEvidenceHarness` so one shared smoke/sustained evidence executable is not mislabeled as soak-only.
+- `:feasibility-spikes:verifyFeasibilitySpikeIsolation` inspects declared project dependencies across other subprojects and fails if any configuration depends on `:feasibility-spikes`; the task is wired into `:feasibility-spikes:check`.
+
+Historical root task aliases remain build-level compatibility entry points only; they do not place spike classes or dependencies on production module classpaths. Production source review must remain free of `com.samo.spike.*` references. No spike dependency, class, or feasibility conclusion is promoted into engine architecture by T20.
+
 ## Public-promotion rule for later P5R tasks
 
 A later P5R task must not solve an extraction/package-access problem by promoting an implementation class/interface/record/enum to `public` unless its active Issue explicitly defines a new supported public contract and satisfies the repository's public-API review/wiki requirements.

@@ -46,7 +46,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL43.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-public final class IntegratedNativeSoakSpike {
+public final class IntegratedNativeEvidenceHarness {
     private static final int DEFAULT_DURATION_SECONDS = 15;
     private static final int UDP_PORT = 42_120;
     private static final int PACKET_BYTES = Integer.BYTES + Long.BYTES;
@@ -57,7 +57,7 @@ public final class IntegratedNativeSoakSpike {
     private static final int BP_LAYER_NON_MOVING = 0;
     private static final int BP_LAYER_MOVING = 1;
 
-    private IntegratedNativeSoakSpike() {
+    private IntegratedNativeEvidenceHarness() {
     }
 
     public static void main(String[] args) throws Exception {

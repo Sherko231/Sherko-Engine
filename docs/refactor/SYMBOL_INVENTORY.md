@@ -165,6 +165,24 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `ServerMain` | public class | **KEEP** | — | Executable headless server bootstrap entry point is clear. | Headless/runtime verification boundary. |
 | `game-server.internal.ServerVersionReport` | public class in internal package | **KEEP** | — | T19 accepted implementation gives the executable-specific reporter an explicit server role while retaining its internal package and exact output behavior. | Internal executable helper; emitted output must remain byte/meaning compatible. |
 
+## Experimental feasibility-spike entry/harness surface — P5R-T20
+
+These types remain under the explicit experimental `feasibility-spikes` module and `com.samo.spike.*` package root. They are verification/evidence executables, not production engine APIs.
+
+| Symbol | Action | Current responsibility / rationale | Isolation / compatibility risk |
+| --- | --- | --- | --- |
+| `OpenGL46Spike` | **KEEP** | P0-T03 OpenGL 4.6 feasibility executable; name states API level and spike purpose. | Preserve `runOpenGL46Spike` and historical evidence. |
+| `JoltLifecycleSpike` | **KEEP** | P0-T04 Jolt JNI lifecycle/cleanup feasibility executable. | Preserve lifecycle evidence and native cleanup behavior. |
+| `OpenAL3DAudioSpike` | **KEEP** | P0-T05 OpenAL 3D-audio feasibility executable. | Preserve `runOpenAL3DAudioSpike` and audio evidence behavior. |
+| `LocalhostUdpSpike` | **KEEP** | P0-T06 localhost UDP feasibility executable serving server/client roles. | Preserve `runUdpSpikeServer` / `runUdpSpikeClient`. |
+| `NetworkImpairmentHarness` | **KEEP** | P0-T11 deterministic localhost latency/jitter/loss/duplication/reordering harness. | Harness wording already distinguishes it from production transport. |
+| `SteamInitSpike` | **KEEP** | P0-T07 Steam initialization/callback feasibility executable. | Must not imply production Steam transport coverage. |
+| `SteamFlatApiFfmSpike` | **KEEP** | P0-T09 Java FFM access to the Steam flat API. | Must retain the narrow “API access, not end-to-end transport” conclusion. |
+| `WindowsNativeCiSmoke` | **KEEP** | Headless-safe hosted-Windows GLFW/OpenAL lifecycle smoke used by CI. | Smoke utility remains experimental/build verification, not engine runtime architecture. |
+| `IntegratedNativeEvidenceHarness` | **RENAME ACCEPTED CANDIDATE** | T20 name for the shared integrated GLFW/OpenGL/Jolt/OpenAL/UDP evidence executable backing both P0-T12 smoke and P0-T13 sustained tasks. | Replaces misleading `IntegratedNativeSoakSpike` name only; task names, durations, evidence labels/JFR paths, subsystem behavior, and conclusions remain unchanged. |
+
+T20 also adds a Gradle isolation guard under `:feasibility-spikes:check` that rejects any project dependency from another declared subproject to `:feasibility-spikes`. Existing architecture/source review continues to confirm production Java has no `com.samo.spike.*` references.
+
 ## Modules with no production/runtime Java in the current P1-P5 implementation
 
 These modules are present in `settings.gradle.kts` but currently have no `src/main/java` production types to classify for T01: `engine-ui`, `engine-assets`, `engine-world`, `engine-physics-jolt`, `engine-audio-openal`, `engine-network-api`, `engine-network-ip`, `engine-steam`, `engine-editor`, and `test-support`.

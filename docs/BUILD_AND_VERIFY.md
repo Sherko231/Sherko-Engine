@@ -1803,3 +1803,5 @@ The final non-Markdown PR must pass the repository five-job matrix. Its Build jo
 
 Wiki impact: none — no supported engine API changes.
 Sandbox impact: none — no sandbox behavior changes.
+
+Accepted P5R-T19 verification evidence: final PR head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #487 / `35524411941`. The Build job passed both default executable runs, `verifyHeadlessServerRuntime`, and the end-to-end six-key version-report verifier. PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`; exact merged-master Lightweight verification passed in run #488 / `35524646827`, including committed dependency locks, headless-server runtime isolation, and exact-merge version reporting.

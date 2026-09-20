@@ -227,9 +227,9 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
-### P5R-T07 candidate
+### P5R-T07 accepted implementation
 
-The T07 candidate resolves the two T01 lifecycle public-name findings under D-066:
+The accepted T07 implementation resolves the two T01 lifecycle public-name findings under D-066:
 
 - `SubsystemStartupCoordinator` replaces `SubsystemStartup` and retains the same stateless `start(...)` coordination, partial-start rollback, caller ownership, failure identity, suppression order, and self-suppression avoidance;
 - `FatalTerminationCoordinator` replaces `FatalTermination` and retains the same synchronous one-shot `terminate(...)` sequence, cleanup/reporting containment, logger flush, and exit-status behavior;

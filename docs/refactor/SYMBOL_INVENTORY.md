@@ -391,6 +391,6 @@ T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fr
 T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` unchanged after fresh review. It renames only `ViewModelProjection` -> `ViewModelProjectionFactory` and extracts fixed six-vertex fixture packing into `ViewModelFixtureVertexPacker`; D-041/D-045/D-064/D-065 spatial/rendering/order/ownership behavior remains unchanged.
 
 
-### P5R-T16 active implementation
+### P5R-T16 accepted implementation
 
 T16 keeps public `SandboxMain` as the bootstrap/lifecycle entry point and extracts package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize`. `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged; T17-owned control/helper naming and `EngineDemoMain` / `runEngineDemo` compatibility cleanup remain deferred. Owner controls, spatial/camera semantics, fixed scene values, diagnostics, renderer/present ordering, and shutdown behavior remain unchanged.

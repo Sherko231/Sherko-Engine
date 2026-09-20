@@ -1730,4 +1730,6 @@ Spatial review must confirm the D-041/D-045 camera basis is unchanged, W/A/S/D p
 
 Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix. The Windows native Phase 5 integration remains a regression check for sandbox-driven camera/render assumptions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #276 can close.
 
+Accepted P5R-T16 evidence: initial head `58a6ee520f3f3c9ebdce7a7611da2b06ea2f49e6` failed Unit tests in run #473 / `35514092541` because added direct tests crossed the existing sandbox compile-only dependency boundary; the tests were removed without changing Gradle/dependency metadata, so that run is superseded. Corrected final head `8705d6b031b9bb437c74405f5963a60aa731b175` passed all five required jobs in run #479 / `35514285664`, including Windows native P5-T16/P5-T17/P5-T18 regressions. PR #337 merged as `c4d9675e7c03cf046bc684b668ac1117af0f23fe`; exact merged-master Lightweight verification passed in run #480 / `35514559730`.
+
 Wiki impact: none — no supported public engine API or consumer usage changes. Sandbox impact: structural only — `runSandbox`, controls, README instructions, output, and observable behavior remain unchanged, so no owner-facing README content change is required.

@@ -724,3 +724,6 @@ The exit review on baseline `69c860f02aa54bdb8e8d32055f9e582dc19942b9` finds no 
 The persistent sandbox remains `SandboxMain` via `:game-sandbox:runSandbox`. The standalone renderer observation surface remains `RendererVisualDemo` via `:engine-render-opengl:runRendererVisualDemo`. No Phase 6 asset identity/resource contract is introduced by this review.
 
 This is a reconciliation result, not a new durable architecture decision. Final Phase 5R PASS still depends on the exact-candidate and exact-merge automated verification required by Issue #306.
+
+
+Accepted P5R-T26 exit evidence: exact candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in run #495 / `35537699489`; PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`; exact-merge Lightweight verification passed in run #496 / `35537989459`. The reconciliation found no new architecture decision requirement. Phase 5R exit result: PASS; Phase 6 may proceed only through a freshly refined P6-T01 contract.

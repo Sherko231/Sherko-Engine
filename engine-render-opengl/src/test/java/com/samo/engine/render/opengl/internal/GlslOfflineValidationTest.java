@@ -57,15 +57,15 @@ class GlslOfflineValidationTest {
     }
 
     @Test
-    void rejectsBrokenFixtureWithDiagnostics() throws Exception {
+    void rejectsInvalidSyntaxFixtureWithDiagnostics() throws Exception {
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> GlslOfflineValidator.validate(
                         GlslOfflineValidator.Stage.FRAGMENT,
-                        "shaders/p5/broken.frag",
-                        resource("shaders/p5/broken.frag")));
+                        "shaders/p5/invalid-syntax.frag",
+                        resource("shaders/p5/invalid-syntax.frag")));
 
-        assertTrue(failure.getMessage().contains("shaders/p5/broken.frag"));
+        assertTrue(failure.getMessage().contains("shaders/p5/invalid-syntax.frag"));
         assertTrue(failure.getMessage().contains("FRAGMENT"));
         assertTrue(failure.getMessage().toLowerCase().contains("error"));
     }

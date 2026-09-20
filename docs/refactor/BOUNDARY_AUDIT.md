@@ -324,3 +324,13 @@ Independent public-API-change review is not applicable because the T21 candidate
 
 Wiki impact: none — no public name/signature/usage change.
 Sandbox impact: none — no runtime capability or owner-facing usage change.
+
+
+## P5R-T22 test/evidence boundary result
+
+T22 does not alter production/public/internal package boundaries. Test vocabulary is already synchronized with accepted production names. The only fixture rename is an invalid GLSL test resource from `broken.frag` to `invalid-syntax.frag`; no production resource path changes.
+
+Historical native/gate environment variables, evidence report/capture paths, workflow artifact names, and phase-gate test names remain stable because they are evidence provenance and automation contracts, not consumer API.
+
+Wiki impact: none.
+Sandbox impact: none.

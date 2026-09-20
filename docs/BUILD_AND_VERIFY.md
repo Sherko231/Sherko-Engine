@@ -1851,3 +1851,24 @@ Sandbox impact: none — no capability or owner-facing usage changes.
 
 
 Accepted P5R-T21 verification evidence: final audit head `32886cb82e69c199ed6747630aa42b12ac55b125` was merged through PR #347 as `d79f6d6c18490c839157770e51e9908eb2f7e13d`. The complete PR diff contained exactly 8 changed paths and every path ended in `.md`, so the documented Markdown-only exemption applied. No heavy PR CI or post-merge Lightweight run was required or claimed. Source/wiki/boundary review found no justified public rename and no source/wiki/sandbox/runtime change.
+
+
+## P5R-T22 test/fixture/evidence naming verification
+
+Issue #302 changes no production code. Fresh audit covers all 99 current test classes and all current `@Test` method names. Existing test vocabulary already matches accepted P5R production names; the only justified change is the negative GLSL fixture `shaders/p5/broken.frag` -> `shaders/p5/invalid-syntax.frag` plus `rejectsInvalidSyntaxFixtureWithDiagnostics`.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.GlslOfflineValidationTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Repository search must find no live `broken.frag` reference. Historical `SHERKO_P*_*` environment variables, phase/task report/capture filenames, workflow artifact names, and phase-gate class names remain unchanged because they are evidence provenance rather than current implementation vocabulary.
+
+Because Java test/resource paths change, the exact final PR head requires the normal five-job matrix. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #302 closes.
+
+Wiki impact: none — no public API or consumer usage changes.
+Sandbox impact: none — no owner-facing behavior changes.

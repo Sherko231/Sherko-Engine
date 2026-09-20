@@ -149,9 +149,10 @@ public final class GlfwWindow extends EngineSubsystem {
         this.title = suppliedTitle;
         this.logger = Objects.requireNonNull(logger, "logger");
         this.nativeResources = Objects.requireNonNull(nativeResources, "nativeResources");
+        WindowSizeListener suppliedSizeListener = Objects.requireNonNull(sizeListener, "sizeListener");
         this.openGlDebugMode = Objects.requireNonNull(openGlDebugMode, "openGlDebugMode");
         this.backend = Objects.requireNonNull(backend, "backend");
-        this.sizeDelivery = new GlfwDeferredSizeDelivery(Objects.requireNonNull(sizeListener, "sizeListener"));
+        this.sizeDelivery = new GlfwDeferredSizeDelivery(suppliedSizeListener);
         this.windowModeController = new GlfwWindowModeController(this.backend);
         this.cursorCapture = new GlfwCursorCaptureController(this.backend, mouseMotion);
     }

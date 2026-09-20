@@ -1760,3 +1760,21 @@ Because Java/test/build source changes, the exact final PR head requires the nor
 Accepted P5R-T17 evidence: final PR head `31172c12de2eb1a5c78d75a74b1a58268f67faa3` passed all five required jobs in run #482 / `35518803707`, including Windows native P5-T16/P5-T17/P5-T18 regressions. Earlier run #481 / `35518792283` was cancelled after a documentation-only head advance and is not acceptance evidence. PR #339 merged as `62e9bbd1683557193a6afe27e9b08fbacc32212a`; exact merged-master Lightweight verification passed in run #483 / `35519165178`.
 
 Wiki impact: none — the removed surface is a sandbox executable compatibility alias, not supported engine consumer API. Sandbox impact: launch guidance now documents only the canonical `runSandbox`; controls/output/capabilities remain unchanged.
+
+
+## P5R-T18 renderer visual-demo decomposition verification
+
+Issue #278 decomposes only the standalone renderer `visualDemo` source set. Public `RendererVisualDemo`, `:engine-render-opengl:runRendererVisualDemo`, production renderer source/API, dependencies, and module edges remain unchanged.
+
+Run the focused deterministic suites:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.AnimatedDemoLightingTest" --tests "com.samo.engine.render.opengl.internal.RendererVisualDemoFramebufferSizeTest" --tests "com.samo.engine.render.opengl.internal.RendererVisualDemoLoopTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:check --rerun-tasks
+.\gradlew.bat check
+```
+
+`AnimatedDemoLightingTest` protects the accepted two-light ordering, trajectories, normalized spot direction, exact initial intensity/range values, seven debug primitives, and terminal debug ray. `RendererVisualDemoFramebufferSizeTest` proves logical-size callbacks do not replace framebuffer dimensions while framebuffer callbacks replace both values. `RendererVisualDemoLoopTest` protects the pre-existing saturating elapsed-time arithmetic moved out of the entry point.
+
+The normal exact-head five-job PR matrix remains required because Java source/tests changed. After merge, require the Lightweight master verification on the exact merge SHA before Issue #278 closes. The standalone interactive demo is owner-observation only and does not replace automated/native renderer acceptance.

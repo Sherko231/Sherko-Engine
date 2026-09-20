@@ -337,3 +337,19 @@ Historical native/gate environment variables, evidence report/capture paths, wor
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+## P5R-T23 internal package boundary result
+
+T23 confirms the current package layout is the stronger encapsulation boundary for the completed P1-P5 codebase.
+
+The renderer's production internal implementation is one connected package-private dependency component. The platform's deferred implementation helpers are also intentionally package-private beside their public facades. Reorganizing either surface into Java subpackages would require visibility widening or bridge/public contracts merely to preserve existing calls, which the P5R public-promotion rule forbids.
+
+The visual demo similarly retains the current package because its material comparison overlay consumes package-private renderer infrastructure. Client/server singleton internal helpers are not fragmented into nested single-type packages.
+
+No public/internal root, Java visibility, module edge, artifact boundary, ownership/spatial/config/wire contract, wiki usage, or sandbox behavior changes.
+
+Detailed evidence: `docs/refactor/INTERNAL_PACKAGE_AUDIT.md`.
+
+Wiki impact: none.
+Sandbox impact: none.

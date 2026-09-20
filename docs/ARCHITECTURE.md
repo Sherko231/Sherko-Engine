@@ -677,3 +677,20 @@ Durable decision impact: none — existing experimental isolation is enforced; n
 
 
 Accepted P5R-T20 evidence: final head `244041127c1851d477f557c92734c981ee5649b7` passed all five required jobs in run #489 / `35525360797`; PR #345 merged as `510e61d6d44eab4cb986d5c03078138aaa40a020`; exact merged-master Lightweight verification passed in run #490 / `35525718982`. The accepted boundary keeps feasibility code experimental and prevents declared subproject dependencies on `:feasibility-spikes`.
+
+
+## Phase 5R internal package audit — P5R-T23 / Issue #303
+
+Fresh T23 review keeps the current package layout.
+
+The 42 production types under `com.samo.engine.render.opengl.internal` form one connected source-dependency component. The responsibility groups established by T10-T15 are clear at class level, but Java package-private dependencies intentionally cross those groups. Splitting them into resource/frame/material/light/debug/view-model subpackages would require widening implementation visibility or creating bridge contracts solely to cross package boundaries. Moving the whole connected implementation into one deeper package would add churn without creating a meaningful responsibility boundary.
+
+The 11 package-private platform collaborators deferred by T03-T06 also remain colocated in `com.samo.engine.platform.api`. `GlfwWindow` and `InputActionBindings` depend on those package-private collaborators; moving them to a separate internal package would require public/protected promotion or new bridge types, contrary to the accepted encapsulation rule.
+
+The standalone renderer visual demo remains in the existing renderer internal package because `MaterialComparisonOverlay` intentionally consumes package-private renderer resource/draw/material infrastructure. Client/server internal packages each contain one executable-specific version-report helper and are not fragmented into single-type nested packages.
+
+The durable analysis is recorded in `docs/refactor/INTERNAL_PACKAGE_AUDIT.md`.
+
+Wiki impact: none — no supported public package/type/signature/usage changes.
+Sandbox impact: none — no runtime capability or owner-facing usage changes.
+Durable decision impact: none — current package-private cohesion is retained rather than replaced.

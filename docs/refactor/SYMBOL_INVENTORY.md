@@ -447,3 +447,15 @@ Historical CI/evidence identifiers remain KEEP even when they reflect original r
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+## P5R-T23 internal package audit candidate
+
+Fresh T23 review selects **KEEP** for the current package layout.
+
+- `engine-render-opengl`: 42 production internal types remain together because their package-private source-reference graph is one connected component.
+- `engine-platform-lwjgl`: 11 package-private implementation collaborators remain beside `GlfwWindow` / `InputActionBindings`; moving them would require visibility widening or bridge types.
+- renderer visual-demo types remain in the existing internal package because `MaterialComparisonOverlay` consumes package-private renderer infrastructure.
+- `game-client.internal.ClientVersionReport` and `game-server.internal.ServerVersionReport` remain in their existing internal roots; deeper one-class packages would be fragmentation.
+
+No symbol/package/visibility/API/wiki/sandbox change is introduced. The detailed package evidence is in `INTERNAL_PACKAGE_AUDIT.md`.

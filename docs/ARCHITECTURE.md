@@ -608,3 +608,12 @@ The accepted T14 implementation keeps the established D-050 resource-wrapper and
 The bounded refactor renames only the ambiguous cleanup utility `CleanupFailures` to `CleanupFailureSuppression` and centralizes the exact repeated rollback rule in `runAndSuppress(primary, cleanup)`: run the same cleanup action, preserve the original primary failure, add a distinct cleanup failure as suppressed, and never self-suppress. Resource creation/registration/deletion order, native handle ownership, owner-thread checks, registry behavior, wrapper-level idempotent close, dynamic-buffer fence ownership, and multi-resource close ordering remain unchanged. No resource manager, cache, pool, backend selector, new native abstraction layer, public API, or Phase 6 identity contract is introduced.
 
 Accepted evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` passed all five required jobs in run #469 / `35511357500`; PR #333 merged as `750e36a678ef70e497d019beafa0c0bf97d56324`; exact merged-master Lightweight verification passed in run #470 / `35511620539`.
+
+
+## Phase 5R debug/view-model responsibility cleanup — P5R-T15 / Issue #275
+
+The T15 candidate keeps the accepted debug split unchanged: `DebugLineVertexPacker` continues to own bounded world-space debug primitive -> line-vertex packing, and `DebugLineRenderer` continues to own only the corresponding GL resources/upload/draw lifecycle. Their names and behavior remain canonical.
+
+For the internal P5-T17 validation layer, `ViewModelProjectionFactory` is the canonical stateless creator for the fixed 55° vertical-FOV, framebuffer-aspect, 0.01 m near, 10 m far perspective. `ViewModelFixtureVertexPacker` owns only the fixed six-vertex validation-fixture byte packing and linear RGB `(0.95, 0.55, 0.15)`. `ViewModelRenderer` remains the GL resource/render owner and consumes those helpers without transferring ownership.
+
+D-041/D-045 world/view conventions remain untouched, view-model view remains identity, ordering remains world -> debug -> depth-only reset -> view-model, and D-063 presentation plus GL state/restoration semantics remain unchanged. No public view-model/gameplay submission API, weapon/hand system, animation/IK, render graph/FBO, or asset/resource identity is introduced.

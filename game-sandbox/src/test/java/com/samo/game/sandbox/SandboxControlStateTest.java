@@ -8,7 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.samo.engine.core.api.InputResponseSettings;
 import com.samo.engine.platform.api.InputAction;
 import com.samo.engine.platform.api.InputActionBindings;
+import com.samo.engine.platform.api.InputActionComponent;
 import com.samo.engine.platform.api.InputActionEvaluator;
+import com.samo.engine.platform.api.InputActionValueType;
+import com.samo.engine.platform.api.InputBinding;
+import com.samo.engine.platform.api.InputKey;
 import com.samo.engine.platform.api.WindowMode;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -87,10 +91,17 @@ final class SandboxControlStateTest {
     }
 
     private static InputActionBindings emptyBindings() {
-        EnumMap<InputAction, List<com.samo.engine.platform.api.InputBinding>> bindings =
-                new EnumMap<>(InputAction.class);
+        EnumMap<InputAction, List<InputBinding>> bindings = new EnumMap<>(InputAction.class);
         for (InputAction action : InputAction.values()) {
-            bindings.put(action, List.of());
+            InputActionComponent component = action.valueType() == InputActionValueType.DIGITAL
+                    ? InputActionComponent.VALUE
+                    : InputActionComponent.X;
+            bindings.put(
+                    action,
+                    List.of(new InputBinding(
+                            new InputBinding.KeyControl(InputKey.W),
+                            component,
+                            1.0d)));
         }
         return new InputActionBindings(bindings);
     }

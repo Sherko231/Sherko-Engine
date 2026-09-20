@@ -13,12 +13,12 @@ final class ReferenceSceneVisibilityPlanner {
     private static final int MATERIAL_KEY_BASELINE = 0;
     private static final int MESH_KEY_REFERENCE = 0;
 
-    private final RendererMaterial baselineMaterial;
+    private final RenderMaterialDescriptor baselineMaterial;
     private final CpuFrustumCuller frustumCuller;
     private final DrawSubmissionSorter submissionSorter;
 
     ReferenceSceneVisibilityPlanner(
-            RendererMaterial baselineMaterial,
+            RenderMaterialDescriptor baselineMaterial,
             CpuFrustumCuller frustumCuller,
             DrawSubmissionSorter submissionSorter) {
         this.baselineMaterial = Objects.requireNonNull(baselineMaterial, "baselineMaterial");

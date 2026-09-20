@@ -632,6 +632,8 @@ Accepted evidence: final corrected PR head `8705d6b031b9bb437c74405f5963a60aa731
 
 ## Phase 5R sandbox naming/compatibility cleanup — P5R-T17 / Issue #277
 
-Fresh repository-reference verification establishes that the legacy `EngineDemoMain` class and `:game-sandbox:runEngineDemo` task have no live code/workflow/test consumers and are obsolete compatibility-only surfaces. T17 removes both and leaves public `SandboxMain` plus `:game-sandbox:runSandbox` as the sole canonical persistent owner-facing entry path.
+Fresh repository-reference verification established that the legacy `EngineDemoMain` class and `:game-sandbox:runEngineDemo` task had no live code/workflow/test consumers and were obsolete compatibility-only surfaces. The accepted T17 implementation removes both and leaves public `SandboxMain` plus `:game-sandbox:runSandbox` as the sole canonical persistent owner-facing entry path.
 
 Within the package-private owner-control mapper, nested `SandboxControls.SandboxAction` and `SandboxControls.SandboxControlInput` are the canonical responsibility-revealing names after T16 decomposition. Enum members, record fields/order, control resolution, simultaneous-action behavior, and every owner-visible F/R/Right-Shift/Ctrl+Q rule remain unchanged. `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, `SandboxFramebufferSize`, `SandboxCamera`, `SandboxControls`, `SandboxDiagnosticFormatter`, and `SandboxDiagnosticFormatter.DiagnosticValues` otherwise remain unchanged.
+
+Accepted P5R-T17 evidence: final PR head `31172c12de2eb1a5c78d75a74b1a58268f67faa3` passed all five required jobs in run #482 / `35518803707`; PR #339 merged as `62e9bbd1683557193a6afe27e9b08fbacc32212a`; exact merged-master Lightweight verification passed in run #483 / `35519165178`. Run #481 / `35518792283` is superseded because a later documentation-only commit advanced the PR head.

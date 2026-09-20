@@ -360,6 +360,9 @@ Sandbox impact: none.
 
 ## P5R-T24 pattern boundary result
 
+Accepted T24 evidence: PR #353 final head `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005` passed all five required jobs in run #493 / `35534567287`, merged as `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`, and exact-merge Lightweight verification passed in run #494 / `35534881306`. No public/internal root, module edge, or adapter visibility changed.
+
+
 `OpenGlBackendSet` is package-private under the existing renderer internal root. It composes — but does not merge, publish, or redirect — the three accepted renderer adapter contracts:
 
 - `OpenGlResourceBackend`;

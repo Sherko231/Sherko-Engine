@@ -57,12 +57,14 @@ class AnimatedDemoLightingTest {
         assertEquals(0.0f, point.positionX(), 0.000001f);
         assertEquals(0.75f, point.positionY(), 0.000001f);
         assertEquals(-0.20f, point.positionZ(), 0.000001f);
-        assertEquals(1.0f, point.intensity(), 0.000001f);\n        assertEquals(4.5f, point.rangeMeters(), 0.000001f);
+        assertEquals(1.0f, point.intensity(), 0.000001f);
+        assertEquals(4.5f, point.rangeMeters(), 0.000001f);
 
         assertEquals(1.25f, spot.positionX(), 0.000001f);
         assertEquals(0.95f, spot.positionY(), 0.000001f);
         assertEquals(-0.25f, spot.positionZ(), 0.000001f);
-        assertEquals(1.0f, spot.intensity(), 0.000001f);\n        assertEquals(5.0f, spot.rangeMeters(), 0.000001f);
+        assertEquals(1.0f, spot.intensity(), 0.000001f);
+        assertEquals(5.0f, spot.rangeMeters(), 0.000001f);
 
         assertEquals(2.3f, ray.lengthMeters(), 0.000001f);
     }

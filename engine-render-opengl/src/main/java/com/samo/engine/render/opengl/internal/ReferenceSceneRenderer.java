@@ -57,7 +57,7 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             DebugLineRenderer debugLineRenderer,
             ViewModelRenderer viewModelRenderer,
             RenderMaterialDescriptor baselineMaterial,
-            PresentationMode presentationMode,
+            SrgbPresentationMode presentationMode,
             EngineLogger logger,
             int maxLocalLights) {
         this.threadGuard = threadGuard;
@@ -252,10 +252,10 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             gl.uploadBufferSubData(indices.handle(), 0L, ReferenceRoomFixture.indices());
 
             camera = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(camera.handle(), CameraUniformBlock.SIZE_BYTES);
+            gl.allocateDynamicBufferStorage(camera.handle(), CameraMatricesUniformBlock.SIZE_BYTES);
 
             perFrame = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(perFrame.handle(), PerFrameUniformBlock.SIZE_BYTES);
+            gl.allocateDynamicBufferStorage(perFrame.handle(), FramebufferMetricsUniformBlock.SIZE_BYTES);
 
             localLights = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(localLights.handle(), LocalLightUniformBlock.SIZE_BYTES);
@@ -277,8 +277,8 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
                     guard,
                     resources,
                     gl);
-            PresentationMode presentationMode =
-                    PresentationMode.fromDefaultFramebufferEncoding(
+            SrgbPresentationMode presentationMode =
+                    SrgbPresentationMode.fromDefaultFramebufferEncoding(
                             draw.defaultFramebufferColorEncoding());
 
             fragment = OpenGlShader.compile(
@@ -300,8 +300,8 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
 
             draw.configurePositionNormalUvAttributes(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
-            draw.bindUniformBuffer(CameraUniformBlock.BINDING, camera.handle());
-            draw.bindUniformBuffer(PerFrameUniformBlock.BINDING, perFrame.handle());
+            draw.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, camera.handle());
+            draw.bindUniformBuffer(FramebufferMetricsUniformBlock.BINDING, perFrame.handle());
             draw.bindUniformBuffer(LocalLightUniformBlock.BINDING, localLights.handle());
 
             MaterialTextureBinding referenceBinding =

@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T12 / Issue #272 is accepted; freshly refine P5R-T13 / Issue #273 against current `master` before implementation |
+| Active executable task | P5R-T13 / Issue #273 — uniform-block/color/presentation internal naming candidate on `p5r-t13-uniform-color-presentation-names`; P5R-T14 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -146,6 +146,8 @@ P5R-T11 / Issue #271 is accepted through PR #327. Final head `2512677512e657de4f
 
 P5R-T12 / Issue #272 is accepted through PR #329. Final head `85de9922f0fef5bbedc17add1bc41b1065d94f4a` passed all five required final-candidate jobs in run #465 / `35508358983`, including the renamed P5-T09 material native regression and P5-T18 Phase 5 exit integration. PR #329 merged as `aa3cccf885216f4e955c5cf671a96bb73702af8d`, and exact merged `master` passed Lightweight verification in run #466 / `35508613959`. The accepted naming refactor keeps `DrawSubmission`, `DrawSubmissionSorter`, `CpuFrustumCuller`, `DirectionalLight`, and the subordinate material mode/binding/scalar names unchanged, while renaming only `RendererMaterial` -> `RenderMaterialDescriptor`, `MaterialStatePolicy` -> `OpenGlMaterialStatePolicy`, and `LocalLightSelection` -> `LocalLightSelector`. Public API, draw ordering/state, culling semantics, local-light limits/warnings, shader behavior, module edges, sandbox usage, and native ownership remain unchanged.
 
+P5R-T13 / Issue #273 is the active candidate from baseline `4178944b0919c450a0affdcc8472c4ba8ca6f31a`. Fresh review retains `LocalLightUniformBlock`, `UniformBlockLayoutVerifier`, `SrgbTransfer`, `TextureColorEncoding`, and shader ABI names/defines unchanged. The candidate renames only `CameraUniformBlock` -> `CameraMatricesUniformBlock`, `PerFrameUniformBlock` -> `FramebufferMetricsUniformBlock`, and `PresentationMode` -> `SrgbPresentationMode`, plus the directly coupled presentation test name. GLSL `CameraBlock` / `PerFrameBlock` / `LocalLightBlock`, bindings 0/1/2, byte layouts 128/16/528, `SHERKO_MANUAL_SRGB_ENCODE`, texture encodings, and exactly-one sRGB presentation semantics remain unchanged pending verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T13 / Issue #273** against current `master` before implementation. Keep it bounded to uniform-block/color/presentation internal naming, preserve shader ABI/binding/layout and D-056/D-063 output semantics, and do not materialize P6-T01.
+Complete implementation/self-review/verification for **P5R-T13 / Issue #273** on `p5r-t13-uniform-color-presentation-names`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T14 and P6-T01 remain blocked.

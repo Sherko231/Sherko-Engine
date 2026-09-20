@@ -108,3 +108,18 @@ Sandbox impact: none — no capability or owner-facing behavior change.
 Architecture/decision impact: none — no module, dependency, ownership, spatial, persisted/config, protocol, or public-contract change.
 
 P6-T01 remains blocked until P5R-T26 records PASS.
+
+
+## Acceptance record
+
+P5R-T25 was accepted through Markdown-only PR #355.
+
+- Final audit head: `12681d0a1261926a32961d86ee541c1376e7ff7f`.
+- Merge commit: `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`.
+- Complete PR diff: 8 Markdown files only.
+- CI policy: Markdown-only exemption applied; no heavy five-job PR matrix or post-merge Lightweight verifier was required or claimed.
+- Cleanup result: no Java/Gradle/resource/wiki/sandbox removal or rename was justified.
+- Remaining old-name text: intentional historical provenance only.
+- Public/module/ownership/spatial/persisted/protocol behavior: unchanged.
+
+P5R-T26 / Issue #306 is the next Phase 5R task. P6-T01 remains blocked until T26 records PASS.

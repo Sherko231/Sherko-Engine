@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T04 / Issue #264 is accepted; freshly refine P5R-T05 against current `master` before implementation |
+| Active executable task | P5R-T05 / Issue #265 — `GlfwWindow` window-mode/size responsibility decomposition candidate on `p5r-t05-window-mode-size`; P5R-T06 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -122,6 +122,8 @@ The stable P5R task catalog lives in `docs/roadmap/TECHNICAL_BACKLOG.md`. Execut
 
 Phase 6 remains blocked until P5R-T26 records a passing Phase 5R exit review.
 
+P5R-T05 / Issue #265 is the active non-Markdown candidate. It extracts package-private `GlfwWindowModeController`, `GlfwDeferredSizeDelivery`, and GLFW-specific internal value records while preserving the public `GlfwWindow` surface, D-032 deferred size semantics, D-033 window-mode/restore/rollback behavior, native ownership, and accepted T04 input/focus/cursor collaborators. Final acceptance requires the exact candidate to pass the five-job heavy PR matrix and the exact merged master to pass Lightweight verification.
+
 P5R-T04 / Issue #264 is accepted through PR #315. Final head `60ec0c2b37b2d8d9e49f3400b3babbaf3dece19c` passed all five required final-candidate jobs in run #451 / `35496414835`, including the existing Windows native focus-loss, raw-mouse, and input regressions. PR #315 merged as `fd8235da70a20d28cc7e34f9b7a07bfcd3053496`, and exact merged `master` passed Lightweight verification in run #452 / `35496659084`. The accepted refactor extracts package-private `GlfwInputState`, `GlfwMouseMotionTracker`, and `GlfwCursorCaptureController` while preserving focus-loss release synthesis, explicit recapture, raw-motion fallback, retryable cursor normalization, snapshot consumption, callback failure staging, the public `GlfwWindow` surface, and all P5R-T05 size/window-mode responsibilities.
 
 P5R-T03 / Issue #263 is accepted through PR #313. Final head `5c81b4a1f2c443f7858baf2b3e1f9d0b34ef80a7` passed all five required final-candidate jobs in run #449 / `35473370042`, including Windows native smoke. PR #313 merged as `414114384711505a0b198d555f98246d5ae17cf5`, and exact merged `master` passed Lightweight verification in run #450 / `35495870731`. The accepted refactor extracts package-private `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and responsibility-specific callback registration/sink plumbing while preserving the public `GlfwWindow` surface, module edges, native ownership/cleanup behavior, and the separate P5R-T04/P5R-T05 responsibilities.
@@ -132,4 +134,4 @@ P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enum
 
 ## Exact next action
 
-Freshly refine **P5R-T05 / Issue #265** against current `master` before implementation. Keep the task bounded to `GlfwWindow` window-mode/size transition responsibility decomposition, preserve accepted windowed/borderless/exclusive behavior and deferred size delivery, and leave P5R-T06 input-binding work blocked until T05 is accepted. Do not materialize P6-T01 yet.
+Complete review/verification/merge of **P5R-T05 / Issue #265**. The candidate separates window-mode/restore/monitor/rollback ownership and deferred size delivery into package-private collaborators while preserving the public `GlfwWindow` surface and accepted P3 behavior. After exact PR-head heavy CI and exact merged-master Lightweight verification pass, freshly refine **P5R-T06 / Issue #266**. Do not materialize P6-T01 yet.

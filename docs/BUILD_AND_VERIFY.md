@@ -1647,3 +1647,29 @@ Retained artifacts:
 
 The ordinary exact-head five-job PR matrix plus exact-merge Lightweight verification remains authoritative. Native evidence is correctness-only and establishes no performance or gameplay claim.
 
+
+
+## P5R-T14 OpenGL ownership cleanup verification
+
+Issue #274 is a package-private ownership-cleanup refactor. It keeps all accepted resource-wrapper/backend names and D-049/D-050/D-051 lifecycle behavior unchanged, renames only `CleanupFailures` to `CleanupFailureSuppression`, and centralizes equivalent rollback suppression through one narrow helper.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.CleanupFailureSuppressionTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlResourceOwnershipTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.BoundedDynamicBufferUploaderTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source review must confirm no production/test reference remains to `CleanupFailures`, all resource/backend wrapper names remain unchanged, and no module/dependency/resource/shader/public API changes are present. Existing P5-T03/P5-T04 ownership tests remain authoritative for create/register/delete, owner-thread rejection, idempotent close, fence cleanup, leak detection, and failure ordering.
+
+Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native P5-T03/P5-T04 regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #274 can close.
+
+Wiki impact: none — supported renderer API and consumer usage are unchanged. Sandbox impact: none — owner-facing behavior and controls are unchanged.

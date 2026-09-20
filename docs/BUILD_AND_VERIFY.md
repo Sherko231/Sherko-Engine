@@ -1875,3 +1875,23 @@ Sandbox impact: none — no owner-facing behavior changes.
 
 
 Accepted P5R-T22 verification evidence: final head `5bda2120526a40c4176aa161ba1492060118860f` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #491 / `35530836855`. The accepted resource rename preserved identical fixture bytes/Git blob `fe6d5138a34d2a8903ab88b73b54110b25b6adeb`. PR #349 merged as `387549c83ffa6af9d8d69b0373772e84ac23053c`; exact merged-master Lightweight verification passed in run #492 / `35532808303`. Historical CI/evidence identifiers remained unchanged.
+
+
+## P5R-T23 internal package audit verification
+
+Issue #303 is documentation/source-analysis only. The final candidate proposes no Java/package/build/resource/workflow/wiki/sandbox change.
+
+Verification consists of:
+
+- recursive production Java tree inventory of explicit `.internal` roots;
+- declaration review of the 11 platform implementation collaborators deferred to T23, confirming they remain package-private;
+- direct facade/helper reference review for `GlfwWindow` and `InputActionBindings`;
+- renderer internal source-reference analysis showing all 42 production internal types are one connected component;
+- visual-demo source review confirming package-private dependency on production renderer internals;
+- client/server internal-root inventory;
+- complete PR file-list inspection before using the Markdown-only exemption.
+
+If every final changed path ends in `.md`, the `AGENTS.md` Markdown-only exemption applies: no five-job heavy PR matrix and no post-merge Lightweight verifier are required. No unrun Gradle/runtime command is claimed as passing.
+
+Wiki impact: none — no public package or usage changes.
+Sandbox impact: none — no owner-facing behavior changes.

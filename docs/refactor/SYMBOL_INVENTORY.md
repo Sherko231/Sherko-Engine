@@ -179,7 +179,7 @@ These types remain under the explicit experimental `feasibility-spikes` module a
 | `SteamInitSpike` | **KEEP** | P0-T07 Steam initialization/callback feasibility executable. | Must not imply production Steam transport coverage. |
 | `SteamFlatApiFfmSpike` | **KEEP** | P0-T09 Java FFM access to the Steam flat API. | Must retain the narrow “API access, not end-to-end transport” conclusion. |
 | `WindowsNativeCiSmoke` | **KEEP** | Headless-safe hosted-Windows GLFW/OpenAL lifecycle smoke used by CI. | Smoke utility remains experimental/build verification, not engine runtime architecture. |
-| `IntegratedNativeEvidenceHarness` | **RENAME ACCEPTED CANDIDATE** | T20 name for the shared integrated GLFW/OpenGL/Jolt/OpenAL/UDP evidence executable backing both P0-T12 smoke and P0-T13 sustained tasks. | Replaces misleading `IntegratedNativeSoakSpike` name only; task names, durations, evidence labels/JFR paths, subsystem behavior, and conclusions remain unchanged. |
+| `IntegratedNativeEvidenceHarness` | **KEEP** | T20 accepted name for the shared integrated GLFW/OpenGL/Jolt/OpenAL/UDP evidence executable backing both P0-T12 smoke and P0-T13 sustained tasks. | Replaced misleading `IntegratedNativeSoakSpike` name only; task names, durations, evidence labels/JFR paths, subsystem behavior, and conclusions remain unchanged. |
 
 T20 also adds a Gradle isolation guard under `:feasibility-spikes:check` that rejects any project dependency from another declared subproject to `:feasibility-spikes`. Existing architecture/source review continues to confirm production Java has no `com.samo.spike.*` references.
 

@@ -164,3 +164,15 @@ No source/wiki mismatch requiring a consumer-facing edit was found.
 Wiki impact: none — no supported public type/member name, signature, or consumer-visible usage changes.
 
 Sandbox impact: none — no capability, command, control, or public API usage changes.
+
+
+## Acceptance record
+
+P5R-T21 was accepted through PR #347.
+
+- Final audit head: `32886cb82e69c199ed6747630aa42b12ac55b125`.
+- Merge commit: `d79f6d6c18490c839157770e51e9908eb2f7e13d`.
+- Complete PR diff: 8 Markdown files only.
+- CI policy: Markdown-only exemption applied; no heavy PR matrix or post-merge Lightweight verifier was required.
+- Public API result: KEEP all current supported names.
+- Independent public-API-change review: not applicable because no public API change was selected.

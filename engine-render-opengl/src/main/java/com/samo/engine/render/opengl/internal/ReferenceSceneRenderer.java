@@ -1,6 +1,8 @@
 package com.samo.engine.render.opengl.internal;
 
+import com.samo.engine.core.api.DebugFrame;
 import com.samo.engine.core.api.DebugTextCounter;
+import com.samo.engine.core.api.Frustum3f;
 import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
@@ -402,8 +404,8 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             int framebufferWidth,
             int framebufferHeight,
             List<RenderLocalLight> localLights,
-            com.samo.engine.core.api.DebugFrame debugFrame) {
-        var frustum = visibilityPlanner.extractFrustum(viewMatrix, projectionMatrix);
+            DebugFrame debugFrame) {
+        Frustum3f frustum = visibilityPlanner.extractFrustum(viewMatrix, projectionMatrix);
 
         frameUniformUploader.upload(
                 viewMatrix,

@@ -612,8 +612,10 @@ Accepted evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` pass
 
 ## Phase 5R debug/view-model responsibility cleanup — P5R-T15 / Issue #275
 
-The T15 candidate keeps the accepted debug split unchanged: `DebugLineVertexPacker` continues to own bounded world-space debug primitive -> line-vertex packing, and `DebugLineRenderer` continues to own only the corresponding GL resources/upload/draw lifecycle. Their names and behavior remain canonical.
+The accepted T15 implementation keeps the accepted debug split unchanged: `DebugLineVertexPacker` continues to own bounded world-space debug primitive -> line-vertex packing, and `DebugLineRenderer` continues to own only the corresponding GL resources/upload/draw lifecycle. Their names and behavior remain canonical.
 
 For the internal P5-T17 validation layer, `ViewModelProjectionFactory` is the canonical stateless creator for the fixed 55° vertical-FOV, framebuffer-aspect, 0.01 m near, 10 m far perspective. `ViewModelFixtureVertexPacker` owns only the fixed six-vertex validation-fixture byte packing and linear RGB `(0.95, 0.55, 0.15)`. `ViewModelRenderer` remains the GL resource/render owner and consumes those helpers without transferring ownership.
 
 D-041/D-045 world/view conventions remain untouched, view-model view remains identity, ordering remains world -> debug -> depth-only reset -> view-model, and D-063 presentation plus GL state/restoration semantics remain unchanged. No public view-model/gameplay submission API, weapon/hand system, animation/IK, render graph/FBO, or asset/resource identity is introduced.
+
+Accepted evidence: final PR head `96510a58644eea158c75c3327d3ac1959c0ab9ef` passed all five required jobs in run #471 / `35512198379`; PR #335 merged as `9c41a1db72834d162f58f503a9d03aa0fd00add3`; exact merged-master Lightweight verification passed in run #472 / `35512467254`.

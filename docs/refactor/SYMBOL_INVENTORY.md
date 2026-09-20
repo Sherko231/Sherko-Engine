@@ -382,6 +382,6 @@ Sandbox impact: none — proposals only; no owner-facing behavior changed.
 T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fresh review. It renames only `CleanupFailures` -> `CleanupFailureSuppression` and centralizes equivalent rollback suppression through `runAndSuppress(...)`; native ownership, registration/deletion order, thread affinity, idempotent close, dynamic-buffer fence behavior, and multi-resource close ordering remain unchanged.
 
 
-### P5R-T15 active implementation
+### P5R-T15 accepted implementation
 
 T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` unchanged after fresh review. It renames only `ViewModelProjection` -> `ViewModelProjectionFactory` and extracts fixed six-vertex fixture packing into `ViewModelFixtureVertexPacker`; D-041/D-045/D-064/D-065 spatial/rendering/order/ownership behavior remains unchanged.

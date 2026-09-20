@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T21 / Issue #301 is accepted; freshly refine P5R-T22 / Issue #302 against current `master` before implementation |
+| Active executable task | P5R-T22 / Issue #302 — synchronize test/fixture/evidence naming; preserve historical evidence identifiers |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -164,6 +164,8 @@ P5R-T20 / Issue #280 is accepted through PR #345. Final head `244041127c1851d477
 
 P5R-T21 / Issue #301 is accepted through Markdown-only PR #347. Final audit head `32886cb82e69c199ed6747630aa42b12ac55b125` reviewed all 60 supported public top-level P1-P5 types plus 15 supported nested public types and their declared public member vocabulary, including record accessors, interface/default methods, enum constants, and public constants. Every current public name is retained: no new rename was justified after comparison with the naming standard, source responsibility, accepted decisions/spatial semantics, wiki/API guidance, and current consumers. PR #347 merged as `d79f6d6c18490c839157770e51e9908eb2f7e13d`. Its complete diff contained 8 Markdown files only, so the `AGENTS.md` Markdown-only exemption correctly required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. No Java, wiki, sandbox, Gradle, resource, workflow, dependency, behavior, public signature/package, alias, or compatibility-shim change occurred.
 
+P5R-T22 / Issue #302 is active from baseline `db4f10cea849ea0949974f5cff416a7c13f3f55f`. Fresh audit inspected 99 current test classes and all current `@Test` method names. Direct tests already match accepted production/refactor vocabulary. The only justified rename is the generic negative GLSL fixture `broken.frag` -> `invalid-syntax.frag` plus the directly coupled test method/path wording; fixture bytes and validator behavior stay unchanged. Historical environment variables, report/capture paths, workflow artifact names, and phase-gate test names remain intentionally stable for evidence traceability.
+
 ## Exact next action
 
-Freshly refine **P5R-T22 / Issue #302** against current `master` before implementation. Preserve historical CI/evidence identifiers where automation depends on them, rename only tests/fixtures/evidence whose current vocabulary is materially stale, and keep P6-T01 blocked.
+Complete the bounded T22 candidate, exact-head CI, merge verification, and handoff. P5R-T23 and P6-T01 remain blocked until T22 acceptance.

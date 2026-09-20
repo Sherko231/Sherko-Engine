@@ -7,8 +7,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 /** Child-JVM harness for the real {@link System#exit(int)} fatal path. */
-public final class FatalTerminationCoordinatorCoordinatorChildProcess {
-    private FatalTerminationCoordinatorCoordinatorChildProcess() {
+public final class FatalTerminationCoordinatorChildProcess {
+    private FatalTerminationCoordinatorChildProcess() {
     }
 
     public static void main(String[] args) {

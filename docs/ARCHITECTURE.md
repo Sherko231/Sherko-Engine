@@ -649,3 +649,13 @@ Wiki impact: none — the decomposed types are not supported engine consumer API
 Sandbox impact: none — the persistent sandbox and its controls remain unchanged; only the already-separate renderer visual demo is refactored internally.
 
 Accepted P5R-T18 evidence: corrected final head `5f6ff0c1dfb05a078486abf05f4f10860f14dac4` passed all five required jobs in run #485 / `35523275737`; PR #341 merged as `9fa3a5c831cd0d9884b7b6a89c26029a3d41a6dd`; exact merged-master Lightweight verification passed in run #486 / `35523595439`. Run #484 / `35523166142` is superseded after the malformed test-source newline was corrected.
+
+
+## Phase 5R client/server version-report naming — P5R-T19 / Issue #279
+
+The T19 candidate keeps `ClientMain` and `ServerMain` as the canonical executable bootstrap entry points because their current responsibilities are already small and explicit. It renames only the executable-specific internal reporting helpers to `com.samo.game.client.internal.ClientVersionReport` and `com.samo.game.server.internal.ServerVersionReport`.
+
+The rename does not change `runClient` / `runServer`, the main-class FQCNs, default startup/shutdown output, `META-INF/sherko-version.properties`, generated metadata, report key order or values, the client/server dependency graphs, or the server headless-runtime boundary. No shared reporter abstraction or new module edge is introduced merely to remove trivial duplicated reporting code.
+
+Wiki impact: none — these are executable/internal surfaces, not supported engine consumer API.
+Sandbox impact: none — no engine capability or persistent sandbox behavior changes.

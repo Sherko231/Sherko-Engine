@@ -1780,3 +1780,26 @@ Run the focused deterministic suites:
 The normal exact-head five-job PR matrix remains required because Java source/tests changed. After merge, require the Lightweight master verification on the exact merge SHA before Issue #278 closes. The standalone interactive demo is owner-observation only and does not replace automated/native renderer acceptance.
 
 Accepted P5R-T18 verification evidence: the connected agent environment could not clone the repository because outbound DNS resolution for `github.com` failed, so no local Gradle result is claimed. Initial run #484 / `35523166142` exposed a malformed literal `\\n` in `AnimatedDemoLightingTest`; that candidate is superseded. Corrected final head `5f6ff0c1dfb05a078486abf05f4f10860f14dac4` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #485 / `35523275737`. PR #341 merged as `9fa3a5c831cd0d9884b7b6a89c26029a3d41a6dd`, and exact-merge Lightweight master verification passed in run #486 / `35523595439`.
+
+
+## P5R-T19 client/server version-report naming verification
+
+Issue #279 is a naming-only executable cleanup. `ClientMain`, `ServerMain`, `runClient`, `runServer`, version metadata generation, compatibility keys, and module dependencies remain unchanged. The old internal helper names are replaced by `ClientVersionReport` and `ServerVersionReport`.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :game-client:classes :game-server:classes --rerun-tasks
+.\gradlew.bat :game-client:runClient
+.\gradlew.bat :game-server:runServer
+.\gradlew.bat -q :game-client:runClient --args="--version"
+.\gradlew.bat -q :game-server:runServer --args="--version"
+.\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+The final non-Markdown PR must pass the repository five-job matrix. Its Build job directly executes both default entry points, the headless server boundary, and the existing end-to-end version-report verifier requiring the six nonblank keys `executable`, `engineCommit`, `protocolVersion`, `assetVersion`, `javaVersion`, and `nativeLibraries`; shared client/server values must match and `engineCommit` must equal the exact GitHub candidate SHA. After merge, exact merged `master` must pass Lightweight verification before Issue #279 closes.
+
+Wiki impact: none — no supported engine API changes.
+Sandbox impact: none — no sandbox behavior changes.

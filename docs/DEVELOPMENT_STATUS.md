@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 5 complete — Phase 5R refactor hardening is next; Phase 6 is blocked until P5R exit PASS |
+| Active phase | Phase 5 complete — Phase 5R refactor hardening is in progress; Phase 6 is blocked until P5R exit PASS |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P5R-T03 / Issue #263 — `GlfwWindow` native backend/callback plumbing decomposition candidate on `p5r-t03-glfw-native-backend`; P5R-T04 remains blocked until acceptance |
+| Active executable task | None — P5R-T03 / Issue #263 is accepted; freshly refine P5R-T04 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -122,7 +122,7 @@ The stable P5R task catalog lives in `docs/roadmap/TECHNICAL_BACKLOG.md`. Execut
 
 Phase 6 remains blocked until P5R-T26 records a passing Phase 5R exit review.
 
-P5R-T03 / Issue #263 is the active non-Markdown candidate. It reduces `GlfwWindow` native/backend plumbing by extracting a package-private backend contract, LWJGL adapter, and callback registration/sink types without changing public signatures, module edges, or the separate T04/T05 responsibilities. Final acceptance requires the exact candidate to pass the five-job heavy PR matrix and the exact merged master to pass Lightweight verification.
+P5R-T03 / Issue #263 is accepted through PR #313. Final head `5c81b4a1f2c443f7858baf2b3e1f9d0b34ef80a7` passed all five required final-candidate jobs in run #449 / `35473370042`, including Windows native smoke. PR #313 merged as `414114384711505a0b198d555f98246d5ae17cf5`, and exact merged `master` passed Lightweight verification in run #450 / `35495870731`. The accepted refactor extracts package-private `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and responsibility-specific callback registration/sink plumbing while preserving the public `GlfwWindow` surface, module edges, native ownership/cleanup behavior, and the separate P5R-T04/P5R-T05 responsibilities.
 
 P5R-T02 / Issue #262 is accepted through PR #311. The audit documents 60 top-level plus 15 nested supported public engine types, distinguishes Java visibility from consumer API, and records internal/adapter boundaries without changing source, visibility, packages, module edges, or runtime behavior.
 
@@ -130,4 +130,4 @@ P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enum
 
 ## Exact next action
 
-Complete review/verification/merge of **P5R-T03 / Issue #263**. The candidate extracts package-private `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, and callback registration/sink plumbing while preserving the public `GlfwWindow` surface and leaving T04/T05 responsibilities untouched. After exact PR-head heavy CI and exact merged-master Lightweight verification pass, freshly refine **P5R-T04 / Issue #264**. Do not materialize P6-T01 yet.
+Freshly refine **P5R-T04 / Issue #264** against current `master` before implementation. Keep the task bounded to `GlfwWindow` input/focus/cursor responsibility decomposition, preserve accepted focus-loss/cursor/input behavior, and leave P5R-T05 window-mode/size work blocked until T04 is accepted. Do not materialize P6-T01 yet.

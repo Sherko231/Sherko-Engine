@@ -1699,4 +1699,6 @@ Source review must confirm no production/test reference remains to `ViewModelPro
 
 Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native P5-T16/P5-T17/P5-T18 regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #275 can close.
 
+Accepted P5R-T15 evidence: final PR head `96510a58644eea158c75c3327d3ac1959c0ab9ef` passed all five required jobs in run #471 / `35512198379`, including P5-T16 debug geometry, P5-T17 view-model, and P5-T18 integration. PR #335 merged as `9c41a1db72834d162f58f503a9d03aa0fd00add3`; exact merged-master Lightweight verification passed in run #472 / `35512467254`.
+
 Wiki impact: none — supported debug/render APIs and consumer usage are unchanged. Sandbox impact: none — observable debug/view-model behavior and controls are unchanged.

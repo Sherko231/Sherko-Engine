@@ -64,7 +64,7 @@ Source has not changed since the T01 inventory baseline; the intervening commits
 | --- | --- | --- |
 | `EngineSubsystem` | Base lifecycle contract for one engine subsystem. | KEEP public contract; T07 may refactor lifecycle internals only unless T21 authorizes a public rename. |
 | `SubsystemGraph` | Declares named subsystem dependencies and resolves safe order. | KEEP; public nested `Registration` remains part of the contract. |
-| `SubsystemStartup` | Coordinates ordered startup and rollback on partial failure. | T01 proposes a public rename; **defer rename to T21**. |
+| `SubsystemStartupCoordinator` | Coordinates ordered startup and rollback on partial failure. | KEEP after the P5R-T07 public rename; behavior remains D-020-compatible. |
 | `EngineClock` | Monotonic elapsed-time sampling. | KEEP. |
 | `FixedStepAccumulator` | Exact fixed-rate tick accumulation/interpolation progress. | KEEP. |
 | `FixedStepCatchUpPolicy` | Bounds elapsed spikes and per-update catch-up work. | KEEP. |
@@ -97,7 +97,7 @@ Source has not changed since the T01 inventory baseline; the intervening commits
 | `ConfigValidationException` | Aggregates config validation failures. | KEEP. |
 | `EngineLogger` | Structured synchronous logging boundary. | KEEP; nested public logging vocabulary remains consumer API. |
 | `NativeResourceRegistry` | Explicit native ownership registration/terminal diagnostics. | KEEP; nested `Registration` remains lifecycle-sensitive public API. |
-| `FatalTermination` | One-shot orderly fatal shutdown coordination. | T01 proposes a public rename; **defer rename to T21**. |
+| `FatalTerminationCoordinator` | One-shot orderly fatal shutdown coordination. | KEEP after the P5R-T07 public rename; behavior remains D-029-compatible. |
 
 Public nested engine-core types that remain supported consumer API:
 
@@ -231,8 +231,8 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 
 | T01 proposal | Boundary classification | Earliest allowed implementation |
 | --- | --- | --- |
-| `FatalTermination` -> `FatalTerminationCoordinator` | Supported public engine API rename. | **T21**, unless a later active Issue explicitly authorizes earlier public contract work. |
-| `SubsystemStartup` -> `SubsystemStartupCoordinator` | Supported public engine API rename. | **T21**, unless explicitly authorized earlier. |
+| `FatalTerminationCoordinator` | Supported public lifecycle coordinator name accepted by T07. | **KEEP**; broader public naming review remains T21. |
+| `SubsystemStartupCoordinator` | Supported public lifecycle coordinator name accepted by T07. | **KEEP**; broader public naming review remains T21. |
 | `GlfwWindow` decomposition | Public facade retained; extracted collaborators are implementation. | T03-T05, with no public signature/name change. |
 | `InputActionBindingsLoader` decomposition | Package-private implementation; T06 candidate splits file loading, strict JSON/schema parsing, and domain validation/copying into named package-private collaborators. | T06. |
 | Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. | T10-T15. |

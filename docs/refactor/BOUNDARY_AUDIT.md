@@ -375,3 +375,15 @@ This change is compatible with T23's KEEP package result: the set stays inside t
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+## P5R-T25 final cleanup boundary result
+
+Fresh T25 review finds no stale compatibility boundary that can be removed without contradicting an accepted contract. Supported public constructors/operations remain the T21 KEEP surface; historical Phase-0 Gradle aliases remain T20 evidence entry points; no authored-Java `@Deprecated` shim is present for a P5R rename; and no removed sandbox compatibility entry point remains live.
+
+No public/internal root, Java visibility, module edge, artifact boundary, ownership/spatial/config/wire contract, wiki usage, or sandbox behavior changes.
+
+Detailed evidence: `FINAL_CLEANUP_AUDIT.md`.
+
+Wiki impact: none.
+Sandbox impact: none.

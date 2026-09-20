@@ -473,3 +473,15 @@ No Singleton, Service Locator, Object Pool, ECS, job system, command bus, public
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+## P5R-T25 final cleanup result
+
+Fresh baseline: `4bba10629e73a7899e2aac04f381db501773afd3`.
+
+The final stale-name/dead-code/reference sweep found no new rename, removal, decomposition, move, or compatibility cleanup justified after T03-T24. Every retained P5R production collaborator has a current production consumer, current public names remain the T21 KEEP set, and remaining obsolete-name text is historical provenance rather than live implementation vocabulary.
+
+Detailed evidence: `FINAL_CLEANUP_AUDIT.md`.
+
+Wiki impact: none.
+Sandbox impact: none.

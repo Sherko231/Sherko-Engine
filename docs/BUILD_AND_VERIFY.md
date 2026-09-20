@@ -1923,3 +1923,22 @@ Sandbox impact: none — no owner-facing behavior changes.
 
 
 Accepted P5R-T24 verification evidence: final head `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #493 / `35534567287`. PR #353 merged as `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`; exact merged-master Lightweight verification passed in run #494 / `35534881306`. The accepted `OpenGlBackendSet` composition introduced no public API, module/dependency, workflow, native behavior, shader ABI, wiki, or sandbox change.
+
+
+## P5R-T25 final cleanup audit
+
+Issue #305 is a repository-wide final stale-name/dead-code/compatibility/refactor-scaffolding audit after P5R-T01 through T24.
+
+Verification is static/reference based because the refined candidate changes documentation only and does not modify executable behavior:
+
+- search for every obsolete identifier listed in `docs/refactor/FINAL_CLEANUP_AUDIT.md` and classify remaining hits as intentional historical provenance or current-name containment;
+- confirm removed `EngineDemoMain` / `runEngineDemo` and superseded fixture/type names are absent from live source/resources/tasks;
+- confirm retained P5R helpers have current production/test consumers as appropriate;
+- search authored Java for `@Deprecated` compatibility shims;
+- inspect README/status/roadmap/backlog/refactor records for consistent T25/T26/P6 ordering;
+- inspect the complete PR changed-file list and require every changed path to end in `.md`.
+
+If those conditions hold, the AGENTS.md Markdown-only exemption applies. Do not run or claim the five-job heavy matrix or exact-merge Lightweight verification for this candidate; record them as not required by policy. If any non-Markdown path enters the complete diff, the exemption no longer applies and the normal full verification lifecycle becomes mandatory.
+
+Wiki impact: none — no supported API/usage change.
+Sandbox impact: none — no capability or owner-facing behavior change.

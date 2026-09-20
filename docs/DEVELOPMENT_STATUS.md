@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T24 / Issue #304 is accepted; freshly refine P5R-T25 / Issue #305 against current `master` before implementation |
+| Active executable task | P5R-T25 / Issue #305 — final consistency/dead-code/stale-name audit; refined candidate is Markdown-only because no safe source cleanup is justified |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,4 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Freshly refine **P5R-T25 / Issue #305** against current `master` before implementation. Perform repository-wide stale-name/dead-code/compatibility cleanup only where safety can be proven, preserve historical evidence identifiers, and keep P6-T01 blocked.
+Complete **P5R-T25 / Issue #305** as the refined Markdown-only final cleanup audit, verify its complete diff/search evidence, then merge/close it under the Markdown-only policy. After T25 acceptance, freshly refine P5R-T26 / Issue #306. P6-T01 remains blocked until T26 records PASS.
+
+
+P5R-T25 / Issue #305 is active from baseline `4bba10629e73a7899e2aac04f381db501773afd3`. Fresh repository-wide obsolete-name, compatibility, and helper-reference review found no justified Java/Gradle/resource/wiki/sandbox cleanup. Remaining old-name occurrences are intentional historical provenance, retained public constructors/overloads were already KEEP-reviewed by T21, and Phase-0 build aliases remain preserved evidence entry points under T20. The candidate therefore records the audit in `docs/refactor/FINAL_CLEANUP_AUDIT.md` and updates handoff documentation only; no behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changes.

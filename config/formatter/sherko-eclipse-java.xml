@@ -8,6 +8,7 @@
         <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="1"/>
 
         <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="180"/>
+        <setting id="org.eclipse.jdt.core.formatter.text_block_indentation" value="3"/>
         <setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="180"/>
         <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="true"/>
         <setting id="org.eclipse.jdt.core.formatter.join_lines_in_comments" value="false"/>

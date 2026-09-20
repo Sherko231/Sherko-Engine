@@ -485,3 +485,6 @@ Detailed evidence: `FINAL_CLEANUP_AUDIT.md`.
 
 Wiki impact: none.
 Sandbox impact: none.
+
+
+Accepted T25 evidence: Markdown-only PR #355 final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. No symbol rename/removal/decomposition/move was justified; the complete diff was documentation-only under the repository CI exemption.

@@ -300,11 +300,13 @@ Accepted evidence: final PR head `2512677512e657de4f82b64e09f0b74fabd75c95` pass
 
 ## Phase 5R renderer internal naming normalization — P5R-T12 / Issue #272
 
-The T12 candidate applies only three justified package-private renderer renames. `RenderMaterialDescriptor` names the immutable declarative material value without implying renderer/resource ownership. `OpenGlMaterialStatePolicy` makes explicit that the record contains concrete OpenGL blend/depth/cull enum decisions rather than renderer-neutral policy. `LocalLightSelector` names the stateful bounded first-N selector actor rather than sounding like a selected-result value.
+The accepted T12 implementation applies only three justified package-private renderer renames. `RenderMaterialDescriptor` names the immutable declarative material value without implying renderer/resource ownership. `OpenGlMaterialStatePolicy` makes explicit that the record contains concrete OpenGL blend/depth/cull enum decisions rather than renderer-neutral policy. `LocalLightSelector` names the stateful bounded first-N selector actor rather than sounding like a selected-result value.
 
 Fresh review explicitly retains `DrawSubmission`, `DrawSubmissionSorter`, `CpuFrustumCuller`, `DirectionalLight`, `MaterialShaderVariant`, `MaterialTextureBinding`, `MaterialScalars`, `MaterialBlendMode`, `MaterialDepthMode`, and `MaterialCullMode` because those names already communicate their current responsibilities. No wrapper, alias, package move, new abstraction, or public API is added.
 
 The rename preserves D-057 material payload/immutability, D-059 culling semantics, D-060 ordering keys and sort rules, D-061 directional-light semantics, D-062 local-light capacity/first-N overflow policy/warning behavior, shader ABI/layout/bindings, frame diagnostics, native ownership, and draw-state cleanup exactly.
+
+Accepted evidence: final PR head `85de9922f0fef5bbedc17add1bc41b1065d94f4a` passed all five required jobs in run #465 / `35508358983`; PR #329 merged as `aa3cccf885216f4e955c5cf671a96bb73702af8d`; exact merged-master Lightweight verification passed in run #466 / `35508613959`.
 
 
 ## Phase 5R spatial/math naming audit — P5R-T09 / Issue #269

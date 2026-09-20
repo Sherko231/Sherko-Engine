@@ -52,6 +52,13 @@ The accepted P5R-T06 implementation preserves the public `InputActionBindings`, 
 The split preserves the existing failure precedence and text for accepted P3-T07 scenarios: malformed/duplicate JSON object fields still fail as read/parse errors; schema/type/enum/context failures remain `InputBindingLoadException`; public-constructor programmer errors remain `IllegalArgumentException` or `NullPointerException` with the existing messages. The committed v1 fixture, Jackson version, Gradle/lockfiles, public signatures, evaluator/sampler behavior, module edges, wiki usage, and sandbox behavior remain unchanged. No package reorganization occurs; T23 remains the package-grouping task.
 
 
+## Phase 5R core lifecycle naming normalization — P5R-T07 / Issue #267
+
+The P5R-T07 candidate changes only two supported public type names under D-066: `SubsystemStartupCoordinator` names the stateless coordinator that starts an already-resolved dependency-first subsystem order and rolls back partial startup, while `FatalTerminationCoordinator` names the one-shot synchronous fatal-shutdown coordinator. The public operations remain `start(...)` and `terminate(...)`; D-020 and D-029 ordering, ownership, failure identity/suppression, cleanup/reporting/flush sequence, and exit status remain unchanged.
+
+`EngineSubsystem` and `SubsystemGraph` are retained because their names already match their responsibilities. No compatibility alias, package move, dependency/module edge, lifecycle state-machine change, shutdown manager, restart contract, or background lifecycle thread is introduced. Historical D-020/D-029 decision rows retain the original accepted type names; D-066 records the current public naming contract. Relevant wiki usage is updated in the same candidate because this is a supported public API rename.
+
+
 P5-T01 extends the existing `GlfwWindow` ownership boundary with optional OpenGL debug-context diagnostics under D-048. `OpenGlDebugMode.DISABLED` preserves the existing release-safe constructors. `FAIL_ON_HIGH_SEVERITY` requests and verifies a debug context, installs one context-bound callback after capabilities exist, reports normalized source/type/severity/message fields through `EngineLogger`, stages callback/logging failures instead of throwing through native code, and surfaces high-severity failures once from owner-thread `pollEvents()`. The callback is released before context detachment and capability clearing during stop/start-failure/close. No raw OpenGL handle, renderer resource API, draw path, dependency, or module edge is introduced.
  The root project is a build, quality, and task-aggregation project with no Java source tree and no spike runtime dependencies.
 

@@ -600,7 +600,7 @@ Current owner-facing manual observation uses the persistent playground:
 .\gradlew.bat :game-sandbox:runSandbox
 ```
 
-The playground captures one public `InputSnapshot` after each poll and emits bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics while leaving the owner in control. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence. Historical P3-T06 evidence may reference the former `runEngineDemo` alias; that alias now delegates to the same persistent playground.
+The playground captures one public `InputSnapshot` after each poll and emits bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics while leaving the owner in control. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence. Historical P3-T06 evidence may reference the former `runEngineDemo` alias. P5R-T17 removes that compatibility task; current manual observation uses only `runSandbox`.
 
 Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then one passing lightweight exact-merge `master` verifier after merge. Do not repeat the routine heavy matrix after merge unless the active Issue explicitly requires stronger exact-merge evidence.
 

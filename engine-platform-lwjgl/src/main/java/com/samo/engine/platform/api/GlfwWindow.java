@@ -4,8 +4,6 @@ import com.samo.engine.core.api.EngineLogger;
 import com.samo.engine.core.api.EngineSubsystem;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import org.lwjgl.glfw.GLFW;
@@ -35,12 +33,9 @@ public final class GlfwWindow extends EngineSubsystem {
     private final WindowSizeListener sizeListener;
     private final OpenGlDebugMode openGlDebugMode;
     private final GlfwNativeBackend backend;
-    private final boolean[] heldKeys = new boolean[GLFW.GLFW_KEY_LAST + 1];
-    private final boolean[] heldMouseButtons = new boolean[GLFW.GLFW_MOUSE_BUTTON_LAST + 1];
-    private final boolean[] pendingPressedKeys = new boolean[InputKey.values().length];
-    private final boolean[] pendingReleasedKeys = new boolean[InputKey.values().length];
-    private final boolean[] pendingPressedMouseButtons = new boolean[InputMouseButton.values().length];
-    private final boolean[] pendingReleasedMouseButtons = new boolean[InputMouseButton.values().length];
+    private final GlfwInputState inputState = new GlfwInputState();
+    private final GlfwMouseMotionTracker mouseMotion = new GlfwMouseMotionTracker();
+    private final GlfwCursorCaptureController cursorCapture;
 
     private final OpenGlThreadGuard openGlThreadGuard = new OpenGlThreadGuard();
 
@@ -63,17 +58,6 @@ public final class GlfwWindow extends EngineSubsystem {
     private int pendingFramebufferHeight;
     private WindowMode windowMode = WindowMode.WINDOWED;
     private WindowGeometry windowedRestoreGeometry;
-    private boolean windowFocused;
-    private boolean cursorCaptureRequested;
-    private boolean cursorCaptureEffective;
-    private boolean cursorCaptureNeedsExplicitRearm;
-    private boolean cursorNormalizationPending;
-    private boolean rawMouseMotionEnabled;
-    private boolean mouseMotionBaselineValid;
-    private double previousMouseX;
-    private double previousMouseY;
-    private double accumulatedMouseDeltaX;
-    private double accumulatedMouseDeltaY;
     private Throwable pendingInputFailure;
     private Throwable pendingOpenGlDebugFailure;
 
@@ -176,6 +160,7 @@ public final class GlfwWindow extends EngineSubsystem {
         this.sizeListener = Objects.requireNonNull(sizeListener, "sizeListener");
         this.openGlDebugMode = Objects.requireNonNull(openGlDebugMode, "openGlDebugMode");
         this.backend = Objects.requireNonNull(backend, "backend");
+        this.cursorCapture = new GlfwCursorCaptureController(this.backend, mouseMotion);
     }
 
     /** Returns the stable non-owning guard for production OpenGL thread affinity. */
@@ -221,54 +206,13 @@ public final class GlfwWindow extends EngineSubsystem {
             throw new IllegalStateException("GLFW input snapshots require a started window");
         }
         requireOwnerThread();
-        if (frameId < 0L) {
-            throw new IllegalArgumentException("frameId must be non-negative");
-        }
 
-        EnumSet<InputKey> heldKeySet = EnumSet.noneOf(InputKey.class);
-        EnumSet<InputKey> pressedKeySet = EnumSet.noneOf(InputKey.class);
-        EnumSet<InputKey> releasedKeySet = EnumSet.noneOf(InputKey.class);
-        for (InputKey key : InputKey.values()) {
-            if (heldKeys[glfwKey(key)]) {
-                heldKeySet.add(key);
-            }
-            if (pendingPressedKeys[key.ordinal()]) {
-                pressedKeySet.add(key);
-            }
-            if (pendingReleasedKeys[key.ordinal()]) {
-                releasedKeySet.add(key);
-            }
-        }
-
-        EnumSet<InputMouseButton> heldButtonSet = EnumSet.noneOf(InputMouseButton.class);
-        EnumSet<InputMouseButton> pressedButtonSet = EnumSet.noneOf(InputMouseButton.class);
-        EnumSet<InputMouseButton> releasedButtonSet = EnumSet.noneOf(InputMouseButton.class);
-        for (InputMouseButton button : InputMouseButton.values()) {
-            if (heldMouseButtons[glfwMouseButton(button)]) {
-                heldButtonSet.add(button);
-            }
-            if (pendingPressedMouseButtons[button.ordinal()]) {
-                pressedButtonSet.add(button);
-            }
-            if (pendingReleasedMouseButtons[button.ordinal()]) {
-                releasedButtonSet.add(button);
-            }
-        }
-
-        InputSnapshot snapshot = new InputSnapshot(
+        InputSnapshot snapshot = inputState.captureSnapshot(
                 frameId,
-                windowFocused,
-                cursorCaptureEffective,
-                heldKeySet,
-                pressedKeySet,
-                releasedKeySet,
-                heldButtonSet,
-                pressedButtonSet,
-                releasedButtonSet,
-                accumulatedMouseDeltaX,
-                accumulatedMouseDeltaY);
-        clearPendingInputEdges();
-        clearAccumulatedMouseDelta();
+                cursorCapture.effectivelyCaptured(),
+                mouseMotion.accumulatedDeltaX(),
+                mouseMotion.accumulatedDeltaY());
+        mouseMotion.clearAccumulatedDelta();
         return snapshot;
     }
 
@@ -278,32 +222,7 @@ public final class GlfwWindow extends EngineSubsystem {
             throw new IllegalStateException("GLFW cursor capture requires a started window");
         }
         requireOwnerThread();
-
-        if (captured) {
-            if (!windowFocused) {
-                clearMouseMotionState();
-                cursorCaptureRequested = true;
-                cursorCaptureEffective = false;
-                cursorCaptureNeedsExplicitRearm = true;
-                return;
-            }
-            if (cursorCaptureRequested && cursorCaptureEffective && !cursorCaptureNeedsExplicitRearm) {
-                return;
-            }
-            captureCursorWithRawMotion();
-            return;
-        }
-
-        if (!cursorCaptureRequested
-                && !cursorCaptureEffective
-                && !cursorNormalizationPending
-                && !rawMouseMotionEnabled) {
-            clearMouseMotionState();
-            cursorCaptureNeedsExplicitRearm = false;
-            return;
-        }
-
-        releaseCursorDirect();
+        cursorCapture.setCaptured(windowHandle, inputState.focused(), captured);
     }
 
     public void setWindowMode(WindowMode mode) {
@@ -438,18 +357,22 @@ public final class GlfwWindow extends EngineSubsystem {
 
                 @Override
                 public void onKey(int key, int action) {
-                    handleKeyChanged(key, action);
+                    inputState.onKeyChanged(key, action);
                 }
 
                 @Override
                 public void onMouseButton(int button, int action) {
-                    handleMouseButtonChanged(button, action);
+                    inputState.onMouseButtonChanged(button, action);
                 }
             });
             motionCallbackState = backend.installCursorPositionCallback(
                     windowHandle,
-                    this::handleCursorPositionChanged);
-            windowFocused = backend.queryWindowFocused(windowHandle);
+                    (x, y) -> mouseMotion.onCursorPosition(
+                            inputState.focused(),
+                            cursorCapture.effectivelyCaptured(),
+                            x,
+                            y));
+            inputState.onFocusChanged(backend.queryWindowFocused(windowHandle));
 
             Dimensions logicalSize = backend.queryLogicalSize(windowHandle);
             validatePlatformDimensions("logical window", logicalSize);
@@ -462,7 +385,9 @@ public final class GlfwWindow extends EngineSubsystem {
             windowMode = WindowMode.WINDOWED;
             windowedRestoreGeometry = null;
             pendingOpenGlDebugFailure = null;
-            resetInputState();
+            inputState.clearForLifecycle();
+            cursorCapture.reset();
+            pendingInputFailure = null;
             eventPollingEnabled = true;
             backend.showWindow(windowHandle);
         } catch (RuntimeException | Error failure) {
@@ -477,14 +402,13 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
-        clearHeldInput();
-        clearPendingInputEdges();
-        clearMouseMotionState();
+        inputState.clearForLifecycle();
+        mouseMotion.reset();
         pendingInputFailure = null;
         pendingOpenGlDebugFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
-        releaseCursorForCleanup(failures);
+        cursorCapture.releaseForCleanup(windowHandle, failures);
         releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
@@ -508,14 +432,13 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
-        clearHeldInput();
-        clearPendingInputEdges();
-        clearMouseMotionState();
+        inputState.clearForLifecycle();
+        mouseMotion.reset();
         pendingInputFailure = null;
         pendingOpenGlDebugFailure = null;
 
         List<Throwable> failures = new ArrayList<>();
-        releaseCursorForCleanup(failures);
+        cursorCapture.releaseForCleanup(windowHandle, failures);
         releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
@@ -546,190 +469,38 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     boolean isKeyHeldForTest(int key) {
-        return key >= 0 && key < heldKeys.length && heldKeys[key];
+        return inputState.isKeyHeld(key);
     }
 
     boolean isMouseButtonHeldForTest(int button) {
-        return button >= 0 && button < heldMouseButtons.length && heldMouseButtons[button];
+        return inputState.isMouseButtonHeld(button);
     }
 
     boolean isFocusedForTest() {
-        return windowFocused;
+        return inputState.focused();
     }
 
     boolean isCursorEffectivelyCapturedForTest() {
-        return cursorCaptureEffective;
+        return cursorCapture.effectivelyCaptured();
     }
 
     boolean isRawMouseMotionEnabledForTest() {
-        return rawMouseMotionEnabled;
+        return cursorCapture.rawMouseMotionEnabled();
     }
 
     boolean isRawMouseMotionSupportedForTest() {
-        return backend.rawMouseMotionSupported();
+        return cursorCapture.rawMouseMotionSupported();
     }
 
-    MouseMotion drainMouseMotionForTest() {
-        MouseMotion motion = new MouseMotion(accumulatedMouseDeltaX, accumulatedMouseDeltaY);
-        clearAccumulatedMouseDelta();
-        return motion;
-    }
-
-    private void captureCursorWithRawMotion() {
-        boolean previousRequested = cursorCaptureRequested;
-        boolean previousEffective = cursorCaptureEffective;
-        boolean previousRearm = cursorCaptureNeedsExplicitRearm;
-        boolean previousNormalizationPending = cursorNormalizationPending;
-        boolean previousRaw = rawMouseMotionEnabled;
-        boolean cursorDisabled = false;
-        boolean rawEnableAttempted = false;
-        boolean rawEnabledThisAttempt = false;
-
-        try {
-            backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_DISABLED);
-            cursorDisabled = true;
-            cursorNormalizationPending = true;
-            if (backend.rawMouseMotionSupported()) {
-                rawEnableAttempted = true;
-                backend.setRawMouseMotion(windowHandle, true);
-                rawEnabledThisAttempt = true;
-            }
-            clearMouseMotionState();
-            cursorCaptureRequested = true;
-            cursorCaptureEffective = true;
-            cursorCaptureNeedsExplicitRearm = false;
-            rawMouseMotionEnabled = rawEnabledThisAttempt;
-        } catch (RuntimeException | Error failure) {
-            clearMouseMotionState();
-            if (rawEnableAttempted) {
-                try {
-                    backend.setRawMouseMotion(windowHandle, false);
-                } catch (RuntimeException | Error rollbackFailure) {
-                    addSuppressedUnlessSame(failure, rollbackFailure);
-                }
-            }
-            if (cursorDisabled) {
-                try {
-                    backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
-                    cursorNormalizationPending = false;
-                } catch (RuntimeException | Error rollbackFailure) {
-                    addSuppressedUnlessSame(failure, rollbackFailure);
-                }
-            } else {
-                cursorNormalizationPending = previousNormalizationPending;
-            }
-            cursorCaptureRequested = previousRequested;
-            cursorCaptureEffective = previousEffective;
-            cursorCaptureNeedsExplicitRearm = previousRearm;
-            rawMouseMotionEnabled = previousRaw;
-            throw failure;
-        }
-    }
-
-    private void releaseCursorDirect() {
-        clearMouseMotionState();
-        cursorCaptureRequested = false;
-        cursorCaptureEffective = false;
-        cursorCaptureNeedsExplicitRearm = false;
-
-        List<Throwable> failures = new ArrayList<>();
-        if (rawMouseMotionEnabled
-                && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
-            rawMouseMotionEnabled = false;
-        }
-        if (cursorNormalizationPending
-                && runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
-            cursorNormalizationPending = false;
-        }
-        throwCleanupFailure(failures);
+    GlfwMouseMotionTracker.MouseDelta drainMouseMotionForTest() {
+        return mouseMotion.drainForTest();
     }
 
     private void handleFocusChanged(boolean focused) {
-        windowFocused = focused;
-        if (focused) {
-            return;
+        inputState.onFocusChanged(focused);
+        if (!focused) {
+            cursorCapture.onFocusLost(windowHandle, this::stageInputFailure);
         }
-
-        clearHeldInputForFocusLoss();
-        clearMouseMotionState();
-        if (cursorCaptureRequested) {
-            cursorCaptureNeedsExplicitRearm = true;
-        }
-        if (!cursorCaptureEffective && !rawMouseMotionEnabled && !cursorNormalizationPending) {
-            return;
-        }
-
-        cursorCaptureEffective = false;
-        if (rawMouseMotionEnabled) {
-            try {
-                backend.setRawMouseMotion(windowHandle, false);
-                rawMouseMotionEnabled = false;
-            } catch (RuntimeException | Error failure) {
-                stageInputFailure(failure);
-            }
-        }
-        if (cursorNormalizationPending) {
-            try {
-                backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL);
-                cursorNormalizationPending = false;
-            } catch (RuntimeException | Error failure) {
-                stageInputFailure(failure);
-            }
-        }
-    }
-
-    private void handleKeyChanged(int key, int action) {
-        if (!windowFocused || key < 0 || key >= heldKeys.length) {
-            return;
-        }
-        InputKey inputKey = inputKey(key);
-        if (action == GLFW.GLFW_PRESS) {
-            heldKeys[key] = true;
-            if (inputKey != null) {
-                pendingPressedKeys[inputKey.ordinal()] = true;
-            }
-        } else if (action == GLFW.GLFW_REPEAT) {
-            heldKeys[key] = true;
-        } else if (action == GLFW.GLFW_RELEASE) {
-            heldKeys[key] = false;
-            if (inputKey != null) {
-                pendingReleasedKeys[inputKey.ordinal()] = true;
-            }
-        }
-    }
-
-    private void handleMouseButtonChanged(int button, int action) {
-        if (!windowFocused || button < 0 || button >= heldMouseButtons.length) {
-            return;
-        }
-        InputMouseButton inputButton = inputMouseButton(button);
-        if (action == GLFW.GLFW_PRESS) {
-            heldMouseButtons[button] = true;
-            if (inputButton != null) {
-                pendingPressedMouseButtons[inputButton.ordinal()] = true;
-            }
-        } else if (action == GLFW.GLFW_RELEASE) {
-            heldMouseButtons[button] = false;
-            if (inputButton != null) {
-                pendingReleasedMouseButtons[inputButton.ordinal()] = true;
-            }
-        }
-    }
-
-    private void handleCursorPositionChanged(double x, double y) {
-        if (!windowFocused || !cursorCaptureEffective) {
-            return;
-        }
-        if (!mouseMotionBaselineValid) {
-            previousMouseX = x;
-            previousMouseY = y;
-            mouseMotionBaselineValid = true;
-            return;
-        }
-        accumulatedMouseDeltaX += x - previousMouseX;
-        accumulatedMouseDeltaY += y - previousMouseY;
-        previousMouseX = x;
-        previousMouseY = y;
     }
 
     private void handleOpenGlDebugMessage(int source, int type, int id, int severity, String message) {
@@ -843,141 +614,6 @@ public final class GlfwWindow extends EngineSubsystem {
         Throwable failure = pendingInputFailure;
         pendingInputFailure = null;
         return failure;
-    }
-
-    private void resetInputState() {
-        clearHeldInput();
-        clearPendingInputEdges();
-        clearMouseMotionState();
-        cursorCaptureRequested = false;
-        cursorCaptureEffective = false;
-        cursorCaptureNeedsExplicitRearm = false;
-        cursorNormalizationPending = false;
-        rawMouseMotionEnabled = false;
-        pendingInputFailure = null;
-    }
-
-    private void clearHeldInput() {
-        Arrays.fill(heldKeys, false);
-        Arrays.fill(heldMouseButtons, false);
-    }
-
-    private void clearHeldInputForFocusLoss() {
-        Arrays.fill(pendingPressedKeys, false);
-        Arrays.fill(pendingPressedMouseButtons, false);
-        for (InputKey key : InputKey.values()) {
-            int nativeKey = glfwKey(key);
-            if (heldKeys[nativeKey]) {
-                pendingReleasedKeys[key.ordinal()] = true;
-            }
-        }
-        for (InputMouseButton button : InputMouseButton.values()) {
-            int nativeButton = glfwMouseButton(button);
-            if (heldMouseButtons[nativeButton]) {
-                pendingReleasedMouseButtons[button.ordinal()] = true;
-            }
-        }
-        clearHeldInput();
-    }
-
-    private void clearPendingInputEdges() {
-        Arrays.fill(pendingPressedKeys, false);
-        Arrays.fill(pendingReleasedKeys, false);
-        Arrays.fill(pendingPressedMouseButtons, false);
-        Arrays.fill(pendingReleasedMouseButtons, false);
-    }
-
-    private void clearAccumulatedMouseDelta() {
-        accumulatedMouseDeltaX = 0.0;
-        accumulatedMouseDeltaY = 0.0;
-    }
-
-    private void clearMouseMotionState() {
-        mouseMotionBaselineValid = false;
-        previousMouseX = 0.0;
-        previousMouseY = 0.0;
-        clearAccumulatedMouseDelta();
-    }
-
-    private void releaseCursorForCleanup(List<Throwable> failures) {
-        clearMouseMotionState();
-        cursorCaptureEffective = false;
-        if (rawMouseMotionEnabled) {
-            if (runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
-                rawMouseMotionEnabled = false;
-            }
-        }
-        if (cursorNormalizationPending) {
-            if (runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
-                cursorNormalizationPending = false;
-            }
-        }
-        cursorCaptureRequested = false;
-        cursorCaptureNeedsExplicitRearm = false;
-    }
-
-    private static InputKey inputKey(int glfwKey) {
-        return switch (glfwKey) {
-            case GLFW.GLFW_KEY_W -> InputKey.W;
-            case GLFW.GLFW_KEY_A -> InputKey.A;
-            case GLFW.GLFW_KEY_S -> InputKey.S;
-            case GLFW.GLFW_KEY_D -> InputKey.D;
-            case GLFW.GLFW_KEY_SPACE -> InputKey.SPACE;
-            case GLFW.GLFW_KEY_LEFT_SHIFT -> InputKey.LEFT_SHIFT;
-            case GLFW.GLFW_KEY_RIGHT_SHIFT -> InputKey.RIGHT_SHIFT;
-            case GLFW.GLFW_KEY_LEFT_CONTROL -> InputKey.LEFT_CONTROL;
-            case GLFW.GLFW_KEY_RIGHT_CONTROL -> InputKey.RIGHT_CONTROL;
-            case GLFW.GLFW_KEY_LEFT_ALT -> InputKey.LEFT_ALT;
-            case GLFW.GLFW_KEY_RIGHT_ALT -> InputKey.RIGHT_ALT;
-            case GLFW.GLFW_KEY_ESCAPE -> InputKey.ESCAPE;
-            case GLFW.GLFW_KEY_E -> InputKey.E;
-            case GLFW.GLFW_KEY_Q -> InputKey.Q;
-            case GLFW.GLFW_KEY_R -> InputKey.R;
-            case GLFW.GLFW_KEY_F -> InputKey.F;
-            default -> null;
-        };
-    }
-
-    private static int glfwKey(InputKey key) {
-        return switch (key) {
-            case W -> GLFW.GLFW_KEY_W;
-            case A -> GLFW.GLFW_KEY_A;
-            case S -> GLFW.GLFW_KEY_S;
-            case D -> GLFW.GLFW_KEY_D;
-            case SPACE -> GLFW.GLFW_KEY_SPACE;
-            case LEFT_SHIFT -> GLFW.GLFW_KEY_LEFT_SHIFT;
-            case RIGHT_SHIFT -> GLFW.GLFW_KEY_RIGHT_SHIFT;
-            case LEFT_CONTROL -> GLFW.GLFW_KEY_LEFT_CONTROL;
-            case RIGHT_CONTROL -> GLFW.GLFW_KEY_RIGHT_CONTROL;
-            case LEFT_ALT -> GLFW.GLFW_KEY_LEFT_ALT;
-            case RIGHT_ALT -> GLFW.GLFW_KEY_RIGHT_ALT;
-            case ESCAPE -> GLFW.GLFW_KEY_ESCAPE;
-            case E -> GLFW.GLFW_KEY_E;
-            case Q -> GLFW.GLFW_KEY_Q;
-            case R -> GLFW.GLFW_KEY_R;
-            case F -> GLFW.GLFW_KEY_F;
-        };
-    }
-
-    private static InputMouseButton inputMouseButton(int glfwButton) {
-        return switch (glfwButton) {
-            case GLFW.GLFW_MOUSE_BUTTON_LEFT -> InputMouseButton.LEFT;
-            case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> InputMouseButton.RIGHT;
-            case GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> InputMouseButton.MIDDLE;
-            case GLFW.GLFW_MOUSE_BUTTON_4 -> InputMouseButton.BUTTON_4;
-            case GLFW.GLFW_MOUSE_BUTTON_5 -> InputMouseButton.BUTTON_5;
-            default -> null;
-        };
-    }
-
-    private static int glfwMouseButton(InputMouseButton button) {
-        return switch (button) {
-            case LEFT -> GLFW.GLFW_MOUSE_BUTTON_LEFT;
-            case RIGHT -> GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            case MIDDLE -> GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
-            case BUTTON_4 -> GLFW.GLFW_MOUSE_BUTTON_4;
-            case BUTTON_5 -> GLFW.GLFW_MOUSE_BUTTON_5;
-        };
     }
 
     private WindowGeometry captureWindowedGeometry() {
@@ -1128,13 +764,12 @@ public final class GlfwWindow extends EngineSubsystem {
         eventPollingEnabled = false;
         clearPendingSizes();
         windowedRestoreGeometry = null;
-        clearHeldInput();
-        clearPendingInputEdges();
-        clearMouseMotionState();
+        inputState.clearForLifecycle();
+        mouseMotion.reset();
         pendingInputFailure = null;
         pendingOpenGlDebugFailure = null;
         List<Throwable> failures = new ArrayList<>();
-        releaseCursorForCleanup(failures);
+        cursorCapture.releaseForCleanup(windowHandle, failures);
         releaseMotionCallback(failures);
         releaseInputCallbacks(failures);
         releaseSizeCallbacks(failures);
@@ -1264,9 +899,6 @@ public final class GlfwWindow extends EngineSubsystem {
         if (primary != suppressed) {
             primary.addSuppressed(suppressed);
         }
-    }
-
-    record MouseMotion(double x, double y) {
     }
 
     record Dimensions(int width, int height) {

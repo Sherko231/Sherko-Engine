@@ -156,7 +156,7 @@ class GlfwWindowMouseMotionNativeTest {
     }
 
     private static void assertMotionCleared(GlfwWindow window) {
-        GlfwWindow.MouseMotion motion = window.drainMouseMotionForTest();
+        GlfwMouseMotionTracker.MouseDelta motion = window.drainMouseMotionForTest();
         assertEquals(0.0, motion.x(), 0.0);
         assertEquals(0.0, motion.y(), 0.0);
     }

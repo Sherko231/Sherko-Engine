@@ -44,19 +44,17 @@ final class DebugLineRenderer implements AutoCloseable {
     static DebugLineRenderer create(
             OpenGlThreadGuard threadGuard,
             NativeResourceRegistry registry,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlUniformBlockReflectionBackend reflectionBackend,
+            OpenGlBackendSet backends,
             int cameraBufferHandle,
             SrgbPresentationMode presentationMode,
             String vertexSource,
             String fragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
-        OpenGlResourceBackend gl = Objects.requireNonNull(resourceBackend, "resourceBackend");
-        OpenGlDrawBackend draw = Objects.requireNonNull(drawBackend, "drawBackend");
-        OpenGlUniformBlockReflectionBackend reflection =
-                Objects.requireNonNull(reflectionBackend, "reflectionBackend");
+        OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
+        OpenGlResourceBackend gl = backendSet.resourceBackend();
+        OpenGlDrawBackend draw = backendSet.drawBackend();
+        OpenGlUniformBlockReflectionBackend reflection = backendSet.reflectionBackend();
         SrgbPresentationMode mode = Objects.requireNonNull(presentationMode, "presentationMode");
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");

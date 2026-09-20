@@ -600,7 +600,7 @@ Current owner-facing manual observation uses the persistent playground:
 .\gradlew.bat :game-sandbox:runSandbox
 ```
 
-The playground captures one public `InputSnapshot` after each poll and emits bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics while leaving the owner in control. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence. Historical P3-T06 evidence may reference the former `runEngineDemo` alias; that alias now delegates to the same persistent playground.
+The playground captures one public `InputSnapshot` after each poll and emits bounded once-per-second frame/focus/capture/WASD/mouse-delta diagnostics while leaving the owner in control. This is human observation only; it is not renderer, FPS, performance, soak, or acceptance evidence. Historical P3-T06 evidence may reference the former `runEngineDemo` alias. P5R-T17 removes that compatibility task; current manual observation uses only `runSandbox`.
 
 Final acceptance follows the current CI gate: one passing heavy five-job workflow on the exact final PR candidate, then one passing lightweight exact-merge `master` verifier after merge. Do not repeat the routine heavy matrix after merge unless the active Issue explicitly requires stronger exact-merge evidence.
 
@@ -724,7 +724,7 @@ Historical P3-T04A references to `EngineDemoTimelineTest`, the approximately 38-
 
 ## Persistent sandbox playground verification — Issue #165
 
-Issue #165 replaces the scripted presentation model without adding a new engine public API. It removes the automatic timeline, makes `SandboxMain` / `runSandbox` canonical, retains `EngineDemoMain` / `runEngineDemo` only as a compatibility delegate, and keeps window/input/timing/action/tick-command/response capabilities live together until explicit owner exit.
+Issue #165 replaced the scripted presentation model without adding a new engine public API and made `SandboxMain` / `runSandbox` canonical. P5R-T17 later removes the obsolete `EngineDemoMain` / `runEngineDemo` compatibility delegate after repository-reference verification.
 
 Run the focused pure-Java control suite:
 
@@ -1724,7 +1724,7 @@ Focused verification:
 
 Direct sandbox unit tests remain inside the existing test dependency boundary. `engine-platform-lwjgl` and `engine-render-opengl` are intentional `compileOnly` / sandbox-runtime dependencies for `game-sandbox`; T16 does not add Gradle test dependencies just to reference extracted package-private collaborators from tests. The preserved camera/control/diagnostic formatter tests, the new framebuffer-state test, full sandbox tests/classes, full repository build, and heavy CI remain the bounded verification set.
 
-Source review must confirm `SandboxMain` no longer owns the per-frame loop, owner-control state application, fixed-scene construction, periodic diagnostic state, or nested framebuffer-size state. It must also confirm `EngineDemoMain`, `runEngineDemo`, `SandboxControls.Action/Input`, sandbox resource paths, build dependencies, and owner-facing controls are unchanged.
+At T16 acceptance, source review confirmed `SandboxMain` no longer owned the per-frame loop, owner-control state application, fixed-scene construction, periodic diagnostic state, or nested framebuffer-size state; the then-existing `EngineDemoMain`, `runEngineDemo`, `SandboxControls.Action/Input`, sandbox resource paths, build dependencies, and owner-facing controls were unchanged by T16. P5R-T17 subsequently owns the compatibility removal and nested control-name cleanup.
 
 Spatial review must confirm the D-041/D-045 camera basis is unchanged, W/A/S/D plus mouse LOOK still flow through `PlayerInputCommand` -> `SandboxCamera`, and the world projection remains 70° vertical FOV, framebuffer aspect, 0.1 m near, and 100 m far. Scene review must retain the same fixed local lights, debug primitive order/values/colors, and debug text-counter order. Diagnostic review must retain field order/wording/meaning, mouse-delta reset only after publication, deadline catch-up semantics, and the explicit non-FPS/non-benchmark qualifier.
 
@@ -1733,3 +1733,28 @@ Because Java/test source changes, the exact final PR head requires the normal fi
 Accepted P5R-T16 evidence: initial head `58a6ee520f3f3c9ebdce7a7611da2b06ea2f49e6` failed Unit tests in run #473 / `35514092541` because added direct tests crossed the existing sandbox compile-only dependency boundary; the tests were removed without changing Gradle/dependency metadata, so that run is superseded. Corrected final head `8705d6b031b9bb437c74405f5963a60aa731b175` passed all five required jobs in run #479 / `35514285664`, including Windows native P5-T16/P5-T17/P5-T18 regressions. PR #337 merged as `c4d9675e7c03cf046bc684b668ac1117af0f23fe`; exact merged-master Lightweight verification passed in run #480 / `35514559730`.
 
 Wiki impact: none — no supported public engine API or consumer usage changes. Sandbox impact: structural only — `runSandbox`, controls, README instructions, output, and observable behavior remain unchanged, so no owner-facing README content change is required.
+
+
+## P5R-T17 sandbox naming and compatibility verification
+
+Issue #277 removes only the verified-obsolete sandbox compatibility entry point/task and applies a naming-only cleanup to nested owner-control types. Canonical `SandboxMain` / `runSandbox`, controls, runtime behavior, resources, diagnostics, and all T16 helper responsibilities remain unchanged.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxControlsTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxCameraTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticFormatterTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxFramebufferSizeTest" --rerun-tasks
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat :game-sandbox:classes --rerun-tasks
+.\gradlew.bat :game-sandbox:tasks --all
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source/reference review must prove that `EngineDemoMain.java` and the live `runEngineDemo` Gradle task are gone, `runSandbox` still targets `com.samo.game.sandbox.SandboxMain`, no non-historical documentation claims the alias still exists, and no `SandboxControls.Action` / `SandboxControls.Input` references remain. Historical P3-T04A evidence may still mention the old command when explicitly labeled historical.
+
+Because Java/test/build source changes, the exact final PR head requires the normal five-job heavy matrix. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #277 can close.
+
+Wiki impact: none — the removed surface is a sandbox executable compatibility alias, not supported engine consumer API. Sandbox impact: launch guidance now documents only the canonical `runSandbox`; controls/output/capabilities remain unchanged.

@@ -20,7 +20,7 @@ final class SandboxControlState {
     }
 
     boolean apply(
-            EnumSet<SandboxControls.Action> actions,
+            EnumSet<SandboxControls.SandboxAction> actions,
             boolean cursorCaptured,
             InputActionEvaluator actionEvaluator,
             Consumer<WindowMode> windowModeSetter,
@@ -31,17 +31,17 @@ final class SandboxControlState {
         Objects.requireNonNull(cursorCaptureSetter, "cursorCaptureSetter");
         Objects.requireNonNull(logSink, "logSink");
 
-        if (actions.contains(SandboxControls.Action.CYCLE_WINDOW_MODE)) {
+        if (actions.contains(SandboxControls.SandboxAction.CYCLE_WINDOW_MODE)) {
             currentWindowMode = nextWindowMode(currentWindowMode);
             windowModeSetter.accept(currentWindowMode);
             logSink.accept("Sandbox window mode -> " + currentWindowMode);
         }
-        if (actions.contains(SandboxControls.Action.TOGGLE_CURSOR_CAPTURE)) {
+        if (actions.contains(SandboxControls.SandboxAction.TOGGLE_CURSOR_CAPTURE)) {
             boolean requestedCapture = !cursorCaptured;
             cursorCaptureSetter.accept(requestedCapture);
             logSink.accept("Sandbox cursor capture requested -> " + requestedCapture);
         }
-        if (actions.contains(SandboxControls.Action.CYCLE_MOUSE_SENSITIVITY)) {
+        if (actions.contains(SandboxControls.SandboxAction.CYCLE_MOUSE_SENSITIVITY)) {
             InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
             sensitivityIndex = (sensitivityIndex + 1) % MOUSE_SENSITIVITIES.length;
             responseSettings = new InputResponseSettings(
@@ -52,7 +52,7 @@ final class SandboxControlState {
             evaluator.setResponseSettings(responseSettings);
             logSink.accept("Mouse sensitivity -> %.2f".formatted(responseSettings.mouseSensitivity()));
         }
-        if (actions.contains(SandboxControls.Action.TOGGLE_MOUSE_Y_INVERSION)) {
+        if (actions.contains(SandboxControls.SandboxAction.TOGGLE_MOUSE_Y_INVERSION)) {
             InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
             responseSettings = new InputResponseSettings(
                     responseSettings.mouseSensitivity(),
@@ -63,7 +63,7 @@ final class SandboxControlState {
             logSink.accept("Mouse Y inversion -> " + responseSettings.invertMouseY());
         }
 
-        return actions.contains(SandboxControls.Action.EXIT);
+        return actions.contains(SandboxControls.SandboxAction.EXIT);
     }
 
     WindowMode currentWindowMode() {

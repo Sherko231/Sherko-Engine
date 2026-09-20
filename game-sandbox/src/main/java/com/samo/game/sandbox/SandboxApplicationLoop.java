@@ -65,14 +65,14 @@ final class SandboxApplicationLoop {
             window.pollEvents();
             InputSnapshot latestInput = window.captureInputSnapshot(inputFrameId++);
 
-            SandboxControls.Input ownerInput = new SandboxControls.Input(
+            SandboxControls.SandboxControlInput ownerInput = new SandboxControls.SandboxControlInput(
                     latestInput.keyPressed(InputKey.F),
                     latestInput.keyPressed(InputKey.R),
                     latestInput.keyPressed(InputKey.Q),
                     latestInput.keyHeld(InputKey.RIGHT_SHIFT),
                     latestInput.keyHeld(InputKey.LEFT_CONTROL),
                     latestInput.keyHeld(InputKey.RIGHT_CONTROL));
-            EnumSet<SandboxControls.Action> ownerActions = SandboxControls.resolve(ownerInput);
+            EnumSet<SandboxControls.SandboxAction> ownerActions = SandboxControls.resolve(ownerInput);
 
             exitRequested = controlState.apply(
                     ownerActions,

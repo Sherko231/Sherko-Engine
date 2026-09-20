@@ -14,8 +14,6 @@ On Windows x64 with Java 25 available through the repository Gradle toolchain:
 .\gradlew.bat :game-sandbox:runSandbox
 ```
 
-`runEngineDemo` remains only as a temporary compatibility alias. `runSandbox` is the canonical command.
-
 The sandbox stays open until you explicitly exit with `Ctrl+Q`.
 
 ## Owner controls

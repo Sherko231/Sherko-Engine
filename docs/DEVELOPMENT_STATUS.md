@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T16 / Issue #276 is accepted; freshly refine P5R-T17 / Issue #277 against current `master` before implementation |
+| Active executable task | P5R-T17 / Issue #277 — sandbox naming/legacy compatibility cleanup candidate on `p5r-t17-sandbox-naming-compatibility`; P5R-T18 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -154,6 +154,8 @@ P5R-T15 / Issue #275 is accepted through PR #335. Final head `96510a58644eea158c
 
 P5R-T16 / Issue #276 is accepted through PR #337. Initial head `58a6ee520f3f3c9ebdce7a7611da2b06ea2f49e6` correctly failed Unit tests in run #473 / `35514092541` because three new tests crossed the intentional `game-sandbox` compile-only dependency boundary; that run is superseded and is not acceptance evidence. The correction removed those boundary-expanding tests, retained Gradle/dependency metadata unchanged, and added `SandboxFramebufferSizeTest`. Final head `8705d6b031b9bb437c74405f5963a60aa731b175` passed all five required final-candidate jobs in run #479 / `35514285664`, including the Windows native P5-T16 debug-geometry, P5-T17 view-model, and P5-T18 Phase 5 integration regressions. PR #337 merged as `c4d9675e7c03cf046bc684b668ac1117af0f23fe`, and exact merged `master` passed Lightweight verification in run #480 / `35514559730`. The accepted decomposition keeps public `SandboxMain` as bootstrap/lifecycle owner and extracts package-private `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and top-level `SandboxFramebufferSize`; `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain unchanged. Owner controls, focus/cursor behavior, 60 Hz tick/camera flow, 70° / 0.1 m / 100 m projection, fixed lights/debug scene, diagnostics, render/present ordering, shutdown cleanup, and the public-production-API-only sandbox boundary remain unchanged.
 
+P5R-T17 / Issue #277 is the active candidate from baseline `6ab26a2d7a7fd015f2045c2971d4cf90e99186d9`. Fresh repository-wide reference audit found `EngineDemoMain` and `runEngineDemo` used only by their own compatibility source/task plus documentation, with no workflow/test/production-module/config/resource consumer. The candidate removes those obsolete compatibility surfaces, keeps canonical `SandboxMain` / `runSandbox` unchanged, renames only nested `SandboxControls.Action` -> `SandboxAction` and `SandboxControls.Input` -> `SandboxControlInput`, and retains all T16 helper names/behavior. Owner controls, input precedence, camera/focus/cursor behavior, renderer usage, diagnostics, resources, shutdown, and public engine APIs remain unchanged pending verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T17 / Issue #277** against current `master` before implementation. Verify repository references before removing any legacy sandbox compatibility surface, keep canonical `runSandbox` behavior unchanged, and do not materialize P6-T01.
+Complete implementation/self-review/verification for **P5R-T17 / Issue #277** on `p5r-t17-sandbox-naming-compatibility`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T18 and P6-T01 remain blocked.

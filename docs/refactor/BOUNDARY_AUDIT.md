@@ -190,7 +190,7 @@ Current important examples:
 | `InputActionBindingsLoader`, `InputActionBindingsJsonParser`, and `InputActionBindingsValidator` in `com.samo.engine.platform.api` | Package-private implementation behind `InputActionBindings.load(...)` / constructor validation. Accepted T06 separates file loading, JSON/schema parsing, and domain validation/copying into named responsibilities without public promotion. | T06 owns this bounded split; T23 may later reconsider stable internal package grouping without widening consumer API. |
 | `GlfwNativeBackend`, `LwjglGlfwNativeBackend`, callback registration/sink types, `GlfwInputState`, `GlfwMouseMotionTracker`, `GlfwCursorCaptureController`, `GlfwWindowModeController`, `GlfwDeferredSizeDelivery`, and GLFW window value records | Package-private implementation/testing surface colocated with the public facade; T03-T05 extract native/backend, input/focus/cursor, and mode/size responsibilities without public promotion. | T03-T05 own the bounded decomposition; T23 may later reconsider stable internal package grouping without widening consumer API. |
 | Renderer material/submission/culling/light/uniform/color/view-model helpers | Package-private under `com.samo.engine.render.opengl.internal`. | T10-T15. |
-| Sandbox application-loop/control-state/scene/diagnostic/framebuffer helpers | Package-private game composition behind public `SandboxMain`, not engine-library API. T16 extracts `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and `SandboxFramebufferSize` while retaining `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter`. | T16 owns decomposition; T17 owns later naming/legacy compatibility cleanup. |
+| Sandbox application-loop/control-state/scene/diagnostic/framebuffer helpers | Package-private game composition behind public `SandboxMain`, not engine-library API. T16 extracts `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, and `SandboxFramebufferSize`; T17 retains those boundaries and clarifies nested owner-control names. | T16 owns decomposition; T17 removes only obsolete sandbox compatibility surface and normalizes nested control names. |
 
 A package named `.api` does not make a package-private type public API; Java visibility still matters. Conversely, a `public` type under an `.internal` package is not automatically supported consumer API.
 
@@ -231,7 +231,7 @@ The following public visibility is intentional/current implementation or executa
 | `com.samo.game.server.ServerMain` | Headless executable composition entry point, not reusable engine API. | T19. |
 | `com.samo.game.server.internal.VersionReport` | Executable helper; public modifier supports cross-package call from `ServerMain`, not engine consumption. | T19 may rename/restructure while preserving output. |
 | `com.samo.game.sandbox.SandboxMain` | Persistent owner-facing playground entry point, not an engine-library API. | T16 keeps the entry point while decomposing internals. |
-| `com.samo.game.sandbox.demo.EngineDemoMain` | Legacy compatibility entry point explicitly outside the engine-consumer API. | T17 may remove only after repository/reference verification. |
+| `com.samo.game.sandbox.demo.EngineDemoMain` | Removed legacy compatibility entry point; T17 reference audit found no live code/workflow/test consumer. | Removed in T17; `SandboxMain` / `runSandbox` remain canonical. |
 
 Feasibility-spike entry points are experimental by scope and are handled separately by T20.
 
@@ -245,7 +245,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | `InputActionBindingsLoader` decomposition | Package-private implementation; T06 candidate splits file loading, strict JSON/schema parsing, and domain validation/copying into named package-private collaborators. | T06. |
 | Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. T10 renamed the fixed room/world owner and extracted `ReferenceRoomFixture`; T11 extracts package-private `RendererFrameUniformUploader`, `ReferenceSceneVisibilityPlanner`, `ReferenceSceneDrawExecutor`, and `RendererFrameDiagnostics` without promoting or transferring ownership. | T10-T15. |
 | `SandboxMain` decomposition | Game/playground entry point, not engine consumer API; entry point retained. | T16. |
-| `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 after reference verification. |
+| `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 removes it after repository-wide reference verification; no replacement alias is introduced. |
 | `RendererVisualDemo` decomposition | Non-production visual-demo entry point. | T18. |
 | client/server `VersionReport` renames | Internal executable helpers, not engine consumer API. | T19 while preserving exact compatibility output. |
 | feasibility-spike naming/isolation | Experimental surface. | T20. |

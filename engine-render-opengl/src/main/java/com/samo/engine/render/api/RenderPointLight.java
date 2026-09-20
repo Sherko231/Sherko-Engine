@@ -3,24 +3,25 @@ package com.samo.engine.render.api;
 /**
  * Immutable unshadowed point-light submission in canonical D-041 world space.
  *
- * @param positionX world-space X position in meters
- * @param positionY world-space Y position in meters
- * @param positionZ world-space Z position in meters
- * @param red linear red component in [0,1]
- * @param green linear green component in [0,1]
- * @param blue linear blue component in [0,1]
- * @param intensity bounded SDR intensity in [0,1]
- * @param rangeMeters strictly positive attenuation range in meters
+ * @param positionX
+ *            world-space X position in meters
+ * @param positionY
+ *            world-space Y position in meters
+ * @param positionZ
+ *            world-space Z position in meters
+ * @param red
+ *            linear red component in [0,1]
+ * @param green
+ *            linear green component in [0,1]
+ * @param blue
+ *            linear blue component in [0,1]
+ * @param intensity
+ *            bounded SDR intensity in [0,1]
+ * @param rangeMeters
+ *            strictly positive attenuation range in meters
  */
-public record RenderPointLight(
-        float positionX,
-        float positionY,
-        float positionZ,
-        float red,
-        float green,
-        float blue,
-        float intensity,
-        float rangeMeters) implements RenderLocalLight {
+public record RenderPointLight(float positionX, float positionY, float positionZ, float red, float green, float blue, float intensity,
+    float rangeMeters) implements RenderLocalLight {
 
     public RenderPointLight {
         requireFinite("positionX", positionX);

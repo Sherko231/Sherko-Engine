@@ -53,9 +53,7 @@ interface GlfwNativeBackend {
     default void releaseInputCallbacks(long handle, GlfwInputCallbackRegistration state) {
     }
 
-    default GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-            long handle,
-            GlfwCursorPositionEventSink sink) {
+    default GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
         return null;
     }
 
@@ -90,14 +88,7 @@ interface GlfwNativeBackend {
 
     void setDecorated(long handle, boolean decorated);
 
-    void setWindowMonitor(
-            long handle,
-            long monitor,
-            int x,
-            int y,
-            int width,
-            int height,
-            int refreshRate);
+    void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate);
 
     void swapBuffers(long handle);
 

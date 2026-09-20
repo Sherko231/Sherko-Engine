@@ -64,24 +64,16 @@ public final class JoltLifecycleSpike {
             if (debugBuild) {
                 long currentBalance = allocationBalance();
                 long growth = currentBalance - previousBalance;
-                System.out.printf(
-                        "Cycle %d/%d native allocation balance: %d (delta %+d)%n",
-                        cycle, cycles, currentBalance, growth
-                );
+                System.out.printf("Cycle %d/%d native allocation balance: %d (delta %+d)%n", cycle, cycles, currentBalance, growth);
 
                 if (cycle > 1 && growth > 0) {
-                    throw new IllegalStateException(
-                            "Native allocation balance increased after cleanup: " + growth
-                    );
+                    throw new IllegalStateException("Native allocation balance increased after cleanup: " + growth);
                 }
                 previousBalance = currentBalance;
             }
         }
 
-        System.out.printf(
-                "P0-T04 passed: %d repeated Jolt start/stop cycles completed.%n",
-                cycles
-        );
+        System.out.printf("P0-T04 passed: %d repeated Jolt start/stop cycles completed.%n", cycles);
     }
 
     private static void runCycle(int cycle) {
@@ -106,77 +98,29 @@ public final class JoltLifecycleSpike {
             objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_MOVING);
             objectLayerFilter.enableCollision(OBJ_LAYER_MOVING, OBJ_LAYER_NON_MOVING);
 
-            layerMap = new BroadPhaseLayerInterfaceTable(
-                    NUM_OBJECT_LAYERS,
-                    NUM_BROAD_PHASE_LAYERS
-            );
-            layerMap.mapObjectToBroadPhaseLayer(
-                    OBJ_LAYER_NON_MOVING,
-                    BP_LAYER_NON_MOVING
-            );
-            layerMap.mapObjectToBroadPhaseLayer(
-                    OBJ_LAYER_MOVING,
-                    BP_LAYER_MOVING
-            );
+            layerMap = new BroadPhaseLayerInterfaceTable(NUM_OBJECT_LAYERS, NUM_BROAD_PHASE_LAYERS);
+            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
+            layerMap.mapObjectToBroadPhaseLayer(OBJ_LAYER_MOVING, BP_LAYER_MOVING);
 
-            broadPhaseFilter = new ObjVsBpFilter(
-                    NUM_OBJECT_LAYERS,
-                    NUM_BROAD_PHASE_LAYERS
-            );
-            broadPhaseFilter.disablePair(
-                    OBJ_LAYER_NON_MOVING,
-                    BP_LAYER_NON_MOVING
-            );
+            broadPhaseFilter = new ObjVsBpFilter(NUM_OBJECT_LAYERS, NUM_BROAD_PHASE_LAYERS);
+            broadPhaseFilter.disablePair(OBJ_LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
 
             physicsSystem = new PhysicsSystem();
-            physicsSystem.init(
-                    1_024,
-                    0,
-                    1_024,
-                    1_024,
-                    layerMap,
-                    broadPhaseFilter,
-                    objectLayerFilter
-            );
+            physicsSystem.init(1_024, 0, 1_024, 1_024, layerMap, broadPhaseFilter, objectLayerFilter);
 
             tempAllocator = new TempAllocatorMalloc();
-            int workerThreads = Math.max(
-                    1,
-                    Runtime.getRuntime().availableProcessors() - 1
-            );
-            jobSystem = new JobSystemThreadPool(
-                    Jolt.cMaxPhysicsJobs,
-                    Jolt.cMaxPhysicsBarriers,
-                    workerThreads
-            );
+            int workerThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+            jobSystem = new JobSystemThreadPool(Jolt.cMaxPhysicsJobs, Jolt.cMaxPhysicsBarriers, workerThreads);
 
             BodyInterface bodies = physicsSystem.getBodyInterface();
 
             floorShape = new BoxShape(new Vec3(10.0f, 0.5f, 10.0f));
-            floorSettings = new BodyCreationSettings(
-                    floorShape,
-                    new RVec3(0.0, -0.5, 0.0),
-                    new Quat(),
-                    EMotionType.Static,
-                    OBJ_LAYER_NON_MOVING
-            );
-            int floorId = bodies.createAndAddBody(
-                    floorSettings,
-                    EActivation.DontActivate
-            );
+            floorSettings = new BodyCreationSettings(floorShape, new RVec3(0.0, -0.5, 0.0), new Quat(), EMotionType.Static, OBJ_LAYER_NON_MOVING);
+            int floorId = bodies.createAndAddBody(floorSettings, EActivation.DontActivate);
 
             boxShape = new BoxShape(new Vec3(0.5f, 0.5f, 0.5f));
-            boxSettings = new BodyCreationSettings(
-                    boxShape,
-                    new RVec3(0.0, 5.0, 0.0),
-                    new Quat(),
-                    EMotionType.Dynamic,
-                    OBJ_LAYER_MOVING
-            );
-            int boxId = bodies.createAndAddBody(
-                    boxSettings,
-                    EActivation.Activate
-            );
+            boxSettings = new BodyCreationSettings(boxShape, new RVec3(0.0, 5.0, 0.0), new Quat(), EMotionType.Dynamic, OBJ_LAYER_MOVING);
+            int boxId = bodies.createAndAddBody(boxSettings, EActivation.Activate);
 
             double startY = bodies.getPosition(boxId).y();
             double lowestY = startY;
@@ -184,33 +128,19 @@ public final class JoltLifecycleSpike {
             physicsSystem.optimizeBroadPhase();
 
             for (int step = 0; step < STEPS_PER_CYCLE; step++) {
-                physicsSystem.update(
-                        TIME_STEP_SECONDS,
-                        1,
-                        tempAllocator,
-                        jobSystem
-                );
+                physicsSystem.update(TIME_STEP_SECONDS, 1, tempAllocator, jobSystem);
                 lowestY = Math.min(lowestY, bodies.getPosition(boxId).y());
             }
 
             double finalY = bodies.getPosition(boxId).y();
             if (lowestY >= startY - 0.5) {
-                throw new IllegalStateException(
-                        "Dynamic box did not fall under gravity."
-                );
+                throw new IllegalStateException("Dynamic box did not fall under gravity.");
             }
             if (Math.abs(finalY - 0.5) > 0.15) {
-                throw new IllegalStateException(
-                        "Dynamic box did not settle on the floor. Final Y=" + finalY
-                );
+                throw new IllegalStateException("Dynamic box did not settle on the floor. Final Y=" + finalY);
             }
 
-            System.out.printf(
-                    "Cycle %d physics result: startY=%.3f, finalY=%.3f%n",
-                    cycle,
-                    startY,
-                    finalY
-            );
+            System.out.printf("Cycle %d physics result: startY=%.3f, finalY=%.3f%n", cycle, startY, finalY);
 
             bodies.removeBody(boxId);
             bodies.destroyBody(boxId);
@@ -248,34 +178,19 @@ public final class JoltLifecycleSpike {
         try {
             closeable.close();
         } catch (Exception exception) {
-            throw new RuntimeException(
-                    "Failed to release Jolt native object",
-                    exception
-            );
+            throw new RuntimeException("Failed to release Jolt native object", exception);
         }
     }
 
     private static void loadNativeLibrary() {
-        LibraryInfo info = new LibraryInfo(
-                null,
-                "joltjni",
-                DirectoryPath.USER_DIR
-        );
+        LibraryInfo info = new LibraryInfo(null, "joltjni", DirectoryPath.USER_DIR);
         NativeBinaryLoader loader = new NativeBinaryLoader(info);
-        NativeDynamicLibrary[] libraries = {
-                new NativeDynamicLibrary(
-                        "windows/x86-64/com/github/stephengold",
-                        PlatformPredicate.WIN_X86_64
-                )
-        };
+        NativeDynamicLibrary[] libraries = {new NativeDynamicLibrary("windows/x86-64/com/github/stephengold", PlatformPredicate.WIN_X86_64)};
         loader.registerNativeLibraries(libraries).initPlatformLibrary();
         try {
             loader.loadLibrary(LoadingCriterion.CLEAN_EXTRACTION);
         } catch (Exception exception) {
-            throw new IllegalStateException(
-                    "Failed to load Jolt JNI native library",
-                    exception
-            );
+            throw new IllegalStateException("Failed to load Jolt JNI native library", exception);
         }
     }
 }

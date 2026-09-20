@@ -22,12 +22,7 @@ class EngineLoggerTest {
     void eventPreservesLevelMessageContextAndCallerThreadIdentity() {
         List<EngineLogger.Event> captured = new ArrayList<>();
         EngineLogger logger = new EngineLogger(captured::add);
-        EngineLogger.Context context = new EngineLogger.Context(
-                120L,
-                240L,
-                " network ",
-                " conn-a ",
-                " player-7 ");
+        EngineLogger.Context context = new EngineLogger.Context(120L, 240L, " network ", " conn-a ", " player-7 ");
         Thread caller = Thread.currentThread();
 
         logger.log(EngineLogger.Level.INFO, "received input", context);
@@ -67,35 +62,20 @@ class EngineLoggerTest {
         assertNull(absent.simulationTick());
         assertEquals(0L, zero.frame());
         assertEquals(0L, zero.simulationTick());
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new EngineLogger.Context(-1L, 0L, null, null, null));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new EngineLogger.Context(0L, -1L, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(-1L, 0L, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(0L, -1L, null, null, null));
     }
 
     @Test
     void contextNormalizesOptionalStringsAndRejectsBlankPresentValues() {
-        EngineLogger.Context context = new EngineLogger.Context(
-                null,
-                null,
-                "  render  ",
-                "  connection-2  ",
-                "  entity-9  ");
+        EngineLogger.Context context = new EngineLogger.Context(null, null, "  render  ", "  connection-2  ", "  entity-9  ");
 
         assertEquals("render", context.subsystem());
         assertEquals("connection-2", context.connection());
         assertEquals("entity-9", context.entity());
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new EngineLogger.Context(null, null, "   ", null, null));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new EngineLogger.Context(null, null, null, "\t", null));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new EngineLogger.Context(null, null, null, null, "\n"));
+        assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, "   ", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, null, "\t", null));
+        assertThrows(IllegalArgumentException.class, () -> new EngineLogger.Context(null, null, null, null, "\n"));
     }
 
     @Test
@@ -103,27 +83,14 @@ class EngineLoggerTest {
         List<EngineLogger.Event> captured = new ArrayList<>();
         EngineLogger logger = new EngineLogger(captured::add);
 
-        logger.log(
-                EngineLogger.Level.INFO,
-                "same message",
-                new EngineLogger.Context(1L, 10L, "network", "conn-a", "entity-a"));
-        logger.log(
-                EngineLogger.Level.INFO,
-                "same message",
-                new EngineLogger.Context(1L, 10L, "network", "conn-b", "entity-b"));
-        logger.log(
-                EngineLogger.Level.WARN,
-                "same message",
-                new EngineLogger.Context(2L, 11L, "physics", "conn-a", "entity-c"));
+        logger.log(EngineLogger.Level.INFO, "same message", new EngineLogger.Context(1L, 10L, "network", "conn-a", "entity-a"));
+        logger.log(EngineLogger.Level.INFO, "same message", new EngineLogger.Context(1L, 10L, "network", "conn-b", "entity-b"));
+        logger.log(EngineLogger.Level.WARN, "same message", new EngineLogger.Context(2L, 11L, "physics", "conn-a", "entity-c"));
 
-        List<EngineLogger.Event> connA = captured.stream()
-                .filter(event -> "conn-a".equals(event.context().connection()))
-                .toList();
+        List<EngineLogger.Event> connA = captured.stream().filter(event -> "conn-a".equals(event.context().connection())).toList();
 
         assertEquals(2, connA.size());
-        assertEquals(List.of("entity-a", "entity-c"), connA.stream()
-                .map(event -> event.context().entity())
-                .toList());
+        assertEquals(List.of("entity-a", "entity-c"), connA.stream().map(event -> event.context().entity()).toList());
         assertTrue(connA.stream().allMatch(event -> "same message".equals(event.message())));
         assertFalse(connA.stream().anyMatch(event -> "conn-b".equals(event.context().connection())));
     }
@@ -138,9 +105,7 @@ class EngineLoggerTest {
         }
 
         assertEquals(EngineLogger.Level.values().length, captured.size());
-        assertEquals(
-                EnumSet.allOf(EngineLogger.Level.class),
-                EnumSet.copyOf(captured.stream().map(EngineLogger.Event::level).toList()));
+        assertEquals(EnumSet.allOf(EngineLogger.Level.class), EnumSet.copyOf(captured.stream().map(EngineLogger.Event::level).toList()));
     }
 
     @Test
@@ -149,18 +114,10 @@ class EngineLoggerTest {
         EngineLogger logger = new EngineLogger(event -> writes.incrementAndGet());
 
         assertThrows(NullPointerException.class, () -> new EngineLogger(null));
-        assertThrows(
-                NullPointerException.class,
-                () -> logger.log(null, "message", EngineLogger.Context.empty()));
-        assertThrows(
-                NullPointerException.class,
-                () -> logger.log(EngineLogger.Level.INFO, null, EngineLogger.Context.empty()));
-        assertThrows(
-                NullPointerException.class,
-                () -> logger.log(EngineLogger.Level.INFO, "message", null));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> logger.log(EngineLogger.Level.INFO, " \t\n ", EngineLogger.Context.empty()));
+        assertThrows(NullPointerException.class, () -> logger.log(null, "message", EngineLogger.Context.empty()));
+        assertThrows(NullPointerException.class, () -> logger.log(EngineLogger.Level.INFO, null, EngineLogger.Context.empty()));
+        assertThrows(NullPointerException.class, () -> logger.log(EngineLogger.Level.INFO, "message", null));
+        assertThrows(IllegalArgumentException.class, () -> logger.log(EngineLogger.Level.INFO, " \t\n ", EngineLogger.Context.empty()));
         assertEquals(0, writes.get());
     }
 
@@ -173,9 +130,7 @@ class EngineLoggerTest {
             throw expected;
         });
 
-        RuntimeException actual = assertThrows(
-                RuntimeException.class,
-                () -> logger.log(EngineLogger.Level.ERROR, "event", EngineLogger.Context.empty()));
+        RuntimeException actual = assertThrows(RuntimeException.class, () -> logger.log(EngineLogger.Level.ERROR, "event", EngineLogger.Context.empty()));
 
         assertSame(expected, actual);
         assertEquals(1, attempts.get());
@@ -190,9 +145,7 @@ class EngineLoggerTest {
             throw expected;
         });
 
-        AssertionError actual = assertThrows(
-                AssertionError.class,
-                () -> logger.log(EngineLogger.Level.ERROR, "event", EngineLogger.Context.empty()));
+        AssertionError actual = assertThrows(AssertionError.class, () -> logger.log(EngineLogger.Level.ERROR, "event", EngineLogger.Context.empty()));
 
         assertSame(expected, actual);
         assertEquals(1, attempts.get());
@@ -302,9 +255,7 @@ class EngineLoggerTest {
         second.start();
         assertTrue(secondCallerStarted.await(5, TimeUnit.SECONDS));
 
-        assertFalse(
-                twoSinkEntries.await(250, TimeUnit.MILLISECONDS),
-                "second sink callback must not overlap the blocked first callback");
+        assertFalse(twoSinkEntries.await(250, TimeUnit.MILLISECONDS), "second sink callback must not overlap the blocked first callback");
         releaseFirst.countDown();
         first.join(5_000L);
         second.join(5_000L);
@@ -316,14 +267,8 @@ class EngineLoggerTest {
         assertEquals(1, maxActiveCallbacks.get());
         assertEquals(2, captured.size());
 
-        EngineLogger.Event firstEvent = captured.stream()
-                .filter(event -> "first".equals(event.message()))
-                .findFirst()
-                .orElseThrow();
-        EngineLogger.Event secondEvent = captured.stream()
-                .filter(event -> "second".equals(event.message()))
-                .findFirst()
-                .orElseThrow();
+        EngineLogger.Event firstEvent = captured.stream().filter(event -> "first".equals(event.message())).findFirst().orElseThrow();
+        EngineLogger.Event secondEvent = captured.stream().filter(event -> "second".equals(event.message())).findFirst().orElseThrow();
         assertEquals(first.threadId(), firstEvent.threadId());
         assertEquals(first.getName(), firstEvent.threadName());
         assertEquals(second.threadId(), secondEvent.threadId());

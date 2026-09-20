@@ -64,11 +64,7 @@ final class GlfwInputState {
         }
     }
 
-    InputSnapshot captureSnapshot(
-            long frameId,
-            boolean cursorCaptured,
-            double accumulatedMouseDeltaX,
-            double accumulatedMouseDeltaY) {
+    InputSnapshot captureSnapshot(long frameId, boolean cursorCaptured, double accumulatedMouseDeltaX, double accumulatedMouseDeltaY) {
         if (frameId < 0L) {
             throw new IllegalArgumentException("frameId must be non-negative");
         }
@@ -103,18 +99,8 @@ final class GlfwInputState {
             }
         }
 
-        InputSnapshot snapshot = new InputSnapshot(
-                frameId,
-                focused,
-                cursorCaptured,
-                heldKeySet,
-                pressedKeySet,
-                releasedKeySet,
-                heldButtonSet,
-                pressedButtonSet,
-                releasedButtonSet,
-                accumulatedMouseDeltaX,
-                accumulatedMouseDeltaY);
+        InputSnapshot snapshot = new InputSnapshot(frameId, focused, cursorCaptured, heldKeySet, pressedKeySet, releasedKeySet, heldButtonSet, pressedButtonSet, releasedButtonSet,
+            accumulatedMouseDeltaX, accumulatedMouseDeltaY);
         clearPendingInputEdges();
         return snapshot;
     }

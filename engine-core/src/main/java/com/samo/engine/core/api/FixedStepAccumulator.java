@@ -3,7 +3,8 @@ package com.samo.engine.core.api;
 /**
  * Converts elapsed nanoseconds into whole fixed-rate simulation ticks.
  *
- * <p>The accumulator retains exact fractional progress between calls. The caller owns execution of
+ * <p>
+ * The accumulator retains exact fractional progress between calls. The caller owns execution of
  * the returned ticks and externally serializes calls.
  */
 public final class FixedStepAccumulator {
@@ -21,13 +22,16 @@ public final class FixedStepAccumulator {
     /**
      * Adds one non-negative elapsed duration and returns newly due whole simulation ticks.
      *
-     * <p>Fractional progress is represented as tick-nanosecond units over one billion, preserving
+     * <p>
+     * Fractional progress is represented as tick-nanosecond units over one billion, preserving
      * the exact rational rate of 60 ticks per second without floating-point arithmetic or rounding
      * one simulation step to an integer nanosecond duration.
      *
-     * @param elapsedNanos elapsed monotonic time to accumulate
+     * @param elapsedNanos
+     *            elapsed monotonic time to accumulate
      * @return newly due whole simulation ticks
-     * @throws IllegalArgumentException if {@code elapsedNanos} is negative
+     * @throws IllegalArgumentException
+     *             if {@code elapsedNanos} is negative
      */
     public long advance(long elapsedNanos) {
         if (elapsedNanos < 0L) {
@@ -48,7 +52,8 @@ public final class FixedStepAccumulator {
     /**
      * Returns renderer-facing fractional progress toward the next fixed simulation tick.
      *
-     * <p>This is a read-only normalized presentation value in {@code [0.0, 1.0)}. Fixed-step
+     * <p>
+     * This is a read-only normalized presentation value in {@code [0.0, 1.0)}. Fixed-step
      * accumulation itself remains exact integer/rational arithmetic; querying alpha neither mutates
      * nor consumes retained progress.
      *

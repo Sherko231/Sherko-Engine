@@ -11,10 +11,7 @@ class DirectionalLightTest {
 
     @Test
     void normalizesDirectionAndMatchesHandCalculatedDiffuseResponse() {
-        DirectionalLight light = DirectionalLight.from(
-                new Vector3f(0.0f, -2.0f, -2.0f),
-                new Vector3f(1.0f, 0.8f, 0.6f),
-                0.8f);
+        DirectionalLight light = DirectionalLight.from(new Vector3f(0.0f, -2.0f, -2.0f), new Vector3f(1.0f, 0.8f, 0.6f), 0.8f);
 
         float inverseSqrtTwo = (float) (1.0 / Math.sqrt(2.0));
         assertEquals(0.0f, light.directionX(), TOLERANCE);
@@ -28,23 +25,12 @@ class DirectionalLightTest {
 
     @Test
     void rejectsInvalidDirectionColorIntensityAndNormal() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DirectionalLight(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DirectionalLight(Float.NaN, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DirectionalLight(0.0f, 0.0f, -1.0f, -0.01f, 1.0f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DirectionalLight(0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.01f));
+        assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(Float.NaN, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(0.0f, 0.0f, -1.0f, -0.01f, 1.0f, 1.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new DirectionalLight(0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.01f));
 
-        DirectionalLight valid =
-                new DirectionalLight(0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> valid.diffuseFactor(new Vector3f(0.0f, 0.0f, 0.0f)));
+        DirectionalLight valid = new DirectionalLight(0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        assertThrows(IllegalArgumentException.class, () -> valid.diffuseFactor(new Vector3f(0.0f, 0.0f, 0.0f)));
     }
 }

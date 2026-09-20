@@ -32,20 +32,12 @@ public final class FatalTerminationCoordinatorChildProcess {
             }
         });
 
-        new FatalTerminationCoordinator(logger).terminate(
-                "child fatal",
-                EngineLogger.Context.empty(),
-                List.of(subsystem),
-                registry);
+        new FatalTerminationCoordinator(logger).terminate("child fatal", EngineLogger.Context.empty(), List.of(subsystem), registry);
     }
 
     private static void append(Path marker, String value) {
         try {
-            Files.writeString(
-                    marker,
-                    value + System.lineSeparator(),
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
+            Files.writeString(marker, value + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException failure) {
             throw new IllegalStateException("Unable to write fatal child marker", failure);
         }

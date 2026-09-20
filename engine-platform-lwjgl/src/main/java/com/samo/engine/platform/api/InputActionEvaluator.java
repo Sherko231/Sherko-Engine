@@ -54,8 +54,8 @@ public final class InputActionEvaluator {
             }
 
             InputActionState state = action.valueType() == InputActionValueType.DIGITAL
-                    ? new InputActionState(action, pressed, evaluation.active, released, evaluation.value, 0.0d, 0.0d)
-                    : new InputActionState(action, pressed, evaluation.active, released, 0.0d, evaluation.x, evaluation.y);
+                ? new InputActionState(action, pressed, evaluation.active, released, evaluation.value, 0.0d, 0.0d)
+                : new InputActionState(action, pressed, evaluation.active, released, 0.0d, evaluation.x, evaluation.y);
             evaluatedStates.put(action, state);
             nextActive.put(action, evaluation.active);
         }
@@ -67,11 +67,7 @@ public final class InputActionEvaluator {
         return new InputActionSnapshot(frameId, evaluatedStates);
     }
 
-    private static Evaluation evaluateAction(
-            InputAction action,
-            List<InputBinding> actionBindings,
-            InputSnapshot snapshot,
-            InputResponseSettings responseSettings) {
+    private static Evaluation evaluateAction(InputAction action, List<InputBinding> actionBindings, InputSnapshot snapshot, InputResponseSettings responseSettings) {
         double value = 0.0d;
         double x = 0.0d;
         double y = 0.0d;
@@ -89,35 +85,24 @@ public final class InputActionEvaluator {
             }
         }
 
-        boolean active = action.valueType() == InputActionValueType.DIGITAL
-                ? value != 0.0d
-                : x != 0.0d || y != 0.0d;
+        boolean active = action.valueType() == InputActionValueType.DIGITAL ? value != 0.0d : x != 0.0d || y != 0.0d;
         return new Evaluation(value, x, y, active, sawCompleteTap);
     }
 
-    private static BindingSample sample(
-            InputBinding binding,
-            InputSnapshot snapshot,
-            InputResponseSettings responseSettings) {
+    private static BindingSample sample(InputBinding binding, InputSnapshot snapshot, InputResponseSettings responseSettings) {
         InputBinding.Control control = binding.control();
         if (control instanceof InputBinding.KeyControl keyControl) {
             InputKey key = keyControl.key();
-            return new BindingSample(
-                    snapshot.keyHeld(key) ? 1.0d : 0.0d,
-                    snapshot.keyPressed(key),
-                    snapshot.keyReleased(key));
+            return new BindingSample(snapshot.keyHeld(key) ? 1.0d : 0.0d, snapshot.keyPressed(key), snapshot.keyReleased(key));
         }
         if (control instanceof InputBinding.MouseButtonControl buttonControl) {
             InputMouseButton button = buttonControl.button();
-            return new BindingSample(
-                    snapshot.mouseButtonHeld(button) ? 1.0d : 0.0d,
-                    snapshot.mouseButtonPressed(button),
-                    snapshot.mouseButtonReleased(button));
+            return new BindingSample(snapshot.mouseButtonHeld(button) ? 1.0d : 0.0d, snapshot.mouseButtonPressed(button), snapshot.mouseButtonReleased(button));
         }
         InputBinding.MouseDeltaControl mouseDeltaControl = (InputBinding.MouseDeltaControl) control;
         double amount = mouseDeltaControl.axis() == InputBinding.MouseDeltaAxis.X
-                ? responseSettings.applyMouseX(snapshot.mouseDeltaX())
-                : responseSettings.applyMouseY(snapshot.mouseDeltaY());
+            ? responseSettings.applyMouseX(snapshot.mouseDeltaX())
+            : responseSettings.applyMouseY(snapshot.mouseDeltaY());
         return new BindingSample(amount, false, false);
     }
 
@@ -140,11 +125,6 @@ public final class InputActionEvaluator {
     private record BindingSample(double amount, boolean pressed, boolean released) {
     }
 
-    private record Evaluation(
-            double value,
-            double x,
-            double y,
-            boolean active,
-            boolean sawCompleteTap) {
+    private record Evaluation(double value, double x, double y, boolean active, boolean sawCompleteTap) {
     }
 }

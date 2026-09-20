@@ -13,8 +13,7 @@ final class OpenGlVertexArray implements AutoCloseable {
     static OpenGlVertexArray create(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         guard.assertOwnerThread();
         int handle = backend.createVertexArray();
-        return new OpenGlVertexArray(OwnedOpenGlHandle.register(
-                "OpenGL vertex array", handle, guard, registry, backend::deleteVertexArray));
+        return new OpenGlVertexArray(OwnedOpenGlHandle.register("OpenGL vertex array", handle, guard, registry, backend::deleteVertexArray));
     }
 
     int handle() {

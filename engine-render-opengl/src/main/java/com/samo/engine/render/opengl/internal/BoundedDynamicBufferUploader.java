@@ -9,9 +9,7 @@ import java.util.Objects;
 
 final class BoundedDynamicBufferUploader implements AutoCloseable {
     private enum SlotState {
-        FREE,
-        UPLOADED,
-        SUBMITTED
+        FREE, UPLOADED, SUBMITTED
     }
 
     static final class Slice {
@@ -21,12 +19,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         private final int lengthBytes;
         private final long generation;
 
-        private Slice(
-                BoundedDynamicBufferUploader owner,
-                int slotIndex,
-                long offsetBytes,
-                int lengthBytes,
-                long generation) {
+        private Slice(BoundedDynamicBufferUploader owner, int slotIndex, long offsetBytes, int lengthBytes, long generation) {
             this.owner = owner;
             this.slotIndex = slotIndex;
             this.offsetBytes = offsetBytes;
@@ -68,13 +61,8 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
     private boolean closeAttempted;
     private int nextSlot;
 
-    private BoundedDynamicBufferUploader(
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend,
-            OpenGlBuffer buffer,
-            int slotCount,
-            long slotCapacityBytes) {
+    private BoundedDynamicBufferUploader(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlResourceBackend backend, OpenGlBuffer buffer, int slotCount,
+        long slotCapacityBytes) {
         this.threadGuard = threadGuard;
         this.registry = registry;
         this.backend = backend;
@@ -86,12 +74,8 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         }
     }
 
-    static BoundedDynamicBufferUploader create(
-            int slotCount,
-            long slotCapacityBytes,
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend) {
+    static BoundedDynamicBufferUploader create(int slotCount, long slotCapacityBytes, OpenGlThreadGuard threadGuard, NativeResourceRegistry registry,
+        OpenGlResourceBackend backend) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlResourceBackend gl = Objects.requireNonNull(backend, "backend");
@@ -114,8 +98,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         OpenGlBuffer buffer = OpenGlBuffer.create(guard, resources, gl);
         try {
             gl.allocateDynamicBufferStorage(buffer.handle(), totalCapacity);
-            return new BoundedDynamicBufferUploader(
-                    guard, resources, gl, buffer, slotCount, slotCapacityBytes);
+            return new BoundedDynamicBufferUploader(guard, resources, gl, buffer, slotCount, slotCapacityBytes);
         } catch (RuntimeException | Error failure) {
             CleanupFailureSuppression.runAndSuppress(failure, buffer::close);
             throw failure;
@@ -131,8 +114,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             throw new IllegalArgumentException("upload data must contain at least one byte");
         }
         if ((long) lengthBytes > slotCapacityBytes) {
-            throw new IllegalArgumentException(
-                    "upload exceeds slot capacity: bytes=" + lengthBytes + ", capacity=" + slotCapacityBytes);
+            throw new IllegalArgumentException("upload exceeds slot capacity: bytes=" + lengthBytes + ", capacity=" + slotCapacityBytes);
         }
 
         Slot slot = slots[nextSlot];
@@ -159,10 +141,8 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
         }
 
         Slot slot = slots[actual.slotIndex];
-        if (slot.state != SlotState.UPLOADED
-                || slot.generation != actual.generation
-                || slot.lengthBytes != actual.lengthBytes
-                || actual.offsetBytes != Math.multiplyExact((long) actual.slotIndex, slotCapacityBytes)) {
+        if (slot.state != SlotState.UPLOADED || slot.generation != actual.generation || slot.lengthBytes != actual.lengthBytes
+            || actual.offsetBytes != Math.multiplyExact((long) actual.slotIndex, slotCapacityBytes)) {
             throw new IllegalStateException("slice is stale or is not the current uploaded slot generation");
         }
 
@@ -173,13 +153,10 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
 
         NativeResourceRegistry.Registration registration;
         try {
-            registration = registry.register(
-                    "OpenGL sync",
-                    fenceHandle,
-                    () -> {
-                        threadGuard.assertOwnerThread();
-                        backend.deleteFence(fenceHandle);
-                    });
+            registration = registry.register("OpenGL sync", fenceHandle, () -> {
+                threadGuard.assertOwnerThread();
+                backend.deleteFence(fenceHandle);
+            });
         } catch (RuntimeException | Error failure) {
             CleanupFailureSuppression.runAndSuppress(failure, () -> backend.deleteFence(fenceHandle));
             throw failure;

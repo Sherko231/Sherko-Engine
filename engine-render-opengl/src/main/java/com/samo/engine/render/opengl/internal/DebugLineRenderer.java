@@ -18,19 +18,11 @@ final class DebugLineRenderer implements AutoCloseable {
     private final OpenGlShader vertexShader;
     private final OpenGlShader fragmentShader;
     private final OpenGlProgram program;
-    private final ByteBuffer vertexBytes =
-            ByteBuffer.allocateDirect(DebugLineVertexPacker.MAX_BYTES).order(ByteOrder.nativeOrder());
+    private final ByteBuffer vertexBytes = ByteBuffer.allocateDirect(DebugLineVertexPacker.MAX_BYTES).order(ByteOrder.nativeOrder());
     private boolean closeAttempted;
 
-    private DebugLineRenderer(
-            OpenGlThreadGuard threadGuard,
-            OpenGlResourceBackend resourceBackend,
-            OpenGlDrawBackend drawBackend,
-            OpenGlVertexArray vertexArray,
-            OpenGlBuffer vertexBuffer,
-            OpenGlShader vertexShader,
-            OpenGlShader fragmentShader,
-            OpenGlProgram program) {
+    private DebugLineRenderer(OpenGlThreadGuard threadGuard, OpenGlResourceBackend resourceBackend, OpenGlDrawBackend drawBackend, OpenGlVertexArray vertexArray,
+        OpenGlBuffer vertexBuffer, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program) {
         this.threadGuard = threadGuard;
         this.resourceBackend = resourceBackend;
         this.drawBackend = drawBackend;
@@ -41,14 +33,8 @@ final class DebugLineRenderer implements AutoCloseable {
         this.program = program;
     }
 
-    static DebugLineRenderer create(
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry registry,
-            OpenGlBackendSet backends,
-            int cameraBufferHandle,
-            SrgbPresentationMode presentationMode,
-            String vertexSource,
-            String fragmentSource) {
+    static DebugLineRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, OpenGlBackendSet backends, int cameraBufferHandle,
+        SrgbPresentationMode presentationMode, String vertexSource, String fragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         OpenGlBackendSet backendSet = Objects.requireNonNull(backends, "backends");
@@ -70,42 +56,15 @@ final class DebugLineRenderer implements AutoCloseable {
             vertices = OpenGlBuffer.create(guard, resources, gl);
             gl.allocateDynamicBufferStorage(vertices.handle(), DebugLineVertexPacker.MAX_BYTES);
 
-            vertex = OpenGlShader.compile(
-                    OpenGlShader.Stage.VERTEX,
-                    "shaders/p5/debug-lines.vert",
-                    vertSource,
-                    guard,
-                    resources,
-                    gl);
-            fragment = OpenGlShader.compile(
-                    OpenGlShader.Stage.FRAGMENT,
-                    "shaders/p5/debug-lines.frag",
-                    mode.fragmentSource(fragSource),
-                    guard,
-                    resources,
-                    gl);
-            linkedProgram = OpenGlProgram.link(
-                    "p5-debug-lines-program",
-                    vertex,
-                    fragment,
-                    guard,
-                    resources,
-                    gl);
+            vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "shaders/p5/debug-lines.vert", vertSource, guard, resources, gl);
+            fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "shaders/p5/debug-lines.frag", mode.fragmentSource(fragSource), guard, resources, gl);
+            linkedProgram = OpenGlProgram.link("p5-debug-lines-program", vertex, fragment, guard, resources, gl);
 
-            UniformBlockLayoutVerifier.verifyCameraOnly(
-                    linkedProgram.handle(), guard, reflection);
+            UniformBlockLayoutVerifier.verifyCameraOnly(linkedProgram.handle(), guard, reflection);
             draw.configureDebugLineAttributes(vao.handle(), vertices.handle());
             draw.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, cameraBufferHandle);
 
-            return new DebugLineRenderer(
-                    guard,
-                    gl,
-                    draw,
-                    vao,
-                    vertices,
-                    vertex,
-                    fragment,
-                    linkedProgram);
+            return new DebugLineRenderer(guard, gl, draw, vao, vertices, vertex, fragment, linkedProgram);
         } catch (RuntimeException | Error failure) {
             suppressClose(failure, linkedProgram);
             suppressClose(failure, fragment);

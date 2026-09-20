@@ -55,8 +55,7 @@ class PlayerInputCommandSamplerTest {
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(5L, 0.0d, 0.0d, 4.0d, 0.0d, true, false, true, 0.0d));
 
-        assertThatThrownBy(() -> sampler.submit(snapshot(5L, 0, 0, 1, 0, false, false, false, 0)))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sampler.submit(snapshot(5L, 0, 0, 1, 0, false, false, false, 0))).isInstanceOf(IllegalArgumentException.class);
 
         PlayerInputCommand command = sampler.nextCommand(9L);
         assertThat(command.lookX()).isEqualTo(4.0d);
@@ -75,17 +74,7 @@ class PlayerInputCommandSamplerTest {
         PlayerInputCommandSampler sampler = new PlayerInputCommandSampler();
         sampler.submit(snapshot(20L, 0.0d, 0.0d, Double.MAX_VALUE, 0.0d, true, false, true, 0.0d));
 
-        assertThatThrownBy(() -> sampler.submit(snapshot(
-                        21L,
-                        1.0d,
-                        1.0d,
-                        Double.MAX_VALUE,
-                        0.0d,
-                        false,
-                        true,
-                        false,
-                        1.0d)))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sampler.submit(snapshot(21L, 1.0d, 1.0d, Double.MAX_VALUE, 0.0d, false, true, false, 1.0d))).isInstanceOf(IllegalArgumentException.class);
 
         sampler.submit(snapshot(21L, 0.5d, -0.5d, 0.0d, 1.0d, false, false, false, 0.0d));
         PlayerInputCommand command = sampler.nextCommand(30L);
@@ -118,51 +107,16 @@ class PlayerInputCommandSamplerTest {
         assertThatThrownBy(() -> sampler.nextCommand(0L)).isInstanceOf(IllegalStateException.class);
     }
 
-    private static InputActionSnapshot snapshot(
-            long frameId,
-            double moveX,
-            double moveY,
-            double lookX,
-            double lookY,
-            boolean jumpPressed,
-            boolean jumpHeld,
-            boolean jumpReleased,
-            double jumpValue) {
+    private static InputActionSnapshot snapshot(long frameId, double moveX, double moveY, double lookX, double lookY, boolean jumpPressed, boolean jumpHeld, boolean jumpReleased,
+        double jumpValue) {
         EnumMap<InputAction, InputActionState> states = new EnumMap<>(InputAction.class);
         for (InputAction action : InputAction.values()) {
             if (action == InputAction.MOVE) {
-                states.put(
-                        action,
-                        new InputActionState(
-                                action,
-                                false,
-                                moveX != 0.0d || moveY != 0.0d,
-                                false,
-                                0.0d,
-                                moveX,
-                                moveY));
+                states.put(action, new InputActionState(action, false, moveX != 0.0d || moveY != 0.0d, false, 0.0d, moveX, moveY));
             } else if (action == InputAction.LOOK) {
-                states.put(
-                        action,
-                        new InputActionState(
-                                action,
-                                false,
-                                lookX != 0.0d || lookY != 0.0d,
-                                false,
-                                0.0d,
-                                lookX,
-                                lookY));
+                states.put(action, new InputActionState(action, false, lookX != 0.0d || lookY != 0.0d, false, 0.0d, lookX, lookY));
             } else if (action == InputAction.JUMP) {
-                states.put(
-                        action,
-                        new InputActionState(
-                                action,
-                                jumpPressed,
-                                jumpHeld,
-                                jumpReleased,
-                                jumpValue,
-                                0.0d,
-                                0.0d));
+                states.put(action, new InputActionState(action, jumpPressed, jumpHeld, jumpReleased, jumpValue, 0.0d, 0.0d));
             } else {
                 states.put(action, new InputActionState(action, false, false, false, 0.0d, 0.0d, 0.0d));
             }

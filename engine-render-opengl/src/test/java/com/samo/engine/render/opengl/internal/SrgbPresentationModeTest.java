@@ -12,15 +12,9 @@ import org.lwjgl.opengl.GL21;
 class SrgbPresentationModeTest {
     @Test
     void selectsModeFromActualDefaultFramebufferEncoding() {
-        assertEquals(
-                SrgbPresentationMode.HARDWARE_SRGB,
-                SrgbPresentationMode.fromDefaultFramebufferEncoding(GL21.GL_SRGB));
-        assertEquals(
-                SrgbPresentationMode.MANUAL_SRGB,
-                SrgbPresentationMode.fromDefaultFramebufferEncoding(GL11.GL_LINEAR));
-        assertThrows(
-                IllegalStateException.class,
-                () -> SrgbPresentationMode.fromDefaultFramebufferEncoding(0x7fffffff));
+        assertEquals(SrgbPresentationMode.HARDWARE_SRGB, SrgbPresentationMode.fromDefaultFramebufferEncoding(GL21.GL_SRGB));
+        assertEquals(SrgbPresentationMode.MANUAL_SRGB, SrgbPresentationMode.fromDefaultFramebufferEncoding(GL11.GL_LINEAR));
+        assertThrows(IllegalStateException.class, () -> SrgbPresentationMode.fromDefaultFramebufferEncoding(0x7fffffff));
     }
 
     @Test
@@ -40,10 +34,7 @@ class SrgbPresentationModeTest {
 
         assertFalse(SrgbPresentationMode.MANUAL_SRGB.framebufferSrgbEnabled());
         assertEquals(1, occurrences(variant, "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
-        assertTrue(variant.startsWith(
-                "#version 460 core"
-                        + System.lineSeparator()
-                        + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
+        assertTrue(variant.startsWith("#version 460 core" + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1"));
         assertEquals(0.34919024f, SrgbPresentationMode.MANUAL_SRGB.clearComponent(0.10f), 1.0e-6f);
     }
 

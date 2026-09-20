@@ -11,59 +11,30 @@ import org.junit.jupiter.api.Test;
 class GlslOfflineValidationTest {
     @Test
     void validatesCommittedRuntimeShaders() throws Exception {
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.VERTEX,
-                "shaders/p5/basic.vert",
-                resource("shaders/p5/basic.vert"));
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/basic.frag",
-                resource("shaders/p5/basic.frag"));
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.VERTEX,
-                "shaders/p5/debug-lines.vert",
-                resource("shaders/p5/debug-lines.vert"));
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/debug-lines.frag",
-                resource("shaders/p5/debug-lines.frag"));
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.VERTEX,
-                "shaders/p5/view-model.vert",
-                resource("shaders/p5/view-model.vert"));
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/view-model.frag",
-                resource("shaders/p5/view-model.frag"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.VERTEX, "shaders/p5/basic.vert", resource("shaders/p5/basic.vert"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/basic.frag", resource("shaders/p5/basic.frag"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.VERTEX, "shaders/p5/debug-lines.vert", resource("shaders/p5/debug-lines.vert"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/debug-lines.frag", resource("shaders/p5/debug-lines.frag"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.VERTEX, "shaders/p5/view-model.vert", resource("shaders/p5/view-model.vert"));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/view-model.frag", resource("shaders/p5/view-model.frag"));
     }
 
     @Test
     void validatesManualSrgbFallbackVariant() throws Exception {
         String source = resource("shaders/p5/basic.frag");
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/basic.frag[manual-srgb]",
-                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(source));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/basic.frag[manual-srgb]", SrgbPresentationMode.MANUAL_SRGB.fragmentSource(source));
         String debugSource = resource("shaders/p5/debug-lines.frag");
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/debug-lines.frag[manual-srgb]",
-                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(debugSource));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/debug-lines.frag[manual-srgb]",
+            SrgbPresentationMode.MANUAL_SRGB.fragmentSource(debugSource));
         String viewModelSource = resource("shaders/p5/view-model.frag");
-        GlslOfflineValidator.validate(
-                GlslOfflineValidator.Stage.FRAGMENT,
-                "shaders/p5/view-model.frag[manual-srgb]",
-                SrgbPresentationMode.MANUAL_SRGB.fragmentSource(viewModelSource));
+        GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/view-model.frag[manual-srgb]",
+            SrgbPresentationMode.MANUAL_SRGB.fragmentSource(viewModelSource));
     }
 
     @Test
     void rejectsInvalidSyntaxFixtureWithDiagnostics() throws Exception {
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> GlslOfflineValidator.validate(
-                        GlslOfflineValidator.Stage.FRAGMENT,
-                        "shaders/p5/invalid-syntax.frag",
-                        resource("shaders/p5/invalid-syntax.frag")));
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+            () -> GlslOfflineValidator.validate(GlslOfflineValidator.Stage.FRAGMENT, "shaders/p5/invalid-syntax.frag", resource("shaders/p5/invalid-syntax.frag")));
 
         assertTrue(failure.getMessage().contains("shaders/p5/invalid-syntax.frag"));
         assertTrue(failure.getMessage().contains("FRAGMENT"));

@@ -11,15 +11,15 @@ import org.joml.Vector3fc;
 /**
  * Mutable local/world transform using the engine's canonical right-handed spatial convention.
  *
- * <p>Local composition is {@code T * R * S}; world composition is
+ * <p>
+ * Local composition is {@code T * R * S}; world composition is
  * {@code parentWorld * local}. Instances are externally serialized and do not retain caller-owned
  * JOML value/destination objects. Parent assignments that would create a hierarchy cycle are
  * rejected before mutation. Local and parent mutations explicitly invalidate only this transform
  * and its descendants.
  */
 public final class Transform {
-    private static final String CYCLE_ERROR_MESSAGE =
-            "parent assignment would create a transform cycle";
+    private static final String CYCLE_ERROR_MESSAGE = "parent assignment would create a transform cycle";
 
     private final Vector3f localPosition = new Vector3f();
     private final Quaternionf localRotation = new Quaternionf();
@@ -86,11 +86,7 @@ public final class Transform {
         }
 
         double inverseLength = 1.0 / Math.sqrt(lengthSquared);
-        localRotation.set(
-                (float) (x * inverseLength),
-                (float) (y * inverseLength),
-                (float) (z * inverseLength),
-                (float) (w * inverseLength));
+        localRotation.set((float) (x * inverseLength), (float) (y * inverseLength), (float) (z * inverseLength), (float) (w * inverseLength));
         markSubtreeDirty();
     }
 

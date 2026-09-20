@@ -18,9 +18,7 @@ public final class Plane3f {
         requireFinite(normal.z(), "normal.z");
         requireFinite(offset, "offset");
 
-        double lengthSquared = (double) normal.x() * normal.x()
-                + (double) normal.y() * normal.y()
-                + (double) normal.z() * normal.z();
+        double lengthSquared = (double) normal.x() * normal.x() + (double) normal.y() * normal.y() + (double) normal.z() * normal.z();
         if (!(lengthSquared > 0.0) || !Double.isFinite(lengthSquared)) {
             throw new IllegalArgumentException("plane normal must have finite non-zero length");
         }
@@ -42,9 +40,7 @@ public final class Plane3f {
         requireFinite(normal.y(), "normal.y");
         requireFinite(normal.z(), "normal.z");
 
-        double rawOffset = -((double) normal.x() * point.x()
-                + (double) normal.y() * point.y()
-                + (double) normal.z() * point.z());
+        double rawOffset = -((double) normal.x() * point.x() + (double) normal.y() * point.y() + (double) normal.z() * point.z());
         if (!Double.isFinite(rawOffset)) {
             throw new IllegalArgumentException("plane offset must be finite");
         }

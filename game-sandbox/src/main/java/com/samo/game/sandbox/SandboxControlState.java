@@ -19,13 +19,8 @@ final class SandboxControlState {
         sensitivityIndex = indexOfSensitivity(responseSettings.mouseSensitivity());
     }
 
-    boolean apply(
-            EnumSet<SandboxControls.SandboxAction> actions,
-            boolean cursorCaptured,
-            InputActionEvaluator actionEvaluator,
-            Consumer<WindowMode> windowModeSetter,
-            Consumer<Boolean> cursorCaptureSetter,
-            Consumer<String> logSink) {
+    boolean apply(EnumSet<SandboxControls.SandboxAction> actions, boolean cursorCaptured, InputActionEvaluator actionEvaluator, Consumer<WindowMode> windowModeSetter,
+        Consumer<Boolean> cursorCaptureSetter, Consumer<String> logSink) {
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(windowModeSetter, "windowModeSetter");
         Objects.requireNonNull(cursorCaptureSetter, "cursorCaptureSetter");
@@ -44,21 +39,15 @@ final class SandboxControlState {
         if (actions.contains(SandboxControls.SandboxAction.CYCLE_MOUSE_SENSITIVITY)) {
             InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
             sensitivityIndex = (sensitivityIndex + 1) % MOUSE_SENSITIVITIES.length;
-            responseSettings = new InputResponseSettings(
-                    MOUSE_SENSITIVITIES[sensitivityIndex],
-                    responseSettings.invertMouseY(),
-                    responseSettings.controllerDeadZone(),
-                    responseSettings.controllerCurveExponent());
+            responseSettings = new InputResponseSettings(MOUSE_SENSITIVITIES[sensitivityIndex], responseSettings.invertMouseY(), responseSettings.controllerDeadZone(),
+                responseSettings.controllerCurveExponent());
             evaluator.setResponseSettings(responseSettings);
             logSink.accept("Mouse sensitivity -> %.2f".formatted(responseSettings.mouseSensitivity()));
         }
         if (actions.contains(SandboxControls.SandboxAction.TOGGLE_MOUSE_Y_INVERSION)) {
             InputActionEvaluator evaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
-            responseSettings = new InputResponseSettings(
-                    responseSettings.mouseSensitivity(),
-                    !responseSettings.invertMouseY(),
-                    responseSettings.controllerDeadZone(),
-                    responseSettings.controllerCurveExponent());
+            responseSettings = new InputResponseSettings(responseSettings.mouseSensitivity(), !responseSettings.invertMouseY(), responseSettings.controllerDeadZone(),
+                responseSettings.controllerCurveExponent());
             evaluator.setResponseSettings(responseSettings);
             logSink.accept("Mouse Y inversion -> " + responseSettings.invertMouseY());
         }

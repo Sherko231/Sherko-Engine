@@ -84,19 +84,11 @@ class GlfwWindowFocusTest {
 
         window.setCursorCaptured(true);
         assertTrue(window.isCursorEffectivelyCapturedForTest());
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_DISABLED),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_DISABLED), backend.cursorModes);
 
         window.setCursorCaptured(false);
         window.setCursorCaptured(false);
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         window.stop();
         window.close();
@@ -173,24 +165,15 @@ class GlfwWindowFocusTest {
         assertFalse(window.isKeyHeldForTest(GLFW.GLFW_KEY_W));
         assertFalse(window.isMouseButtonHeldForTest(GLFW.GLFW_MOUSE_BUTTON_LEFT));
         assertFalse(window.isCursorEffectivelyCapturedForTest());
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.cursorFailure = null;
         window.pollEvents();
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         window.setCursorCaptured(false);
         assertFalse(window.isCursorEffectivelyCapturedForTest());
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         window.setCursorCaptured(false);
         assertEquals(3, backend.cursorModes.size());
@@ -217,19 +200,12 @@ class GlfwWindowFocusTest {
         RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
         assertSame(releaseFailure, actual);
         assertFalse(window.isCursorEffectivelyCapturedForTest());
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.cursorFailure = null;
         window.stop();
 
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         window.close();
         registry.assertNoOpenResources();
@@ -254,23 +230,12 @@ class GlfwWindowFocusTest {
 
         RuntimeException stopFailure = assertThrows(RuntimeException.class, window::stop);
         assertSame(releaseFailure, stopFailure);
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.cursorFailure = null;
         window.close();
 
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
         registry.assertNoOpenResources();
     }
 
@@ -309,13 +274,8 @@ class GlfwWindowFocusTest {
     }
 
     private static GlfwWindow window(FocusBackend backend, NativeResourceRegistry registry) {
-        return new GlfwWindow(
-                800,
-                600,
-                "P3-T04 focus test",
-                new EngineLogger(event -> { }),
-                registry,
-                backend);
+        return new GlfwWindow(800, 600, "P3-T04 focus test", new EngineLogger(event -> {
+        }), registry, backend);
     }
 
     private static final class FocusBackend implements GlfwNativeBackend {
@@ -489,14 +449,7 @@ class GlfwWindowFocusTest {
         }
 
         @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
+        public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
         }
 
         @Override

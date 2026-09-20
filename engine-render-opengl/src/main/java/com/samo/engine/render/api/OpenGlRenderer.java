@@ -15,7 +15,8 @@ import org.joml.Matrix4fc;
 /**
  * Minimal production OpenGL renderer composition for the fixed indexed reference mesh.
  *
- * <p>The current internal path draws the fixed renderer-owned room once through the opaque baseline
+ * <p>
+ * The current internal path draws the fixed renderer-owned room once through the opaque baseline
  * material, samples one renderer-owned sRGB reference texture, and writes linear shader output
  * through exactly one presentation sRGB encode, using hardware when the default buffer is sRGB or an
  * internal fallback when it is linear. Alternate internal material-state values remain implementation
@@ -38,42 +39,20 @@ public final class OpenGlRenderer implements AutoCloseable {
         this.referenceSceneRenderer = referenceSceneRenderer;
     }
 
-    public static OpenGlRenderer create(
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry nativeResources) {
-        return create(
-                threadGuard,
-                nativeResources,
-                new EngineLogger(event -> System.err.printf(
-                        "[%s] [%s] %s%n",
-                        event.level(),
-                        event.context().subsystem(),
-                        event.message())),
-                8);
+    public static OpenGlRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry nativeResources) {
+        return create(threadGuard, nativeResources, new EngineLogger(event -> System.err.printf("[%s] [%s] %s%n", event.level(), event.context().subsystem(), event.message())), 8);
     }
 
-    public static OpenGlRenderer create(
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry nativeResources,
-            EngineLogger logger,
-            int maxLocalLights) {
+    public static OpenGlRenderer create(OpenGlThreadGuard threadGuard, NativeResourceRegistry nativeResources, EngineLogger logger, int maxLocalLights) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry registry = Objects.requireNonNull(nativeResources, "nativeResources");
         EngineLogger engineLogger = Objects.requireNonNull(logger, "logger");
         if (maxLocalLights < 1 || maxLocalLights > 8) {
             throw new IllegalArgumentException("maxLocalLights must be within [1,8]");
         }
-        return new OpenGlRenderer(ReferenceSceneRenderer.createProduction(
-                guard,
-                registry,
-                engineLogger,
-                maxLocalLights,
-                loadShader("shaders/p5/basic.vert"),
-                loadShader("shaders/p5/basic.frag"),
-                loadShader("shaders/p5/debug-lines.vert"),
-                loadShader("shaders/p5/debug-lines.frag"),
-                loadShader("shaders/p5/view-model.vert"),
-                loadShader("shaders/p5/view-model.frag")));
+        return new OpenGlRenderer(ReferenceSceneRenderer.createProduction(guard, registry, engineLogger, maxLocalLights, loadShader("shaders/p5/basic.vert"),
+            loadShader("shaders/p5/basic.frag"), loadShader("shaders/p5/debug-lines.vert"), loadShader("shaders/p5/debug-lines.frag"), loadShader("shaders/p5/view-model.vert"),
+            loadShader("shaders/p5/view-model.frag")));
     }
 
     public void render(RenderFramePacket frame) {
@@ -83,7 +62,8 @@ public final class OpenGlRenderer implements AutoCloseable {
     /**
      * Returns immutable counters from the latest successfully completed render call.
      *
-     * <p>A failed render does not replace the previously published counters.
+     * <p>
+     * A failed render does not replace the previously published counters.
      */
     public RenderCullingCounters lastCullingCounters() {
         return referenceSceneRenderer.lastCullingCounters();
@@ -92,17 +72,14 @@ public final class OpenGlRenderer implements AutoCloseable {
     /**
      * Returns the bounded text-counter snapshot from the latest successfully completed render call.
      *
-     * <p>A failed render leaves the previously published snapshot unchanged.
+     * <p>
+     * A failed render leaves the previously published snapshot unchanged.
      */
     public List<DebugTextCounter> lastDebugTextCounters() {
         return referenceSceneRenderer.lastDebugTextCounters();
     }
 
-    public void render(
-            Matrix4fc view,
-            Matrix4fc projection,
-            int framebufferWidth,
-            int framebufferHeight) {
+    public void render(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight) {
         render(new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight));
     }
 

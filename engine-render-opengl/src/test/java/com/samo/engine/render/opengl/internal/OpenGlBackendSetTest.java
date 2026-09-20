@@ -11,8 +11,7 @@ class OpenGlBackendSetTest {
     void preservesInjectedAdapterIdentities() {
         OpenGlResourceBackend resources = new LwjglOpenGlResourceBackend();
         OpenGlDrawBackend draw = new LwjglOpenGlDrawBackend();
-        OpenGlUniformBlockReflectionBackend reflection =
-                new LwjglOpenGlUniformBlockReflectionBackend();
+        OpenGlUniformBlockReflectionBackend reflection = new LwjglOpenGlUniformBlockReflectionBackend();
 
         OpenGlBackendSet backends = new OpenGlBackendSet(resources, draw, reflection);
 
@@ -25,13 +24,10 @@ class OpenGlBackendSetTest {
     void rejectsNullAdapters() {
         OpenGlResourceBackend resources = new LwjglOpenGlResourceBackend();
         OpenGlDrawBackend draw = new LwjglOpenGlDrawBackend();
-        OpenGlUniformBlockReflectionBackend reflection =
-                new LwjglOpenGlUniformBlockReflectionBackend();
+        OpenGlUniformBlockReflectionBackend reflection = new LwjglOpenGlUniformBlockReflectionBackend();
 
         assertThrows(NullPointerException.class, () -> new OpenGlBackendSet(null, draw, reflection));
-        assertThrows(
-                NullPointerException.class,
-                () -> new OpenGlBackendSet(resources, null, reflection));
+        assertThrows(NullPointerException.class, () -> new OpenGlBackendSet(resources, null, reflection));
         assertThrows(NullPointerException.class, () -> new OpenGlBackendSet(resources, draw, null));
     }
 
@@ -41,8 +37,6 @@ class OpenGlBackendSetTest {
 
         assertInstanceOf(LwjglOpenGlResourceBackend.class, backends.resourceBackend());
         assertInstanceOf(LwjglOpenGlDrawBackend.class, backends.drawBackend());
-        assertInstanceOf(
-                LwjglOpenGlUniformBlockReflectionBackend.class,
-                backends.reflectionBackend());
+        assertInstanceOf(LwjglOpenGlUniformBlockReflectionBackend.class, backends.reflectionBackend());
     }
 }

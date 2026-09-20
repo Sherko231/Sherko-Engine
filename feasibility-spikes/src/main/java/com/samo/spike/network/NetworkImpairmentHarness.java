@@ -52,28 +52,21 @@ public final class NetworkImpairmentHarness {
         runScenario(mode, basePort, packetCount, timeoutMillis);
     }
 
-    private static void runScenario(
-            ImpairmentMode mode,
-            int port,
-            int packetCount,
-            int timeoutMillis
-    ) throws Exception {
+    private static void runScenario(ImpairmentMode mode, int port, int packetCount, int timeoutMillis) throws Exception {
         System.out.println();
         System.out.printf("=== P0-T11 mode=%s port=%d packets=%d ===%n", mode.cliName, port, packetCount);
 
         CountDownLatch serverReady = new CountDownLatch(1);
         AtomicReference<Throwable> serverFailure = new AtomicReference<>();
 
-        Thread serverThread = Thread.ofPlatform()
-                .name("p0-t11-server-" + mode.cliName)
-                .start(() -> {
-                    try {
-                        runServer(mode, port, packetCount, timeoutMillis, serverReady);
-                    } catch (Throwable failure) {
-                        serverFailure.set(failure);
-                        serverReady.countDown();
-                    }
-                });
+        Thread serverThread = Thread.ofPlatform().name("p0-t11-server-" + mode.cliName).start(() -> {
+            try {
+                runServer(mode, port, packetCount, timeoutMillis, serverReady);
+            } catch (Throwable failure) {
+                serverFailure.set(failure);
+                serverReady.countDown();
+            }
+        });
 
         if (!serverReady.await(2, TimeUnit.SECONDS)) {
             throw new IllegalStateException("Server did not become ready for mode=" + mode.cliName);
@@ -97,13 +90,7 @@ public final class NetworkImpairmentHarness {
         System.out.printf("P0-T11 %s passed: %s%n", mode.cliName, result.summary(mode, packetCount));
     }
 
-    private static void runServer(
-            ImpairmentMode mode,
-            int port,
-            int packetCount,
-            int timeoutMillis,
-            CountDownLatch ready
-    ) throws Exception {
+    private static void runServer(ImpairmentMode mode, int port, int packetCount, int timeoutMillis, CountDownLatch ready) throws Exception {
         try (DatagramChannel channel = DatagramChannel.open()) {
             channel.bind(new InetSocketAddress(HOST, port));
             channel.configureBlocking(false);
@@ -119,10 +106,7 @@ public final class NetworkImpairmentHarness {
                 SocketAddress sender = channel.receive(packet);
                 if (sender == null) {
                     if (System.nanoTime() >= deadlineNanos) {
-                        throw new IllegalStateException(
-                                "Server timed out after receiving " + receivedCount + "/" + packetCount
-                                        + " packets in mode=" + mode.cliName
-                        );
+                        throw new IllegalStateException("Server timed out after receiving " + receivedCount + "/" + packetCount + " packets in mode=" + mode.cliName);
                     }
                     Thread.onSpinWait();
                     continue;
@@ -170,12 +154,7 @@ public final class NetworkImpairmentHarness {
                             System.out.println("Harness reordering: holding seq=2 until seq=3 arrives");
                         } else if (sequence == 3 && heldForReordering != null) {
                             sendEcho(channel, sender, sequence, sentNanos);
-                            sendEcho(
-                                    channel,
-                                    heldForReordering.sender,
-                                    heldForReordering.sequence,
-                                    heldForReordering.sentNanos
-                            );
+                            sendEcho(channel, heldForReordering.sender, heldForReordering.sequence, heldForReordering.sentNanos);
                             System.out.println("Harness reordering: emitted seq=3 before held seq=2");
                             heldForReordering = null;
                         } else {
@@ -186,22 +165,12 @@ public final class NetworkImpairmentHarness {
             }
 
             if (heldForReordering != null) {
-                sendEcho(
-                        channel,
-                        heldForReordering.sender,
-                        heldForReordering.sequence,
-                        heldForReordering.sentNanos
-                );
+                sendEcho(channel, heldForReordering.sender, heldForReordering.sequence, heldForReordering.sentNanos);
             }
         }
     }
 
-    private static ScenarioResult runClient(
-            ImpairmentMode mode,
-            int port,
-            int packetCount,
-            int timeoutMillis
-    ) throws Exception {
+    private static ScenarioResult runClient(ImpairmentMode mode, int port, int packetCount, int timeoutMillis) throws Exception {
         InetSocketAddress serverAddress = new InetSocketAddress(HOST, port);
         int expectedReplies = expectedReplyCount(mode, packetCount);
 
@@ -211,31 +180,29 @@ public final class NetworkImpairmentHarness {
             channel.configureBlocking(false);
 
             AtomicReference<Throwable> senderFailure = new AtomicReference<>();
-            Thread senderThread = Thread.ofPlatform()
-                    .name("p0-t11-client-sender-" + mode.cliName)
-                    .start(() -> {
-                        try {
-                            ByteBuffer outgoing = newPacketBuffer();
-                            for (int sequence = 1; sequence <= packetCount; sequence++) {
-                                long sentNanos = System.nanoTime();
-                                outgoing.clear();
-                                outgoing.putInt(sequence);
-                                outgoing.putLong(sentNanos);
-                                outgoing.flip();
+            Thread senderThread = Thread.ofPlatform().name("p0-t11-client-sender-" + mode.cliName).start(() -> {
+                try {
+                    ByteBuffer outgoing = newPacketBuffer();
+                    for (int sequence = 1; sequence <= packetCount; sequence++) {
+                        long sentNanos = System.nanoTime();
+                        outgoing.clear();
+                        outgoing.putInt(sequence);
+                        outgoing.putLong(sentNanos);
+                        outgoing.flip();
 
-                                while (outgoing.hasRemaining()) {
-                                    channel.write(outgoing);
-                                }
-                                System.out.printf("Client sent seq=%d%n", sequence);
-
-                                if (sequence < packetCount) {
-                                    Thread.sleep(SEND_INTERVAL_MILLIS);
-                                }
-                            }
-                        } catch (Throwable failure) {
-                            senderFailure.set(failure);
+                        while (outgoing.hasRemaining()) {
+                            channel.write(outgoing);
                         }
-                    });
+                        System.out.printf("Client sent seq=%d%n", sequence);
+
+                        if (sequence < packetCount) {
+                            Thread.sleep(SEND_INTERVAL_MILLIS);
+                        }
+                    }
+                } catch (Throwable failure) {
+                    senderFailure.set(failure);
+                }
+            });
 
             ByteBuffer incoming = newPacketBuffer();
             List<Integer> receiveOrder = new ArrayList<>();
@@ -249,10 +216,7 @@ public final class NetworkImpairmentHarness {
                 if (sender == null) {
                     rethrow("Client sender failed", senderFailure.get());
                     if (System.nanoTime() >= deadlineNanos) {
-                        throw new IllegalStateException(
-                                "Client timed out after receiving " + receiveOrder.size() + "/" + expectedReplies
-                                        + " replies in mode=" + mode.cliName
-                        );
+                        throw new IllegalStateException("Client timed out after receiving " + receiveOrder.size() + "/" + expectedReplies + " replies in mode=" + mode.cliName);
                     }
                     Thread.onSpinWait();
                     continue;
@@ -293,34 +257,25 @@ public final class NetworkImpairmentHarness {
                 requireUniqueReplies(result, packetCount);
                 double minimumRtt = result.minimumRttMillis();
                 if (minimumRtt < FIXED_LATENCY_MILLIS - 20.0) {
-                    throw new IllegalStateException(
-                            "Latency was not observable enough; minimum RTT=" + minimumRtt + " ms"
-                    );
+                    throw new IllegalStateException("Latency was not observable enough; minimum RTT=" + minimumRtt + " ms");
                 }
             }
             case JITTER -> {
                 requireUniqueReplies(result, packetCount);
                 double spread = result.maximumRttMillis() - result.minimumRttMillis();
                 if (spread < 25.0) {
-                    throw new IllegalStateException(
-                            "Jitter was not observable enough; RTT spread=" + spread + " ms"
-                    );
+                    throw new IllegalStateException("Jitter was not observable enough; RTT spread=" + spread + " ms");
                 }
             }
             case LOSS -> {
                 int expectedUnique = packetCount - countMatching(packetCount, NetworkImpairmentHarness::shouldDrop);
                 if (result.countsBySequence.size() != expectedUnique) {
-                    throw new IllegalStateException(
-                            "Expected " + expectedUnique + " unique replies after loss but received "
-                                    + result.countsBySequence.size()
-                    );
+                    throw new IllegalStateException("Expected " + expectedUnique + " unique replies after loss but received " + result.countsBySequence.size());
                 }
                 for (int sequence = 1; sequence <= packetCount; sequence++) {
                     boolean received = result.countsBySequence.containsKey(sequence);
                     if (shouldDrop(sequence) == received) {
-                        throw new IllegalStateException(
-                                "Unexpected loss result for seq=" + sequence + "; received=" + received
-                        );
+                        throw new IllegalStateException("Unexpected loss result for seq=" + sequence + "; received=" + received);
                     }
                 }
             }
@@ -330,9 +285,7 @@ public final class NetworkImpairmentHarness {
                     int expected = shouldDuplicate(sequence) ? 2 : 1;
                     int actual = result.countsBySequence.getOrDefault(sequence, 0);
                     if (actual != expected) {
-                        throw new IllegalStateException(
-                                "Expected seq=" + sequence + " count=" + expected + " but got " + actual
-                        );
+                        throw new IllegalStateException("Expected seq=" + sequence + " count=" + expected + " but got " + actual);
                     }
                 }
             }
@@ -341,9 +294,7 @@ public final class NetworkImpairmentHarness {
                 int index2 = result.receiveOrder.indexOf(2);
                 int index3 = result.receiveOrder.indexOf(3);
                 if (index2 < 0 || index3 < 0 || index3 >= index2) {
-                    throw new IllegalStateException(
-                            "Expected seq=3 before seq=2; order=" + result.receiveOrder
-                    );
+                    throw new IllegalStateException("Expected seq=3 before seq=2; order=" + result.receiveOrder);
                 }
             }
         }
@@ -351,9 +302,7 @@ public final class NetworkImpairmentHarness {
 
     private static void requireUniqueReplies(ScenarioResult result, int packetCount) {
         if (result.countsBySequence.size() != packetCount) {
-            throw new IllegalStateException(
-                    "Expected " + packetCount + " unique replies but received " + result.countsBySequence.size()
-            );
+            throw new IllegalStateException("Expected " + packetCount + " unique replies but received " + result.countsBySequence.size());
         }
     }
 
@@ -383,12 +332,7 @@ public final class NetworkImpairmentHarness {
         return sequence % 4 == 0;
     }
 
-    private static void sendEcho(
-            DatagramChannel channel,
-            SocketAddress receiver,
-            int sequence,
-            long sentNanos
-    ) throws IOException {
+    private static void sendEcho(DatagramChannel channel, SocketAddress receiver, int sequence, long sentNanos) throws IOException {
         ByteBuffer response = newPacketBuffer();
         response.putInt(sequence);
         response.putLong(sentNanos);
@@ -409,9 +353,7 @@ public final class NetworkImpairmentHarness {
             throw new IllegalArgumentException("spike.impairmentPort does not leave room for all mode ports");
         }
         if (packetCount < 6) {
-            throw new IllegalArgumentException(
-                    "spike.impairmentPacketCount must be >= 6 so every deterministic impairment is exercised"
-            );
+            throw new IllegalArgumentException("spike.impairmentPacketCount must be >= 6 so every deterministic impairment is exercised");
         }
         if (timeoutMillis < 1) {
             throw new IllegalArgumentException("spike.impairmentTimeoutMillis must be >= 1");
@@ -429,11 +371,7 @@ public final class NetworkImpairmentHarness {
     }
 
     private enum ImpairmentMode {
-        LATENCY("latency"),
-        JITTER("jitter"),
-        LOSS("loss"),
-        DUPLICATION("duplication"),
-        REORDERING("reordering");
+        LATENCY("latency"), JITTER("jitter"), LOSS("loss"), DUPLICATION("duplication"), REORDERING("reordering");
 
         private final String cliName;
 
@@ -447,21 +385,14 @@ public final class NetworkImpairmentHarness {
                     return mode;
                 }
             }
-            throw new IllegalArgumentException(
-                    "Unknown impairment mode: " + value
-                            + ". Expected latency, jitter, loss, duplication, reordering, or all."
-            );
+            throw new IllegalArgumentException("Unknown impairment mode: " + value + ". Expected latency, jitter, loss, duplication, reordering, or all.");
         }
     }
 
     private record HeldPacket(SocketAddress sender, int sequence, long sentNanos) {
     }
 
-    private record ScenarioResult(
-            List<Integer> receiveOrder,
-            Map<Integer, Integer> countsBySequence,
-            Map<Integer, Double> rttBySequence
-    ) {
+    private record ScenarioResult(List<Integer> receiveOrder, Map<Integer, Integer> countsBySequence, Map<Integer, Double> rttBySequence) {
         private double minimumRttMillis() {
             return rttBySequence.values().stream().mapToDouble(Double::doubleValue).min().orElseThrow();
         }
@@ -472,30 +403,10 @@ public final class NetworkImpairmentHarness {
 
         private String summary(ImpairmentMode mode, int packetCount) {
             return switch (mode) {
-                case LATENCY -> String.format(
-                        Locale.ROOT,
-                        "fixed %d ms delay observed; min RTT=%.3f ms",
-                        FIXED_LATENCY_MILLIS,
-                        minimumRttMillis()
-                );
-                case JITTER -> String.format(
-                        Locale.ROOT,
-                        "variable delay observed; RTT range=%.3f..%.3f ms",
-                        minimumRttMillis(),
-                        maximumRttMillis()
-                );
-                case LOSS -> String.format(
-                        Locale.ROOT,
-                        "received %d/%d unique packets with deterministic drops",
-                        countsBySequence.size(),
-                        packetCount
-                );
-                case DUPLICATION -> String.format(
-                        Locale.ROOT,
-                        "received %d datagrams for %d unique sequences with deterministic duplicates",
-                        receiveOrder.size(),
-                        packetCount
-                );
+                case LATENCY -> String.format(Locale.ROOT, "fixed %d ms delay observed; min RTT=%.3f ms", FIXED_LATENCY_MILLIS, minimumRttMillis());
+                case JITTER -> String.format(Locale.ROOT, "variable delay observed; RTT range=%.3f..%.3f ms", minimumRttMillis(), maximumRttMillis());
+                case LOSS -> String.format(Locale.ROOT, "received %d/%d unique packets with deterministic drops", countsBySequence.size(), packetCount);
+                case DUPLICATION -> String.format(Locale.ROOT, "received %d datagrams for %d unique sequences with deterministic duplicates", receiveOrder.size(), packetCount);
                 case REORDERING -> "receive order=" + receiveOrder;
             };
         }

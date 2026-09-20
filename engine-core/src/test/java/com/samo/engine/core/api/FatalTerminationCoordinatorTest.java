@@ -19,8 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class FatalTerminationCoordinatorTest {
-    private static final EngineLogger.Context CONTEXT =
-            new EngineLogger.Context(12L, 34L, "core", null, null);
+    private static final EngineLogger.Context CONTEXT = new EngineLogger.Context(12L, 34L, "core", null, null);
 
     @Test
     void happyPathLogsCleansReverseOrderVerifiesFlushesThenTerminates() {
@@ -39,24 +38,10 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        assertSame(
-                signal,
-                assertThrows(
-                        TerminationSignal.class,
-                        () -> fatal.terminate("fatal", CONTEXT, List.of(first, second), registry)));
+        assertSame(signal, assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(first, second), registry)));
 
         assertEquals(
-                List.of(
-                        "log:FATAL:fatal",
-                        "second:stop",
-                        "second:close",
-                        "second:resource-close",
-                        "first:stop",
-                        "first:close",
-                        "first:resource-close",
-                        "flush",
-                        "terminate:1"),
-                trace);
+            List.of("log:FATAL:fatal", "second:stop", "second:close", "second:resource-close", "first:stop", "first:close", "first:resource-close", "flush", "terminate:1"), trace);
         assertEquals(1, first.resourceCloses.get());
         assertEquals(1, second.resourceCloses.get());
     }
@@ -79,9 +64,7 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        TerminationSignal actual = assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(first, second), registry));
+        TerminationSignal actual = assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(first, second), registry));
 
         assertSame(signal, actual);
         assertEquals(1, actual.getSuppressed().length);
@@ -92,10 +75,7 @@ class FatalTerminationCoordinatorTest {
         assertEquals(1, first.resourceCloses.get());
         assertEquals(1, second.resourceCloses.get());
 
-        EngineLogger.Event error = events.stream()
-                .filter(event -> event.level() == EngineLogger.Level.ERROR)
-                .findFirst()
-                .orElseThrow();
+        EngineLogger.Event error = events.stream().filter(event -> event.level() == EngineLogger.Level.ERROR).findFirst().orElseThrow();
         assertSame(CONTEXT, error.context());
         assertTrue(error.message().contains("1"));
         assertTrue(error.message().contains(second.stopFailure.getClass().getName()));
@@ -120,9 +100,7 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        TerminationSignal actual = assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
+        TerminationSignal actual = assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
         assertEquals(2, actual.getSuppressed().length);
         assertSame(releaseFailure, actual.getSuppressed()[0]);
@@ -170,9 +148,7 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        TerminationSignal actual = assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
+        TerminationSignal actual = assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
         assertEquals(1, errorWrites.get());
         assertEquals(2, actual.getSuppressed().length);
@@ -207,18 +183,14 @@ class FatalTerminationCoordinatorTest {
             terminations.incrementAndGet();
         });
 
-        IllegalStateException returned = assertThrows(
-                IllegalStateException.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
+        IllegalStateException returned = assertThrows(IllegalStateException.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
         assertTrue(returned.getMessage().contains("returned normally"));
         assertEquals(1, returned.getSuppressed().length);
         assertSame(subsystem.stopFailure, returned.getSuppressed()[0]);
         int traceSize = trace.size();
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> fatal.terminate("again", CONTEXT, List.of(subsystem), registry));
+        assertThrows(IllegalStateException.class, () -> fatal.terminate("again", CONTEXT, List.of(subsystem), registry));
         assertEquals(traceSize, trace.size());
         assertEquals(1, terminations.get());
     }
@@ -229,20 +201,14 @@ class FatalTerminationCoordinatorTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 5L);
         AtomicInteger terminations = new AtomicInteger();
-        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(
-                new EngineLogger(new TraceSink(trace)),
-                status -> terminations.incrementAndGet());
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(new EngineLogger(new TraceSink(trace)), status -> terminations.incrementAndGet());
 
         assertThrows(NullPointerException.class, () -> fatal.terminate(null, CONTEXT, List.of(), registry));
         assertThrows(IllegalArgumentException.class, () -> fatal.terminate("   ", CONTEXT, List.of(), registry));
         assertThrows(NullPointerException.class, () -> fatal.terminate("fatal", null, List.of(), registry));
         assertThrows(NullPointerException.class, () -> fatal.terminate("fatal", CONTEXT, null, registry));
-        assertThrows(
-                NullPointerException.class,
-                () -> fatal.terminate("fatal", CONTEXT, Arrays.asList(subsystem, null), registry));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem, subsystem), registry));
+        assertThrows(NullPointerException.class, () -> fatal.terminate("fatal", CONTEXT, Arrays.asList(subsystem, null), registry));
+        assertThrows(IllegalArgumentException.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem, subsystem), registry));
         assertThrows(NullPointerException.class, () -> fatal.terminate("fatal", CONTEXT, List.of(), null));
 
         assertEquals(List.of(), trace);
@@ -258,9 +224,8 @@ class FatalTerminationCoordinatorTest {
         AtomicReference<Throwable> nestedFailure = new AtomicReference<>();
         AtomicInteger terminations = new AtomicInteger();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 6L);
-        subsystem.onStopCallback = () -> nestedFailure.set(assertThrows(
-                IllegalStateException.class,
-                () -> fatalRef.get().terminate("nested", CONTEXT, List.of(subsystem), registry)));
+        subsystem.onStopCallback = () -> nestedFailure
+            .set(assertThrows(IllegalStateException.class, () -> fatalRef.get().terminate("nested", CONTEXT, List.of(subsystem), registry)));
         start(subsystem);
         trace.clear();
 
@@ -270,17 +235,13 @@ class FatalTerminationCoordinatorTest {
         });
         fatalRef.set(fatal);
 
-        assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
+        assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
         int traceSize = trace.size();
 
         assertTrue(nestedFailure.get() instanceof IllegalStateException);
         assertEquals(1, trace.stream().filter("one:stop"::equals).count());
         assertEquals(1, trace.stream().filter("one:close"::equals).count());
-        assertThrows(
-                IllegalStateException.class,
-                () -> fatal.terminate("later", CONTEXT, List.of(subsystem), registry));
+        assertThrows(IllegalStateException.class, () -> fatal.terminate("later", CONTEXT, List.of(subsystem), registry));
         assertEquals(traceSize, trace.size());
         assertEquals(1, terminations.get());
     }
@@ -312,9 +273,7 @@ class FatalTerminationCoordinatorTest {
         });
         assertTrue(fatalWriteEntered.await(5, TimeUnit.SECONDS));
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> fatal.terminate("second", CONTEXT, List.of(), registry));
+        assertThrows(IllegalStateException.class, () -> fatal.terminate("second", CONTEXT, List.of(), registry));
         releaseFatalWrite.countDown();
         first.join(5_000L);
 
@@ -325,23 +284,10 @@ class FatalTerminationCoordinatorTest {
     @Test
     void publicConstructorExitsChildJvmOnlyAfterResourceCleanupAndFlush(@TempDir Path tempDir) throws Exception {
         Path marker = tempDir.resolve("fatal-order.txt");
-        String javaExecutable = Path.of(
-                        System.getProperty("java.home"),
-                        "bin",
-                        isWindows() ? "java.exe" : "java")
-                .toString();
-        String childClasspath = String.join(
-                File.pathSeparator,
-                codeSourcePath(FatalTerminationCoordinatorChildProcess.class),
-                codeSourcePath(FatalTerminationCoordinator.class));
-        Process process = new ProcessBuilder(
-                        javaExecutable,
-                        "-cp",
-                        childClasspath,
-                        FatalTerminationCoordinatorChildProcess.class.getName(),
-                        marker.toString())
-                .redirectErrorStream(true)
-                .start();
+        String javaExecutable = Path.of(System.getProperty("java.home"), "bin", isWindows() ? "java.exe" : "java").toString();
+        String childClasspath = String.join(File.pathSeparator, codeSourcePath(FatalTerminationCoordinatorChildProcess.class), codeSourcePath(FatalTerminationCoordinator.class));
+        Process process = new ProcessBuilder(javaExecutable, "-cp", childClasspath, FatalTerminationCoordinatorChildProcess.class.getName(), marker.toString())
+            .redirectErrorStream(true).start();
 
         boolean finished = process.waitFor(15, TimeUnit.SECONDS);
         if (!finished) {
@@ -350,9 +296,7 @@ class FatalTerminationCoordinatorTest {
 
         assertTrue(finished, "child JVM must terminate within the bounded timeout");
         assertEquals(1, process.exitValue());
-        assertEquals(
-                List.of("fatal", "stop", "close", "resource-close", "flush"),
-                Files.readAllLines(marker));
+        assertEquals(List.of("fatal", "stop", "close", "resource-close", "flush"), Files.readAllLines(marker));
     }
 
     private static String codeSourcePath(Class<?> type) throws Exception {
@@ -387,9 +331,7 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        TerminationSignal actual = assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
+        TerminationSignal actual = assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(subsystem), registry));
 
         assertSame(failure, actual.getSuppressed()[0]);
         assertEquals(2, writes.get());
@@ -415,9 +357,7 @@ class FatalTerminationCoordinatorTest {
             throw signal;
         });
 
-        TerminationSignal actual = assertThrows(
-                TerminationSignal.class,
-                () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+        TerminationSignal actual = assertThrows(TerminationSignal.class, () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
 
         assertEquals(1, actual.getSuppressed().length);
         assertSame(failure, actual.getSuppressed()[0]);
@@ -435,13 +375,9 @@ class FatalTerminationCoordinatorTest {
 
         Throwable actual;
         if (terminationFailure instanceof Error) {
-            actual = assertThrows(
-                    Error.class,
-                    () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+            actual = assertThrows(Error.class, () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
         } else {
-            actual = assertThrows(
-                    RuntimeException.class,
-                    () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
+            actual = assertThrows(RuntimeException.class, () -> fatal.terminate("fatal", CONTEXT, List.of(), registry));
         }
 
         assertSame(terminationFailure, actual);

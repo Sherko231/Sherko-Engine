@@ -25,15 +25,9 @@ class BoundedDynamicBufferUploaderTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> BoundedDynamicBufferUploader.create(0, 4, guard, registry, backend));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> BoundedDynamicBufferUploader.create(1, 0, guard, registry, backend));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> BoundedDynamicBufferUploader.create(2, Long.MAX_VALUE, guard, registry, backend));
+        assertThrows(IllegalArgumentException.class, () -> BoundedDynamicBufferUploader.create(0, 4, guard, registry, backend));
+        assertThrows(IllegalArgumentException.class, () -> BoundedDynamicBufferUploader.create(1, 0, guard, registry, backend));
+        assertThrows(IllegalArgumentException.class, () -> BoundedDynamicBufferUploader.create(2, Long.MAX_VALUE, guard, registry, backend));
 
         assertEquals(0, backend.createdBuffers);
         registry.assertNoOpenResources();
@@ -48,15 +42,12 @@ class BoundedDynamicBufferUploaderTest {
         backend.allocationFailure = primary;
         backend.bufferDeleteFailure = primary;
 
-        RuntimeException actual = assertThrows(
-                RuntimeException.class,
-                () -> BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend));
+        RuntimeException actual = assertThrows(RuntimeException.class, () -> BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend));
 
         assertSame(primary, actual);
         assertEquals(0, actual.getSuppressed().length);
         assertEquals(1, backend.deletedBuffers);
-        IllegalStateException registryFailure =
-                assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
+        IllegalStateException registryFailure = assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
         assertTrue(registryFailure.getMessage().contains("CLOSE_FAILED"));
     }
 
@@ -65,8 +56,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(3, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(3, 4, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice first = uploader.upload(bytes(1, 2, 3, 4));
             BoundedDynamicBufferUploader.Slice second = uploader.upload(bytes(5));
             BoundedDynamicBufferUploader.Slice third = uploader.upload(bytes(6, 7));
@@ -75,7 +65,7 @@ class BoundedDynamicBufferUploaderTest {
             assertEquals(4L, second.offsetBytes());
             assertEquals(8L, third.offsetBytes());
             assertEquals(4, first.lengthBytes());
-            assertArrayEquals(new byte[] {1, 2, 3, 4}, backend.uploads.get(0L));
+            assertArrayEquals(new byte[]{1, 2, 3, 4}, backend.uploads.get(0L));
 
             uploader.markSubmitted(first);
             uploader.markSubmitted(second);
@@ -94,8 +84,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 8, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 8, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice first = uploader.upload(bytes(1, 2));
             uploader.markSubmitted(first);
             backend.fenceStatus = OpenGlResourceBackend.FenceStatus.TIMEOUT;
@@ -118,13 +107,11 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
             uploader.upload(bytes(1));
             int uploadCalls = backend.uploadCalls;
 
-            IllegalStateException failure =
-                    assertThrows(IllegalStateException.class, () -> uploader.upload(bytes(2)));
+            IllegalStateException failure = assertThrows(IllegalStateException.class, () -> uploader.upload(bytes(2)));
 
             assertTrue(failure.getMessage().contains("not submitted"));
             assertEquals(uploadCalls, backend.uploadCalls);
@@ -137,8 +124,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(2, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(2, 4, guard, registry, backend)) {
             assertThrows(IllegalArgumentException.class, () -> uploader.upload(ByteBuffer.allocate(0)));
             assertThrows(IllegalArgumentException.class, () -> uploader.upload(ByteBuffer.allocate(5)));
             assertEquals(0, backend.uploadCalls);
@@ -151,8 +137,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice slice = uploader.upload(bytes(1));
             uploader.markSubmitted(slice);
             int fenceCalls = backend.createdFences;
@@ -169,11 +154,10 @@ class BoundedDynamicBufferUploaderTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
         backend.nextFence = 100L;
-        NativeResourceRegistry.Registration duplicate =
-                registry.register("OpenGL sync", 100L, () -> { });
+        NativeResourceRegistry.Registration duplicate = registry.register("OpenGL sync", 100L, () -> {
+        });
 
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice slice = uploader.upload(bytes(1));
 
             assertThrows(IllegalStateException.class, () -> uploader.markSubmitted(slice));
@@ -192,15 +176,13 @@ class BoundedDynamicBufferUploaderTest {
         backend.nextFence = 100L;
         RuntimeException cleanupFailure = new IllegalStateException("fence delete failed");
         backend.fenceDeleteFailure = cleanupFailure;
-        NativeResourceRegistry.Registration duplicate =
-                registry.register("OpenGL sync", 100L, () -> { });
+        NativeResourceRegistry.Registration duplicate = registry.register("OpenGL sync", 100L, () -> {
+        });
 
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice slice = uploader.upload(bytes(1));
 
-            RuntimeException actual =
-                    assertThrows(RuntimeException.class, () -> uploader.markSubmitted(slice));
+            RuntimeException actual = assertThrows(RuntimeException.class, () -> uploader.markSubmitted(slice));
 
             assertSame(cleanupFailure, actual.getSuppressed()[0]);
             assertEquals(1, actual.getSuppressed().length);
@@ -216,8 +198,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(2, 4, guard, registry, backend);
+        BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(2, 4, guard, registry, backend);
         BoundedDynamicBufferUploader.Slice slice = uploader.upload(bytes(1));
         int uploadCalls = backend.uploadCalls;
         int fenceCalls = backend.createdFences;
@@ -243,8 +224,7 @@ class BoundedDynamicBufferUploaderTest {
         OpenGlThreadGuard guard = boundGuard();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
-        try (BoundedDynamicBufferUploader uploader =
-                BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
+        try (BoundedDynamicBufferUploader uploader = BoundedDynamicBufferUploader.create(1, 4, guard, registry, backend)) {
             BoundedDynamicBufferUploader.Slice first = uploader.upload(bytes(1));
             uploader.markSubmitted(first);
             backend.fenceStatus = OpenGlResourceBackend.FenceStatus.FAILED;
@@ -278,12 +258,8 @@ class BoundedDynamicBufferUploaderTest {
     }
 
     private static OpenGlThreadGuard boundGuard() {
-        GlfwWindow window = new GlfwWindow(
-                1,
-                1,
-                "guard fixture",
-                new EngineLogger(event -> { }),
-                new NativeResourceRegistry());
+        GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
+        }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
         try {
             Method bind = OpenGlThreadGuard.class.getDeclaredMethod("bindOwnerThread", Thread.class);

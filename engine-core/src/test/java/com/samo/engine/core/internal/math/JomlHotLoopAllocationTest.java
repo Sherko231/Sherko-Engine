@@ -25,8 +25,7 @@ final class JomlHotLoopAllocationTest {
     private static final int ALLOCATING_CONTROL_ITERATIONS = 1_024;
     private static final int ALLOCATING_CONTROL_BYTES = 1_024;
     private static final float EPSILON = 1.0e-5f;
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "allocation", "p4-t02-joml-hot-loop-allocation.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "allocation", "p4-t02-joml-hot-loop-allocation.txt");
 
     private static volatile Object allocationSink;
     private static volatile float mathSink;
@@ -66,14 +65,9 @@ final class JomlHotLoopAllocationTest {
             writeReport(evidence);
 
             for (int pass = 0; pass < passDeltas.size(); pass++) {
-                assertEquals(
-                        0L,
-                        passDeltas.get(pass).longValue(),
-                        "Warmed JOML hot-loop pass " + pass + " allocated heap bytes");
+                assertEquals(0L, passDeltas.get(pass).longValue(), "Warmed JOML hot-loop pass " + pass + " allocated heap bytes");
             }
-            assertTrue(
-                    allocatingControlDelta > 0L,
-                    "Allocating control must report positive heap allocation through the same counter");
+            assertTrue(allocatingControlDelta > 0L, "Allocating control must report positive heap allocation through the same counter");
         } finally {
             if (!initiallyEnabled && bean.isThreadAllocatedMemoryEnabled()) {
                 bean.setThreadAllocatedMemoryEnabled(false);
@@ -114,8 +108,7 @@ final class JomlHotLoopAllocationTest {
     private static ThreadMXBean requireThreadAllocationBean() {
         java.lang.management.ThreadMXBean platformBean = ManagementFactory.getThreadMXBean();
         if (!(platformBean instanceof ThreadMXBean allocationBean)) {
-            throw new IllegalStateException(
-                    "Java runtime does not expose com.sun.management.ThreadMXBean allocation accounting");
+            throw new IllegalStateException("Java runtime does not expose com.sun.management.ThreadMXBean allocation accounting");
         }
         if (!allocationBean.isThreadAllocatedMemorySupported()) {
             throw new IllegalStateException("Thread allocation measurement is unsupported by this Java runtime");

@@ -10,14 +10,10 @@ final class OpenGlFramebuffer implements AutoCloseable {
         this.owned = owned;
     }
 
-    static OpenGlFramebuffer create(
-            OpenGlThreadGuard guard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend) {
+    static OpenGlFramebuffer create(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         guard.assertOwnerThread();
         int handle = backend.createFramebuffer();
-        return new OpenGlFramebuffer(OwnedOpenGlHandle.register(
-                "OpenGL framebuffer", handle, guard, registry, backend::deleteFramebuffer));
+        return new OpenGlFramebuffer(OwnedOpenGlHandle.register("OpenGL framebuffer", handle, guard, registry, backend::deleteFramebuffer));
     }
 
     @Override

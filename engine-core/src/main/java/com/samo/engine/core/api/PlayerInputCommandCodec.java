@@ -98,18 +98,11 @@ public final class PlayerInputCommandCodec {
         validateMask("held", heldMask);
         validateMask("released", releasedMask);
 
-        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states =
-                new EnumMap<>(PlayerInputCommand.DigitalAction.class);
+        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = new EnumMap<>(PlayerInputCommand.DigitalAction.class);
         for (int index = 0; index < actions.length; index++) {
             requireFinite("digital value for " + actions[index], values[index]);
             int bit = 1 << index;
-            states.put(
-                    actions[index],
-                    new PlayerInputCommand.DigitalState(
-                            values[index],
-                            (pressedMask & bit) != 0,
-                            (heldMask & bit) != 0,
-                            (releasedMask & bit) != 0));
+            states.put(actions[index], new PlayerInputCommand.DigitalState(values[index], (pressedMask & bit) != 0, (heldMask & bit) != 0, (releasedMask & bit) != 0));
         }
 
         PlayerInputCommand result = new PlayerInputCommand(tickId, moveX, moveY, lookX, lookY, states);

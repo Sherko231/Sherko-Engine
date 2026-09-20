@@ -29,8 +29,7 @@ class SubsystemGraphTest {
         Probe gameplay = new Probe("gameplay", calls);
         Probe renderer = new Probe("renderer", calls);
         Probe assets = new Probe("assets", calls);
-        SubsystemGraph graph = graph(registration("gameplay", gameplay, "renderer"),
-                registration("renderer", renderer, "assets"), registration("assets", assets));
+        SubsystemGraph graph = graph(registration("gameplay", gameplay, "renderer"), registration("renderer", renderer, "assets"), registration("assets", assets));
 
         List<EngineSubsystem> ordered = graph.initializationOrder();
         assertEquals(List.of(assets, renderer, gameplay), ordered);
@@ -43,10 +42,8 @@ class SubsystemGraphTest {
             // The test caller owns this successful composition; no rollback manager is introduced.
             ordered.reversed().forEach(EngineSubsystem::close);
         }
-        assertEquals(List.of("assets.initialize", "renderer.initialize", "gameplay.initialize",
-                "assets.start", "renderer.start", "gameplay.start",
-                "gameplay.stop", "renderer.stop", "assets.stop",
-                "gameplay.close", "renderer.close", "assets.close"), calls);
+        assertEquals(List.of("assets.initialize", "renderer.initialize", "gameplay.initialize", "assets.start", "renderer.start", "gameplay.start", "gameplay.stop",
+            "renderer.stop", "assets.stop", "gameplay.close", "renderer.close", "assets.close"), calls);
         assertEquals(ordered, graph.initializationOrder(), "Resolution does not inspect lifecycle state");
         assertEquals(12, calls.size());
     }
@@ -59,9 +56,8 @@ class SubsystemGraphTest {
         Probe right = new Probe("right", calls);
         Probe shared = new Probe("shared", calls);
         Probe isolated = new Probe("isolated", calls);
-        SubsystemGraph graph = graph(registration("app", app, "right", "left"),
-                registration("isolated", isolated), registration("left", left, "shared"),
-                registration("right", right, "shared"), registration("shared", shared));
+        SubsystemGraph graph = graph(registration("app", app, "right", "left"), registration("isolated", isolated), registration("left", left, "shared"),
+            registration("right", right, "shared"), registration("shared", shared));
 
         assertEquals(List.of(shared, right, left, app, isolated), graph.initializationOrder());
         assertEquals(List.of(shared, right, left, app, isolated), graph.initializationOrder());
@@ -78,19 +74,14 @@ class SubsystemGraphTest {
     @Test
     void cycleInLaterComponentFailsBeforeOwnerInitializesEvenValidRoots() {
         List<String> calls = new ArrayList<>();
-        SubsystemGraph graph = graph(registration("valid", new Probe("valid", calls)),
-                registration("tail", new Probe("tail", calls), "A"),
-                registration("A", new Probe("A", calls), "B"),
-                registration("B", new Probe("B", calls), "C"),
-                registration("C", new Probe("C", calls), "A"));
+        SubsystemGraph graph = graph(registration("valid", new Probe("valid", calls)), registration("tail", new Probe("tail", calls), "A"),
+            registration("A", new Probe("A", calls), "B"), registration("B", new Probe("B", calls), "C"), registration("C", new Probe("C", calls), "A"));
 
         for (int attempt = 0; attempt < 2; attempt++) {
-            IllegalStateException failure = assertThrows(IllegalStateException.class,
-                    () -> graph.initializationOrder().forEach(EngineSubsystem::initialize));
+            IllegalStateException failure = assertThrows(IllegalStateException.class, () -> graph.initializationOrder().forEach(EngineSubsystem::initialize));
             StringWriter diagnostic = new StringWriter();
             new PrintWriter(diagnostic).println(failure.getMessage());
-            assertEquals("Subsystem dependency cycle: A -> B -> C -> A" + System.lineSeparator(),
-                    diagnostic.toString());
+            assertEquals("Subsystem dependency cycle: A -> B -> C -> A" + System.lineSeparator(), diagnostic.toString());
             System.err.print(diagnostic);
             assertTrue(calls.isEmpty(), "No hooks may run, including for the earlier valid component");
         }
@@ -100,16 +91,14 @@ class SubsystemGraphTest {
     void selfDependencyReportsAClosedCycleWithoutHooks() {
         Probe self = new Probe("self", new ArrayList<>());
         SubsystemGraph graph = graph(registration("self", self, "self"));
-        assertEquals("Subsystem dependency cycle: self -> self",
-                assertThrows(IllegalStateException.class, graph::initializationOrder).getMessage());
+        assertEquals("Subsystem dependency cycle: self -> self", assertThrows(IllegalStateException.class, graph::initializationOrder).getMessage());
         assertTrue(self.calls.isEmpty());
     }
 
     @Test
     void rejectsMissingDependencyBeforeLifecycleWork() {
         Probe caller = new Probe("caller", new ArrayList<>());
-        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
-                () -> graph(registration("caller", caller, "missing")));
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () -> graph(registration("caller", caller, "missing")));
         assertEquals("Subsystem caller depends on missing subsystem missing", failure.getMessage());
         assertTrue(caller.calls.isEmpty());
     }
@@ -119,11 +108,10 @@ class SubsystemGraphTest {
         List<String> calls = new ArrayList<>();
         Probe first = new Probe("first", calls);
         Probe second = new Probe("second", calls);
-        assertEquals("Duplicate subsystem ID: same", assertThrows(IllegalArgumentException.class,
-                () -> graph(registration("same", first), registration("same", second))).getMessage());
+        assertEquals("Duplicate subsystem ID: same",
+            assertThrows(IllegalArgumentException.class, () -> graph(registration("same", first), registration("same", second))).getMessage());
         assertEquals("Subsystem instance registered as both first and alias",
-                assertThrows(IllegalArgumentException.class,
-                        () -> graph(registration("first", first), registration("alias", first))).getMessage());
+            assertThrows(IllegalArgumentException.class, () -> graph(registration("first", first), registration("alias", first))).getMessage());
         assertTrue(calls.isEmpty());
     }
 
@@ -132,8 +120,7 @@ class SubsystemGraphTest {
         List<String> calls = new ArrayList<>();
         EqualProbe first = new EqualProbe("first", calls);
         EqualProbe second = new EqualProbe("second", calls);
-        List<EngineSubsystem> ordered = graph(registration("first", first, "second"),
-                registration("second", second)).initializationOrder();
+        List<EngineSubsystem> ordered = graph(registration("first", first, "second"), registration("second", second)).initializationOrder();
         assertEquals(2, ordered.size());
         assertSame(second, ordered.get(0));
         assertSame(first, ordered.get(1));
@@ -146,8 +133,7 @@ class SubsystemGraphTest {
         Probe dependency = new Probe("dependency", new ArrayList<>());
         List<String> dependencies = new ArrayList<>(List.of("dependency"));
         SubsystemGraph.Registration declaration = new SubsystemGraph.Registration("dependent", dependent, dependencies);
-        List<SubsystemGraph.Registration> declarations = new ArrayList<>(List.of(declaration,
-                registration("dependency", dependency)));
+        List<SubsystemGraph.Registration> declarations = new ArrayList<>(List.of(declaration, registration("dependency", dependency)));
         SubsystemGraph graph = new SubsystemGraph(declarations);
         dependencies.clear();
         dependencies.add("missing");
@@ -166,8 +152,7 @@ class SubsystemGraphTest {
         Probe upper = new Probe("A", new ArrayList<>());
         Probe lower = new Probe("a", new ArrayList<>());
         Probe spaced = new Probe(" A ", new ArrayList<>());
-        assertEquals(List.of(spaced, lower, upper), graph(registration("A", upper, "a"),
-                registration("a", lower, " A "), registration(" A ", spaced)).initializationOrder());
+        assertEquals(List.of(spaced, lower, upper), graph(registration("A", upper, "a"), registration("a", lower, " A "), registration(" A ", spaced)).initializationOrder());
         assertThrows(IllegalArgumentException.class, () -> graph(registration("A", upper, "a")));
         assertThrows(IllegalArgumentException.class, () -> graph(registration("A", upper, " A ")));
     }
@@ -184,8 +169,7 @@ class SubsystemGraphTest {
     @Test
     void rejectsRepeatedDependencyIdsAtDeclarationTime() {
         Probe probe = new Probe("probe", new ArrayList<>());
-        assertEquals("Subsystem probe repeats dependency base", assertThrows(IllegalArgumentException.class,
-                () -> registration("probe", probe, "base", "base")).getMessage());
+        assertEquals("Subsystem probe repeats dependency base", assertThrows(IllegalArgumentException.class, () -> registration("probe", probe, "base", "base")).getMessage());
         assertTrue(probe.calls.isEmpty());
     }
 
@@ -210,8 +194,7 @@ class SubsystemGraphTest {
         for (int index = 0; index < count; index++) {
             Probe probe = new Probe("node" + index, calls);
             probes.add(probe);
-            registrations.add(new SubsystemGraph.Registration("node" + index, probe,
-                    index + 1 < count ? List.of("node" + (index + 1)) : List.of()));
+            registrations.add(new SubsystemGraph.Registration("node" + index, probe, index + 1 < count ? List.of("node" + (index + 1)) : List.of()));
         }
         List<EngineSubsystem> order = new SubsystemGraph(registrations).initializationOrder();
         assertEquals(count, order.size());

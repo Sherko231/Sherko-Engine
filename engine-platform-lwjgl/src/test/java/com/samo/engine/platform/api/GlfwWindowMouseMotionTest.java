@@ -85,9 +85,7 @@ class GlfwWindowMouseMotionTest {
         assertFalse(window.isRawMouseMotionEnabledForTest());
         assertFalse(window.isCursorEffectivelyCapturedForTest());
         assertEquals(List.of(true, false), backend.rawTransitions);
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         cleanup(window, registry);
     }
@@ -165,9 +163,7 @@ class GlfwWindowMouseMotionTest {
         assertSame(failure, actual);
         assertFalse(window.isCursorEffectivelyCapturedForTest());
         assertFalse(window.isRawMouseMotionEnabledForTest());
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
         assertEquals(List.of(true, false), backend.rawTransitions);
         assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
 
@@ -232,39 +228,23 @@ class GlfwWindowMouseMotionTest {
         assertTrue(window.isRawMouseMotionEnabledForTest());
         assertMotion(window.drainMouseMotionForTest(), 0.0, 0.0);
         assertEquals(List.of(true, false), backend.rawTransitions);
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.rawDisableFailure = null;
         window.pollEvents();
         assertEquals(List.of(true, false), backend.rawTransitions);
-        assertEquals(
-                List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
-        RuntimeException cursorRetryFailure =
-                assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
+        RuntimeException cursorRetryFailure = assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
         assertSame(cursorFailure, cursorRetryFailure);
         assertFalse(window.isRawMouseMotionEnabledForTest());
         assertEquals(List.of(true, false, false), backend.rawTransitions);
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.cursorNormalFailure = null;
         window.setCursorCaptured(false);
         assertEquals(List.of(true, false, false), backend.rawTransitions);
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         window.stop();
         window.close();
@@ -295,17 +275,11 @@ class GlfwWindowMouseMotionTest {
         assertFalse(window.isCursorEffectivelyCapturedForTest());
 
         backend.cursorNormalFailure = null;
-        RuntimeException retryFailure =
-                assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
+        RuntimeException retryFailure = assertThrows(RuntimeException.class, () -> window.setCursorCaptured(false));
         assertSame(rawFailure, retryFailure);
         assertTrue(window.isRawMouseMotionEnabledForTest());
         assertEquals(List.of(true, false, false), backend.rawTransitions);
-        assertEquals(
-                List.of(
-                        GLFW.GLFW_CURSOR_DISABLED,
-                        GLFW.GLFW_CURSOR_NORMAL,
-                        GLFW.GLFW_CURSOR_NORMAL),
-                backend.cursorModes);
+        assertEquals(List.of(GLFW.GLFW_CURSOR_DISABLED, GLFW.GLFW_CURSOR_NORMAL, GLFW.GLFW_CURSOR_NORMAL), backend.cursorModes);
 
         backend.rawDisableFailure = null;
         window.setCursorCaptured(false);
@@ -359,13 +333,8 @@ class GlfwWindowMouseMotionTest {
     }
 
     private static GlfwWindow window(MotionBackend backend, NativeResourceRegistry registry) {
-        return new GlfwWindow(
-                800,
-                600,
-                "P3-T05 mouse motion test",
-                new EngineLogger(event -> { }),
-                registry,
-                backend);
+        return new GlfwWindow(800, 600, "P3-T05 mouse motion test", new EngineLogger(event -> {
+        }), registry, backend);
     }
 
     private static void start(GlfwWindow window) {
@@ -500,9 +469,7 @@ class GlfwWindowMouseMotionTest {
         }
 
         @Override
-        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-                long handle,
-                GlfwCursorPositionEventSink sink) {
+        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
             if (motionInstallFailure != null) {
                 throw motionInstallFailure;
             }
@@ -580,14 +547,7 @@ class GlfwWindowMouseMotionTest {
         }
 
         @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
+        public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
         }
 
         @Override

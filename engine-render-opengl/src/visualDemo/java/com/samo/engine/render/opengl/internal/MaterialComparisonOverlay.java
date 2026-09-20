@@ -13,36 +13,36 @@ final class MaterialComparisonOverlay implements AutoCloseable {
     private static final int INDEX_BYTES = 6 * Integer.BYTES;
 
     private static final String VERTEX_SHADER = """
-            #version 460 core
-            layout(location = 0) in vec3 position;
-            layout(location = 1) uniform float horizontalOffset;
-            void main() {
-                gl_Position = vec4(position.x + horizontalOffset, position.y, position.z, 1.0);
-            }
-            """;
+        #version 460 core
+        layout(location = 0) in vec3 position;
+        layout(location = 1) uniform float horizontalOffset;
+        void main() {
+            gl_Position = vec4(position.x + horizontalOffset, position.y, position.z, 1.0);
+        }
+        """;
 
     private static final String FRAGMENT_SHADER = """
-            #version 460 core
-            layout(location = 0) uniform vec4 materialColorMultiplier;
-            layout(location = 0) out vec4 color;
+        #version 460 core
+        layout(location = 0) uniform vec4 materialColorMultiplier;
+        layout(location = 0) out vec4 color;
 
-            vec3 linearToSrgb(vec3 linearColor) {
-                bvec3 cutoff = lessThanEqual(linearColor, vec3(0.0031308));
-                vec3 lower = linearColor * 12.92;
-                vec3 upper = 1.055 * pow(linearColor, vec3(1.0 / 2.4)) - 0.055;
-                return mix(upper, lower, cutoff);
-            }
+        vec3 linearToSrgb(vec3 linearColor) {
+            bvec3 cutoff = lessThanEqual(linearColor, vec3(0.0031308));
+            vec3 lower = linearColor * 12.92;
+            vec3 upper = 1.055 * pow(linearColor, vec3(1.0 / 2.4)) - 0.055;
+            return mix(upper, lower, cutoff);
+        }
 
-            void main() {
-            #ifdef SHERKO_MANUAL_SRGB_ENCODE
-                color = vec4(
-                    linearToSrgb(materialColorMultiplier.rgb),
-                    materialColorMultiplier.a);
-            #else
-                color = materialColorMultiplier;
-            #endif
-            }
-            """;
+        void main() {
+        #ifdef SHERKO_MANUAL_SRGB_ENCODE
+            color = vec4(
+                linearToSrgb(materialColorMultiplier.rgb),
+                materialColorMultiplier.a);
+        #else
+            color = materialColorMultiplier;
+        #endif
+        }
+        """;
 
     private final OpenGlDrawBackend draw;
     private final OpenGlVertexArray vertexArray;
@@ -58,19 +58,9 @@ final class MaterialComparisonOverlay implements AutoCloseable {
     private final SrgbPresentationMode presentationMode;
     private boolean closed;
 
-    private MaterialComparisonOverlay(
-            OpenGlDrawBackend draw,
-            OpenGlVertexArray vertexArray,
-            OpenGlBuffer vertexBuffer,
-            OpenGlBuffer indexBuffer,
-            OpenGlTexture texture,
-            OpenGlSampler sampler,
-            OpenGlShader vertexShader,
-            OpenGlShader fragmentShader,
-            OpenGlProgram program,
-            RenderMaterialDescriptor opaque,
-            RenderMaterialDescriptor transparent,
-            SrgbPresentationMode presentationMode) {
+    private MaterialComparisonOverlay(OpenGlDrawBackend draw, OpenGlVertexArray vertexArray, OpenGlBuffer vertexBuffer, OpenGlBuffer indexBuffer, OpenGlTexture texture,
+        OpenGlSampler sampler, OpenGlShader vertexShader, OpenGlShader fragmentShader, OpenGlProgram program, RenderMaterialDescriptor opaque, RenderMaterialDescriptor transparent,
+        SrgbPresentationMode presentationMode) {
         this.draw = draw;
         this.vertexArray = vertexArray;
         this.vertexBuffer = vertexBuffer;
@@ -85,9 +75,7 @@ final class MaterialComparisonOverlay implements AutoCloseable {
         this.presentationMode = presentationMode;
     }
 
-    static MaterialComparisonOverlay create(
-            OpenGlThreadGuard guard,
-            NativeResourceRegistry registry) {
+    static MaterialComparisonOverlay create(OpenGlThreadGuard guard, NativeResourceRegistry registry) {
         OpenGlResourceBackend resources = new LwjglOpenGlResourceBackend();
         OpenGlDrawBackend draw = new LwjglOpenGlDrawBackend();
 
@@ -113,76 +101,23 @@ final class MaterialComparisonOverlay implements AutoCloseable {
             draw.configurePositionNormalUvAttributes(vao.handle(), vertices.handle());
             draw.bindElementBuffer(vao.handle(), indices.handle());
 
-            texture = OpenGlTexture.createRgba8(
-                    guard,
-                    registry,
-                    resources,
-                    TextureColorEncoding.LINEAR_DATA,
-                    1,
-                    1,
-                    ByteBuffer.allocateDirect(4)
-                            .put((byte) 255)
-                            .put((byte) 255)
-                            .put((byte) 255)
-                            .put((byte) 255)
-                            .flip());
+            texture = OpenGlTexture.createRgba8(guard, registry, resources, TextureColorEncoding.LINEAR_DATA, 1, 1,
+                ByteBuffer.allocateDirect(4).put((byte) 255).put((byte) 255).put((byte) 255).put((byte) 255).flip());
             sampler = OpenGlSampler.createLinearClamp(guard, registry, resources);
 
-            SrgbPresentationMode mode = SrgbPresentationMode.fromDefaultFramebufferEncoding(
-                    draw.defaultFramebufferColorEncoding());
+            SrgbPresentationMode mode = SrgbPresentationMode.fromDefaultFramebufferEncoding(draw.defaultFramebufferColorEncoding());
 
-            vertex = OpenGlShader.compile(
-                    OpenGlShader.Stage.VERTEX,
-                    "visual-demo.vert",
-                    VERTEX_SHADER,
-                    guard,
-                    registry,
-                    resources);
-            fragment = OpenGlShader.compile(
-                    OpenGlShader.Stage.FRAGMENT,
-                    "visual-demo.frag",
-                    mode.fragmentSource(FRAGMENT_SHADER),
-                    guard,
-                    registry,
-                    resources);
-            program = OpenGlProgram.link(
-                    "visual-demo-program",
-                    vertex,
-                    fragment,
-                    guard,
-                    registry,
-                    resources);
+            vertex = OpenGlShader.compile(OpenGlShader.Stage.VERTEX, "visual-demo.vert", VERTEX_SHADER, guard, registry, resources);
+            fragment = OpenGlShader.compile(OpenGlShader.Stage.FRAGMENT, "visual-demo.frag", mode.fragmentSource(FRAGMENT_SHADER), guard, registry, resources);
+            program = OpenGlProgram.link("visual-demo-program", vertex, fragment, guard, registry, resources);
 
-            MaterialTextureBinding binding =
-                    new MaterialTextureBinding(0, texture.handle(), sampler.handle());
-            RenderMaterialDescriptor opaque = new RenderMaterialDescriptor(
-                    MaterialShaderVariant.TEXTURED_REFERENCE,
-                    List.of(binding),
-                    new MaterialScalars(0.10f, 0.62f, 1.0f, 1.0f),
-                    MaterialBlendMode.OPAQUE,
-                    MaterialDepthMode.DISABLED,
-                    MaterialCullMode.NONE);
-            RenderMaterialDescriptor transparent = new RenderMaterialDescriptor(
-                    MaterialShaderVariant.TEXTURED_REFERENCE,
-                    List.of(binding),
-                    new MaterialScalars(0.10f, 0.62f, 1.0f, 0.32f),
-                    MaterialBlendMode.ALPHA_BLEND,
-                    MaterialDepthMode.DISABLED,
-                    MaterialCullMode.NONE);
+            MaterialTextureBinding binding = new MaterialTextureBinding(0, texture.handle(), sampler.handle());
+            RenderMaterialDescriptor opaque = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding),
+                new MaterialScalars(0.10f, 0.62f, 1.0f, 1.0f), MaterialBlendMode.OPAQUE, MaterialDepthMode.DISABLED, MaterialCullMode.NONE);
+            RenderMaterialDescriptor transparent = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding),
+                new MaterialScalars(0.10f, 0.62f, 1.0f, 0.32f), MaterialBlendMode.ALPHA_BLEND, MaterialDepthMode.DISABLED, MaterialCullMode.NONE);
 
-            return new MaterialComparisonOverlay(
-                    draw,
-                    vao,
-                    vertices,
-                    indices,
-                    texture,
-                    sampler,
-                    vertex,
-                    fragment,
-                    program,
-                    opaque,
-                    transparent,
-                    mode);
+            return new MaterialComparisonOverlay(draw, vao, vertices, indices, texture, sampler, vertex, fragment, program, opaque, transparent, mode);
         } catch (RuntimeException | Error failure) {
             closeSuppressing(failure, program);
             closeSuppressing(failure, fragment);

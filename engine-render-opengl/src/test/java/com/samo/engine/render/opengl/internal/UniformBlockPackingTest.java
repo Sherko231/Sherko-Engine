@@ -11,18 +11,9 @@ import org.junit.jupiter.api.Test;
 class UniformBlockPackingTest {
     @Test
     void cameraMatricesPackerWritesHandwrittenStd140Offsets() {
-        Matrix4f view = new Matrix4f().set(
-                1, 2, 3, 4,
-                5, 6, 7, 8,
-                9, 10, 11, 12,
-                13, 14, 15, 16);
-        Matrix4f projection = new Matrix4f().set(
-                21, 22, 23, 24,
-                25, 26, 27, 28,
-                29, 30, 31, 32,
-                33, 34, 35, 36);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES + 8)
-                .order(ByteOrder.nativeOrder());
+        Matrix4f view = new Matrix4f().set(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        Matrix4f projection = new Matrix4f().set(21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES + 8).order(ByteOrder.nativeOrder());
         buffer.position(4);
 
         CameraMatricesUniformBlock.write(view, projection, buffer);
@@ -36,8 +27,7 @@ class UniformBlockPackingTest {
 
     @Test
     void framebufferMetricsPackerWritesFramebufferAndInverseAtOffsetZero() {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES)
-                .order(ByteOrder.nativeOrder());
+        ByteBuffer buffer = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
 
         FramebufferMetricsUniformBlock.write(1920, 1080, buffer);
 
@@ -52,16 +42,12 @@ class UniformBlockPackingTest {
     void invalidInputsFailBeforeDestinationPositionChanges() {
         ByteBuffer camera = ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES - 1);
         int cameraStart = camera.position();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> CameraMatricesUniformBlock.write(new Matrix4f(), new Matrix4f(), camera));
+        assertThrows(IllegalArgumentException.class, () -> CameraMatricesUniformBlock.write(new Matrix4f(), new Matrix4f(), camera));
         assertEquals(cameraStart, camera.position());
 
         ByteBuffer framebufferMetrics = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES);
         int frameStart = framebufferMetrics.position();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> FramebufferMetricsUniformBlock.write(0, 1080, framebufferMetrics));
+        assertThrows(IllegalArgumentException.class, () -> FramebufferMetricsUniformBlock.write(0, 1080, framebufferMetrics));
         assertEquals(frameStart, framebufferMetrics.position());
     }
 

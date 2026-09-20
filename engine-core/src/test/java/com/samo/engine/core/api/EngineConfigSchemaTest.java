@@ -66,10 +66,7 @@ class EngineConfigSchemaTest {
 
     @Test
     void onlyLockedTickRateIsAccepted() {
-        assertEquals(
-                60,
-                schema.validate(Map.of("simulation.tickRate", entry("60", "locked")))
-                        .get(EngineConfigSchema.TICK_RATE));
+        assertEquals(60, schema.validate(Map.of("simulation.tickRate", entry("60", "locked"))).get(EngineConfigSchema.TICK_RATE));
         assertSingleError("simulation.tickRate", "59", "tick-59");
         assertSingleError("simulation.tickRate", "61", "tick-61");
         assertSingleError("simulation.tickRate", "120", "tick-120");
@@ -77,8 +74,7 @@ class EngineConfigSchemaTest {
 
     @Test
     void integerParsingTrimsWhitespace() {
-        Map<String, ConfigEntry> raw = Map.of(
-                "fullscreen.width", entry(" 2560 \t", "trimmed"));
+        Map<String, ConfigEntry> raw = Map.of("fullscreen.width", entry(" 2560 \t", "trimmed"));
 
         assertEquals(2560, schema.validate(raw).get(EngineConfigSchema.FULLSCREEN_WIDTH));
     }
@@ -86,10 +82,8 @@ class EngineConfigSchemaTest {
     @Test
     void malformedIntegerPreservesSource() {
         ConfigSource source = new ConfigSource("game.properties:9");
-        ConfigValidationException exception = assertThrows(
-                ConfigValidationException.class,
-                () -> schema.validate(Map.of(
-                        "fullscreen.height", new ConfigEntry("not-a-number", source))));
+        ConfigValidationException exception = assertThrows(ConfigValidationException.class,
+            () -> schema.validate(Map.of("fullscreen.height", new ConfigEntry("not-a-number", source))));
 
         assertEquals(1, exception.errors().size());
         assertEquals("fullscreen.height", exception.errors().getFirst().key());
@@ -100,10 +94,7 @@ class EngineConfigSchemaTest {
     @Test
     void unknownKeyIsRejectedWithSource() {
         ConfigSource source = new ConfigSource("command line");
-        ConfigValidationException exception = assertThrows(
-                ConfigValidationException.class,
-                () -> schema.validate(Map.of(
-                        "mystery.setting", new ConfigEntry("true", source))));
+        ConfigValidationException exception = assertThrows(ConfigValidationException.class, () -> schema.validate(Map.of("mystery.setting", new ConfigEntry("true", source))));
 
         assertEquals("mystery.setting", exception.errors().getFirst().key());
         assertSame(source, exception.errors().getFirst().source());
@@ -120,13 +111,10 @@ class EngineConfigSchemaTest {
         raw.put("simulation.tickRate", new ConfigEntry("120", tickSource));
         raw.put("mystery.setting", new ConfigEntry("true", unknownSource));
 
-        ConfigValidationException exception =
-                assertThrows(ConfigValidationException.class, () -> schema.validate(raw));
+        ConfigValidationException exception = assertThrows(ConfigValidationException.class, () -> schema.validate(raw));
 
         assertEquals("Configuration validation failed with 3 error(s)", exception.getMessage());
-        assertEquals(
-                List.of("fullscreen.width", "simulation.tickRate", "mystery.setting"),
-                exception.errors().stream().map(ConfigError::key).toList());
+        assertEquals(List.of("fullscreen.width", "simulation.tickRate", "mystery.setting"), exception.errors().stream().map(ConfigError::key).toList());
         assertSame(widthSource, exception.errors().get(0).source());
         assertSame(tickSource, exception.errors().get(1).source());
         assertSame(unknownSource, exception.errors().get(2).source());
@@ -135,17 +123,10 @@ class EngineConfigSchemaTest {
     @Test
     void successfulOutputAndFailureErrorsAreImmutable() {
         Map<ConfigKey<?>, Object> config = schema.validate(Map.of());
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> config.put(EngineConfigSchema.FULLSCREEN_WIDTH, 800));
+        assertThrows(UnsupportedOperationException.class, () -> config.put(EngineConfigSchema.FULLSCREEN_WIDTH, 800));
 
-        ConfigValidationException exception = assertThrows(
-                ConfigValidationException.class,
-                () -> schema.validate(Map.of("mystery.setting", entry("x", "test"))));
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> exception.errors().add(
-                        new ConfigError("other", new ConfigSource("test"), "bad")));
+        ConfigValidationException exception = assertThrows(ConfigValidationException.class, () -> schema.validate(Map.of("mystery.setting", entry("x", "test"))));
+        assertThrows(UnsupportedOperationException.class, () -> exception.errors().add(new ConfigError("other", new ConfigSource("test"), "bad")));
     }
 
     @Test
@@ -174,21 +155,17 @@ class EngineConfigSchemaTest {
         raw.put("fullscreen.width", entry("0", "game.properties:4"));
         raw.put("simulation.tickRate", entry("120", "game.properties:8"));
 
-        assertThrows(
-                ConfigValidationException.class,
-                () -> {
-                    schema.validate(raw);
-                    subsystem.initialize();
-                });
+        assertThrows(ConfigValidationException.class, () -> {
+            schema.validate(raw);
+            subsystem.initialize();
+        });
 
         assertEquals(0, subsystem.initializeCalls);
     }
 
     private void assertSingleError(String key, String value, String sourceDescription) {
         ConfigSource source = new ConfigSource(sourceDescription);
-        ConfigValidationException exception = assertThrows(
-                ConfigValidationException.class,
-                () -> schema.validate(Map.of(key, new ConfigEntry(value, source))));
+        ConfigValidationException exception = assertThrows(ConfigValidationException.class, () -> schema.validate(Map.of(key, new ConfigEntry(value, source))));
 
         assertEquals(1, exception.errors().size());
         assertEquals(key, exception.errors().getFirst().key());

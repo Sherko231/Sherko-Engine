@@ -58,10 +58,7 @@ final class GlfwCursorCaptureController {
             return;
         }
 
-        if (!captureRequested
-                && !captureEffective
-                && !cursorNormalizationPending
-                && !rawMouseMotionEnabled) {
+        if (!captureRequested && !captureEffective && !cursorNormalizationPending && !rawMouseMotionEnabled) {
             mouseMotion.reset();
             captureNeedsExplicitRearm = false;
             return;
@@ -101,12 +98,10 @@ final class GlfwCursorCaptureController {
     void releaseForCleanup(long windowHandle, List<Throwable> failures) {
         mouseMotion.reset();
         captureEffective = false;
-        if (rawMouseMotionEnabled
-                && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
+        if (rawMouseMotionEnabled && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
             rawMouseMotionEnabled = false;
         }
-        if (cursorNormalizationPending
-                && runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
+        if (cursorNormalizationPending && runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
             cursorNormalizationPending = false;
         }
         captureRequested = false;
@@ -171,12 +166,10 @@ final class GlfwCursorCaptureController {
         captureNeedsExplicitRearm = false;
 
         List<Throwable> failures = new ArrayList<>();
-        if (rawMouseMotionEnabled
-                && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
+        if (rawMouseMotionEnabled && runCleanup(failures, () -> backend.setRawMouseMotion(windowHandle, false))) {
             rawMouseMotionEnabled = false;
         }
-        if (cursorNormalizationPending
-                && runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
+        if (cursorNormalizationPending && runCleanup(failures, () -> backend.setCursorMode(windowHandle, GLFW.GLFW_CURSOR_NORMAL))) {
             cursorNormalizationPending = false;
         }
         throwCleanupFailure(failures);

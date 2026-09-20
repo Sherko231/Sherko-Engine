@@ -14,8 +14,7 @@ import org.junit.jupiter.api.Test;
 
 final class TransformTest {
     private static final float EPSILON = 1.0e-5f;
-    private static final String CYCLE_ERROR_MESSAGE =
-            "parent assignment would create a transform cycle";
+    private static final String CYCLE_ERROR_MESSAGE = "parent assignment would create a transform cycle";
     private static final Field WORLD_REVISION_FIELD = worldRevisionField();
 
     @Test
@@ -53,8 +52,7 @@ final class TransformTest {
     @Test
     void parentPositiveYRotationRotatesChildLocalTranslation() {
         Transform parent = new Transform();
-        parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f,
-                (float) Math.cos(Math.PI / 4.0));
+        parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f, (float) Math.cos(Math.PI / 4.0));
         Transform child = new Transform();
         child.setLocalPosition(0.0f, 0.0f, -2.0f);
         child.setParent(parent);
@@ -77,14 +75,12 @@ final class TransformTest {
     void combinedParentAndChildTrsMatchesIndependentPointOracle() {
         Transform parent = new Transform();
         parent.setLocalPosition(10.0f, 1.0f, -5.0f);
-        parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f,
-                (float) Math.cos(Math.PI / 4.0));
+        parent.setLocalRotation(0.0f, (float) Math.sin(Math.PI / 4.0), 0.0f, (float) Math.cos(Math.PI / 4.0));
         parent.setLocalScale(2.0f, 3.0f, 4.0f);
 
         Transform child = new Transform();
         child.setLocalPosition(1.0f, 2.0f, -1.0f);
-        child.setLocalRotation(0.0f, 0.0f, (float) Math.sin(Math.PI / 4.0),
-                (float) Math.cos(Math.PI / 4.0));
+        child.setLocalRotation(0.0f, 0.0f, (float) Math.sin(Math.PI / 4.0), (float) Math.cos(Math.PI / 4.0));
         child.setLocalScale(0.5f, 2.0f, 1.0f);
         child.setParent(parent);
 
@@ -143,8 +139,7 @@ final class TransformTest {
         transform.setParent(originalParent);
         assertTransformedPoint(transform, 0.0f, 0.0f, 0.0f, 6.0f, 0.0f, 0.0f);
 
-        IllegalArgumentException error =
-                assertThrows(IllegalArgumentException.class, () -> transform.setParent(transform));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> transform.setParent(transform));
 
         assertEquals(CYCLE_ERROR_MESSAGE, error.getMessage());
         assertSame(originalParent, transform.parent());
@@ -166,8 +161,7 @@ final class TransformTest {
         c.setParent(b);
 
         assertTransformedPoint(c, 0.0f, 0.0f, 0.0f, 16.0f, 0.0f, 0.0f);
-        IllegalArgumentException error =
-                assertThrows(IllegalArgumentException.class, () -> a.setParent(c));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> a.setParent(c));
 
         assertEquals(CYCLE_ERROR_MESSAGE, error.getMessage());
         assertSame(rootParent, a.parent());
@@ -422,8 +416,7 @@ final class TransformTest {
         scaleInput.set(99.0f, 99.0f, 99.0f);
 
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
-        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x,
-                expectedRotation.y, expectedRotation.z, expectedRotation.w);
+        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x, expectedRotation.y, expectedRotation.z, expectedRotation.w);
         assertVector(transform.localScale(new Vector3f()), 2.0f, 3.0f, 4.0f);
 
         Vector3f positionDestination = transform.localPosition(new Vector3f());
@@ -432,8 +425,7 @@ final class TransformTest {
 
         Quaternionf rotationDestination = transform.localRotation(new Quaternionf());
         rotationDestination.identity();
-        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x,
-                expectedRotation.y, expectedRotation.z, expectedRotation.w);
+        assertQuaternion(transform.localRotation(new Quaternionf()), expectedRotation.x, expectedRotation.y, expectedRotation.z, expectedRotation.w);
 
         Matrix4f worldDestination = transform.worldMatrix(new Matrix4f());
         worldDestination.zero();
@@ -453,10 +445,8 @@ final class TransformTest {
         transform.setLocalRotation(0.0f, 0.0f, 1.0f, 1.0f);
         Quaternionf before = transform.localRotation(new Quaternionf());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> transform.setLocalRotation(0.0f, 0.0f, 0.0f, 0.0f));
-        assertThrows(IllegalArgumentException.class,
-                () -> transform.setLocalRotation(Float.NaN, 0.0f, 0.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> transform.setLocalRotation(0.0f, 0.0f, 0.0f, 0.0f));
+        assertThrows(IllegalArgumentException.class, () -> transform.setLocalRotation(Float.NaN, 0.0f, 0.0f, 1.0f));
 
         Quaternionf after = transform.localRotation(new Quaternionf());
         assertQuaternion(after, before.x, before.y, before.z, before.w);
@@ -468,10 +458,8 @@ final class TransformTest {
         transform.setLocalPosition(1.0f, 2.0f, 3.0f);
         transform.setLocalScale(4.0f, 5.0f, 6.0f);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> transform.setLocalPosition(7.0f, Float.POSITIVE_INFINITY, 9.0f));
-        assertThrows(IllegalArgumentException.class,
-                () -> transform.setLocalScale(Float.NaN, 8.0f, 9.0f));
+        assertThrows(IllegalArgumentException.class, () -> transform.setLocalPosition(7.0f, Float.POSITIVE_INFINITY, 9.0f));
+        assertThrows(IllegalArgumentException.class, () -> transform.setLocalScale(Float.NaN, 8.0f, 9.0f));
 
         assertVector(transform.localPosition(new Vector3f()), 1.0f, 2.0f, 3.0f);
         assertVector(transform.localScale(new Vector3f()), 4.0f, 5.0f, 6.0f);
@@ -512,14 +500,7 @@ final class TransformTest {
         assertThrows(NullPointerException.class, () -> transform.setLocalScale((Vector3f) null));
     }
 
-    private static void assertTransformedPoint(
-            Transform transform,
-            float inputX,
-            float inputY,
-            float inputZ,
-            float expectedX,
-            float expectedY,
-            float expectedZ) {
+    private static void assertTransformedPoint(Transform transform, float inputX, float inputY, float inputZ, float expectedX, float expectedY, float expectedZ) {
         Matrix4f matrix = transform.worldMatrix(new Matrix4f());
         Vector3f actual = new Vector3f(inputX, inputY, inputZ);
         matrix.transformPosition(actual);

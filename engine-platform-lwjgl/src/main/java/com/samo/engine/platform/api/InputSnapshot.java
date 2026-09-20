@@ -17,18 +17,9 @@ public final class InputSnapshot {
     private final double mouseDeltaX;
     private final double mouseDeltaY;
 
-    InputSnapshot(
-            long frameId,
-            boolean focused,
-            boolean cursorCaptured,
-            EnumSet<InputKey> heldKeys,
-            EnumSet<InputKey> pressedKeys,
-            EnumSet<InputKey> releasedKeys,
-            EnumSet<InputMouseButton> heldMouseButtons,
-            EnumSet<InputMouseButton> pressedMouseButtons,
-            EnumSet<InputMouseButton> releasedMouseButtons,
-            double mouseDeltaX,
-            double mouseDeltaY) {
+    InputSnapshot(long frameId, boolean focused, boolean cursorCaptured, EnumSet<InputKey> heldKeys, EnumSet<InputKey> pressedKeys, EnumSet<InputKey> releasedKeys,
+        EnumSet<InputMouseButton> heldMouseButtons, EnumSet<InputMouseButton> pressedMouseButtons, EnumSet<InputMouseButton> releasedMouseButtons, double mouseDeltaX,
+        double mouseDeltaY) {
         if (frameId < 0L) {
             throw new IllegalArgumentException("frameId must be non-negative");
         }

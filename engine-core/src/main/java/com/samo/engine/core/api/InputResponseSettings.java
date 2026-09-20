@@ -1,19 +1,13 @@
 package com.samo.engine.core.api;
 
 /** Immutable deterministic input-response settings shared across platform adapters. */
-public record InputResponseSettings(
-        double mouseSensitivity,
-        boolean invertMouseY,
-        double controllerDeadZone,
-        double controllerCurveExponent) {
+public record InputResponseSettings(double mouseSensitivity, boolean invertMouseY, double controllerDeadZone, double controllerCurveExponent) {
 
     public InputResponseSettings {
         if (!Double.isFinite(mouseSensitivity) || mouseSensitivity < 0.0d) {
             throw new IllegalArgumentException("mouseSensitivity must be finite and >= 0");
         }
-        if (!Double.isFinite(controllerDeadZone)
-                || controllerDeadZone < 0.0d
-                || controllerDeadZone >= 1.0d) {
+        if (!Double.isFinite(controllerDeadZone) || controllerDeadZone < 0.0d || controllerDeadZone >= 1.0d) {
             throw new IllegalArgumentException("controllerDeadZone must be finite and in [0, 1)");
         }
         if (!Double.isFinite(controllerCurveExponent) || controllerCurveExponent <= 0.0d) {

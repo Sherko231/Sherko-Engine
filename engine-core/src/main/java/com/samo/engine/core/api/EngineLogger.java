@@ -6,7 +6,8 @@ import java.util.Objects;
 /**
  * Synchronous structured runtime logging boundary with caller-owned sink semantics.
  *
- * <p>The logger captures timestamp and caller-thread identity automatically. Sink callbacks
+ * <p>
+ * The logger captures timestamp and caller-thread identity automatically. Sink callbacks
  * are serialized across concurrent callers, but the logger owns no background thread,
  * buffering, retry policy, persistence format, or sink lifetime.
  */
@@ -17,8 +18,10 @@ public final class EngineLogger {
     /**
      * Creates a logger that forwards every valid event to the supplied caller-owned sink.
      *
-     * @param sink synchronous event sink
-     * @throws NullPointerException if {@code sink} is null
+     * @param sink
+     *            synchronous event sink
+     * @throws NullPointerException
+     *             if {@code sink} is null
      */
     public EngineLogger(Sink sink) {
         this.sink = Objects.requireNonNull(sink, "sink");
@@ -27,11 +30,16 @@ public final class EngineLogger {
     /**
      * Emits one structured event synchronously.
      *
-     * @param level severity label
-     * @param message nonblank message preserved as supplied
-     * @param context immutable structured context
-     * @throws NullPointerException if level, message, or context is null
-     * @throws IllegalArgumentException if message is blank
+     * @param level
+     *            severity label
+     * @param message
+     *            nonblank message preserved as supplied
+     * @param context
+     *            immutable structured context
+     * @throws NullPointerException
+     *             if level, message, or context is null
+     * @throws IllegalArgumentException
+     *             if message is blank
      */
     public void log(Level level, String message, Context context) {
         Level eventLevel = Objects.requireNonNull(level, "level");
@@ -42,13 +50,7 @@ public final class EngineLogger {
         }
 
         Thread caller = Thread.currentThread();
-        Event event = new Event(
-                Instant.now(),
-                eventLevel,
-                eventMessage,
-                caller.threadId(),
-                caller.getName(),
-                eventContext);
+        Event event = new Event(Instant.now(), eventLevel, eventMessage, caller.threadId(), caller.getName(), eventContext);
 
         synchronized (sinkLock) {
             sink.write(event);
@@ -64,23 +66,14 @@ public final class EngineLogger {
 
     /** Fixed severity labels. The logger performs no threshold filtering. */
     public enum Level {
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR,
-        FATAL
+        DEBUG, INFO, WARN, ERROR, FATAL
     }
 
     /**
      * Optional structured context for one event. Missing values are represented only by
      * {@code null}.
      */
-    public record Context(
-            Long frame,
-            Long simulationTick,
-            String subsystem,
-            String connection,
-            String entity) {
+    public record Context(Long frame, Long simulationTick, String subsystem, String connection, String entity) {
 
         /** Validates numeric fields and normalizes present string fields with {@link String#strip()}. */
         public Context {
@@ -113,13 +106,7 @@ public final class EngineLogger {
     }
 
     /** Immutable structured event passed to the sink. */
-    public record Event(
-            Instant timestamp,
-            Level level,
-            String message,
-            long threadId,
-            String threadName,
-            Context context) {
+    public record Event(Instant timestamp, Level level, String message, long threadId, String threadName, Context context) {
     }
 
     /** Caller-owned synchronous event sink. */

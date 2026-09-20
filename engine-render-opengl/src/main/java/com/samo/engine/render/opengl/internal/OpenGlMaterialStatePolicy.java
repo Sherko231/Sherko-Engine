@@ -4,17 +4,8 @@ import java.util.Objects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-record OpenGlMaterialStatePolicy(
-        boolean blendEnabled,
-        int blendEquation,
-        int blendSourceFactor,
-        int blendDestinationFactor,
-        boolean depthTestEnabled,
-        boolean depthWriteEnabled,
-        int depthFunction,
-        boolean cullEnabled,
-        int cullFace,
-        int frontFace) {
+record OpenGlMaterialStatePolicy(boolean blendEnabled, int blendEquation, int blendSourceFactor, int blendDestinationFactor, boolean depthTestEnabled, boolean depthWriteEnabled,
+    int depthFunction, boolean cullEnabled, int cullFace, int frontFace) {
 
     static OpenGlMaterialStatePolicy from(RenderMaterialDescriptor material) {
         RenderMaterialDescriptor value = Objects.requireNonNull(material, "material");
@@ -72,16 +63,7 @@ record OpenGlMaterialStatePolicy(
             default -> throw new IllegalStateException("Unhandled cull mode: " + value.cullMode());
         }
 
-        return new OpenGlMaterialStatePolicy(
-                blendEnabled,
-                GL14.GL_FUNC_ADD,
-                blendSource,
-                blendDestination,
-                depthEnabled,
-                depthWrite,
-                GL11.GL_LESS,
-                cullEnabled,
-                cullFace,
-                GL11.GL_CCW);
+        return new OpenGlMaterialStatePolicy(blendEnabled, GL14.GL_FUNC_ADD, blendSource, blendDestination, depthEnabled, depthWrite, GL11.GL_LESS, cullEnabled, cullFace,
+            GL11.GL_CCW);
     }
 }

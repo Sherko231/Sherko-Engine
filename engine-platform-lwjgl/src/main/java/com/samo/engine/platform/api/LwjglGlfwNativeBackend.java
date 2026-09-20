@@ -118,14 +118,8 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
 
     @Override
     public OpenGlDebugCallbackRegistration installOpenGlDebugCallback(OpenGlDebugEventSink sink) {
-        GLDebugMessageCallback callback = GLDebugMessageCallback.create(
-                (source, type, id, severity, length, message, userParam) ->
-                        sink.onMessage(
-                                source,
-                                type,
-                                id,
-                                severity,
-                                GLDebugMessageCallback.getMessage(length, message)));
+        GLDebugMessageCallback callback = GLDebugMessageCallback
+            .create((source, type, id, severity, length, message, userParam) -> sink.onMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message)));
         try {
             GL11.glEnable(GL43.GL_DEBUG_OUTPUT);
             GL11.glEnable(GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -153,12 +147,9 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
 
     @Override
     public GlfwSizeCallbackRegistration installSizeCallbacks(long handle, GlfwSizeEventSink sink) {
-        GLFWWindowSizeCallback logical = GLFWWindowSizeCallback.create(
-                (window, callbackWidth, callbackHeight) ->
-                        sink.onLogicalSize(callbackWidth, callbackHeight));
-        GLFWFramebufferSizeCallback framebuffer = GLFWFramebufferSizeCallback.create(
-                (window, callbackWidth, callbackHeight) ->
-                        sink.onFramebufferSize(callbackWidth, callbackHeight));
+        GLFWWindowSizeCallback logical = GLFWWindowSizeCallback.create((window, callbackWidth, callbackHeight) -> sink.onLogicalSize(callbackWidth, callbackHeight));
+        GLFWFramebufferSizeCallback framebuffer = GLFWFramebufferSizeCallback
+            .create((window, callbackWidth, callbackHeight) -> sink.onFramebufferSize(callbackWidth, callbackHeight));
         boolean logicalInstalled = false;
         try {
             GLFW.glfwSetWindowSizeCallback(handle, logical);
@@ -199,12 +190,9 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
 
     @Override
     public GlfwInputCallbackRegistration installInputCallbacks(long handle, GlfwInputEventSink sink) {
-        GLFWWindowFocusCallback focus =
-                GLFWWindowFocusCallback.create((window, focused) -> sink.onFocus(focused));
-        GLFWKeyCallback key = GLFWKeyCallback.create(
-                (window, callbackKey, scancode, action, mods) -> sink.onKey(callbackKey, action));
-        GLFWMouseButtonCallback mouseButton = GLFWMouseButtonCallback.create(
-                (window, button, action, mods) -> sink.onMouseButton(button, action));
+        GLFWWindowFocusCallback focus = GLFWWindowFocusCallback.create((window, focused) -> sink.onFocus(focused));
+        GLFWKeyCallback key = GLFWKeyCallback.create((window, callbackKey, scancode, action, mods) -> sink.onKey(callbackKey, action));
+        GLFWMouseButtonCallback mouseButton = GLFWMouseButtonCallback.create((window, button, action, mods) -> sink.onMouseButton(button, action));
         boolean focusInstalled = false;
         boolean keyInstalled = false;
         try {
@@ -261,11 +249,8 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
     }
 
     @Override
-    public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-            long handle,
-            GlfwCursorPositionEventSink sink) {
-        GLFWCursorPosCallback cursorPosition =
-                GLFWCursorPosCallback.create((window, x, y) -> sink.onCursorPosition(x, y));
+    public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
+        GLFWCursorPosCallback cursorPosition = GLFWCursorPosCallback.create((window, x, y) -> sink.onCursorPosition(x, y));
         try {
             GLFW.glfwSetCursorPosCallback(handle, cursorPosition);
             return new GlfwCursorPositionCallbackRegistration(cursorPosition);
@@ -280,9 +265,7 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
     }
 
     @Override
-    public void releaseCursorPositionCallback(
-            long handle,
-            GlfwCursorPositionCallbackRegistration state) {
+    public void releaseCursorPositionCallback(long handle, GlfwCursorPositionCallbackRegistration state) {
         List<Throwable> failures = new ArrayList<>();
         runCleanup(failures, () -> GLFW.glfwSetCursorPosCallback(handle, null));
         runCleanup(failures, () -> ((GLFWCursorPosCallback) state.cursorPosition()).free());
@@ -306,10 +289,7 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
 
     @Override
     public void setRawMouseMotion(long handle, boolean enabled) {
-        GLFW.glfwSetInputMode(
-                handle,
-                GLFW.GLFW_RAW_MOUSE_MOTION,
-                enabled ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
+        GLFW.glfwSetInputMode(handle, GLFW.GLFW_RAW_MOUSE_MOTION, enabled ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
     }
 
     @Override
@@ -368,21 +348,11 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
 
     @Override
     public void setDecorated(long handle, boolean decorated) {
-        GLFW.glfwSetWindowAttrib(
-                handle,
-                GLFW.GLFW_DECORATED,
-                decorated ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
+        GLFW.glfwSetWindowAttrib(handle, GLFW.GLFW_DECORATED, decorated ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
     }
 
     @Override
-    public void setWindowMonitor(
-            long handle,
-            long monitor,
-            int x,
-            int y,
-            int width,
-            int height,
-            int refreshRate) {
+    public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
         GLFW.glfwSetWindowMonitor(handle, monitor, x, y, width, height, refreshRate);
     }
 

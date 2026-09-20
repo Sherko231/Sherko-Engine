@@ -24,24 +24,16 @@ import org.junit.jupiter.api.Test;
 
 class GlfwWindowNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P3_T01_NATIVE";
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p3", "p3-t01-glfw-window.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "p3", "p3-t01-glfw-window.txt");
 
     @Test
     void createsRealOpenGl46WindowLogsActualIdentityAndCleansOwnership() throws Exception {
-        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P3-T01 native acceptance");
-        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P3-T01 native acceptance targets Windows x64");
+        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T01 native acceptance");
+        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T01 native acceptance targets Windows x64");
 
         List<EngineLogger.Event> events = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        GlfwWindow window = new GlfwWindow(
-                640,
-                360,
-                "Sherko Engine P3-T01 Native Acceptance",
-                new EngineLogger(events::add),
-                registry);
+        GlfwWindow window = new GlfwWindow(640, 360, "Sherko Engine P3-T01 Native Acceptance", new EngineLogger(events::add), registry);
 
         String actualVersion = null;
         String actualRenderer = null;
@@ -62,8 +54,7 @@ class GlfwWindowNativeTest {
             actualRenderer = glGetString(GL_RENDERER);
 
             String observedVersion = actualMajor + "." + actualMinor;
-            assertTrue(actualMajor > 4 || actualMajor == 4 && actualMinor >= 6,
-                    "expected OpenGL >= 4.6 but observed " + observedVersion);
+            assertTrue(actualMajor > 4 || actualMajor == 4 && actualMinor >= 6, "expected OpenGL >= 4.6 but observed " + observedVersion);
             assertTrue(actualVersion != null && !actualVersion.isBlank());
             assertTrue(actualRenderer != null && !actualRenderer.isBlank());
             assertEquals(2, events.size());
@@ -103,27 +94,13 @@ class GlfwWindowNativeTest {
         assertEquals("platform", event.context().subsystem());
     }
 
-    private static void writeReport(
-            int actualMajor,
-            int actualMinor,
-            String actualVersion,
-            String actualRenderer) throws IOException {
+    private static void writeReport(int actualMajor, int actualMinor, String actualVersion, String actualRenderer) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
-        List<String> lines = List.of(
-                "task=P3-T01",
-                "result=PASS",
-                "requested.context=4.6 Core",
-                "actual.major=" + actualMajor,
-                "actual.minor=" + actualMinor,
-                "actual.version=" + actualVersion,
-                "actual.renderer=" + actualRenderer,
-                "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
-                "java.version=" + System.getProperty("java.version"),
-                "os.name=" + System.getProperty("os.name"),
-                "os.arch=" + System.getProperty("os.arch"),
-                "lifecycle.cleanup=PASS",
-                "native.resource.registry.empty.after.cleanup=true",
-                "evidence.scope=single production GLFW/OpenGL window-context lifecycle; not P0-T13 soak or P0-T14 repeated lifecycle evidence");
+        List<String> lines = List.of("task=P3-T01", "result=PASS", "requested.context=4.6 Core", "actual.major=" + actualMajor, "actual.minor=" + actualMinor,
+            "actual.version=" + actualVersion, "actual.renderer=" + actualRenderer, "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
+            "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"), "lifecycle.cleanup=PASS",
+            "native.resource.registry.empty.after.cleanup=true",
+            "evidence.scope=single production GLFW/OpenGL window-context lifecycle; not P0-T13 soak or P0-T14 repeated lifecycle evidence");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
     }
 

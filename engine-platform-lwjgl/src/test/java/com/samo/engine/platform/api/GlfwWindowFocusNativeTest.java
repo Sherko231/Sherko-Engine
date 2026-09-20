@@ -25,24 +25,16 @@ import org.lwjgl.system.MemoryUtil;
 
 class GlfwWindowFocusNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P3_T04_NATIVE";
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p3", "p3-t04-focus-loss.txt");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "p3", "p3-t04-focus-loss.txt");
 
     @Test
-    void productionWindowReleasesCaptureOnRealFocusTransferAndRequiresExplicitRecapture()
-            throws Exception {
-        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P3-T04 native acceptance");
-        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P3-T04 native acceptance targets Windows x64");
+    void productionWindowReleasesCaptureOnRealFocusTransferAndRequiresExplicitRecapture() throws Exception {
+        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P3-T04 native acceptance");
+        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P3-T04 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        GlfwWindow window = new GlfwWindow(
-                960,
-                540,
-                "Sherko Engine P3-T04 Native Acceptance",
-                new EngineLogger(event -> { }),
-                registry);
+        GlfwWindow window = new GlfwWindow(960, 540, "Sherko Engine P3-T04 Native Acceptance", new EngineLogger(event -> {
+        }), registry);
 
         boolean started = false;
         boolean stopAttempted = false;
@@ -131,28 +123,15 @@ class GlfwWindowFocusNativeTest {
         }
     }
 
-    private static void writeReport(
-            int capturedMode,
-            int lostMode,
-            int regainedMode,
-            int recapturedMode) throws IOException {
+    private static void writeReport(int capturedMode, int lostMode, int regainedMode, int recapturedMode) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
-        List<String> lines = List.of(
-                "task=P3-T04",
-                "result=PASS",
-                "focus.transfer=test-only second GLFW helper window via glfwFocusWindow",
-                "cursor.mode.initial.capture=" + capturedMode,
-                "cursor.mode.after.focus.loss=" + lostMode,
-                "cursor.mode.after.focus.regain=" + regainedMode,
-                "cursor.mode.after.explicit.recapture=" + recapturedMode,
-                "no.auto.recapture=true",
-                "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
-                "java.version=" + System.getProperty("java.version"),
-                "os.name=" + System.getProperty("os.name"),
-                "os.arch=" + System.getProperty("os.arch"),
-                "native.resource.registry.empty.after.cleanup=true",
-                "manual.alt.tab.scenario=Capture cursor, hold movement key, Alt+Tab away, release key while unfocused, Alt+Tab back; P3-T06 must later observe released state rather than a stuck key.",
-                "evidence.limit=focus/cursor production path proven; public InputSnapshot is not implemented by P3-T04");
+        List<String> lines = List.of("task=P3-T04", "result=PASS", "focus.transfer=test-only second GLFW helper window via glfwFocusWindow",
+            "cursor.mode.initial.capture=" + capturedMode, "cursor.mode.after.focus.loss=" + lostMode, "cursor.mode.after.focus.regain=" + regainedMode,
+            "cursor.mode.after.explicit.recapture=" + recapturedMode, "no.auto.recapture=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
+            "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
+            "native.resource.registry.empty.after.cleanup=true",
+            "manual.alt.tab.scenario=Capture cursor, hold movement key, Alt+Tab away, release key while unfocused, Alt+Tab back; P3-T06 must later observe released state rather than a stuck key.",
+            "evidence.limit=focus/cursor production path proven; public InputSnapshot is not implemented by P3-T04");
         Files.write(REPORT_PATH, lines, StandardCharsets.UTF_8);
     }
 

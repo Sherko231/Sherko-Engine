@@ -32,11 +32,7 @@ class ViewFrustumExtractorTest {
         assertFalse(frustum.intersects(aabb(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f)));
     }
 
-    private static Aabb3f aabb(
-            float minX, float minY, float minZ,
-            float maxX, float maxY, float maxZ) {
-        return new Aabb3f(
-                new Vector3f(minX, minY, minZ),
-                new Vector3f(maxX, maxY, maxZ));
+    private static Aabb3f aabb(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+        return new Aabb3f(new Vector3f(minX, minY, minZ), new Vector3f(maxX, maxY, maxZ));
     }
 }

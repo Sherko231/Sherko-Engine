@@ -13,13 +13,8 @@ class RenderMaterialDescriptorTest {
     void retainsCompleteImmutableMaterialValueWithoutOwningResources() {
         MaterialTextureBinding binding = new MaterialTextureBinding(0, 31, 41);
         MaterialScalars scalars = new MaterialScalars(1.0f, 0.5f, 0.25f, 0.75f);
-        RenderMaterialDescriptor material = new RenderMaterialDescriptor(
-                MaterialShaderVariant.TEXTURED_REFERENCE,
-                List.of(binding),
-                scalars,
-                MaterialBlendMode.ALPHA_BLEND,
-                MaterialDepthMode.TEST_NO_WRITE,
-                MaterialCullMode.NONE);
+        RenderMaterialDescriptor material = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding), scalars, MaterialBlendMode.ALPHA_BLEND,
+            MaterialDepthMode.TEST_NO_WRITE, MaterialCullMode.NONE);
 
         assertEquals(MaterialShaderVariant.TEXTURED_REFERENCE, material.shaderVariant());
         assertEquals(List.of(binding), material.textures());
@@ -33,13 +28,8 @@ class RenderMaterialDescriptorTest {
     void mapsEveryMaterialStateModeDeterministically() {
         MaterialTextureBinding binding = new MaterialTextureBinding(0, 31, 41);
 
-        RenderMaterialDescriptor opaqueBack = new RenderMaterialDescriptor(
-                MaterialShaderVariant.TEXTURED_REFERENCE,
-                List.of(binding),
-                MaterialScalars.identity(),
-                MaterialBlendMode.OPAQUE,
-                MaterialDepthMode.TEST_WRITE,
-                MaterialCullMode.BACK);
+        RenderMaterialDescriptor opaqueBack = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding), MaterialScalars.identity(),
+            MaterialBlendMode.OPAQUE, MaterialDepthMode.TEST_WRITE, MaterialCullMode.BACK);
         OpenGlMaterialStatePolicy opaqueBackPolicy = OpenGlMaterialStatePolicy.from(opaqueBack);
         assertEquals(false, opaqueBackPolicy.blendEnabled());
         assertEquals(GL14.GL_FUNC_ADD, opaqueBackPolicy.blendEquation());
@@ -52,13 +42,8 @@ class RenderMaterialDescriptorTest {
         assertEquals(GL11.GL_BACK, opaqueBackPolicy.cullFace());
         assertEquals(GL11.GL_CCW, opaqueBackPolicy.frontFace());
 
-        RenderMaterialDescriptor alphaFront = new RenderMaterialDescriptor(
-                MaterialShaderVariant.TEXTURED_REFERENCE,
-                List.of(binding),
-                MaterialScalars.identity(),
-                MaterialBlendMode.ALPHA_BLEND,
-                MaterialDepthMode.TEST_NO_WRITE,
-                MaterialCullMode.FRONT);
+        RenderMaterialDescriptor alphaFront = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding), MaterialScalars.identity(),
+            MaterialBlendMode.ALPHA_BLEND, MaterialDepthMode.TEST_NO_WRITE, MaterialCullMode.FRONT);
         OpenGlMaterialStatePolicy alphaFrontPolicy = OpenGlMaterialStatePolicy.from(alphaFront);
         assertEquals(true, alphaFrontPolicy.blendEnabled());
         assertEquals(GL11.GL_SRC_ALPHA, alphaFrontPolicy.blendSourceFactor());
@@ -68,13 +53,8 @@ class RenderMaterialDescriptorTest {
         assertEquals(true, alphaFrontPolicy.cullEnabled());
         assertEquals(GL11.GL_FRONT, alphaFrontPolicy.cullFace());
 
-        RenderMaterialDescriptor disabled = new RenderMaterialDescriptor(
-                MaterialShaderVariant.TEXTURED_REFERENCE,
-                List.of(binding),
-                MaterialScalars.identity(),
-                MaterialBlendMode.OPAQUE,
-                MaterialDepthMode.DISABLED,
-                MaterialCullMode.NONE);
+        RenderMaterialDescriptor disabled = new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(binding), MaterialScalars.identity(),
+            MaterialBlendMode.OPAQUE, MaterialDepthMode.DISABLED, MaterialCullMode.NONE);
         OpenGlMaterialStatePolicy disabledPolicy = OpenGlMaterialStatePolicy.from(disabled);
         assertEquals(false, disabledPolicy.depthTestEnabled());
         assertEquals(false, disabledPolicy.depthWriteEnabled());
@@ -86,17 +66,9 @@ class RenderMaterialDescriptorTest {
         assertThrows(IllegalArgumentException.class, () -> new MaterialTextureBinding(-1, 1, 1));
         assertThrows(IllegalArgumentException.class, () -> new MaterialTextureBinding(0, 0, 1));
         assertThrows(IllegalArgumentException.class, () -> new MaterialTextureBinding(0, 1, 0));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderMaterialDescriptor(
-                        MaterialShaderVariant.TEXTURED_REFERENCE,
-                        List.of(
-                                new MaterialTextureBinding(0, 1, 1),
-                                new MaterialTextureBinding(1, 2, 2)),
-                        MaterialScalars.identity(),
-                        MaterialBlendMode.OPAQUE,
-                        MaterialDepthMode.TEST_WRITE,
-                        MaterialCullMode.BACK));
+        assertThrows(IllegalArgumentException.class,
+            () -> new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(new MaterialTextureBinding(0, 1, 1), new MaterialTextureBinding(1, 2, 2)),
+                MaterialScalars.identity(), MaterialBlendMode.OPAQUE, MaterialDepthMode.TEST_WRITE, MaterialCullMode.BACK));
     }
 
     @Test
@@ -104,8 +76,6 @@ class RenderMaterialDescriptorTest {
         assertThrows(IllegalArgumentException.class, () -> new MaterialScalars(Float.NaN, 1.0f, 1.0f, 1.0f));
         assertThrows(IllegalArgumentException.class, () -> new MaterialScalars(1.1f, 1.0f, 1.0f, 1.0f));
         assertThrows(IllegalArgumentException.class, () -> new MaterialScalars(1.0f, -0.1f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new MaterialScalars(1.0f, 1.0f, Float.POSITIVE_INFINITY, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new MaterialScalars(1.0f, 1.0f, Float.POSITIVE_INFINITY, 1.0f));
     }
 }

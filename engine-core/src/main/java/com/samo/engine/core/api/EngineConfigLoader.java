@@ -18,10 +18,7 @@ public final class EngineConfigLoader {
     public EngineConfigLoader() {
     }
 
-    public Map<ConfigKey<?>, Object> load(
-            Path gameConfig,
-            Path userConfig,
-            Map<String, String> commandLineOverrides) throws IOException {
+    public Map<ConfigKey<?>, Object> load(Path gameConfig, Path userConfig, Map<String, String> commandLineOverrides) throws IOException {
         Objects.requireNonNull(gameConfig, "gameConfig");
         Objects.requireNonNull(userConfig, "userConfig");
         Objects.requireNonNull(commandLineOverrides, "commandLineOverrides");
@@ -72,35 +69,23 @@ public final class EngineConfigLoader {
                 }
 
                 String value = line.substring(separator + 1);
-                replaceEffective(
-                        effective,
-                        key,
-                        new ConfigEntry(value, new ConfigSource(normalized + ":" + lineNumber)));
+                replaceEffective(effective, key, new ConfigEntry(value, new ConfigSource(normalized + ":" + lineNumber)));
             }
         }
     }
 
-    private static void mergeCommandLine(
-            Map<String, ConfigEntry> effective,
-            Map<String, String> commandLineOverrides) {
+    private static void mergeCommandLine(Map<String, ConfigEntry> effective, Map<String, String> commandLineOverrides) {
         for (Map.Entry<String, String> entry : commandLineOverrides.entrySet()) {
-            replaceEffective(
-                    effective,
-                    entry.getKey(),
-                    new ConfigEntry(entry.getValue(), new ConfigSource("command line")));
+            replaceEffective(effective, entry.getKey(), new ConfigEntry(entry.getValue(), new ConfigSource("command line")));
         }
     }
 
-    private static void replaceEffective(
-            Map<String, ConfigEntry> effective,
-            String key,
-            ConfigEntry value) {
+    private static void replaceEffective(Map<String, ConfigEntry> effective, String key, ConfigEntry value) {
         effective.remove(key);
         effective.put(key, value);
     }
 
     private static IllegalArgumentException malformed(Path path, int lineNumber, String detail) {
-        return new IllegalArgumentException(
-                "Malformed configuration file " + path + ":" + lineNumber + ": " + detail);
+        return new IllegalArgumentException("Malformed configuration file " + path + ":" + lineNumber + ": " + detail);
     }
 }

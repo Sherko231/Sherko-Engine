@@ -16,16 +16,8 @@ final class RendererVisualDemoLoop {
     private RendererVisualDemoLoop() {
     }
 
-    static void run(
-            GlfwWindow window,
-            OpenGlRenderer renderer,
-            MaterialComparisonOverlay overlay,
-            RendererVisualDemoFramebufferSize framebuffer) {
-        Matrix4f view = CameraMatrices.view(
-                new Vector3f(0.0f, 0.0f, 2.0f),
-                new Vector3f(0.0f, 0.0f, -1.0f),
-                new Vector3f(0.0f, 1.0f, 0.0f),
-                new Matrix4f());
+    static void run(GlfwWindow window, OpenGlRenderer renderer, MaterialComparisonOverlay overlay, RendererVisualDemoFramebufferSize framebuffer) {
+        Matrix4f view = CameraMatrices.view(new Vector3f(0.0f, 0.0f, 2.0f), new Vector3f(0.0f, 0.0f, -1.0f), new Vector3f(0.0f, 1.0f, 0.0f), new Matrix4f());
         Matrix4f projection = new Matrix4f();
 
         EngineClock clock = new EngineClock();
@@ -40,29 +32,15 @@ final class RendererVisualDemoLoop {
 
             window.pollEvents();
             InputSnapshot input = window.captureInputSnapshot(inputFrame++);
-            exit = input.keyPressed(InputKey.ESCAPE)
-                    || (input.keyPressed(InputKey.Q)
-                            && (input.keyHeld(InputKey.LEFT_CONTROL)
-                                    || input.keyHeld(InputKey.RIGHT_CONTROL)));
+            exit = input.keyPressed(InputKey.ESCAPE) || (input.keyPressed(InputKey.Q) && (input.keyHeld(InputKey.LEFT_CONTROL) || input.keyHeld(InputKey.RIGHT_CONTROL)));
 
             int width = framebuffer.width();
             int height = framebuffer.height();
             if (!exit && width > 0 && height > 0) {
-                CameraMatrices.perspective(
-                        (float) Math.toRadians(70.0),
-                        (float) width / height,
-                        0.1f,
-                        100.0f,
-                        projection);
+                CameraMatrices.perspective((float) Math.toRadians(70.0), (float) width / height, 0.1f, 100.0f, projection);
 
                 AnimatedDemoLighting.LightingFrame lighting = AnimatedDemoLighting.at(seconds);
-                RenderFramePacket frame = new RenderFramePacket(
-                        view,
-                        projection,
-                        width,
-                        height,
-                        lighting.lights(),
-                        new DebugFrame(lighting.debugPrimitives(), List.of()));
+                RenderFramePacket frame = new RenderFramePacket(view, projection, width, height, lighting.lights(), new DebugFrame(lighting.debugPrimitives(), List.of()));
 
                 renderer.render(frame);
                 overlay.render(width, height);

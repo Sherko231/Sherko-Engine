@@ -247,13 +247,8 @@ class GlfwWindowInputSnapshotTest {
     }
 
     private static GlfwWindow window(SnapshotBackend backend, NativeResourceRegistry registry) {
-        return new GlfwWindow(
-                800,
-                600,
-                "P3-T06 input snapshot test",
-                new EngineLogger(event -> { }),
-                registry,
-                backend);
+        return new GlfwWindow(800, 600, "P3-T06 input snapshot test", new EngineLogger(event -> {
+        }), registry, backend);
     }
 
     private static void start(GlfwWindow window) {
@@ -380,9 +375,7 @@ class GlfwWindowInputSnapshotTest {
         }
 
         @Override
-        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(
-                long handle,
-                GlfwCursorPositionEventSink sink) {
+        public GlfwCursorPositionCallbackRegistration installCursorPositionCallback(long handle, GlfwCursorPositionEventSink sink) {
             motionSink = sink;
             return new GlfwCursorPositionCallbackRegistration(new Object());
         }
@@ -436,14 +429,7 @@ class GlfwWindowInputSnapshotTest {
         }
 
         @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
+        public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
         }
 
         @Override

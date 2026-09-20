@@ -11,8 +11,7 @@ final class InputActionBindingsValidator {
     private InputActionBindingsValidator() {
     }
 
-    static Map<InputAction, List<InputBinding>> validateAndCopy(
-            Map<InputAction, ? extends List<InputBinding>> bindings) {
+    static Map<InputAction, List<InputBinding>> validateAndCopy(Map<InputAction, ? extends List<InputBinding>> bindings) {
         Objects.requireNonNull(bindings, "bindings");
 
         EnumMap<InputAction, List<InputBinding>> copy = new EnumMap<>(InputAction.class);
@@ -30,8 +29,7 @@ final class InputActionBindingsValidator {
                 InputBinding nonNullBinding = Objects.requireNonNull(binding, "binding for " + action);
                 validateActionComponent(action, nonNullBinding);
                 if (bindingCopy.contains(nonNullBinding)) {
-                    throw new IllegalArgumentException(
-                            "duplicate binding for action " + action + ": " + nonNullBinding);
+                    throw new IllegalArgumentException("duplicate binding for action " + action + ": " + nonNullBinding);
                 }
                 bindingCopy.add(nonNullBinding);
             }

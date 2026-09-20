@@ -53,9 +53,7 @@ final class GlfwDeferredSizeDelivery {
 
     static void validateDimensions(String kind, GlfwDimensions dimensions) {
         if (dimensions.width() < 0 || dimensions.height() < 0) {
-            throw new IllegalStateException(
-                    "GLFW reported negative " + kind + " dimensions: "
-                            + dimensions.width() + "x" + dimensions.height());
+            throw new IllegalStateException("GLFW reported negative " + kind + " dimensions: " + dimensions.width() + "x" + dimensions.height());
         }
     }
 }

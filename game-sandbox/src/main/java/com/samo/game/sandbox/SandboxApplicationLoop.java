@@ -36,14 +36,8 @@ final class SandboxApplicationLoop {
     private long inputFrameId;
     private PlayerInputCommand latestCommand;
 
-    SandboxApplicationLoop(
-            GlfwWindow window,
-            OpenGlRenderer renderer,
-            SandboxFramebufferSize framebufferSize,
-            EngineLogger logger,
-            InputActionEvaluator actionEvaluator,
-            PlayerInputCommandSampler commandSampler,
-            InputResponseSettings initialResponseSettings) {
+    SandboxApplicationLoop(GlfwWindow window, OpenGlRenderer renderer, SandboxFramebufferSize framebufferSize, EngineLogger logger, InputActionEvaluator actionEvaluator,
+        PlayerInputCommandSampler commandSampler, InputResponseSettings initialResponseSettings) {
         this.window = Objects.requireNonNull(window, "window");
         this.renderer = Objects.requireNonNull(renderer, "renderer");
         this.framebufferSize = Objects.requireNonNull(framebufferSize, "framebufferSize");
@@ -65,26 +59,13 @@ final class SandboxApplicationLoop {
             window.pollEvents();
             InputSnapshot latestInput = window.captureInputSnapshot(inputFrameId++);
 
-            SandboxControls.SandboxControlInput ownerInput = new SandboxControls.SandboxControlInput(
-                    latestInput.keyPressed(InputKey.F),
-                    latestInput.keyPressed(InputKey.R),
-                    latestInput.keyPressed(InputKey.Q),
-                    latestInput.keyHeld(InputKey.RIGHT_SHIFT),
-                    latestInput.keyHeld(InputKey.LEFT_CONTROL),
-                    latestInput.keyHeld(InputKey.RIGHT_CONTROL));
+            SandboxControls.SandboxControlInput ownerInput = new SandboxControls.SandboxControlInput(latestInput.keyPressed(InputKey.F), latestInput.keyPressed(InputKey.R),
+                latestInput.keyPressed(InputKey.Q), latestInput.keyHeld(InputKey.RIGHT_SHIFT), latestInput.keyHeld(InputKey.LEFT_CONTROL),
+                latestInput.keyHeld(InputKey.RIGHT_CONTROL));
             EnumSet<SandboxControls.SandboxAction> ownerActions = SandboxControls.resolve(ownerInput);
 
-            exitRequested = controlState.apply(
-                    ownerActions,
-                    latestInput.cursorCaptured(),
-                    actionEvaluator,
-                    window::setWindowMode,
-                    window::setCursorCaptured,
-                    message -> SandboxMain.log(
-                            logger,
-                            EngineLogger.Level.INFO,
-                            message,
-                            cumulativeTicks));
+            exitRequested = controlState.apply(ownerActions, latestInput.cursorCaptured(), actionEvaluator, window::setWindowMode, window::setCursorCaptured,
+                message -> SandboxMain.log(logger, EngineLogger.Level.INFO, message, cumulativeTicks));
 
             InputActionSnapshot latestActions = actionEvaluator.evaluate(latestInput);
             commandSampler.submit(latestActions);
@@ -97,31 +78,18 @@ final class SandboxApplicationLoop {
             cumulativeTicks += dueTicks;
 
             if (!exitRequested && framebufferSize.width() > 0 && framebufferSize.height() > 0) {
-                RenderFramePacket renderFrame =
-                        sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId());
+                RenderFramePacket renderFrame = sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId());
                 renderer.render(renderFrame);
                 window.present();
             }
 
-            diagnostics.publishIfDue(
-                    accumulator,
-                    latestInput,
-                    latestActions,
-                    latestCommand,
-                    controlState,
-                    renderer,
-                    logger,
-                    cumulativeTicks);
+            diagnostics.publishIfDue(accumulator, latestInput, latestActions, latestCommand, controlState, renderer, logger, cumulativeTicks);
 
             if (!exitRequested) {
                 Thread.sleep(5L);
             }
         }
 
-        SandboxMain.log(
-                logger,
-                EngineLogger.Level.INFO,
-                "Sandbox exit requested by Ctrl+Q",
-                cumulativeTicks);
+        SandboxMain.log(logger, EngineLogger.Level.INFO, "Sandbox exit requested by Ctrl+Q", cumulativeTicks);
     }
 }

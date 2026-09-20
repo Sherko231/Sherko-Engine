@@ -30,10 +30,7 @@ class SubsystemStartupCoordinatorTest {
 
         SubsystemStartupCoordinator.start(List.of(assets, renderer, gameplay));
 
-        assertEquals(List.of(
-                "assets.initialize", "assets.start",
-                "renderer.initialize", "renderer.start",
-                "gameplay.initialize", "gameplay.start"), trace);
+        assertEquals(List.of("assets.initialize", "assets.start", "renderer.initialize", "renderer.start", "gameplay.initialize", "gameplay.start"), trace);
 
         gameplay.stop();
         gameplay.close();
@@ -42,13 +39,8 @@ class SubsystemStartupCoordinatorTest {
         assets.stop();
         assets.close();
 
-        assertEquals(List.of(
-                "assets.initialize", "assets.start",
-                "renderer.initialize", "renderer.start",
-                "gameplay.initialize", "gameplay.start",
-                "gameplay.stop", "gameplay.close",
-                "renderer.stop", "renderer.close",
-                "assets.stop", "assets.close"), trace);
+        assertEquals(List.of("assets.initialize", "assets.start", "renderer.initialize", "renderer.start", "gameplay.initialize", "gameplay.start", "gameplay.stop",
+            "gameplay.close", "renderer.stop", "renderer.close", "assets.stop", "assets.close"), trace);
     }
 
     @Test
@@ -60,15 +52,10 @@ class SubsystemStartupCoordinatorTest {
         IllegalStateException failure = new IllegalStateException("gameplay init failed");
         gameplay.fail("initialize", failure);
 
-        assertSame(failure, assertThrows(IllegalStateException.class,
-                () -> SubsystemStartupCoordinator.start(List.of(assets, renderer, gameplay))));
+        assertSame(failure, assertThrows(IllegalStateException.class, () -> SubsystemStartupCoordinator.start(List.of(assets, renderer, gameplay))));
 
-        assertEquals(List.of(
-                "assets.initialize", "assets.start",
-                "renderer.initialize", "renderer.start",
-                "gameplay.initialize", "gameplay.close",
-                "renderer.stop", "renderer.close",
-                "assets.stop", "assets.close"), trace);
+        assertEquals(List.of("assets.initialize", "assets.start", "renderer.initialize", "renderer.start", "gameplay.initialize", "gameplay.close", "renderer.stop",
+            "renderer.close", "assets.stop", "assets.close"), trace);
         assertEquals(1, gameplay.closeCalls);
         assertEquals(1, renderer.closeCalls);
         assertEquals(1, assets.closeCalls);
@@ -82,13 +69,9 @@ class SubsystemStartupCoordinatorTest {
         AssertionError failure = new AssertionError("second start failed");
         second.fail("start", failure);
 
-        assertSame(failure, assertThrows(AssertionError.class,
-                () -> SubsystemStartupCoordinator.start(List.of(first, second))));
+        assertSame(failure, assertThrows(AssertionError.class, () -> SubsystemStartupCoordinator.start(List.of(first, second))));
 
-        assertEquals(List.of(
-                "first.initialize", "first.start",
-                "second.initialize", "second.start", "second.close",
-                "first.stop", "first.close"), trace);
+        assertEquals(List.of("first.initialize", "first.start", "second.initialize", "second.start", "second.close", "first.stop", "first.close"), trace);
     }
 
     @Test
@@ -99,8 +82,7 @@ class SubsystemStartupCoordinatorTest {
         RuntimeException failure = new RuntimeException("first init failed");
         first.fail("initialize", failure);
 
-        assertSame(failure, assertThrows(RuntimeException.class,
-                () -> SubsystemStartupCoordinator.start(List.of(first, later))));
+        assertSame(failure, assertThrows(RuntimeException.class, () -> SubsystemStartupCoordinator.start(List.of(first, later))));
 
         assertEquals(List.of("first.initialize", "first.close"), trace);
         assertEquals(0, later.initializeCalls);
@@ -125,18 +107,12 @@ class SubsystemStartupCoordinatorTest {
         second.fail("close", secondClose);
         first.fail("close", firstClose);
 
-        RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> SubsystemStartupCoordinator.start(List.of(first, second, third)));
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> SubsystemStartupCoordinator.start(List.of(first, second, third)));
 
         assertSame(original, thrown);
-        assertArrayEquals(new Throwable[] {failedClose, secondStop, secondClose, firstClose},
-                thrown.getSuppressed());
-        assertEquals(List.of(
-                "first.initialize", "first.start",
-                "second.initialize", "second.start",
-                "third.initialize", "third.close",
-                "second.stop", "second.close",
-                "first.stop", "first.close"), trace);
+        assertArrayEquals(new Throwable[]{failedClose, secondStop, secondClose, firstClose}, thrown.getSuppressed());
+        assertEquals(List.of("first.initialize", "first.start", "second.initialize", "second.start", "third.initialize", "third.close", "second.stop", "second.close", "first.stop",
+            "first.close"), trace);
     }
 
     @Test
@@ -151,9 +127,7 @@ class SubsystemStartupCoordinatorTest {
 
         SubsystemStartupCoordinator.start(mutable);
 
-        assertEquals(List.of(
-                "first.initialize", "first.start",
-                "second.initialize", "second.start"), trace);
+        assertEquals(List.of("first.initialize", "first.start", "second.initialize", "second.start"), trace);
         assertEquals(List.of(), mutable);
 
         second.stop();
@@ -170,8 +144,7 @@ class SubsystemStartupCoordinatorTest {
         probe.fail("initialize", failure);
         probe.fail("close", failure);
 
-        RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> SubsystemStartupCoordinator.start(List.of(probe)));
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> SubsystemStartupCoordinator.start(List.of(probe)));
 
         assertSame(failure, thrown);
         assertEquals(0, thrown.getSuppressed().length);
@@ -181,7 +154,8 @@ class SubsystemStartupCoordinatorTest {
         private final String id;
         private final List<String> trace;
         private final java.util.Map<String, Throwable> failures = new java.util.HashMap<>();
-        private Runnable onInitializeAction = () -> { };
+        private Runnable onInitializeAction = () -> {
+        };
         private int initializeCalls;
         private int closeCalls;
 

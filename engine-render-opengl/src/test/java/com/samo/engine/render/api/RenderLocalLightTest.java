@@ -10,8 +10,7 @@ class RenderLocalLightTest {
 
     @Test
     void pointLightPreservesValidatedLinearInputs() {
-        RenderPointLight light =
-                new RenderPointLight(1.0f, 2.0f, -3.0f, 0.2f, 0.4f, 0.6f, 0.8f, 5.0f);
+        RenderPointLight light = new RenderPointLight(1.0f, 2.0f, -3.0f, 0.2f, 0.4f, 0.6f, 0.8f, 5.0f);
 
         assertEquals(1.0f, light.positionX());
         assertEquals(2.0f, light.positionY());
@@ -25,20 +24,7 @@ class RenderLocalLightTest {
 
     @Test
     void spotLightNormalizesRayTravelDirectionAndPreservesConeRadians() {
-        RenderSpotLight light = new RenderSpotLight(
-                0.0f,
-                1.0f,
-                2.0f,
-                0.0f,
-                -2.0f,
-                -2.0f,
-                1.0f,
-                0.5f,
-                0.25f,
-                0.75f,
-                8.0f,
-                0.2f,
-                0.5f);
+        RenderSpotLight light = new RenderSpotLight(0.0f, 1.0f, 2.0f, 0.0f, -2.0f, -2.0f, 1.0f, 0.5f, 0.25f, 0.75f, 8.0f, 0.2f, 0.5f);
 
         float inverseSqrtTwo = (float) (1.0 / Math.sqrt(2.0));
         assertEquals(0.0f, light.directionX(), TOLERANCE);
@@ -50,38 +36,11 @@ class RenderLocalLightTest {
 
     @Test
     void rejectsInvalidPointAndSpotInputs() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderPointLight(
-                        Float.NaN, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderPointLight(
-                        0.0f, 0.0f, 0.0f, 1.01f, 1.0f, 1.0f, 1.0f, 1.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderPointLight(
-                        0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderSpotLight(
-                        0.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, 0.0f,
-                        1.0f, 1.0f, 1.0f, 1.0f, 2.0f,
-                        0.1f, 0.5f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderSpotLight(
-                        0.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, -1.0f,
-                        1.0f, 1.0f, 1.0f, 1.0f, 2.0f,
-                        0.5f, 0.5f));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new RenderSpotLight(
-                        0.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, -1.0f,
-                        1.0f, 1.0f, 1.0f, 1.0f, 2.0f,
-                        0.5f, (float) (Math.PI * 0.5)));
+        assertThrows(IllegalArgumentException.class, () -> new RenderPointLight(Float.NaN, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new RenderPointLight(0.0f, 0.0f, 0.0f, 1.01f, 1.0f, 1.0f, 1.0f, 1.0f));
+        assertThrows(IllegalArgumentException.class, () -> new RenderPointLight(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f));
+        assertThrows(IllegalArgumentException.class, () -> new RenderSpotLight(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 2.0f, 0.1f, 0.5f));
+        assertThrows(IllegalArgumentException.class, () -> new RenderSpotLight(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 2.0f, 0.5f, 0.5f));
+        assertThrows(IllegalArgumentException.class, () -> new RenderSpotLight(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 2.0f, 0.5f, (float) (Math.PI * 0.5)));
     }
 }

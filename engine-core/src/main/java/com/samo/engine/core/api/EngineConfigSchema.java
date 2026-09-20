@@ -8,12 +8,9 @@ import java.util.Objects;
 
 /** Validates one already-resolved raw configuration map into typed engine startup values. */
 public final class EngineConfigSchema {
-    public static final ConfigKey<Integer> FULLSCREEN_WIDTH =
-            new ConfigKey<>("fullscreen.width", 1920);
-    public static final ConfigKey<Integer> FULLSCREEN_HEIGHT =
-            new ConfigKey<>("fullscreen.height", 1080);
-    public static final ConfigKey<Integer> TICK_RATE =
-            new ConfigKey<>("simulation.tickRate", 60);
+    public static final ConfigKey<Integer> FULLSCREEN_WIDTH = new ConfigKey<>("fullscreen.width", 1920);
+    public static final ConfigKey<Integer> FULLSCREEN_HEIGHT = new ConfigKey<>("fullscreen.height", 1080);
+    public static final ConfigKey<Integer> TICK_RATE = new ConfigKey<>("simulation.tickRate", 60);
 
     private static final int MIN_WIDTH = 320;
     private static final int MAX_WIDTH = 16_384;
@@ -58,49 +55,31 @@ public final class EngineConfigSchema {
         return Map.copyOf(validated);
     }
 
-    private static void parseBoundedInteger(
-            ConfigKey<Integer> key,
-            ConfigEntry entry,
-            int minimum,
-            int maximum,
-            Map<ConfigKey<?>, Object> validated,
-            List<ConfigError> errors) {
+    private static void parseBoundedInteger(ConfigKey<Integer> key, ConfigEntry entry, int minimum, int maximum, Map<ConfigKey<?>, Object> validated, List<ConfigError> errors) {
         Integer parsed = parseInteger(key, entry, errors);
         if (parsed == null) {
             return;
         }
         if (parsed < minimum || parsed > maximum) {
-            errors.add(new ConfigError(
-                    key.name(),
-                    entry.source(),
-                    "must be between " + minimum + " and " + maximum + " inclusive"));
+            errors.add(new ConfigError(key.name(), entry.source(), "must be between " + minimum + " and " + maximum + " inclusive"));
             return;
         }
         validated.put(key, parsed);
     }
 
-    private static void parseLockedTickRate(
-            ConfigEntry entry,
-            Map<ConfigKey<?>, Object> validated,
-            List<ConfigError> errors) {
+    private static void parseLockedTickRate(ConfigEntry entry, Map<ConfigKey<?>, Object> validated, List<ConfigError> errors) {
         Integer parsed = parseInteger(TICK_RATE, entry, errors);
         if (parsed == null) {
             return;
         }
         if (parsed != FixedStepAccumulator.TICKS_PER_SECOND) {
-            errors.add(new ConfigError(
-                    TICK_RATE.name(),
-                    entry.source(),
-                    "must equal the fixed simulation rate of " + FixedStepAccumulator.TICKS_PER_SECOND));
+            errors.add(new ConfigError(TICK_RATE.name(), entry.source(), "must equal the fixed simulation rate of " + FixedStepAccumulator.TICKS_PER_SECOND));
             return;
         }
         validated.put(TICK_RATE, parsed);
     }
 
-    private static Integer parseInteger(
-            ConfigKey<Integer> key,
-            ConfigEntry entry,
-            List<ConfigError> errors) {
+    private static Integer parseInteger(ConfigKey<Integer> key, ConfigEntry entry, List<ConfigError> errors) {
         try {
             return Integer.valueOf(entry.value().trim());
         } catch (NumberFormatException exception) {

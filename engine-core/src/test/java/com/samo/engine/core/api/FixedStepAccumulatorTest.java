@@ -65,9 +65,7 @@ class FixedStepAccumulatorTest {
     @Test
     void acceptsLongMaxValueWithoutOverflow() {
         FixedStepAccumulator accumulator = new FixedStepAccumulator();
-        BigInteger expected = BigInteger.valueOf(Long.MAX_VALUE)
-                .multiply(BigInteger.valueOf(FixedStepAccumulator.TICKS_PER_SECOND))
-                .divide(BigInteger.valueOf(NANOS_PER_SECOND));
+        BigInteger expected = BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.valueOf(FixedStepAccumulator.TICKS_PER_SECOND)).divide(BigInteger.valueOf(NANOS_PER_SECOND));
 
         assertEquals(expected.longValueExact(), accumulator.advance(Long.MAX_VALUE));
     }

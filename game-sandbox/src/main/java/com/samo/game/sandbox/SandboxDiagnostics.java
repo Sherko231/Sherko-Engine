@@ -30,15 +30,8 @@ final class SandboxDiagnostics {
         mouseDeltaY += latestInput.mouseDeltaY();
     }
 
-    boolean publishIfDue(
-            FixedStepAccumulator accumulator,
-            InputSnapshot latestInput,
-            InputActionSnapshot latestActions,
-            PlayerInputCommand latestCommand,
-            SandboxControlState controlState,
-            OpenGlRenderer renderer,
-            EngineLogger logger,
-            long cumulativeTicks) {
+    boolean publishIfDue(FixedStepAccumulator accumulator, InputSnapshot latestInput, InputActionSnapshot latestActions, PlayerInputCommand latestCommand,
+        SandboxControlState controlState, OpenGlRenderer renderer, EngineLogger logger, long cumulativeTicks) {
         if (elapsedSandboxNanos < nextDiagnosticNanos) {
             return false;
         }
@@ -49,36 +42,12 @@ final class SandboxDiagnostics {
         String commandDiagnostic = formatCommandDiagnostic(latestCommand);
         RenderCullingCounters renderCounters = renderer.lastCullingCounters();
         String debugCounterDiagnostic = formatDebugCounters(renderer.lastDebugTextCounters());
-        String diagnosticMessage = SandboxDiagnosticFormatter.format(
-                new SandboxDiagnosticFormatter.DiagnosticValues(
-                        elapsedSandboxNanos / 1_000_000_000.0,
-                        accumulator.interpolationAlpha(),
-                        latestInput.frameId(),
-                        latestInput.focused(),
-                        latestInput.cursorCaptured(),
-                        controlState.currentWindowMode().name(),
-                        controlState.responseSettings().mouseSensitivity(),
-                        controlState.responseSettings().invertMouseY(),
-                        latestInput.keyHeld(InputKey.W),
-                        latestInput.keyHeld(InputKey.A),
-                        latestInput.keyHeld(InputKey.S),
-                        latestInput.keyHeld(InputKey.D),
-                        move.x(),
-                        move.y(),
-                        jump.pressed(),
-                        jump.held(),
-                        jump.released(),
-                        interact.pressed(),
-                        interact.held(),
-                        interact.released(),
-                        commandDiagnostic,
-                        mouseDeltaX,
-                        mouseDeltaY,
-                        renderCounters.testedCandidates(),
-                        renderCounters.visibleCandidates(),
-                        renderCounters.culledCandidates(),
-                        renderCounters.submittedDraws(),
-                        debugCounterDiagnostic));
+        String diagnosticMessage = SandboxDiagnosticFormatter.format(new SandboxDiagnosticFormatter.DiagnosticValues(elapsedSandboxNanos / 1_000_000_000.0,
+            accumulator.interpolationAlpha(), latestInput.frameId(), latestInput.focused(), latestInput.cursorCaptured(), controlState.currentWindowMode().name(),
+            controlState.responseSettings().mouseSensitivity(), controlState.responseSettings().invertMouseY(), latestInput.keyHeld(InputKey.W), latestInput.keyHeld(InputKey.A),
+            latestInput.keyHeld(InputKey.S), latestInput.keyHeld(InputKey.D), move.x(), move.y(), jump.pressed(), jump.held(), jump.released(), interact.pressed(), interact.held(),
+            interact.released(), commandDiagnostic, mouseDeltaX, mouseDeltaY, renderCounters.testedCandidates(), renderCounters.visibleCandidates(),
+            renderCounters.culledCandidates(), renderCounters.submittedDraws(), debugCounterDiagnostic));
         SandboxMain.log(logger, EngineLogger.Level.DEBUG, diagnosticMessage, cumulativeTicks);
 
         mouseDeltaX = 0.0d;
@@ -107,14 +76,8 @@ final class SandboxDiagnostics {
 
     static String formatCommandDiagnostic(PlayerInputCommand command) {
         return command == null
-                ? "tickCommand=none"
-                : "tickCommand=%d MOVE=(%.1f,%.1f) LOOK=(%.2f,%.2f)"
-                        .formatted(
-                                command.tickId(),
-                                command.moveX(),
-                                command.moveY(),
-                                command.lookX(),
-                                command.lookY());
+            ? "tickCommand=none"
+            : "tickCommand=%d MOVE=(%.1f,%.1f) LOOK=(%.2f,%.2f)".formatted(command.tickId(), command.moveX(), command.moveY(), command.lookX(), command.lookY());
     }
 
     static String formatDebugCounters(List<DebugTextCounter> counters) {

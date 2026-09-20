@@ -23,8 +23,7 @@ final class InputActionBindingsJsonParser {
     private static final Set<String> KEY_FIELDS = Set.of("type", "key", "component", "scale");
     private static final Set<String> MOUSE_BUTTON_FIELDS = Set.of("type", "button", "component", "scale");
     private static final Set<String> MOUSE_DELTA_FIELDS = Set.of("type", "axis", "component", "scale");
-    private static final ObjectMapper MAPPER = new ObjectMapper(
-            JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
+    private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
 
     private InputActionBindingsJsonParser() {
     }
@@ -45,8 +44,7 @@ final class InputActionBindingsJsonParser {
         requireOnlyFields(path, root, ROOT_FIELDS, "root");
 
         JsonNode versionNode = requireField(path, root, "schemaVersion", "root");
-        if (!versionNode.isIntegralNumber() || !versionNode.canConvertToInt()
-                || versionNode.intValue() != SCHEMA_VERSION) {
+        if (!versionNode.isIntegralNumber() || !versionNode.canConvertToInt() || versionNode.intValue() != SCHEMA_VERSION) {
             throw failure(path, "schemaVersion must equal " + SCHEMA_VERSION);
         }
 
@@ -67,20 +65,12 @@ final class InputActionBindingsJsonParser {
         }
     }
 
-    private static void parseAction(
-            Path path,
-            JsonNode actionNode,
-            int actionIndex,
-            Map<InputAction, List<InputBinding>> parsed) {
+    private static void parseAction(Path path, JsonNode actionNode, int actionIndex, Map<InputAction, List<InputBinding>> parsed) {
         String context = "actions[" + actionIndex + "]";
         requireObject(path, actionNode, context);
         requireOnlyFields(path, actionNode, ACTION_FIELDS, context);
 
-        InputAction action = parseEnum(
-                path,
-                InputAction.class,
-                requireText(path, actionNode, "action", context),
-                context + ".action");
+        InputAction action = parseEnum(path, InputAction.class, requireText(path, actionNode, "action", context), context + ".action");
         if (parsed.containsKey(action)) {
             throw failure(path, "duplicate action entry: " + action);
         }
@@ -105,48 +95,27 @@ final class InputActionBindingsJsonParser {
         parsed.put(action, List.copyOf(bindings));
     }
 
-    private static InputBinding parseBinding(
-            Path path,
-            InputAction action,
-            JsonNode bindingNode,
-            String actionContext,
-            int bindingIndex) {
+    private static InputBinding parseBinding(Path path, InputAction action, JsonNode bindingNode, String actionContext, int bindingIndex) {
         String context = actionContext + ".bindings[" + bindingIndex + "]";
         requireObject(path, bindingNode, context);
         String type = requireText(path, bindingNode, "type", context);
-        InputActionComponent component = parseEnum(
-                path,
-                InputActionComponent.class,
-                requireText(path, bindingNode, "component", context),
-                context + ".component");
+        InputActionComponent component = parseEnum(path, InputActionComponent.class, requireText(path, bindingNode, "component", context), context + ".component");
         double scale = requireFiniteNonZeroScale(path, bindingNode, context);
 
         InputBinding.Control control = switch (type) {
             case "KEY" -> {
                 requireOnlyFields(path, bindingNode, KEY_FIELDS, context);
-                InputKey key = parseEnum(
-                        path,
-                        InputKey.class,
-                        requireText(path, bindingNode, "key", context),
-                        context + ".key");
+                InputKey key = parseEnum(path, InputKey.class, requireText(path, bindingNode, "key", context), context + ".key");
                 yield new InputBinding.KeyControl(key);
             }
             case "MOUSE_BUTTON" -> {
                 requireOnlyFields(path, bindingNode, MOUSE_BUTTON_FIELDS, context);
-                InputMouseButton button = parseEnum(
-                        path,
-                        InputMouseButton.class,
-                        requireText(path, bindingNode, "button", context),
-                        context + ".button");
+                InputMouseButton button = parseEnum(path, InputMouseButton.class, requireText(path, bindingNode, "button", context), context + ".button");
                 yield new InputBinding.MouseButtonControl(button);
             }
             case "MOUSE_DELTA" -> {
                 requireOnlyFields(path, bindingNode, MOUSE_DELTA_FIELDS, context);
-                InputBinding.MouseDeltaAxis axis = parseEnum(
-                        path,
-                        InputBinding.MouseDeltaAxis.class,
-                        requireText(path, bindingNode, "axis", context),
-                        context + ".axis");
+                InputBinding.MouseDeltaAxis axis = parseEnum(path, InputBinding.MouseDeltaAxis.class, requireText(path, bindingNode, "axis", context), context + ".axis");
                 yield new InputBinding.MouseDeltaControl(axis);
             }
             default -> throw failure(path, "unknown binding type at " + context + ": " + type);
@@ -205,11 +174,7 @@ final class InputActionBindingsJsonParser {
         }
     }
 
-    private static <E extends Enum<E>> E parseEnum(
-            Path path,
-            Class<E> enumType,
-            String value,
-            String context) {
+    private static <E extends Enum<E>> E parseEnum(Path path, Class<E> enumType, String value, String context) {
         try {
             return Enum.valueOf(enumType, value);
         } catch (IllegalArgumentException exception) {

@@ -44,15 +44,12 @@ class DebugGeometryNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T16_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p5", "p5-t16-debug-geometry.txt");
-    private static final Path CAPTURE_PATH =
-            Path.of("build", "reports", "p5", "p5-t16-debug-geometry.png");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "p5", "p5-t16-debug-geometry.txt");
+    private static final Path CAPTURE_PATH = Path.of("build", "reports", "p5", "p5-t16-debug-geometry.png");
 
     @Test
     void rendersBoundedDebugGeometryAndPublishesTextCounters() throws Exception {
-        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P5-T16 native acceptance");
+        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T16 native acceptance");
         assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"));
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
@@ -68,14 +65,8 @@ class DebugGeometryNativeTest {
                 framebufferSize[1] = height;
             }
         };
-        GlfwWindow window = new GlfwWindow(
-                WIDTH,
-                HEIGHT,
-                "Sherko Engine P5-T16 Debug Geometry",
-                new EngineLogger(event -> { }),
-                registry,
-                sizeListener,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
+        GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5-T16 Debug Geometry", new EngineLogger(event -> {
+        }), registry, sizeListener, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
         boolean stopped = false;
@@ -91,71 +82,33 @@ class DebugGeometryNativeTest {
             int framebufferHeight = framebufferSize[1];
             assertTrue(framebufferWidth > 0 && framebufferHeight > 0);
 
-            Matrix4f view = CameraMatrices.view(
-                    new Vector3f(0.0f, 0.0f, 2.0f),
-                    new Vector3f(0.0f, 0.0f, -1.0f),
-                    new Vector3f(0.0f, 1.0f, 0.0f),
-                    new Matrix4f());
-            Matrix4f projection = CameraMatrices.perspective(
-                    (float) Math.toRadians(70.0),
-                    (float) framebufferWidth / framebufferHeight,
-                    0.1f,
-                    100.0f,
-                    new Matrix4f());
+            Matrix4f view = CameraMatrices.view(new Vector3f(0.0f, 0.0f, 2.0f), new Vector3f(0.0f, 0.0f, -1.0f), new Vector3f(0.0f, 1.0f, 0.0f), new Matrix4f());
+            Matrix4f projection = CameraMatrices.perspective((float) Math.toRadians(70.0), (float) framebufferWidth / framebufferHeight, 0.1f, 100.0f, new Matrix4f());
 
             DebugTextCounter tick = new DebugTextCounter("tick", 42L);
             DebugTextCounter latency = new DebugTextCounter("net/rtt_ms", 17L);
-            DebugFrame debugFrame = new DebugFrame(
-                    List.of(
-                            new DebugLine(
-                                    -0.40f, 0.0f, 0.50f,
-                                    0.40f, 0.0f, 0.50f,
-                                    new DebugColor(0.0f, 1.0f, 0.0f)),
-                            new DebugAabb(
-                                    new Aabb3f(
-                                            new Vector3f(-0.95f, -0.80f, 0.20f),
-                                            new Vector3f(-0.65f, -0.50f, 0.50f)),
-                                    new DebugColor(1.0f, 0.8f, 0.0f)),
-                            new DebugSphere(
-                                    new Sphere3f(new Vector3f(0.70f, 0.55f, 0.30f), 0.18f),
-                                    new DebugColor(0.0f, 0.7f, 1.0f)),
-                            new DebugRay(
-                                    new Ray3f(
-                                            new Vector3f(0.45f, -0.70f, 0.40f),
-                                            new Vector3f(1.0f, 0.0f, 0.0f)),
-                                    0.45f,
-                                    new DebugColor(1.0f, 0.0f, 1.0f))),
-                    List.of(tick, latency));
+            DebugFrame debugFrame = new DebugFrame(List.of(new DebugLine(-0.40f, 0.0f, 0.50f, 0.40f, 0.0f, 0.50f, new DebugColor(0.0f, 1.0f, 0.0f)),
+                new DebugAabb(new Aabb3f(new Vector3f(-0.95f, -0.80f, 0.20f), new Vector3f(-0.65f, -0.50f, 0.50f)), new DebugColor(1.0f, 0.8f, 0.0f)),
+                new DebugSphere(new Sphere3f(new Vector3f(0.70f, 0.55f, 0.30f), 0.18f), new DebugColor(0.0f, 0.7f, 1.0f)),
+                new DebugRay(new Ray3f(new Vector3f(0.45f, -0.70f, 0.40f), new Vector3f(1.0f, 0.0f, 0.0f)), 0.45f, new DebugColor(1.0f, 0.0f, 1.0f))), List.of(tick, latency));
 
-            RenderFramePacket frame = new RenderFramePacket(
-                    view,
-                    projection,
-                    framebufferWidth,
-                    framebufferHeight,
-                    List.of(),
-                    debugFrame);
+            RenderFramePacket frame = new RenderFramePacket(view, projection, framebufferWidth, framebufferHeight, List.of(), debugFrame);
 
-            try (OpenGlRenderer renderer =
-                    OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
+            try (OpenGlRenderer renderer = OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 renderer.render(frame);
 
                 RenderCullingCounters culling = renderer.lastCullingCounters();
                 assertEquals(1, culling.submittedDraws());
                 assertEquals(List.of(tick, latency), renderer.lastDebugTextCounters());
 
-                greenPixel = findGreenDominantPixel(
-                        framebufferWidth / 2,
-                        framebufferHeight / 2,
-                        4);
+                greenPixel = findGreenDominantPixel(framebufferWidth / 2, framebufferHeight / 2, 4);
                 assertTrue(greenPixel != null, "Expected green debug line near framebuffer center");
 
                 assertFalse(GL11.glIsEnabled(GL30.GL_FRAMEBUFFER_SRGB));
                 assertEquals(0, GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM));
                 assertEquals(0, GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING));
 
-                IntBuffer viewport = ByteBuffer.allocateDirect(4 * Integer.BYTES)
-                        .order(java.nio.ByteOrder.nativeOrder())
-                        .asIntBuffer();
+                IntBuffer viewport = ByteBuffer.allocateDirect(4 * Integer.BYTES).order(java.nio.ByteOrder.nativeOrder()).asIntBuffer();
                 GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
                 assertEquals(0, viewport.get(0));
                 assertEquals(0, viewport.get(1));
@@ -188,9 +141,7 @@ class DebugGeometryNativeTest {
         for (int y = centerY - radius; y <= centerY + radius; y++) {
             for (int x = centerX - radius; x <= centerX + radius; x++) {
                 int[] pixel = readPixel(x, y);
-                if (pixel[1] >= 200
-                        && pixel[1] - pixel[0] >= 100
-                        && pixel[1] - pixel[2] >= 100) {
+                if (pixel[1] >= 200 && pixel[1] - pixel[0] >= 100 && pixel[1] - pixel[2] >= 100) {
                     return pixel;
                 }
             }
@@ -203,12 +154,7 @@ class DebugGeometryNativeTest {
         GL11.glReadBuffer(GL11.GL_BACK);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixel);
-        return new int[] {
-            Byte.toUnsignedInt(pixel.get(0)),
-            Byte.toUnsignedInt(pixel.get(1)),
-            Byte.toUnsignedInt(pixel.get(2)),
-            Byte.toUnsignedInt(pixel.get(3))
-        };
+        return new int[]{Byte.toUnsignedInt(pixel.get(0)), Byte.toUnsignedInt(pixel.get(1)), Byte.toUnsignedInt(pixel.get(2)), Byte.toUnsignedInt(pixel.get(3))};
     }
 
     private static void captureBackBuffer(int width, int height) throws IOException {
@@ -236,26 +182,12 @@ class DebugGeometryNativeTest {
 
     private static void writeReport(int[] greenPixel) throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
-        Files.write(REPORT_PATH, List.of(
-                "task=P5-T16",
-                "result=PASS",
-                "debug.primitives=line,aabb,sphere,ray",
-                "debug.primitive.count=4",
-                "debug.text.counters=tick=42,net/rtt_ms=17",
-                "debug.expected.vertex.count=124",
-                "debug.green.sample.rgb=" + rgb(greenPixel),
-                "scene.indexed.draws=1",
-                "viewport.restored=true",
-                "program.unbound=true",
-                "vertex.array.unbound=true",
-                "framebuffer.srgb.disabled.after.render=true",
-                "capture=p5-t16-debug-geometry.png",
-                "native.resource.registry.empty.after.cleanup=true",
-                "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
-                "java.version=" + System.getProperty("java.version"),
-                "os.name=" + System.getProperty("os.name"),
-                "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=bounded per-frame renderer-neutral line/AABB/sphere/ray geometry plus published text counters through the production renderer; no font/UI renderer, retained debug scene, physics/network implementation, editor, or performance claim"));
+        Files.write(REPORT_PATH, List.of("task=P5-T16", "result=PASS", "debug.primitives=line,aabb,sphere,ray", "debug.primitive.count=4",
+            "debug.text.counters=tick=42,net/rtt_ms=17", "debug.expected.vertex.count=124", "debug.green.sample.rgb=" + rgb(greenPixel), "scene.indexed.draws=1",
+            "viewport.restored=true", "program.unbound=true", "vertex.array.unbound=true", "framebuffer.srgb.disabled.after.render=true", "capture=p5-t16-debug-geometry.png",
+            "native.resource.registry.empty.after.cleanup=true", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
+            "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
+            "evidence.scope=bounded per-frame renderer-neutral line/AABB/sphere/ray geometry plus published text counters through the production renderer; no font/UI renderer, retained debug scene, physics/network implementation, editor, or performance claim"));
     }
 
     private static String rgb(int[] pixel) {

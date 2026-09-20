@@ -74,26 +74,14 @@ public final class PlayerInputCommandSampler {
             throw new IllegalArgumentException("tickId must be strictly increasing");
         }
 
-        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states =
-                new EnumMap<>(PlayerInputCommand.DigitalAction.class);
+        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = new EnumMap<>(PlayerInputCommand.DigitalAction.class);
         for (PlayerInputCommand.DigitalAction action : PlayerInputCommand.DigitalAction.values()) {
             int index = action.ordinal();
-            states.put(
-                    action,
-                    new PlayerInputCommand.DigitalState(
-                            latestDigitalValues[index],
-                            pendingDigitalPressed[index],
-                            latestDigitalHeld[index],
-                            pendingDigitalReleased[index]));
+            states.put(action,
+                new PlayerInputCommand.DigitalState(latestDigitalValues[index], pendingDigitalPressed[index], latestDigitalHeld[index], pendingDigitalReleased[index]));
         }
 
-        PlayerInputCommand command = new PlayerInputCommand(
-                tickId,
-                latestMoveX,
-                latestMoveY,
-                pendingLookX,
-                pendingLookY,
-                states);
+        PlayerInputCommand command = new PlayerInputCommand(tickId, latestMoveX, latestMoveY, pendingLookX, pendingLookY, states);
 
         pendingLookX = 0.0;
         pendingLookY = 0.0;

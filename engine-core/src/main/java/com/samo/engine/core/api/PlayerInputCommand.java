@@ -8,15 +8,7 @@ import java.util.Objects;
 public final class PlayerInputCommand {
     /** Digital gameplay actions carried by the tick command. */
     public enum DigitalAction {
-        JUMP,
-        CROUCH,
-        SPRINT,
-        INTERACT,
-        GRAB,
-        THROW,
-        PRIMARY_USE,
-        PAUSE,
-        PUSH_TO_TALK
+        JUMP, CROUCH, SPRINT, INTERACT, GRAB, THROW, PRIMARY_USE, PAUSE, PUSH_TO_TALK
     }
 
     /** Immutable scalar and transition state for one digital action. */
@@ -35,13 +27,7 @@ public final class PlayerInputCommand {
     private final double lookY;
     private final Map<DigitalAction, DigitalState> digitalStates;
 
-    public PlayerInputCommand(
-            long tickId,
-            double moveX,
-            double moveY,
-            double lookX,
-            double lookY,
-            Map<DigitalAction, DigitalState> digitalStates) {
+    public PlayerInputCommand(long tickId, double moveX, double moveY, double lookX, double lookY, Map<DigitalAction, DigitalState> digitalStates) {
         if (tickId < 0L) {
             throw new IllegalArgumentException("tickId must be non-negative");
         }
@@ -109,12 +95,9 @@ public final class PlayerInputCommand {
         if (!(other instanceof PlayerInputCommand that)) {
             return false;
         }
-        return tickId == that.tickId
-                && Double.doubleToLongBits(moveX) == Double.doubleToLongBits(that.moveX)
-                && Double.doubleToLongBits(moveY) == Double.doubleToLongBits(that.moveY)
-                && Double.doubleToLongBits(lookX) == Double.doubleToLongBits(that.lookX)
-                && Double.doubleToLongBits(lookY) == Double.doubleToLongBits(that.lookY)
-                && digitalStates.equals(that.digitalStates);
+        return tickId == that.tickId && Double.doubleToLongBits(moveX) == Double.doubleToLongBits(that.moveX)
+            && Double.doubleToLongBits(moveY) == Double.doubleToLongBits(that.moveY) && Double.doubleToLongBits(lookX) == Double.doubleToLongBits(that.lookX)
+            && Double.doubleToLongBits(lookY) == Double.doubleToLongBits(that.lookY) && digitalStates.equals(that.digitalStates);
     }
 
     @Override
@@ -124,12 +107,6 @@ public final class PlayerInputCommand {
 
     @Override
     public String toString() {
-        return "PlayerInputCommand[tickId=" + tickId
-                + ", moveX=" + moveX
-                + ", moveY=" + moveY
-                + ", lookX=" + lookX
-                + ", lookY=" + lookY
-                + ", digitalStates=" + digitalStates
-                + ']';
+        return "PlayerInputCommand[tickId=" + tickId + ", moveX=" + moveX + ", moveY=" + moveY + ", lookX=" + lookX + ", lookY=" + lookY + ", digitalStates=" + digitalStates + ']';
     }
 }

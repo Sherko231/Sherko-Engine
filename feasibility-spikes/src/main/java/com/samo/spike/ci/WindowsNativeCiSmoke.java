@@ -62,9 +62,7 @@ public final class WindowsNativeCiSmoke {
             System.out.println("OpenAL version  : " + alGetString(AL_VERSION));
             int error = alGetError();
             if (error != AL_NO_ERROR) {
-                throw new IllegalStateException(
-                        "OpenAL smoke reported error 0x" + Integer.toHexString(error)
-                );
+                throw new IllegalStateException("OpenAL smoke reported error 0x" + Integer.toHexString(error));
             }
         } finally {
             if (context != NULL) {

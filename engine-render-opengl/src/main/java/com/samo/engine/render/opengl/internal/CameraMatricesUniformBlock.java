@@ -21,8 +21,7 @@ final class CameraMatricesUniformBlock {
         ByteBuffer output = Objects.requireNonNull(destination, "destination");
 
         if (output.remaining() < SIZE_BYTES) {
-            throw new IllegalArgumentException(
-                    "destination requires at least " + SIZE_BYTES + " remaining bytes");
+            throw new IllegalArgumentException("destination requires at least " + SIZE_BYTES + " remaining bytes");
         }
 
         int start = output.position();

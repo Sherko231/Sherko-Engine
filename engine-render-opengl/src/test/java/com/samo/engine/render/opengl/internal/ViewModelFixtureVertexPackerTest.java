@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 class ViewModelFixtureVertexPackerTest {
     @Test
     void packsAcceptedSixVertexFixtureAndLinearColorExactly() {
-        ByteBuffer bytes = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES)
-                .order(ByteOrder.nativeOrder());
+        ByteBuffer bytes = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES).order(ByteOrder.nativeOrder());
 
         ViewModelFixtureVertexPacker.write(bytes);
 

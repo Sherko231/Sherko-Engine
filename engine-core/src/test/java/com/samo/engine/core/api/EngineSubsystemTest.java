@@ -33,13 +33,8 @@ class EngineSubsystemTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-        "0, start", "0, stop",
-        "1, initialize", "1, stop",
-        "2, initialize", "2, start", "2, close",
-        "3, initialize", "3, start", "3, stop",
-        "4, initialize", "4, start", "4, stop"
-    })
+    @CsvSource({"0, start", "0, stop", "1, initialize", "1, stop", "2, initialize", "2, start", "2, close", "3, initialize", "3, start", "3, stop", "4, initialize", "4, start",
+        "4, stop"})
     void invalidStableStateCallsDoNotInvokeHooksOrDamageProgress(int completedPhases, String operation) {
         Probe subsystem = new Probe();
         advance(subsystem, completedPhases);
@@ -73,8 +68,7 @@ class EngineSubsystemTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"initialize, false", "start, false", "stop, false",
-        "initialize, true", "start, true", "stop, true"})
+    @CsvSource({"initialize, false", "start, false", "stop, false", "initialize, true", "start, true", "stop, true"})
     void hookFailurePropagatesUnchangedAndStillAllowsExplicitCleanup(String phase, boolean error) {
         Probe subsystem = new Probe();
         Throwable failure = error ? new AssertionError("hook failure") : new IllegalArgumentException("hook failure");

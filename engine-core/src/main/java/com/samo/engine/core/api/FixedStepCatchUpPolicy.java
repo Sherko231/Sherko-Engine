@@ -5,7 +5,8 @@ import java.util.Objects;
 /**
  * Bounds elapsed-time spikes and the number of fixed simulation steps exposed by one update.
  *
- * <p>The policy delegates exact 60 Hz accumulation to {@link FixedStepAccumulator}. Elapsed time
+ * <p>
+ * The policy delegates exact 60 Hz accumulation to {@link FixedStepAccumulator}. Elapsed time
  * above the configured frame-gap bound and whole steps above the configured per-update cap are
  * deliberately discarded so callers cannot inherit an unbounded catch-up backlog.
  */
@@ -27,9 +28,12 @@ public final class FixedStepCatchUpPolicy {
     /**
      * Creates a catch-up policy with explicit positive bounds.
      *
-     * @param maxFrameGapNanos maximum elapsed duration accepted from one update
-     * @param maxStepsPerUpdate maximum whole simulation steps returned from one update
-     * @throws IllegalArgumentException if either limit is not strictly positive
+     * @param maxFrameGapNanos
+     *            maximum elapsed duration accepted from one update
+     * @param maxStepsPerUpdate
+     *            maximum whole simulation steps returned from one update
+     * @throws IllegalArgumentException
+     *             if either limit is not strictly positive
      */
     public FixedStepCatchUpPolicy(long maxFrameGapNanos, int maxStepsPerUpdate) {
         if (maxFrameGapNanos <= 0L) {
@@ -45,15 +49,20 @@ public final class FixedStepCatchUpPolicy {
     /**
      * Applies frame-gap clamping and the per-update catch-up cap to one elapsed duration.
      *
-     * <p>The supplied accumulator is advanced exactly once with the clamped elapsed duration. Any
+     * <p>
+     * The supplied accumulator is advanced exactly once with the clamped elapsed duration. Any
      * whole steps above the configured cap are discarded rather than retained as later backlog.
      * Fractional progress retained by the accumulator remains untouched.
      *
-     * @param accumulator fixed-step accumulator that owns fractional progress
-     * @param elapsedNanos non-negative elapsed duration for this update
+     * @param accumulator
+     *            fixed-step accumulator that owns fractional progress
+     * @param elapsedNanos
+     *            non-negative elapsed duration for this update
      * @return whole simulation steps to execute now, never greater than the configured cap
-     * @throws NullPointerException if {@code accumulator} is null
-     * @throws IllegalArgumentException if {@code elapsedNanos} is negative
+     * @throws NullPointerException
+     *             if {@code accumulator} is null
+     * @throws IllegalArgumentException
+     *             if {@code elapsedNanos} is negative
      */
     public long advance(FixedStepAccumulator accumulator, long elapsedNanos) {
         Objects.requireNonNull(accumulator, "accumulator");

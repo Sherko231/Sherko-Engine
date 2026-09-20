@@ -21,15 +21,9 @@ class DrawSubmissionSorterTest {
         DrawSubmission opaqueFirstKey = submission(opaque, 1, 4, 9, 3.0f, 2);
         DrawSubmission opaqueMiddleKey = submission(opaque, 2, 0, 5, 2.0f, 1);
 
-        List<DrawSubmission> ordered = sorter.sort(List.of(
-                transparentFar,
-                opaqueLaterKey,
-                opaqueFirstKey,
-                opaqueMiddleKey));
+        List<DrawSubmission> ordered = sorter.sort(List.of(transparentFar, opaqueLaterKey, opaqueFirstKey, opaqueMiddleKey));
 
-        assertEquals(
-                List.of(opaqueFirstKey, opaqueMiddleKey, opaqueLaterKey, transparentFar),
-                ordered);
+        assertEquals(List.of(opaqueFirstKey, opaqueMiddleKey, opaqueLaterKey, transparentFar), ordered);
     }
 
     @Test
@@ -42,21 +36,9 @@ class DrawSubmissionSorterTest {
         DrawSubmission tieLowerMaterialLaterSequence = submission(transparent, 0, 1, 0, 5.0f, 8);
         DrawSubmission tieLowerMaterialEarlierSequence = submission(transparent, 0, 1, 0, 5.0f, 1);
 
-        List<DrawSubmission> ordered = sorter.sort(List.of(
-                near,
-                tieLowerMaterialLaterSequence,
-                far,
-                tieHigherMaterial,
-                tieLowerMaterialEarlierSequence));
+        List<DrawSubmission> ordered = sorter.sort(List.of(near, tieLowerMaterialLaterSequence, far, tieHigherMaterial, tieLowerMaterialEarlierSequence));
 
-        assertEquals(
-                List.of(
-                        far,
-                        tieLowerMaterialEarlierSequence,
-                        tieLowerMaterialLaterSequence,
-                        tieHigherMaterial,
-                        near),
-                ordered);
+        assertEquals(List.of(far, tieLowerMaterialEarlierSequence, tieLowerMaterialLaterSequence, tieHigherMaterial, near), ordered);
     }
 
     @Test
@@ -78,18 +60,10 @@ class DrawSubmissionSorterTest {
     void validatesOrderingInputsBeforeSorting() {
         RenderMaterialDescriptor opaque = material(MaterialBlendMode.OPAQUE);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawSubmission(opaque, -1, 0, 0, 0.0f, 0, 0, 0, 10, 10));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawSubmission(opaque, 0, 0, 0, Float.NaN, 0, 0, 0, 10, 10));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawSubmission(opaque, 0, 0, 0, 0.0f, -1, 0, 0, 10, 10));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawSubmission(opaque, 0, 0, 0, 0.0f, 0, 0, 0, 0, 10));
+        assertThrows(IllegalArgumentException.class, () -> new DrawSubmission(opaque, -1, 0, 0, 0.0f, 0, 0, 0, 10, 10));
+        assertThrows(IllegalArgumentException.class, () -> new DrawSubmission(opaque, 0, 0, 0, Float.NaN, 0, 0, 0, 10, 10));
+        assertThrows(IllegalArgumentException.class, () -> new DrawSubmission(opaque, 0, 0, 0, 0.0f, -1, 0, 0, 10, 10));
+        assertThrows(IllegalArgumentException.class, () -> new DrawSubmission(opaque, 0, 0, 0, 0.0f, 0, 0, 0, 0, 10));
     }
 
     @Test
@@ -101,35 +75,12 @@ class DrawSubmissionSorterTest {
         assertEquals(List.of(only), sorter.sort(List.of(only)));
     }
 
-    private static DrawSubmission submission(
-            RenderMaterialDescriptor material,
-            int programKey,
-            int materialKey,
-            int meshKey,
-            float cameraDepth,
-            int sequence) {
-        return new DrawSubmission(
-                material,
-                programKey,
-                materialKey,
-                meshKey,
-                cameraDepth,
-                sequence,
-                0,
-                0,
-                100,
-                100);
+    private static DrawSubmission submission(RenderMaterialDescriptor material, int programKey, int materialKey, int meshKey, float cameraDepth, int sequence) {
+        return new DrawSubmission(material, programKey, materialKey, meshKey, cameraDepth, sequence, 0, 0, 100, 100);
     }
 
     private static RenderMaterialDescriptor material(MaterialBlendMode blendMode) {
-        return new RenderMaterialDescriptor(
-                MaterialShaderVariant.TEXTURED_REFERENCE,
-                List.of(new MaterialTextureBinding(0, 31, 41)),
-                MaterialScalars.identity(),
-                blendMode,
-                blendMode == MaterialBlendMode.OPAQUE
-                        ? MaterialDepthMode.TEST_WRITE
-                        : MaterialDepthMode.TEST_NO_WRITE,
-                MaterialCullMode.BACK);
+        return new RenderMaterialDescriptor(MaterialShaderVariant.TEXTURED_REFERENCE, List.of(new MaterialTextureBinding(0, 31, 41)), MaterialScalars.identity(), blendMode,
+            blendMode == MaterialBlendMode.OPAQUE ? MaterialDepthMode.TEST_WRITE : MaterialDepthMode.TEST_NO_WRITE, MaterialCullMode.BACK);
     }
 }

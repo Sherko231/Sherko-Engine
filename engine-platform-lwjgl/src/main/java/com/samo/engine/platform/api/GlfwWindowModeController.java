@@ -60,59 +60,30 @@ final class GlfwWindowModeController {
         GlfwPosition position = backend.queryWindowPosition(windowHandle);
         GlfwDimensions logicalSize = backend.queryLogicalSize(windowHandle);
         if (logicalSize.width() <= 0 || logicalSize.height() <= 0) {
-            throw new IllegalStateException(
-                    "GLFW reported non-positive windowed restore dimensions: "
-                            + logicalSize.width() + "x" + logicalSize.height());
+            throw new IllegalStateException("GLFW reported non-positive windowed restore dimensions: " + logicalSize.width() + "x" + logicalSize.height());
         }
-        return new GlfwWindowGeometry(
-                position.x(),
-                position.y(),
-                logicalSize.width(),
-                logicalSize.height());
+        return new GlfwWindowGeometry(position.x(), position.y(), logicalSize.width(), logicalSize.height());
     }
 
-    private GlfwWindowTransitionPlan planTransition(
-            WindowMode mode,
-            GlfwWindowGeometry restoreGeometry) {
+    private GlfwWindowTransitionPlan planTransition(WindowMode mode, GlfwWindowGeometry restoreGeometry) {
         return switch (mode) {
             case WINDOWED -> {
                 if (restoreGeometry == null) {
                     throw new IllegalStateException("Windowed restore geometry is unavailable");
                 }
                 validateRestoreGeometry(restoreGeometry);
-                yield new GlfwWindowTransitionPlan(
-                        WindowMode.WINDOWED,
-                        true,
-                        MemoryUtil.NULL,
-                        restoreGeometry.x(),
-                        restoreGeometry.y(),
-                        restoreGeometry.width(),
-                        restoreGeometry.height(),
-                        GLFW.GLFW_DONT_CARE);
+                yield new GlfwWindowTransitionPlan(WindowMode.WINDOWED, true, MemoryUtil.NULL, restoreGeometry.x(), restoreGeometry.y(), restoreGeometry.width(),
+                    restoreGeometry.height(), GLFW.GLFW_DONT_CARE);
             }
             case BORDERLESS_FULLSCREEN -> {
                 GlfwMonitorTarget monitor = queryPrimaryMonitorTarget();
-                yield new GlfwWindowTransitionPlan(
-                        WindowMode.BORDERLESS_FULLSCREEN,
-                        false,
-                        MemoryUtil.NULL,
-                        monitor.position().x(),
-                        monitor.position().y(),
-                        monitor.videoMode().width(),
-                        monitor.videoMode().height(),
-                        GLFW.GLFW_DONT_CARE);
+                yield new GlfwWindowTransitionPlan(WindowMode.BORDERLESS_FULLSCREEN, false, MemoryUtil.NULL, monitor.position().x(), monitor.position().y(),
+                    monitor.videoMode().width(), monitor.videoMode().height(), GLFW.GLFW_DONT_CARE);
             }
             case EXCLUSIVE_FULLSCREEN -> {
                 GlfwMonitorTarget monitor = queryPrimaryMonitorTarget();
-                yield new GlfwWindowTransitionPlan(
-                        WindowMode.EXCLUSIVE_FULLSCREEN,
-                        null,
-                        monitor.handle(),
-                        0,
-                        0,
-                        monitor.videoMode().width(),
-                        monitor.videoMode().height(),
-                        monitor.videoMode().refreshRate());
+                yield new GlfwWindowTransitionPlan(WindowMode.EXCLUSIVE_FULLSCREEN, null, monitor.handle(), 0, 0, monitor.videoMode().width(), monitor.videoMode().height(),
+                    monitor.videoMode().refreshRate());
             }
         };
     }
@@ -127,9 +98,7 @@ final class GlfwWindowModeController {
             throw new IllegalStateException("GLFW primary monitor video mode is unavailable");
         }
         if (videoMode.width() <= 0 || videoMode.height() <= 0 || videoMode.refreshRate() <= 0) {
-            throw new IllegalStateException(
-                    "GLFW reported invalid primary monitor video mode: "
-                            + videoMode.width() + "x" + videoMode.height() + "@" + videoMode.refreshRate());
+            throw new IllegalStateException("GLFW reported invalid primary monitor video mode: " + videoMode.width() + "x" + videoMode.height() + "@" + videoMode.refreshRate());
         }
         GlfwPosition position = backend.queryMonitorPosition(monitor);
         return new GlfwMonitorTarget(monitor, position, videoMode);
@@ -139,21 +108,12 @@ final class GlfwWindowModeController {
         if (plan.decorated() != null) {
             backend.setDecorated(windowHandle, plan.decorated());
         }
-        backend.setWindowMonitor(
-                windowHandle,
-                plan.monitor(),
-                plan.x(),
-                plan.y(),
-                plan.width(),
-                plan.height(),
-                plan.refreshRate());
+        backend.setWindowMonitor(windowHandle, plan.monitor(), plan.x(), plan.y(), plan.width(), plan.height(), plan.refreshRate());
     }
 
     private static void validateRestoreGeometry(GlfwWindowGeometry geometry) {
         if (geometry.width() <= 0 || geometry.height() <= 0) {
-            throw new IllegalStateException(
-                    "Windowed restore dimensions must be positive: "
-                            + geometry.width() + "x" + geometry.height());
+            throw new IllegalStateException("Windowed restore dimensions must be positive: " + geometry.width() + "x" + geometry.height());
         }
     }
 

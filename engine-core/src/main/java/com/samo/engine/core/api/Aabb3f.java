@@ -46,16 +46,12 @@ public final class Aabb3f {
         requireFinite(point.x(), "point.x");
         requireFinite(point.y(), "point.y");
         requireFinite(point.z(), "point.z");
-        return point.x() >= minX && point.x() <= maxX
-                && point.y() >= minY && point.y() <= maxY
-                && point.z() >= minZ && point.z() <= maxZ;
+        return point.x() >= minX && point.x() <= maxX && point.y() >= minY && point.y() <= maxY && point.z() >= minZ && point.z() <= maxZ;
     }
 
     public boolean intersects(Aabb3f other) {
         Objects.requireNonNull(other, "other");
-        return maxX >= other.minX && minX <= other.maxX
-                && maxY >= other.minY && minY <= other.maxY
-                && maxZ >= other.minZ && minZ <= other.maxZ;
+        return maxX >= other.minX && minX <= other.maxX && maxY >= other.minY && minY <= other.maxY && maxZ >= other.minZ && minZ <= other.maxZ;
     }
 
     public boolean intersects(Sphere3f sphere) {

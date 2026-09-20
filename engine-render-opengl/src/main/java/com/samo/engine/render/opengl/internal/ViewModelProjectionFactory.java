@@ -19,11 +19,6 @@ final class ViewModelProjectionFactory {
             throw new IllegalArgumentException("framebufferHeight must be positive");
         }
         float aspectRatio = (float) framebufferWidth / framebufferHeight;
-        return CameraMatrices.perspective(
-                VERTICAL_FOV_RADIANS,
-                aspectRatio,
-                NEAR_PLANE_METERS,
-                FAR_PLANE_METERS,
-                destination);
+        return CameraMatrices.perspective(VERTICAL_FOV_RADIANS, aspectRatio, NEAR_PLANE_METERS, FAR_PLANE_METERS, destination);
     }
 }

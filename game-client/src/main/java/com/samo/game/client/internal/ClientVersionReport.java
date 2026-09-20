@@ -22,17 +22,14 @@ public final class ClientVersionReport {
 
     private static Properties loadProperties() {
         Properties properties = new Properties();
-        try (InputStream input =
-                ClientVersionReport.class.getClassLoader().getResourceAsStream(RESOURCE)) {
+        try (InputStream input = ClientVersionReport.class.getClassLoader().getResourceAsStream(RESOURCE)) {
             if (input == null) {
                 throw new IllegalStateException("Missing version metadata resource: " + RESOURCE);
             }
             properties.load(input);
             return properties;
         } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Failed to load version metadata resource: " + RESOURCE,
-                    exception);
+            throw new IllegalStateException("Failed to load version metadata resource: " + RESOURCE, exception);
         }
     }
 

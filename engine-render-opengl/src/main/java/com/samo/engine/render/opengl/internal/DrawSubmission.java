@@ -2,17 +2,8 @@ package com.samo.engine.render.opengl.internal;
 
 import java.util.Objects;
 
-record DrawSubmission(
-        RenderMaterialDescriptor material,
-        int programKey,
-        int materialKey,
-        int meshKey,
-        float cameraDepth,
-        int sequence,
-        int viewportX,
-        int viewportY,
-        int viewportWidth,
-        int viewportHeight) {
+record DrawSubmission(RenderMaterialDescriptor material, int programKey, int materialKey, int meshKey, float cameraDepth, int sequence, int viewportX, int viewportY,
+    int viewportWidth, int viewportHeight) {
 
     DrawSubmission {
         Objects.requireNonNull(material, "material");

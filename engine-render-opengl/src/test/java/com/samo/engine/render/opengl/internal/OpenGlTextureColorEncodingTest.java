@@ -27,22 +27,8 @@ class OpenGlTextureColorEncodingTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
 
-        try (OpenGlTexture color = OpenGlTexture.createRgba8(
-                        guard,
-                        registry,
-                        backend,
-                        TextureColorEncoding.SRGB_COLOR,
-                        1,
-                        1,
-                        rgba(128, 128, 128, 255));
-                OpenGlTexture data = OpenGlTexture.createRgba8(
-                        guard,
-                        registry,
-                        backend,
-                        TextureColorEncoding.LINEAR_DATA,
-                        1,
-                        1,
-                        rgba(128, 128, 128, 255))) {
+        try (OpenGlTexture color = OpenGlTexture.createRgba8(guard, registry, backend, TextureColorEncoding.SRGB_COLOR, 1, 1, rgba(128, 128, 128, 255));
+            OpenGlTexture data = OpenGlTexture.createRgba8(guard, registry, backend, TextureColorEncoding.LINEAR_DATA, 1, 1, rgba(128, 128, 128, 255))) {
             assertEquals(TextureColorEncoding.SRGB_COLOR, backend.firstEncoding);
             assertEquals(TextureColorEncoding.LINEAR_DATA, backend.secondEncoding);
         }
@@ -57,16 +43,8 @@ class OpenGlTextureColorEncodingTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         FakeBackend backend = new FakeBackend();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> OpenGlTexture.createRgba8(
-                        guard,
-                        registry,
-                        backend,
-                        TextureColorEncoding.SRGB_COLOR,
-                        1,
-                        1,
-                        ByteBuffer.allocateDirect(3)));
+        assertThrows(IllegalArgumentException.class,
+            () -> OpenGlTexture.createRgba8(guard, registry, backend, TextureColorEncoding.SRGB_COLOR, 1, 1, ByteBuffer.allocateDirect(3)));
 
         assertEquals(0, backend.createdTextures);
         registry.assertNoOpenResources();
@@ -79,12 +57,8 @@ class OpenGlTextureColorEncodingTest {
     }
 
     private static OpenGlThreadGuard boundGuard() {
-        GlfwWindow window = new GlfwWindow(
-                1,
-                1,
-                "guard fixture",
-                new EngineLogger(event -> { }),
-                new NativeResourceRegistry());
+        GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
+        }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
         try {
             Method bind = OpenGlThreadGuard.class.getDeclaredMethod("bindOwnerThread", Thread.class);
@@ -115,12 +89,7 @@ class OpenGlTextureColorEncodingTest {
         }
 
         @Override
-        public void allocateRgba8Texture(
-                int handle,
-                TextureColorEncoding colorEncoding,
-                int width,
-                int height,
-                ByteBuffer rgbaBytes) {
+        public void allocateRgba8Texture(int handle, TextureColorEncoding colorEncoding, int width, int height, ByteBuffer rgbaBytes) {
             if (firstEncoding == null) {
                 firstEncoding = colorEncoding;
             } else {

@@ -15,8 +15,7 @@ final class DebugLineVertexPacker {
     static final int FLOATS_PER_VERTEX = 6;
     static final int VERTEX_STRIDE_BYTES = FLOATS_PER_VERTEX * Float.BYTES;
     static final int SPHERE_SEGMENTS_PER_CIRCLE = 16;
-    static final int MAX_VERTEX_COUNT =
-            DebugFrame.MAX_PRIMITIVES * 3 * SPHERE_SEGMENTS_PER_CIRCLE * 2;
+    static final int MAX_VERTEX_COUNT = DebugFrame.MAX_PRIMITIVES * 3 * SPHERE_SEGMENTS_PER_CIRCLE * 2;
     static final int MAX_BYTES = MAX_VERTEX_COUNT * VERTEX_STRIDE_BYTES;
 
     private DebugLineVertexPacker() {
@@ -29,15 +28,7 @@ final class DebugLineVertexPacker {
 
         for (DebugPrimitive primitive : debugFrame.primitives()) {
             if (primitive instanceof DebugLine line) {
-                putSegment(
-                        target,
-                        line.startX(),
-                        line.startY(),
-                        line.startZ(),
-                        line.endX(),
-                        line.endY(),
-                        line.endZ(),
-                        line.color());
+                putSegment(target, line.startX(), line.startY(), line.startZ(), line.endX(), line.endY(), line.endZ(), line.color());
             } else if (primitive instanceof DebugAabb box) {
                 putAabb(target, box);
             } else if (primitive instanceof DebugSphere sphere) {
@@ -45,8 +36,7 @@ final class DebugLineVertexPacker {
             } else if (primitive instanceof DebugRay ray) {
                 putRay(target, ray);
             } else {
-                throw new IllegalArgumentException(
-                        "Unsupported debug primitive: " + primitive.getClass().getName());
+                throw new IllegalArgumentException("Unsupported debug primitive: " + primitive.getClass().getName());
             }
         }
 
@@ -85,12 +75,7 @@ final class DebugLineVertexPacker {
         putCircle(target, center, radius, color, 2);
     }
 
-    private static void putCircle(
-            ByteBuffer target,
-            Vector3f center,
-            float radius,
-            DebugColor color,
-            int plane) {
+    private static void putCircle(ByteBuffer target, Vector3f center, float radius, DebugColor color, int plane) {
         for (int segment = 0; segment < SPHERE_SEGMENTS_PER_CIRCLE; segment++) {
             double a0 = Math.PI * 2.0 * segment / SPHERE_SEGMENTS_PER_CIRCLE;
             double a1 = Math.PI * 2.0 * (segment + 1) / SPHERE_SEGMENTS_PER_CIRCLE;
@@ -99,21 +84,9 @@ final class DebugLineVertexPacker {
             float c1 = (float) Math.cos(a1) * radius;
             float s1 = (float) Math.sin(a1) * radius;
             switch (plane) {
-                case 0 -> putSegment(
-                        target,
-                        center.x + c0, center.y + s0, center.z,
-                        center.x + c1, center.y + s1, center.z,
-                        color);
-                case 1 -> putSegment(
-                        target,
-                        center.x + c0, center.y, center.z + s0,
-                        center.x + c1, center.y, center.z + s1,
-                        color);
-                case 2 -> putSegment(
-                        target,
-                        center.x, center.y + c0, center.z + s0,
-                        center.x, center.y + c1, center.z + s1,
-                        color);
+                case 0 -> putSegment(target, center.x + c0, center.y + s0, center.z, center.x + c1, center.y + s1, center.z, color);
+                case 1 -> putSegment(target, center.x + c0, center.y, center.z + s0, center.x + c1, center.y, center.z + s1, color);
+                case 2 -> putSegment(target, center.x, center.y + c0, center.z + s0, center.x, center.y + c1, center.z + s1, color);
                 default -> throw new IllegalArgumentException("unsupported sphere plane");
             }
         }
@@ -122,32 +95,15 @@ final class DebugLineVertexPacker {
     private static void putRay(ByteBuffer target, DebugRay debugRay) {
         Vector3f origin = debugRay.ray().origin(new Vector3f());
         Vector3f end = debugRay.ray().pointAt(debugRay.lengthMeters(), new Vector3f());
-        putSegment(
-                target,
-                origin.x, origin.y, origin.z,
-                end.x, end.y, end.z,
-                debugRay.color());
+        putSegment(target, origin.x, origin.y, origin.z, end.x, end.y, end.z, debugRay.color());
     }
 
-    private static void putSegment(
-            ByteBuffer target,
-            float ax,
-            float ay,
-            float az,
-            float bx,
-            float by,
-            float bz,
-            DebugColor color) {
+    private static void putSegment(ByteBuffer target, float ax, float ay, float az, float bx, float by, float bz, DebugColor color) {
         putVertex(target, ax, ay, az, color);
         putVertex(target, bx, by, bz, color);
     }
 
-    private static void putVertex(
-            ByteBuffer target,
-            float x,
-            float y,
-            float z,
-            DebugColor color) {
+    private static void putVertex(ByteBuffer target, float x, float y, float z, DebugColor color) {
         target.putFloat(x).putFloat(y).putFloat(z);
         target.putFloat(color.red()).putFloat(color.green()).putFloat(color.blue());
     }

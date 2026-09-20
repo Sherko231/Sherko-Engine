@@ -11,21 +11,13 @@ final class OwnedOpenGlHandle implements AutoCloseable {
     private final NativeResourceRegistry.Registration registration;
     private boolean closeAttempted;
 
-    private OwnedOpenGlHandle(
-            int handle,
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry.Registration registration) {
+    private OwnedOpenGlHandle(int handle, OpenGlThreadGuard threadGuard, NativeResourceRegistry.Registration registration) {
         this.handle = handle;
         this.threadGuard = threadGuard;
         this.registration = registration;
     }
 
-    static OwnedOpenGlHandle register(
-            String resourceType,
-            int handle,
-            OpenGlThreadGuard threadGuard,
-            NativeResourceRegistry registry,
-            IntConsumer deleter) {
+    static OwnedOpenGlHandle register(String resourceType, int handle, OpenGlThreadGuard threadGuard, NativeResourceRegistry registry, IntConsumer deleter) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
         NativeResourceRegistry resources = Objects.requireNonNull(registry, "registry");
         IntConsumer nativeDeleter = Objects.requireNonNull(deleter, "deleter");

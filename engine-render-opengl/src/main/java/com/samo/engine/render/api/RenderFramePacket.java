@@ -9,7 +9,8 @@ import org.joml.Matrix4fc;
 /**
  * Immutable renderer-facing snapshot for one frame.
  *
- * <p>The packet copies caller-owned camera matrices and the ordered local-light submission list,
+ * <p>
+ * The packet copies caller-owned camera matrices and the ordered local-light submission list,
  * and retains one immutable bounded debug-frame snapshot. It owns no native resources. Later
  * mutation of source matrices, copied-out matrices, or the source light list cannot change the
  * captured frame.
@@ -22,46 +23,19 @@ public final class RenderFramePacket {
     private final List<RenderLocalLight> localLights;
     private final DebugFrame debugFrame;
 
-    public RenderFramePacket(
-            Matrix4fc view,
-            Matrix4fc projection,
-            int framebufferWidth,
-            int framebufferHeight) {
-        this(
-                view,
-                projection,
-                framebufferWidth,
-                framebufferHeight,
-                List.of(),
-                DebugFrame.EMPTY);
+    public RenderFramePacket(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight) {
+        this(view, projection, framebufferWidth, framebufferHeight, List.of(), DebugFrame.EMPTY);
     }
 
-    public RenderFramePacket(
-            Matrix4fc view,
-            Matrix4fc projection,
-            int framebufferWidth,
-            int framebufferHeight,
-            List<? extends RenderLocalLight> localLights) {
-        this(
-                view,
-                projection,
-                framebufferWidth,
-                framebufferHeight,
-                localLights,
-                DebugFrame.EMPTY);
+    public RenderFramePacket(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight, List<? extends RenderLocalLight> localLights) {
+        this(view, projection, framebufferWidth, framebufferHeight, localLights, DebugFrame.EMPTY);
     }
 
-    public RenderFramePacket(
-            Matrix4fc view,
-            Matrix4fc projection,
-            int framebufferWidth,
-            int framebufferHeight,
-            List<? extends RenderLocalLight> localLights,
-            DebugFrame debugFrame) {
+    public RenderFramePacket(Matrix4fc view, Matrix4fc projection, int framebufferWidth, int framebufferHeight, List<? extends RenderLocalLight> localLights,
+        DebugFrame debugFrame) {
         Matrix4fc viewMatrix = Objects.requireNonNull(view, "view");
         Matrix4fc projectionMatrix = Objects.requireNonNull(projection, "projection");
-        List<? extends RenderLocalLight> submittedLights =
-                Objects.requireNonNull(localLights, "localLights");
+        List<? extends RenderLocalLight> submittedLights = Objects.requireNonNull(localLights, "localLights");
         DebugFrame submittedDebugFrame = Objects.requireNonNull(debugFrame, "debugFrame");
         if (framebufferWidth <= 0) {
             throw new IllegalArgumentException("framebufferWidth must be positive");

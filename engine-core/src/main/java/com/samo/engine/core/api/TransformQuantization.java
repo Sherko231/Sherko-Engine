@@ -17,10 +17,10 @@ public final class TransformQuantization {
     private static final double ROTATION_COMPONENT_LIMIT = 1.0 / Math.sqrt(2.0);
     private static final double ROTATION_ENCODE_SCALE = Short.MAX_VALUE / ROTATION_COMPONENT_LIMIT;
     private static final double ROTATION_DECODE_SCALE = ROTATION_COMPONENT_LIMIT / Short.MAX_VALUE;
-    private static final long ROTATION_UNIT_SQUARED_CODE_LIMIT =
-            2L * Short.MAX_VALUE * Short.MAX_VALUE;
+    private static final long ROTATION_UNIT_SQUARED_CODE_LIMIT = 2L * Short.MAX_VALUE * Short.MAX_VALUE;
 
-    private TransformQuantization() {}
+    private TransformQuantization() {
+    }
 
     /** Quantizes canonical engine-space position in meters into three signed 16-bit values. */
     public static QuantizedPosition quantizePosition(Vector3fc position) {
@@ -32,8 +32,7 @@ public final class TransformQuantization {
     }
 
     /** Dequantizes position into the supplied caller-owned destination. */
-    public static Vector3f dequantizePosition(
-            QuantizedPosition quantized, Vector3f destination) {
+    public static Vector3f dequantizePosition(QuantizedPosition quantized, Vector3f destination) {
         Objects.requireNonNull(quantized, "quantized");
         Objects.requireNonNull(destination, "destination");
 
@@ -46,7 +45,8 @@ public final class TransformQuantization {
     /**
      * Quantizes a finite non-zero quaternion using deterministic smallest-three encoding.
      *
-     * <p>The input is normalized first. The largest-absolute component is omitted, ties select the
+     * <p>
+     * The input is normalized first. The largest-absolute component is omitted, ties select the
      * lowest component index, and the quaternion sign is canonicalized so the omitted component is
      * non-negative. Equivalent {@code q} and {@code -q} orientations therefore encode identically.
      */
@@ -128,19 +128,16 @@ public final class TransformQuantization {
     }
 
     /** Dequantizes a smallest-three rotation into the supplied caller-owned destination. */
-    public static Quaternionf dequantizeRotation(
-            QuantizedRotation quantized, Quaternionf destination) {
+    public static Quaternionf dequantizeRotation(QuantizedRotation quantized, Quaternionf destination) {
         Objects.requireNonNull(quantized, "quantized");
         Objects.requireNonNull(destination, "destination");
 
         long aCode = quantized.a();
         long bCode = quantized.b();
         long cCode = quantized.c();
-        long storedSquaredCodeLength =
-                aCode * aCode + bCode * bCode + cCode * cCode;
+        long storedSquaredCodeLength = aCode * aCode + bCode * bCode + cCode * cCode;
         if (storedSquaredCodeLength >= ROTATION_UNIT_SQUARED_CODE_LIMIT) {
-            throw new IllegalArgumentException(
-                    "quantized rotation components do not leave a valid omitted component");
+            throw new IllegalArgumentException("quantized rotation components do not leave a valid omitted component");
         }
 
         double a = aCode * ROTATION_DECODE_SCALE;
@@ -148,8 +145,7 @@ public final class TransformQuantization {
         double c = cCode * ROTATION_DECODE_SCALE;
         double storedLengthSquared = a * a + b * b + c * c;
         if (!(storedLengthSquared < 1.0)) {
-            throw new IllegalArgumentException(
-                    "quantized rotation components do not leave a valid omitted component");
+            throw new IllegalArgumentException("quantized rotation components do not leave a valid omitted component");
         }
 
         double omitted = Math.sqrt(1.0 - storedLengthSquared);
@@ -204,18 +200,11 @@ public final class TransformQuantization {
     private static short quantizePositionComponent(float value, String name) {
         requireFinite(value, name);
         if (value < POSITION_MIN_METERS || value > POSITION_MAX_METERS) {
-            throw new IllegalArgumentException(
-                    name
-                            + " must be within ["
-                            + POSITION_MIN_METERS
-                            + ", "
-                            + POSITION_MAX_METERS
-                            + "] meters");
+            throw new IllegalArgumentException(name + " must be within [" + POSITION_MIN_METERS + ", " + POSITION_MAX_METERS + "] meters");
         }
         long encoded = Math.round((double) value / POSITION_STEP_METERS);
         if (encoded < Short.MIN_VALUE || encoded > Short.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    name + " cannot be represented by position quantization");
+            throw new IllegalArgumentException(name + " cannot be represented by position quantization");
         }
         return (short) encoded;
     }
@@ -223,8 +212,7 @@ public final class TransformQuantization {
     private static short quantizeRotationComponent(double value) {
         long encoded = Math.round(value * ROTATION_ENCODE_SCALE);
         if (encoded < -Short.MAX_VALUE || encoded > Short.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    "normalized rotation component exceeds smallest-three representable range");
+            throw new IllegalArgumentException("normalized rotation component exceeds smallest-three representable range");
         }
         return (short) encoded;
     }
@@ -252,7 +240,8 @@ public final class TransformQuantization {
     }
 
     /** Signed-short quantized canonical position values. */
-    public record QuantizedPosition(short x, short y, short z) {}
+    public record QuantizedPosition(short x, short y, short z) {
+    }
 
     /** Smallest-three quaternion values with one omitted canonical non-negative component. */
     public record QuantizedRotation(int omittedComponent, short a, short b, short c) {
@@ -261,8 +250,7 @@ public final class TransformQuantization {
                 throw new IllegalArgumentException("omittedComponent must be within [0, 3]");
             }
             if (a == Short.MIN_VALUE || b == Short.MIN_VALUE || c == Short.MIN_VALUE) {
-                throw new IllegalArgumentException(
-                        "quantized rotation component must not use reserved Short.MIN_VALUE");
+                throw new IllegalArgumentException("quantized rotation component must not use reserved Short.MIN_VALUE");
             }
         }
     }

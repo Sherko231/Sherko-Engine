@@ -29,17 +29,13 @@ class ReferenceSceneRendererNativeTest {
     private static final String ENABLE_ENV = "SHERKO_P5_T07_NATIVE";
     private static final int WIDTH = 640;
     private static final int HEIGHT = 360;
-    private static final Path REPORT_PATH =
-            Path.of("build", "reports", "p5", "p5-t07-indexed-mesh.txt");
-    private static final Path CAPTURE_PATH =
-            Path.of("build", "reports", "p5", "p5-t07-indexed-mesh.png");
+    private static final Path REPORT_PATH = Path.of("build", "reports", "p5", "p5-t07-indexed-mesh.txt");
+    private static final Path CAPTURE_PATH = Path.of("build", "reports", "p5", "p5-t07-indexed-mesh.png");
 
     @Test
     void rendersTwoMaterialInstancesOfTheIndexedReferenceMeshThroughPublicRenderer() throws Exception {
-        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)),
-                () -> "Set " + ENABLE_ENV + "=true to run the P5-T07 native acceptance");
-        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"),
-                "P5-T07 native acceptance targets Windows x64");
+        assumeTrue(Boolean.parseBoolean(System.getenv(ENABLE_ENV)), () -> "Set " + ENABLE_ENV + "=true to run the P5-T07 native acceptance");
+        assertTrue(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows"), "P5-T07 native acceptance targets Windows x64");
 
         NativeResourceRegistry registry = new NativeResourceRegistry();
         int[] framebufferSize = {WIDTH, HEIGHT};
@@ -54,14 +50,8 @@ class ReferenceSceneRendererNativeTest {
                 framebufferSize[1] = height;
             }
         };
-        GlfwWindow window = new GlfwWindow(
-                WIDTH,
-                HEIGHT,
-                "Sherko Engine P5-T07 Native Acceptance",
-                new EngineLogger(event -> { }),
-                registry,
-                sizeListener,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
+        GlfwWindow window = new GlfwWindow(WIDTH, HEIGHT, "Sherko Engine P5-T07 Native Acceptance", new EngineLogger(event -> {
+        }), registry, sizeListener, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY);
 
         boolean started = false;
         boolean stopped = false;
@@ -73,34 +63,19 @@ class ReferenceSceneRendererNativeTest {
             window.pollEvents();
             int framebufferWidth = framebufferSize[0];
             int framebufferHeight = framebufferSize[1];
-            assertTrue(framebufferWidth > 0 && framebufferHeight > 0,
-                    "Native acceptance requires a visible non-zero framebuffer");
+            assertTrue(framebufferWidth > 0 && framebufferHeight > 0, "Native acceptance requires a visible non-zero framebuffer");
 
-            Matrix4f view = CameraMatrices.view(
-                    new Vector3f(0.0f, 0.0f, 2.0f),
-                    new Vector3f(0.0f, 0.0f, -1.0f),
-                    new Vector3f(0.0f, 1.0f, 0.0f),
-                    new Matrix4f());
-            Matrix4f projection = CameraMatrices.perspective(
-                    (float) Math.toRadians(70.0),
-                    (float) framebufferWidth / framebufferHeight,
-                    0.1f,
-                    100.0f,
-                    new Matrix4f());
+            Matrix4f view = CameraMatrices.view(new Vector3f(0.0f, 0.0f, 2.0f), new Vector3f(0.0f, 0.0f, -1.0f), new Vector3f(0.0f, 1.0f, 0.0f), new Matrix4f());
+            Matrix4f projection = CameraMatrices.perspective((float) Math.toRadians(70.0), (float) framebufferWidth / framebufferHeight, 0.1f, 100.0f, new Matrix4f());
 
-            try (OpenGlRenderer renderer =
-                    OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
+            try (OpenGlRenderer renderer = OpenGlRenderer.create(window.openGlThreadGuard(), registry)) {
                 renderer.render(view, projection, framebufferWidth, framebufferHeight);
 
                 window.pollEvents();
-                assertEquals(
-                        1,
-                        renderer.lastCullingCounters().submittedDraws(),
-                        "P5-T07 world scene must preserve the single full-frame indexed submission");
+                assertEquals(1, renderer.lastCullingCounters().submittedDraws(), "P5-T07 world scene must preserve the single full-frame indexed submission");
 
                 int visibleTrianglePixels = captureBackBuffer(framebufferWidth, framebufferHeight);
-                assertTrue(visibleTrianglePixels > 1_000,
-                        "Expected visible indexed room geometry; pixels=" + visibleTrianglePixels);
+                assertTrue(visibleTrianglePixels > 1_000, "Expected visible indexed room geometry; pixels=" + visibleTrianglePixels);
 
                 window.present();
             }
@@ -143,11 +118,7 @@ class ReferenceSceneRendererNativeTest {
                 int green = Byte.toUnsignedInt(pixels.get(offset + 1));
                 int blue = Byte.toUnsignedInt(pixels.get(offset + 2));
                 int alpha = Byte.toUnsignedInt(pixels.get(offset + 3));
-                int colorDistance = Math.max(
-                        Math.abs(red - backgroundRed),
-                        Math.max(
-                                Math.abs(green - backgroundGreen),
-                                Math.abs(blue - backgroundBlue)));
+                int colorDistance = Math.max(Math.abs(red - backgroundRed), Math.max(Math.abs(green - backgroundGreen), Math.abs(blue - backgroundBlue)));
                 if (colorDistance > 20) {
                     visibleTrianglePixels++;
                 }
@@ -174,30 +145,13 @@ class ReferenceSceneRendererNativeTest {
 
     private static void writeReport() throws IOException {
         Files.createDirectories(REPORT_PATH.getParent());
-        Files.write(REPORT_PATH, List.of(
-                "task=P5-T07",
-                "result=PASS",
-                "renderer.api=OpenGlRenderer",
-                "mesh=indexed-room-fixture",
-                "draw.elements.count=36",
-                "world.submitted.draws=1",
-                "material.baseline.depth=GL_LESS-write",
-                "material.baseline.cull=GL_BACK",
-                "material.tinted.depth=GL_LESS-no-write",
-                "material.tinted.cull=disabled",
-                "front.face=GL_CCW",
-                "camera.uniform.binding=0",
-                "perframe.uniform.binding=1",
-                "capture=p5-t07-indexed-mesh.png",
-                "high.severity.debug.error=none-observed-after-poll",
-                "native.resource.registry.empty.after.cleanup=true",
-                "room.reference.sample=directionally-lit-reference-gray",
-                "srgb.claim=verified-separately-by-p5-t08",
-                "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"),
-                "java.version=" + System.getProperty("java.version"),
-                "os.name=" + System.getProperty("os.name"),
-                "os.arch=" + System.getProperty("os.arch"),
-                "evidence.scope=indexed world-submission regression uses latest-success culling diagnostics so later render layers do not invalidate the two-world-draw contract; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
+        Files.write(REPORT_PATH, List.of("task=P5-T07", "result=PASS", "renderer.api=OpenGlRenderer", "mesh=indexed-room-fixture", "draw.elements.count=36",
+            "world.submitted.draws=1", "material.baseline.depth=GL_LESS-write", "material.baseline.cull=GL_BACK", "material.tinted.depth=GL_LESS-no-write",
+            "material.tinted.cull=disabled", "front.face=GL_CCW", "camera.uniform.binding=0", "perframe.uniform.binding=1", "capture=p5-t07-indexed-mesh.png",
+            "high.severity.debug.error=none-observed-after-poll", "native.resource.registry.empty.after.cleanup=true", "room.reference.sample=directionally-lit-reference-gray",
+            "srgb.claim=verified-separately-by-p5-t08", "engine.commit=" + environmentOr("GITHUB_SHA", "unknown"), "java.version=" + System.getProperty("java.version"),
+            "os.name=" + System.getProperty("os.name"), "os.arch=" + System.getProperty("os.arch"),
+            "evidence.scope=indexed world-submission regression uses latest-success culling diagnostics so later render layers do not invalidate the two-world-draw contract; material correctness remains P5-T09 and color-space correctness remains P5-T08; no asset, world, or performance claim"));
     }
 
     private static String environmentOr(String key, String fallback) {

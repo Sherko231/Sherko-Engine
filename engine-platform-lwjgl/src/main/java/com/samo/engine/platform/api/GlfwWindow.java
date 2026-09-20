@@ -12,8 +12,7 @@ import org.lwjgl.opengl.GL43;
 /** Owns one GLFW window and OpenGL 4.6 Core context for one subsystem lifetime. */
 public final class GlfwWindow extends EngineSubsystem {
     private static final String RESOURCE_TYPE = "GLFW window";
-    private static final EngineLogger.Context LOG_CONTEXT =
-            new EngineLogger.Context(null, null, "platform", null, null);
+    private static final EngineLogger.Context LOG_CONTEXT = new EngineLogger.Context(null, null, "platform", null, null);
     private static final WindowSizeListener NO_OP_SIZE_LISTENER = new WindowSizeListener() {
         @Override
         public void onLogicalWindowSizeChanged(int width, int height) {
@@ -53,87 +52,37 @@ public final class GlfwWindow extends EngineSubsystem {
     private Throwable pendingInputFailure;
     private Throwable pendingOpenGlDebugFailure;
 
-    public GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources) {
+    public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, OpenGlDebugMode.DISABLED);
     }
 
-    public GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            OpenGlDebugMode openGlDebugMode) {
+    public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, OpenGlDebugMode openGlDebugMode) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, openGlDebugMode);
     }
 
-    public GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            WindowSizeListener sizeListener) {
+    public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener) {
         this(width, height, title, logger, nativeResources, sizeListener, OpenGlDebugMode.DISABLED);
     }
 
-    public GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            WindowSizeListener sizeListener,
-            OpenGlDebugMode openGlDebugMode) {
+    public GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener,
+        OpenGlDebugMode openGlDebugMode) {
         this(width, height, title, logger, nativeResources, sizeListener, openGlDebugMode, new LwjglGlfwNativeBackend());
     }
 
-    GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            GlfwNativeBackend backend) {
+    GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, OpenGlDebugMode.DISABLED, backend);
     }
 
-    GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            OpenGlDebugMode openGlDebugMode,
-            GlfwNativeBackend backend) {
+    GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, OpenGlDebugMode openGlDebugMode, GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, NO_OP_SIZE_LISTENER, openGlDebugMode, backend);
     }
 
-    GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            WindowSizeListener sizeListener,
-            GlfwNativeBackend backend) {
+    GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener, GlfwNativeBackend backend) {
         this(width, height, title, logger, nativeResources, sizeListener, OpenGlDebugMode.DISABLED, backend);
     }
 
-    GlfwWindow(
-            int width,
-            int height,
-            String title,
-            EngineLogger logger,
-            NativeResourceRegistry nativeResources,
-            WindowSizeListener sizeListener,
-            OpenGlDebugMode openGlDebugMode,
-            GlfwNativeBackend backend) {
+    GlfwWindow(int width, int height, String title, EngineLogger logger, NativeResourceRegistry nativeResources, WindowSizeListener sizeListener, OpenGlDebugMode openGlDebugMode,
+        GlfwNativeBackend backend) {
         if (width <= 0) {
             throw new IllegalArgumentException("width must be positive");
         }
@@ -201,11 +150,7 @@ public final class GlfwWindow extends EngineSubsystem {
         }
         requireOwnerThread();
 
-        InputSnapshot snapshot = inputState.captureSnapshot(
-                frameId,
-                cursorCapture.effectivelyCaptured(),
-                mouseMotion.accumulatedDeltaX(),
-                mouseMotion.accumulatedDeltaY());
+        InputSnapshot snapshot = inputState.captureSnapshot(frameId, cursorCapture.effectivelyCaptured(), mouseMotion.accumulatedDeltaX(), mouseMotion.accumulatedDeltaY());
         mouseMotion.clearAccumulatedDelta();
         return snapshot;
     }
@@ -258,10 +203,7 @@ public final class GlfwWindow extends EngineSubsystem {
 
             long registeredHandle = windowHandle;
             try {
-                windowRegistration = nativeResources.register(
-                        RESOURCE_TYPE,
-                        registeredHandle,
-                        () -> backend.destroyWindow(registeredHandle));
+                windowRegistration = nativeResources.register(RESOURCE_TYPE, registeredHandle, () -> backend.destroyWindow(registeredHandle));
             } catch (RuntimeException | Error failure) {
                 windowHandle = 0L;
                 try {
@@ -330,13 +272,8 @@ public final class GlfwWindow extends EngineSubsystem {
                     inputState.onMouseButtonChanged(button, action);
                 }
             });
-            motionCallbackState = backend.installCursorPositionCallback(
-                    windowHandle,
-                    (x, y) -> mouseMotion.onCursorPosition(
-                            inputState.focused(),
-                            cursorCapture.effectivelyCaptured(),
-                            x,
-                            y));
+            motionCallbackState = backend.installCursorPositionCallback(windowHandle,
+                (x, y) -> mouseMotion.onCursorPosition(inputState.focused(), cursorCapture.effectivelyCaptured(), x, y));
             inputState.onFocusChanged(backend.queryWindowFocused(windowHandle));
 
             GlfwDimensions logicalSize = backend.queryLogicalSize(windowHandle);
@@ -468,10 +405,8 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private void handleOpenGlDebugMessage(int source, int type, int id, int severity, String message) {
-        String diagnostic = "OpenGL debug [source=" + debugSourceName(source)
-                + ", type=" + debugTypeName(type)
-                + ", severity=" + debugSeverityName(severity)
-                + ", id=" + id + "]: " + message;
+        String diagnostic = "OpenGL debug [source=" + debugSourceName(source) + ", type=" + debugTypeName(type) + ", severity=" + debugSeverityName(severity) + ", id=" + id + "]: "
+            + message;
         if (severity == GL43.GL_DEBUG_SEVERITY_HIGH) {
             IllegalStateException highSeverityFailure = new IllegalStateException(diagnostic);
             try {
@@ -483,9 +418,7 @@ public final class GlfwWindow extends EngineSubsystem {
             return;
         }
 
-        EngineLogger.Level level = severity == GL43.GL_DEBUG_SEVERITY_MEDIUM
-                ? EngineLogger.Level.WARN
-                : EngineLogger.Level.DEBUG;
+        EngineLogger.Level level = severity == GL43.GL_DEBUG_SEVERITY_MEDIUM ? EngineLogger.Level.WARN : EngineLogger.Level.DEBUG;
         try {
             logger.log(level, diagnostic, LOG_CONTEXT);
         } catch (RuntimeException | Error loggingFailure) {
@@ -675,16 +608,8 @@ public final class GlfwWindow extends EngineSubsystem {
     }
 
     private boolean hasOwnedNativeState() {
-        return callbackState != null
-                || debugCallbackState != null
-                || sizeCallbackState != null
-                || inputCallbackState != null
-                || motionCallbackState != null
-                || glfwInitialized
-                || windowHandle != 0L
-                || windowRegistration != null
-                || contextCurrent
-                || capabilitiesCreated;
+        return callbackState != null || debugCallbackState != null || sizeCallbackState != null || inputCallbackState != null || motionCallbackState != null || glfwInitialized
+            || windowHandle != 0L || windowRegistration != null || contextCurrent || capabilitiesCreated;
     }
 
     private void requireOwnerThread() {
@@ -727,6 +652,5 @@ public final class GlfwWindow extends EngineSubsystem {
             primary.addSuppressed(suppressed);
         }
     }
-
 
 }

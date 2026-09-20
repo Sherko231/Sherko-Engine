@@ -20,24 +20,18 @@ class AnimatedDemoLightingTest {
         assertEquals(2, start.lights().size());
         assertEquals(7, start.debugPrimitives().size());
 
-        RenderPointLight startPoint =
-                assertInstanceOf(RenderPointLight.class, start.lights().get(0));
-        RenderSpotLight startSpot =
-                assertInstanceOf(RenderSpotLight.class, start.lights().get(1));
-        RenderPointLight laterPoint =
-                assertInstanceOf(RenderPointLight.class, later.lights().get(0));
-        RenderSpotLight laterSpot =
-                assertInstanceOf(RenderSpotLight.class, later.lights().get(1));
+        RenderPointLight startPoint = assertInstanceOf(RenderPointLight.class, start.lights().get(0));
+        RenderSpotLight startSpot = assertInstanceOf(RenderSpotLight.class, start.lights().get(1));
+        RenderPointLight laterPoint = assertInstanceOf(RenderPointLight.class, later.lights().get(0));
+        RenderSpotLight laterSpot = assertInstanceOf(RenderSpotLight.class, later.lights().get(1));
 
         assertNotEquals(startPoint.positionX(), laterPoint.positionX());
         assertNotEquals(startPoint.positionY(), laterPoint.positionY());
         assertNotEquals(startSpot.positionX(), laterSpot.positionX());
         assertNotEquals(startSpot.directionX(), laterSpot.directionX());
 
-        float spotDirectionLength = (float) Math.sqrt(
-                startSpot.directionX() * startSpot.directionX()
-                        + startSpot.directionY() * startSpot.directionY()
-                        + startSpot.directionZ() * startSpot.directionZ());
+        float spotDirectionLength = (float) Math
+            .sqrt(startSpot.directionX() * startSpot.directionX() + startSpot.directionY() * startSpot.directionY() + startSpot.directionZ() * startSpot.directionZ());
         assertTrue(Math.abs(spotDirectionLength - 1.0f) < 0.0001f);
 
         assertInstanceOf(DebugLine.class, start.debugPrimitives().get(0));
@@ -48,10 +42,8 @@ class AnimatedDemoLightingTest {
     @Test
     void preservesAcceptedInitialLightAndDebugValues() {
         AnimatedDemoLighting.LightingFrame frame = AnimatedDemoLighting.at(0.0);
-        RenderPointLight point =
-                assertInstanceOf(RenderPointLight.class, frame.lights().get(0));
-        RenderSpotLight spot =
-                assertInstanceOf(RenderSpotLight.class, frame.lights().get(1));
+        RenderPointLight point = assertInstanceOf(RenderPointLight.class, frame.lights().get(0));
+        RenderSpotLight spot = assertInstanceOf(RenderSpotLight.class, frame.lights().get(1));
         DebugRay ray = assertInstanceOf(DebugRay.class, frame.debugPrimitives().get(6));
 
         assertEquals(0.0f, point.positionX(), 0.000001f);

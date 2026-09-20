@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 final class ReferenceSceneDrawExecutor {
-    private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT =
-            new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
+    private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT = new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
 
     private final OpenGlDrawBackend drawBackend;
     private final int programHandle;
@@ -15,13 +14,8 @@ final class ReferenceSceneDrawExecutor {
     private final ViewModelRenderer viewModelRenderer;
     private final SrgbPresentationMode presentationMode;
 
-    ReferenceSceneDrawExecutor(
-            OpenGlDrawBackend drawBackend,
-            int programHandle,
-            int vertexArrayHandle,
-            DebugLineRenderer debugLineRenderer,
-            ViewModelRenderer viewModelRenderer,
-            SrgbPresentationMode presentationMode) {
+    ReferenceSceneDrawExecutor(OpenGlDrawBackend drawBackend, int programHandle, int vertexArrayHandle, DebugLineRenderer debugLineRenderer, ViewModelRenderer viewModelRenderer,
+        SrgbPresentationMode presentationMode) {
         this.drawBackend = Objects.requireNonNull(drawBackend, "drawBackend");
         this.programHandle = programHandle;
         this.vertexArrayHandle = vertexArrayHandle;
@@ -30,13 +24,8 @@ final class ReferenceSceneDrawExecutor {
         this.presentationMode = Objects.requireNonNull(presentationMode, "presentationMode");
     }
 
-    int execute(
-            List<DrawSubmission> orderedSubmissions,
-            DebugFrame debugFrame,
-            int framebufferWidth,
-            int framebufferHeight) {
-        List<DrawSubmission> submissions =
-                Objects.requireNonNull(orderedSubmissions, "orderedSubmissions");
+    int execute(List<DrawSubmission> orderedSubmissions, DebugFrame debugFrame, int framebufferWidth, int framebufferHeight) {
+        List<DrawSubmission> submissions = Objects.requireNonNull(orderedSubmissions, "orderedSubmissions");
         DebugFrame diagnostics = Objects.requireNonNull(debugFrame, "debugFrame");
 
         int submittedDraws = 0;
@@ -45,12 +34,7 @@ final class ReferenceSceneDrawExecutor {
         try {
             drawBackend.clearFrame(presentationMode);
             for (DrawSubmission submission : submissions) {
-                drawMaterial(
-                        submission.material(),
-                        submission.viewportX(),
-                        submission.viewportY(),
-                        submission.viewportWidth(),
-                        submission.viewportHeight());
+                drawMaterial(submission.material(), submission.viewportX(), submission.viewportY(), submission.viewportWidth(), submission.viewportHeight());
                 submittedDraws++;
             }
             debugLineRenderer.render(diagnostics, framebufferWidth, framebufferHeight);
@@ -67,10 +51,7 @@ final class ReferenceSceneDrawExecutor {
         drawBackend.setViewport(x, y, width, height);
         drawBackend.applyMaterialState(material);
         for (MaterialTextureBinding textureBinding : material.textures()) {
-            drawBackend.bindTextureAndSampler(
-                    textureBinding.unit(),
-                    textureBinding.textureHandle(),
-                    textureBinding.samplerHandle());
+            drawBackend.bindTextureAndSampler(textureBinding.unit(), textureBinding.textureHandle(), textureBinding.samplerHandle());
         }
         drawBackend.setMaterialScalars(materialProgram, material.scalars());
         drawBackend.setDirectionalLight(materialProgram, REFERENCE_DIRECTIONAL_LIGHT);

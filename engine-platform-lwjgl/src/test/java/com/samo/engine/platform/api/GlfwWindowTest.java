@@ -20,41 +20,19 @@ class GlfwWindowTest {
     @Test
     void constructorRejectsInvalidInputsBeforeBackendActivity() {
         FakeBackend backend = new FakeBackend();
-        EngineLogger logger = new EngineLogger(event -> { });
+        EngineLogger logger = new EngineLogger(event -> {
+        });
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RecordingSizeListener listener = new RecordingSizeListener();
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(0, 720, "window", logger, registry, listener, backend));
-        assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(1280, -1, "window", logger, registry, listener, backend));
-        assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, null, logger, registry, listener, backend));
-        assertThrows(IllegalArgumentException.class,
-                () -> new GlfwWindow(1280, 720, "   ", logger, registry, listener, backend));
-        assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", null, registry, listener, backend));
-        assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(1280, 720, "window", logger, null, listener, backend));
-        assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(
-                        1280,
-                        720,
-                        "window",
-                        logger,
-                        registry,
-                        (WindowSizeListener) null,
-                        backend));
-        assertThrows(NullPointerException.class,
-                () -> new GlfwWindow(
-                        1280,
-                        720,
-                        "window",
-                        logger,
-                        registry,
-                        listener,
-                        null,
-                        backend));
+        assertThrows(IllegalArgumentException.class, () -> new GlfwWindow(0, 720, "window", logger, registry, listener, backend));
+        assertThrows(IllegalArgumentException.class, () -> new GlfwWindow(1280, -1, "window", logger, registry, listener, backend));
+        assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, null, logger, registry, listener, backend));
+        assertThrows(IllegalArgumentException.class, () -> new GlfwWindow(1280, 720, "   ", logger, registry, listener, backend));
+        assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", null, registry, listener, backend));
+        assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", logger, null, listener, backend));
+        assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", logger, registry, (WindowSizeListener) null, backend));
+        assertThrows(NullPointerException.class, () -> new GlfwWindow(1280, 720, "window", logger, registry, listener, null, backend));
         assertEquals(List.of(), backend.trace);
     }
 
@@ -66,19 +44,11 @@ class GlfwWindowTest {
 
         window.initialize();
 
-        assertEquals(List.of(
-                "callback-install",
-                "glfw-init",
-                "hints-default",
-                hint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API),
-                hint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4),
-                hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6),
-                hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE),
-                hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
-                hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE),
-                hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE),
-                hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE),
-                "create:1280x720:  title  "), backend.trace);
+        assertEquals(
+            List.of("callback-install", "glfw-init", "hints-default", hint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API), hint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4),
+                hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6), hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE), hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
+                hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE), hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE), hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE), "create:1280x720:  title  "),
+            backend.trace);
 
         assertThrows(IllegalStateException.class, registry::assertNoOpenResources);
         window.close();
@@ -91,15 +61,8 @@ class GlfwWindowTest {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         List<EngineLogger.Event> events = new ArrayList<>();
-        GlfwWindow window = new GlfwWindow(
-                1280,
-                720,
-                "debug window",
-                new EngineLogger(events::add),
-                registry,
-                new RecordingSizeListener(),
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
-                backend);
+        GlfwWindow window = new GlfwWindow(1280, 720, "debug window", new EngineLogger(events::add), registry, new RecordingSizeListener(), OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
+            backend);
 
         window.initialize();
         assertTrue(backend.trace.contains(hint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE)));
@@ -107,12 +70,7 @@ class GlfwWindowTest {
         assertTrue(backend.trace.contains("debug-context-query"));
         assertTrue(backend.trace.contains("debug-callback-install"));
 
-        backend.emitDebug(
-                GL43.GL_DEBUG_SOURCE_API,
-                GL43.GL_DEBUG_TYPE_ERROR,
-                77,
-                GL43.GL_DEBUG_SEVERITY_HIGH,
-                "fixture invalid operation");
+        backend.emitDebug(GL43.GL_DEBUG_SOURCE_API, GL43.GL_DEBUG_TYPE_ERROR, 77, GL43.GL_DEBUG_SEVERITY_HIGH, "fixture invalid operation");
 
         IllegalStateException failure = assertThrows(IllegalStateException.class, window::pollEvents);
         assertTrue(failure.getMessage().contains("source=API"));
@@ -131,10 +89,8 @@ class GlfwWindowTest {
         registry.assertNoOpenResources();
 
         assertEquals(1, backend.debugReleaseCount);
-        assertTrue(backend.trace.indexOf("debug-callback-release")
-                < backend.trace.indexOf("context:0"));
-        assertTrue(backend.trace.indexOf("debug-callback-release")
-                < backend.trace.indexOf("capabilities-clear"));
+        assertTrue(backend.trace.indexOf("debug-callback-release") < backend.trace.indexOf("context:0"));
+        assertTrue(backend.trace.indexOf("debug-callback-release") < backend.trace.indexOf("capabilities-clear"));
     }
 
     @Test
@@ -142,23 +98,11 @@ class GlfwWindowTest {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         List<EngineLogger.Event> events = new ArrayList<>();
-        GlfwWindow window = new GlfwWindow(
-                1280,
-                720,
-                "debug window",
-                new EngineLogger(events::add),
-                registry,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
-                backend);
+        GlfwWindow window = new GlfwWindow(1280, 720, "debug window", new EngineLogger(events::add), registry, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY, backend);
 
         window.initialize();
         window.start();
-        backend.emitDebug(
-                GL43.GL_DEBUG_SOURCE_APPLICATION,
-                GL43.GL_DEBUG_TYPE_PERFORMANCE,
-                12,
-                GL43.GL_DEBUG_SEVERITY_MEDIUM,
-                "fixture medium");
+        backend.emitDebug(GL43.GL_DEBUG_SOURCE_APPLICATION, GL43.GL_DEBUG_TYPE_PERFORMANCE, 12, GL43.GL_DEBUG_SEVERITY_MEDIUM, "fixture medium");
 
         window.pollEvents();
 
@@ -177,14 +121,8 @@ class GlfwWindowTest {
         FakeBackend backend = new FakeBackend();
         backend.debugContext = false;
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        GlfwWindow window = new GlfwWindow(
-                1280,
-                720,
-                "debug window",
-                new EngineLogger(event -> { }),
-                registry,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
-                backend);
+        GlfwWindow window = new GlfwWindow(1280, 720, "debug window", new EngineLogger(event -> {
+        }), registry, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY, backend);
         window.initialize();
 
         IllegalStateException failure = assertThrows(IllegalStateException.class, window::start);
@@ -202,27 +140,15 @@ class GlfwWindowTest {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         RuntimeException loggingFailure = new IllegalStateException("debug log failed");
-        GlfwWindow window = new GlfwWindow(
-                1280,
-                720,
-                "debug window",
-                new EngineLogger(event -> {
-                    if (event.message().startsWith("OpenGL debug")) {
-                        throw loggingFailure;
-                    }
-                }),
-                registry,
-                OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY,
-                backend);
+        GlfwWindow window = new GlfwWindow(1280, 720, "debug window", new EngineLogger(event -> {
+            if (event.message().startsWith("OpenGL debug")) {
+                throw loggingFailure;
+            }
+        }), registry, OpenGlDebugMode.FAIL_ON_HIGH_SEVERITY, backend);
         window.initialize();
         window.start();
 
-        backend.emitDebug(
-                GL43.GL_DEBUG_SOURCE_API,
-                GL43.GL_DEBUG_TYPE_PERFORMANCE,
-                3,
-                GL43.GL_DEBUG_SEVERITY_LOW,
-                "low message");
+        backend.emitDebug(GL43.GL_DEBUG_SOURCE_API, GL43.GL_DEBUG_TYPE_PERFORMANCE, 3, GL43.GL_DEBUG_SEVERITY_LOW, "low message");
 
         RuntimeException actual = assertThrows(RuntimeException.class, window::pollEvents);
         assertSame(loggingFailure, actual);
@@ -249,33 +175,11 @@ class GlfwWindowTest {
         assertEquals(2, events.size());
         assertEvent(events.get(0), "OpenGL version: 4.6 fixture");
         assertEvent(events.get(1), "OpenGL renderer: fixture renderer");
-        assertEquals(List.of(
-                "callback-install",
-                "glfw-init",
-                "hints-default",
-                hint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API),
-                hint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4),
-                hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6),
-                hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE),
-                hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
-                hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE),
-                hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE),
-                hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE),
-                "create:1280x720:  title  ",
-                "context:101",
-                "capabilities-create",
-                "size-callbacks-install:101",
-                "logical-query:101",
-                "framebuffer-query:101",
-                "show:101",
-                "size-callbacks-release:101",
-                "hide:101",
-                "context:0",
-                "capabilities-clear",
-                "destroy:101",
-                "glfw-terminate",
-                "callback-restore",
-                "callback-free"), backend.trace);
+        assertEquals(List.of("callback-install", "glfw-init", "hints-default", hint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API), hint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4),
+            hint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 6), hint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE), hint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE),
+            hint(GLFW.GLFW_SRGB_CAPABLE, GLFW.GLFW_TRUE), hint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE), hint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE), "create:1280x720:  title  ",
+            "context:101", "capabilities-create", "size-callbacks-install:101", "logical-query:101", "framebuffer-query:101", "show:101", "size-callbacks-release:101", "hide:101",
+            "context:0", "capabilities-clear", "destroy:101", "glfw-terminate", "callback-restore", "callback-free"), backend.trace);
     }
 
     @Test
@@ -467,8 +371,7 @@ class GlfwWindowTest {
         GlfwWindow window = window(backend, registry, new ArrayList<>());
 
         assertThrows(NullPointerException.class, () -> window.setWindowMode(null));
-        assertThrows(IllegalStateException.class,
-                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        assertThrows(IllegalStateException.class, () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
         assertEquals(0, backend.modeTransitionCount);
 
         window.initialize();
@@ -491,8 +394,7 @@ class GlfwWindowTest {
         assertEquals(traceSize, backend.trace.size());
 
         window.stop();
-        assertThrows(IllegalStateException.class,
-                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        assertThrows(IllegalStateException.class, () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
         assertEquals(0, backend.modeTransitionCount);
         window.close();
         registry.assertNoOpenResources();
@@ -572,17 +474,13 @@ class GlfwWindowTest {
         window.start();
 
         backend.primaryMonitor = 0L;
-        IllegalStateException missing = assertThrows(
-                IllegalStateException.class,
-                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        IllegalStateException missing = assertThrows(IllegalStateException.class, () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
         assertTrue(missing.getMessage().contains("primary monitor"));
         assertEquals(0, backend.modeTransitionCount);
 
         backend.primaryMonitor = 202L;
         backend.videoMode = new GlfwVideoMode(0, 1080, 60);
-        IllegalStateException invalid = assertThrows(
-                IllegalStateException.class,
-                () -> window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN));
+        IllegalStateException invalid = assertThrows(IllegalStateException.class, () -> window.setWindowMode(WindowMode.EXCLUSIVE_FULLSCREEN));
         assertTrue(invalid.getMessage().contains("invalid primary monitor video mode"));
         assertEquals(0, backend.modeTransitionCount);
 
@@ -603,9 +501,7 @@ class GlfwWindowTest {
         window.initialize();
         window.start();
 
-        RuntimeException actual = assertThrows(
-                RuntimeException.class,
-                () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
+        RuntimeException actual = assertThrows(RuntimeException.class, () -> window.setWindowMode(WindowMode.BORDERLESS_FULLSCREEN));
 
         assertSame(transitionFailure, actual);
         assertEquals(1, actual.getSuppressed().length);
@@ -703,8 +599,8 @@ class GlfwWindowTest {
     void registryFailureDestroysUnregisteredWindowDirectlyThenRollsBack() {
         FakeBackend backend = new FakeBackend();
         NativeResourceRegistry registry = new NativeResourceRegistry();
-        NativeResourceRegistry.Registration existing =
-                registry.register("GLFW window", 101L, () -> { });
+        NativeResourceRegistry.Registration existing = registry.register("GLFW window", 101L, () -> {
+        });
         GlfwWindow window = window(backend, registry, new ArrayList<>());
 
         assertThrows(IllegalStateException.class, window::initialize);
@@ -870,26 +766,12 @@ class GlfwWindowTest {
         assertEquals(1, backend.destroyCount);
     }
 
-    private static GlfwWindow window(
-            FakeBackend backend,
-            NativeResourceRegistry registry,
-            List<EngineLogger.Event> events) {
+    private static GlfwWindow window(FakeBackend backend, NativeResourceRegistry registry, List<EngineLogger.Event> events) {
         return window(backend, registry, events, new RecordingSizeListener());
     }
 
-    private static GlfwWindow window(
-            FakeBackend backend,
-            NativeResourceRegistry registry,
-            List<EngineLogger.Event> events,
-            WindowSizeListener listener) {
-        return new GlfwWindow(
-                1280,
-                720,
-                "  title  ",
-                new EngineLogger(events::add),
-                registry,
-                listener,
-                backend);
+    private static GlfwWindow window(FakeBackend backend, NativeResourceRegistry registry, List<EngineLogger.Event> events, WindowSizeListener listener) {
+        return new GlfwWindow(1280, 720, "  title  ", new EngineLogger(events::add), registry, listener, backend);
     }
 
     private static void assertEvent(EngineLogger.Event event, String expectedMessage) {
@@ -1135,16 +1017,8 @@ class GlfwWindowTest {
         }
 
         @Override
-        public void setWindowMonitor(
-                long handle,
-                long monitor,
-                int x,
-                int y,
-                int width,
-                int height,
-                int refreshRate) {
-            trace.add("window-monitor:" + handle + ":" + monitor + ":"
-                    + x + "," + y + ":" + width + "x" + height + "@" + refreshRate);
+        public void setWindowMonitor(long handle, long monitor, int x, int y, int width, int height, int refreshRate) {
+            trace.add("window-monitor:" + handle + ":" + monitor + ":" + x + "," + y + ":" + width + "x" + height + "@" + refreshRate);
             modeTransitionCount++;
             if (!transitionFailures.isEmpty()) {
                 throw transitionFailures.removeFirst();

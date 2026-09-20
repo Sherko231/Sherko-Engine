@@ -6,17 +6,10 @@ import org.joml.Matrix4fc;
 
 /** Builds world-space rays from top-left-origin screen/viewport coordinates. */
 public final class ScreenRays {
-    private ScreenRays() {}
+    private ScreenRays() {
+    }
 
-    public static Ray3f worldRay(
-            float screenX,
-            float screenY,
-            int viewportX,
-            int viewportY,
-            int viewportWidth,
-            int viewportHeight,
-            Matrix4fc view,
-            Matrix4fc projection) {
+    public static Ray3f worldRay(float screenX, float screenY, int viewportX, int viewportY, int viewportWidth, int viewportHeight, Matrix4fc view, Matrix4fc projection) {
         Objects.requireNonNull(view, "view");
         Objects.requireNonNull(projection, "projection");
         requireFinite(screenX, "screenX");
@@ -30,8 +23,7 @@ public final class ScreenRays {
 
         double viewportMaxX = (double) viewportX + viewportWidth;
         double viewportMaxY = (double) viewportY + viewportHeight;
-        if (screenX < viewportX || screenX > viewportMaxX
-                || screenY < viewportY || screenY > viewportMaxY) {
+        if (screenX < viewportX || screenX > viewportMaxX || screenY < viewportY || screenY > viewportMaxY) {
             throw new IllegalArgumentException("screen sample must lie inside the closed viewport rectangle");
         }
 
@@ -74,13 +66,7 @@ public final class ScreenRays {
         requireFinite(farY, "far world y");
         requireFinite(farZ, "far world z");
 
-        return new Ray3f(
-                nearX,
-                nearY,
-                nearZ,
-                farX - nearX,
-                farY - nearY,
-                farZ - nearZ);
+        return new Ray3f(nearX, nearY, nearZ, farX - nearX, farY - nearY, farZ - nearZ);
     }
 
     private static float transformX(Matrix4fc matrix, float x, float y, float z) {

@@ -16,47 +16,34 @@ final class SpatialPrimitivesTest {
         Ray3f ray = new Ray3f(new Vector3f(1, 2, 3), new Vector3f(0, 0, -4));
         assertVector(ray.direction(new Vector3f()), 0, 0, -1);
         assertVector(ray.pointAt(2.5f, new Vector3f()), 1, 2, 0.5f);
-        assertThrows(IllegalArgumentException.class,
-                () -> new Ray3f(new Vector3f(), new Vector3f()));
-        assertThrows(IllegalArgumentException.class,
-                () -> ray.pointAt(-1, new Vector3f()));
+        assertThrows(IllegalArgumentException.class, () -> new Ray3f(new Vector3f(), new Vector3f()));
+        assertThrows(IllegalArgumentException.class, () -> ray.pointAt(-1, new Vector3f()));
     }
 
     @Test
     void rayPlaneCoversHitContactAndParallelMiss() {
         Plane3f plane = Plane3f.fromPointNormal(new Vector3f(0, 0, -5), new Vector3f(0, 0, 2));
-        assertEquals(5.0f,
-                new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectPlane(plane), EPSILON);
-        assertEquals(0.0f,
-                new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectPlane(plane));
-        assertTrue(Float.isNaN(
-                new Ray3f(new Vector3f(), new Vector3f(1, 0, 0)).intersectPlane(plane)));
+        assertEquals(5.0f, new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectPlane(plane), EPSILON);
+        assertEquals(0.0f, new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectPlane(plane));
+        assertTrue(Float.isNaN(new Ray3f(new Vector3f(), new Vector3f(1, 0, 0)).intersectPlane(plane)));
     }
 
     @Test
     void raySphereCoversOutsideTangentInsideAndMiss() {
         Sphere3f sphere = new Sphere3f(new Vector3f(0, 0, -5), 1);
-        assertEquals(4.0f,
-                new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectSphere(sphere), EPSILON);
-        assertEquals(5.0f,
-                new Ray3f(new Vector3f(0, 1, 0), new Vector3f(0, 0, -1)).intersectSphere(sphere), EPSILON);
-        assertEquals(0.0f,
-                new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectSphere(sphere));
-        assertTrue(Float.isNaN(
-                new Ray3f(new Vector3f(0, 2, 0), new Vector3f(0, 0, -1)).intersectSphere(sphere)));
+        assertEquals(4.0f, new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectSphere(sphere), EPSILON);
+        assertEquals(5.0f, new Ray3f(new Vector3f(0, 1, 0), new Vector3f(0, 0, -1)).intersectSphere(sphere), EPSILON);
+        assertEquals(0.0f, new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectSphere(sphere));
+        assertTrue(Float.isNaN(new Ray3f(new Vector3f(0, 2, 0), new Vector3f(0, 0, -1)).intersectSphere(sphere)));
     }
 
     @Test
     void rayAabbCoversHitContactInsideAndMiss() {
         Aabb3f box = new Aabb3f(new Vector3f(-1, -1, -6), new Vector3f(1, 1, -4));
-        assertEquals(4.0f,
-                new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectAabb(box), EPSILON);
-        assertEquals(0.0f,
-                new Ray3f(new Vector3f(1, 0, -5), new Vector3f(1, 0, 0)).intersectAabb(box));
-        assertEquals(0.0f,
-                new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectAabb(box));
-        assertTrue(Float.isNaN(
-                new Ray3f(new Vector3f(2, 0, 0), new Vector3f(0, 0, -1)).intersectAabb(box)));
+        assertEquals(4.0f, new Ray3f(new Vector3f(), new Vector3f(0, 0, -1)).intersectAabb(box), EPSILON);
+        assertEquals(0.0f, new Ray3f(new Vector3f(1, 0, -5), new Vector3f(1, 0, 0)).intersectAabb(box));
+        assertEquals(0.0f, new Ray3f(new Vector3f(0, 0, -5), new Vector3f(1, 0, 0)).intersectAabb(box));
+        assertTrue(Float.isNaN(new Ray3f(new Vector3f(2, 0, 0), new Vector3f(0, 0, -1)).intersectAabb(box)));
     }
 
     @Test
@@ -70,8 +57,7 @@ final class SpatialPrimitivesTest {
 
         Plane3f fromPoint = Plane3f.fromPointNormal(new Vector3f(0, 2, 0), new Vector3f(0, 5, 0));
         assertEquals(0.0f, fromPoint.signedDistance(new Vector3f(4, 2, -7)), EPSILON);
-        assertThrows(IllegalArgumentException.class,
-                () -> new Plane3f(new Vector3f(), 0));
+        assertThrows(IllegalArgumentException.class, () -> new Plane3f(new Vector3f(), 0));
     }
 
     @Test
@@ -85,8 +71,7 @@ final class SpatialPrimitivesTest {
         assertTrue(sphere.intersects(new Aabb3f(new Vector3f(2, -1, -1), new Vector3f(3, 1, 1))));
         assertFalse(sphere.intersects(new Aabb3f(new Vector3f(2.01f, -1, -1), new Vector3f(3, 1, 1))));
         assertTrue(new Sphere3f(new Vector3f(1, 2, 3), 0).containsPoint(new Vector3f(1, 2, 3)));
-        assertThrows(IllegalArgumentException.class,
-                () -> new Sphere3f(new Vector3f(), -0.1f));
+        assertThrows(IllegalArgumentException.class, () -> new Sphere3f(new Vector3f(), -0.1f));
     }
 
     @Test
@@ -99,10 +84,8 @@ final class SpatialPrimitivesTest {
         assertFalse(box.intersects(new Aabb3f(new Vector3f(1.01f, -1, -1), new Vector3f(2, 1, 1))));
         assertTrue(box.intersects(new Sphere3f(new Vector3f(2, 0, 0), 1)));
         assertFalse(box.intersects(new Sphere3f(new Vector3f(2.01f, 0, 0), 1)));
-        assertTrue(new Aabb3f(new Vector3f(1, 1, 1), new Vector3f(1, 1, 1))
-                .containsPoint(new Vector3f(1, 1, 1)));
-        assertThrows(IllegalArgumentException.class,
-                () -> new Aabb3f(new Vector3f(2, 0, 0), new Vector3f(1, 1, 1)));
+        assertTrue(new Aabb3f(new Vector3f(1, 1, 1), new Vector3f(1, 1, 1)).containsPoint(new Vector3f(1, 1, 1)));
+        assertThrows(IllegalArgumentException.class, () -> new Aabb3f(new Vector3f(2, 0, 0), new Vector3f(1, 1, 1)));
     }
 
     @Test
@@ -115,10 +98,8 @@ final class SpatialPrimitivesTest {
         assertTrue(frustum.intersects(new Sphere3f(new Vector3f(2, 0, 0), 1)));
         assertFalse(frustum.intersects(new Sphere3f(new Vector3f(2.01f, 0, 0), 1)));
 
-        assertTrue(frustum.intersects(
-                new Aabb3f(new Vector3f(-0.5f, -0.5f, -1.5f), new Vector3f(0.5f, 0.5f, -1))));
-        assertFalse(frustum.intersects(
-                new Aabb3f(new Vector3f(1.01f, -0.5f, -0.5f), new Vector3f(2, 0.5f, 0.5f))));
+        assertTrue(frustum.intersects(new Aabb3f(new Vector3f(-0.5f, -0.5f, -1.5f), new Vector3f(0.5f, 0.5f, -1))));
+        assertFalse(frustum.intersects(new Aabb3f(new Vector3f(1.01f, -0.5f, -0.5f), new Vector3f(2, 0.5f, 0.5f))));
     }
 
     @Test
@@ -134,24 +115,15 @@ final class SpatialPrimitivesTest {
 
     @Test
     void nonFiniteInputsAreRejected() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new Ray3f(new Vector3f(Float.NaN, 0, 0), new Vector3f(1, 0, 0)));
-        assertThrows(IllegalArgumentException.class,
-                () -> new Plane3f(new Vector3f(1, 0, 0), Float.POSITIVE_INFINITY));
-        assertThrows(IllegalArgumentException.class,
-                () -> new Sphere3f(new Vector3f(), Float.NaN));
-        assertThrows(IllegalArgumentException.class,
-                () -> new Aabb3f(new Vector3f(), new Vector3f(Float.POSITIVE_INFINITY, 1, 1)));
+        assertThrows(IllegalArgumentException.class, () -> new Ray3f(new Vector3f(Float.NaN, 0, 0), new Vector3f(1, 0, 0)));
+        assertThrows(IllegalArgumentException.class, () -> new Plane3f(new Vector3f(1, 0, 0), Float.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> new Sphere3f(new Vector3f(), Float.NaN));
+        assertThrows(IllegalArgumentException.class, () -> new Aabb3f(new Vector3f(), new Vector3f(Float.POSITIVE_INFINITY, 1, 1)));
     }
 
     private static Frustum3f unitBoxFrustum() {
-        return new Frustum3f(
-                new Plane3f(new Vector3f(1, 0, 0), 1),
-                new Plane3f(new Vector3f(-1, 0, 0), 1),
-                new Plane3f(new Vector3f(0, 1, 0), 1),
-                new Plane3f(new Vector3f(0, -1, 0), 1),
-                new Plane3f(new Vector3f(0, 0, 1), 1),
-                new Plane3f(new Vector3f(0, 0, -1), 1));
+        return new Frustum3f(new Plane3f(new Vector3f(1, 0, 0), 1), new Plane3f(new Vector3f(-1, 0, 0), 1), new Plane3f(new Vector3f(0, 1, 0), 1),
+            new Plane3f(new Vector3f(0, -1, 0), 1), new Plane3f(new Vector3f(0, 0, 1), 1), new Plane3f(new Vector3f(0, 0, -1), 1));
     }
 
     private static void assertVector(Vector3f actual, float x, float y, float z) {

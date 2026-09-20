@@ -31,21 +31,13 @@ final class SandboxCamera {
         position.z += (float) ((rightZ * moveX + forwardZ * moveY) * movementScale * step);
 
         yawRadians = wrapYaw(yawRadians + (float) command.lookX() * LOOK_RADIANS_PER_UNIT);
-        pitchRadians = clampPitch(
-                pitchRadians - (float) command.lookY() * LOOK_RADIANS_PER_UNIT);
+        pitchRadians = clampPitch(pitchRadians - (float) command.lookY() * LOOK_RADIANS_PER_UNIT);
     }
 
     Matrix4f view(Matrix4f destination) {
         float cosPitch = (float) Math.cos(pitchRadians);
-        Vector3f forward = new Vector3f(
-                (float) Math.sin(yawRadians) * cosPitch,
-                (float) Math.sin(pitchRadians),
-                (float) -Math.cos(yawRadians) * cosPitch);
-        return CameraMatrices.view(
-                position,
-                forward,
-                new Vector3f(0.0f, 1.0f, 0.0f),
-                destination);
+        Vector3f forward = new Vector3f((float) Math.sin(yawRadians) * cosPitch, (float) Math.sin(pitchRadians), (float) -Math.cos(yawRadians) * cosPitch);
+        return CameraMatrices.view(position, forward, new Vector3f(0.0f, 1.0f, 0.0f), destination);
     }
 
     Vector3f position(Vector3f destination) {

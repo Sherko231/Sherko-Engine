@@ -12,26 +12,22 @@ final class ScreenRaysTest {
 
     @Test
     void centerPixelProducesNearPlaneForwardRay() {
-        Ray3f ray = ScreenRays.worldRay(
-                1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f ray = ScreenRays.worldRay(1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
 
         assertRay(ray, 0, 0, -1, 0, 0, -1);
     }
 
     @Test
     void oddSizedCenterPixelCenterMapsExactlyToForward() {
-        Ray3f ray = ScreenRays.worldRay(
-                2.5f, 3.5f, 0, 0, 5, 7, new Matrix4f(), perspective90());
+        Ray3f ray = ScreenRays.worldRay(2.5f, 3.5f, 0, 0, 5, 7, new Matrix4f(), perspective90());
 
         assertRay(ray, 0, 0, -1, 0, 0, -1);
     }
 
     @Test
     void topAndBottomBoundariesUseTopLeftOriginAndDownwardScreenY() {
-        Ray3f top = ScreenRays.worldRay(
-                1.5f, 0.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
-        Ray3f bottom = ScreenRays.worldRay(
-                1.5f, 3.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f top = ScreenRays.worldRay(1.5f, 0.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f bottom = ScreenRays.worldRay(1.5f, 3.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
 
         float inverseSqrt2 = (float) (1.0 / Math.sqrt(2.0));
         assertRay(top, 0, 1, -1, 0, inverseSqrt2, -inverseSqrt2);
@@ -40,10 +36,8 @@ final class ScreenRaysTest {
 
     @Test
     void leftAndRightBoundariesMapToHorizontalFrustumEdges() {
-        Ray3f left = ScreenRays.worldRay(
-                0.0f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
-        Ray3f right = ScreenRays.worldRay(
-                3.0f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f left = ScreenRays.worldRay(0.0f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f right = ScreenRays.worldRay(3.0f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
 
         float inverseSqrt2 = (float) (1.0 / Math.sqrt(2.0));
         assertRay(left, -1, 0, -1, -inverseSqrt2, 0, -inverseSqrt2);
@@ -52,24 +46,17 @@ final class ScreenRaysTest {
 
     @Test
     void offsetViewportPreservesLocalMapping() {
-        Ray3f originViewport = ScreenRays.worldRay(
-                3.0f, 0.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
-        Ray3f offsetViewport = ScreenRays.worldRay(
-                13.0f, 20.0f, 10, 20, 3, 3, new Matrix4f(), perspective90());
+        Ray3f originViewport = ScreenRays.worldRay(3.0f, 0.0f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f offsetViewport = ScreenRays.worldRay(13.0f, 20.0f, 10, 20, 3, 3, new Matrix4f(), perspective90());
 
         assertSameRay(originViewport, offsetViewport);
     }
 
     @Test
     void rotatedCameraFacingPositiveXProducesPositiveXCenterRay() {
-        Matrix4f view = new Matrix4f().set(
-                0, 0, -1, 0,
-                0, 1, 0, 0,
-                1, 0, 0, 0,
-                0, 0, 0, 1);
+        Matrix4f view = new Matrix4f().set(0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1);
 
-        Ray3f ray = ScreenRays.worldRay(
-                1.5f, 1.5f, 0, 0, 3, 3, view, perspective90());
+        Ray3f ray = ScreenRays.worldRay(1.5f, 1.5f, 0, 0, 3, 3, view, perspective90());
 
         assertRay(ray, 1, 0, 0, 1, 0, 0);
     }
@@ -85,8 +72,7 @@ final class ScreenRaysTest {
         assertMatrixEquals(originalView, view);
         assertMatrixEquals(originalProjection, projection);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(-1, 1.5f, 0, 0, 3, 3, view, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(-1, 1.5f, 0, 0, 3, 3, view, projection));
         assertMatrixEquals(originalView, view);
         assertMatrixEquals(originalProjection, projection);
     }
@@ -96,32 +82,21 @@ final class ScreenRaysTest {
         Matrix4f identity = new Matrix4f();
         Matrix4f projection = perspective90();
 
-        assertThrows(NullPointerException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, null, projection));
-        assertThrows(NullPointerException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, null));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(Float.NaN, 1, 0, 0, 3, 3, identity, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, Float.POSITIVE_INFINITY, 0, 0, 3, 3, identity, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 0, 3, identity, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, -1, identity, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(-0.01f, 1, 0, 0, 3, 3, identity, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(3.01f, 1, 0, 0, 3, 3, identity, projection));
+        assertThrows(NullPointerException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, null, projection));
+        assertThrows(NullPointerException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, null));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(Float.NaN, 1, 0, 0, 3, 3, identity, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, Float.POSITIVE_INFINITY, 0, 0, 3, 3, identity, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 0, 3, identity, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, -1, identity, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(-0.01f, 1, 0, 0, 3, 3, identity, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(3.01f, 1, 0, 0, 3, 3, identity, projection));
 
         Matrix4f nonFinite = new Matrix4f().m00(Float.NaN);
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, nonFinite, projection));
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, nonFinite));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, nonFinite, projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, nonFinite));
 
         Matrix4f singular = new Matrix4f().zero();
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, singular));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1, 1, 0, 0, 3, 3, identity, singular));
     }
 
     @Test
@@ -129,35 +104,22 @@ final class ScreenRaysTest {
         Matrix4f inverseViewProjection = new Matrix4f().identity().m23(1.0f).m33(1.0f);
         Matrix4f projection = new Matrix4f(inverseViewProjection).invert();
 
-        assertThrows(IllegalArgumentException.class,
-                () -> ScreenRays.worldRay(1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), projection));
+        assertThrows(IllegalArgumentException.class, () -> ScreenRays.worldRay(1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), projection));
     }
 
     @Test
     void constructedRayWorksWithExistingGeometryQueries() {
-        Ray3f ray = ScreenRays.worldRay(
-                1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
+        Ray3f ray = ScreenRays.worldRay(1.5f, 1.5f, 0, 0, 3, 3, new Matrix4f(), perspective90());
         Sphere3f sphere = new Sphere3f(new Vector3f(0, 0, -5), 1.0f);
 
         assertEquals(3.0f, ray.intersectSphere(sphere), EPSILON);
     }
 
     private static Matrix4f perspective90() {
-        return new Matrix4f().set(
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, -1.2f, -1,
-                0, 0, -2.2f, 0);
+        return new Matrix4f().set(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1.2f, -1, 0, 0, -2.2f, 0);
     }
 
-    private static void assertRay(
-            Ray3f ray,
-            float originX,
-            float originY,
-            float originZ,
-            float directionX,
-            float directionY,
-            float directionZ) {
+    private static void assertRay(Ray3f ray, float originX, float originY, float originZ, float directionX, float directionY, float directionZ) {
         Vector3f origin = ray.origin(new Vector3f());
         Vector3f direction = ray.direction(new Vector3f());
         assertEquals(originX, origin.x, EPSILON);

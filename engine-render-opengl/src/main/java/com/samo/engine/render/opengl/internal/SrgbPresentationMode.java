@@ -5,8 +5,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL21;
 
 enum SrgbPresentationMode {
-    HARDWARE_SRGB(true, false),
-    MANUAL_SRGB(false, true);
+    HARDWARE_SRGB(true, false), MANUAL_SRGB(false, true);
 
     private final boolean framebufferSrgbEnabled;
     private final boolean manualShaderEncode;
@@ -23,8 +22,7 @@ enum SrgbPresentationMode {
         if (encoding == GL11.GL_LINEAR) {
             return MANUAL_SRGB;
         }
-        throw new IllegalStateException(
-                "Unsupported default framebuffer color encoding: " + encoding);
+        throw new IllegalStateException("Unsupported default framebuffer color encoding: " + encoding);
     }
 
     boolean framebufferSrgbEnabled() {
@@ -38,13 +36,9 @@ enum SrgbPresentationMode {
         }
         String version = "#version 460 core";
         if (!source.startsWith(version)) {
-            throw new IllegalArgumentException(
-                    "Fragment shader must start with '" + version + "' for presentation variant injection");
+            throw new IllegalArgumentException("Fragment shader must start with '" + version + "' for presentation variant injection");
         }
-        return version
-                + System.lineSeparator()
-                + "#define SHERKO_MANUAL_SRGB_ENCODE 1"
-                + source.substring(version.length());
+        return version + System.lineSeparator() + "#define SHERKO_MANUAL_SRGB_ENCODE 1" + source.substring(version.length());
     }
 
     float clearComponent(float linear) {

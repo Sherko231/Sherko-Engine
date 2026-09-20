@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 class RendererVisualDemoFramebufferSizeTest {
     @Test
     void tracksOnlyFramebufferSizeCallbacks() {
-        RendererVisualDemoFramebufferSize size =
-                new RendererVisualDemoFramebufferSize(1280, 720);
+        RendererVisualDemoFramebufferSize size = new RendererVisualDemoFramebufferSize(1280, 720);
 
         size.onLogicalWindowSizeChanged(640, 360);
         assertEquals(1280, size.width());

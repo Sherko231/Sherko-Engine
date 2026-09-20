@@ -19,23 +19,11 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
 
         GL45.glEnableVertexArrayAttrib(vertexArray, 1);
-        GL45.glVertexArrayAttribFormat(
-                vertexArray,
-                1,
-                3,
-                GL11.GL_FLOAT,
-                false,
-                3 * Float.BYTES);
+        GL45.glVertexArrayAttribFormat(vertexArray, 1, 3, GL11.GL_FLOAT, false, 3 * Float.BYTES);
         GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
 
         GL45.glEnableVertexArrayAttrib(vertexArray, 2);
-        GL45.glVertexArrayAttribFormat(
-                vertexArray,
-                2,
-                2,
-                GL11.GL_FLOAT,
-                false,
-                6 * Float.BYTES);
+        GL45.glVertexArrayAttribFormat(vertexArray, 2, 2, GL11.GL_FLOAT, false, 6 * Float.BYTES);
         GL45.glVertexArrayAttribBinding(vertexArray, 2, 0);
     }
 
@@ -49,13 +37,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
 
         GL45.glEnableVertexArrayAttrib(vertexArray, 1);
-        GL45.glVertexArrayAttribFormat(
-                vertexArray,
-                1,
-                3,
-                GL11.GL_FLOAT,
-                false,
-                3 * Float.BYTES);
+        GL45.glVertexArrayAttribFormat(vertexArray, 1, 3, GL11.GL_FLOAT, false, 3 * Float.BYTES);
         GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
     }
 
@@ -69,13 +51,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
         GL45.glVertexArrayAttribBinding(vertexArray, 0, 0);
 
         GL45.glEnableVertexArrayAttrib(vertexArray, 1);
-        GL45.glVertexArrayAttribFormat(
-                vertexArray,
-                1,
-                3,
-                GL11.GL_FLOAT,
-                false,
-                3 * Float.BYTES);
+        GL45.glVertexArrayAttribFormat(vertexArray, 1, 3, GL11.GL_FLOAT, false, 3 * Float.BYTES);
         GL45.glVertexArrayAttribBinding(vertexArray, 1, 0);
     }
 
@@ -150,10 +126,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
 
     @Override
     public int defaultFramebufferColorEncoding() {
-        return GL30.glGetFramebufferAttachmentParameteri(
-                GL30.GL_FRAMEBUFFER,
-                GL11.GL_BACK_LEFT,
-                GL30.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
+        return GL30.glGetFramebufferAttachmentParameteri(GL30.GL_FRAMEBUFFER, GL11.GL_BACK_LEFT, GL30.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
     }
 
     @Override
@@ -167,11 +140,7 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
 
     @Override
     public void clearFrame(SrgbPresentationMode presentationMode) {
-        GL11.glClearColor(
-                presentationMode.clearComponent(0.08f),
-                presentationMode.clearComponent(0.10f),
-                presentationMode.clearComponent(0.14f),
-                1.0f);
+        GL11.glClearColor(presentationMode.clearComponent(0.08f), presentationMode.clearComponent(0.10f), presentationMode.clearComponent(0.14f), 1.0f);
         GL11.glClearDepth(1.0d);
         GL11.glDepthMask(true);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -185,29 +154,13 @@ final class LwjglOpenGlDrawBackend implements OpenGlDrawBackend {
 
     @Override
     public void setMaterialScalars(int program, MaterialScalars scalars) {
-        GL41.glProgramUniform4f(
-                program,
-                0,
-                scalars.redMultiplier(),
-                scalars.greenMultiplier(),
-                scalars.blueMultiplier(),
-                scalars.alphaMultiplier());
+        GL41.glProgramUniform4f(program, 0, scalars.redMultiplier(), scalars.greenMultiplier(), scalars.blueMultiplier(), scalars.alphaMultiplier());
     }
 
     @Override
     public void setDirectionalLight(int program, DirectionalLight light) {
-        GL41.glProgramUniform3f(
-                program,
-                1,
-                light.directionX(),
-                light.directionY(),
-                light.directionZ());
-        GL41.glProgramUniform3f(
-                program,
-                2,
-                light.red(),
-                light.green(),
-                light.blue());
+        GL41.glProgramUniform3f(program, 1, light.directionX(), light.directionY(), light.directionZ());
+        GL41.glProgramUniform3f(program, 2, light.red(), light.green(), light.blue());
         GL41.glProgramUniform1f(program, 3, light.intensity());
     }
 

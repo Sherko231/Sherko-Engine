@@ -12,14 +12,7 @@ public final class InputActionState {
     private final double x;
     private final double y;
 
-    InputActionState(
-            InputAction action,
-            boolean pressed,
-            boolean held,
-            boolean released,
-            double value,
-            double x,
-            double y) {
+    InputActionState(InputAction action, boolean pressed, boolean held, boolean released, double value, double x, double y) {
         this.action = Objects.requireNonNull(action, "action");
         if (!Double.isFinite(value) || !Double.isFinite(x) || !Double.isFinite(y)) {
             throw new IllegalArgumentException("action values must be finite");

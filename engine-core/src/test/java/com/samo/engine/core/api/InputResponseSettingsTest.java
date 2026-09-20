@@ -40,36 +40,21 @@ class InputResponseSettingsTest {
 
     @Test
     void validatesSettingsValues() {
-        assertThatThrownBy(() -> new InputResponseSettings(-0.1d, false, 0.0d, 1.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("mouseSensitivity");
-        assertThatThrownBy(() -> new InputResponseSettings(Double.NaN, false, 0.0d, 1.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("mouseSensitivity");
-        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, -0.1d, 1.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("controllerDeadZone");
-        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 1.0d, 1.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("controllerDeadZone");
-        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 0.0d, 0.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("controllerCurveExponent");
-        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 0.0d, Double.POSITIVE_INFINITY))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("controllerCurveExponent");
+        assertThatThrownBy(() -> new InputResponseSettings(-0.1d, false, 0.0d, 1.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mouseSensitivity");
+        assertThatThrownBy(() -> new InputResponseSettings(Double.NaN, false, 0.0d, 1.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mouseSensitivity");
+        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, -0.1d, 1.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("controllerDeadZone");
+        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 1.0d, 1.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("controllerDeadZone");
+        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 0.0d, 0.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("controllerCurveExponent");
+        assertThatThrownBy(() -> new InputResponseSettings(1.0d, false, 0.0d, Double.POSITIVE_INFINITY)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("controllerCurveExponent");
     }
 
     @Test
     void rejectsNonFiniteMouseInputAndOverflow() {
         InputResponseSettings settings = new InputResponseSettings(Double.MAX_VALUE, false, 0.0d, 1.0d);
 
-        assertThatThrownBy(() -> settings.applyMouseX(Double.NaN))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("finite");
-        assertThatThrownBy(() -> settings.applyMouseY(2.0d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("finite");
+        assertThatThrownBy(() -> settings.applyMouseX(Double.NaN)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("finite");
+        assertThatThrownBy(() -> settings.applyMouseY(2.0d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("finite");
     }
 
     @Test
@@ -97,14 +82,8 @@ class InputResponseSettingsTest {
     void rejectsInvalidControllerAxisInput() {
         InputResponseSettings settings = InputResponseSettings.defaults();
 
-        assertThatThrownBy(() -> settings.applyControllerAxis(Double.NaN))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("finite");
-        assertThatThrownBy(() -> settings.applyControllerAxis(1.0001d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("[-1, 1]");
-        assertThatThrownBy(() -> settings.applyControllerAxis(-1.0001d))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("[-1, 1]");
+        assertThatThrownBy(() -> settings.applyControllerAxis(Double.NaN)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("finite");
+        assertThatThrownBy(() -> settings.applyControllerAxis(1.0001d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("[-1, 1]");
+        assertThatThrownBy(() -> settings.applyControllerAxis(-1.0001d)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("[-1, 1]");
     }
 }

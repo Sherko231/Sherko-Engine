@@ -25,9 +25,7 @@ class UniformBlockLayoutVerifierTest {
         FakeReflectionBackend backend = expectedBackend();
         backend.indices.put(CameraMatricesUniformBlock.GLSL_BLOCK_NAME, -1);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("Missing"));
@@ -38,9 +36,7 @@ class UniformBlockLayoutVerifierTest {
         FakeReflectionBackend backend = expectedBackend();
         backend.sizes.put(0, CameraMatricesUniformBlock.SIZE_BYTES + 16);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(CameraMatricesUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=128"));
@@ -52,9 +48,7 @@ class UniformBlockLayoutVerifierTest {
         FakeReflectionBackend backend = expectedBackend();
         backend.bindings.put(1, 5);
 
-        IllegalStateException failure = assertThrows(
-                IllegalStateException.class,
-                () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> UniformBlockLayoutVerifier.verify(7, boundGuard(), backend));
 
         assertTrue(failure.getMessage().contains(FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME));
         assertTrue(failure.getMessage().contains("expected=1"));
@@ -76,12 +70,8 @@ class UniformBlockLayoutVerifierTest {
     }
 
     private static OpenGlThreadGuard boundGuard() {
-        GlfwWindow window = new GlfwWindow(
-                1,
-                1,
-                "guard fixture",
-                new EngineLogger(event -> { }),
-                new NativeResourceRegistry());
+        GlfwWindow window = new GlfwWindow(1, 1, "guard fixture", new EngineLogger(event -> {
+        }), new NativeResourceRegistry());
         OpenGlThreadGuard guard = window.openGlThreadGuard();
         try {
             Method bind = OpenGlThreadGuard.class.getDeclaredMethod("bindOwnerThread", Thread.class);

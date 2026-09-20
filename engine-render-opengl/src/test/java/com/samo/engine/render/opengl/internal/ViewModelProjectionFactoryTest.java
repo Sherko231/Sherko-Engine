@@ -29,11 +29,7 @@ class ViewModelProjectionFactoryTest {
 
     @Test
     void rejectsInvalidFramebufferDimensions() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ViewModelProjectionFactory.build(0, 900, new Matrix4f()));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ViewModelProjectionFactory.build(1600, 0, new Matrix4f()));
+        assertThrows(IllegalArgumentException.class, () -> ViewModelProjectionFactory.build(0, 900, new Matrix4f()));
+        assertThrows(IllegalArgumentException.class, () -> ViewModelProjectionFactory.build(1600, 0, new Matrix4f()));
     }
 }

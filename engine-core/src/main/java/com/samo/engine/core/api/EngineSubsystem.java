@@ -3,16 +3,19 @@ package com.samo.engine.core.api;
 /**
  * Enforces one subsystem lifetime: initialize, start, stop, then close.
  *
- * <p>The owner must serialize all calls on its lifecycle thread. This class is
+ * <p>
+ * The owner must serialize all calls on its lifecycle thread. This class is
  * not thread-safe and provides no restart or native reinitialization guarantee.
  * Reentrant lifecycle calls from hooks are rejected.
  *
- * <p>Initialization acquires resources; starting activates work; stopping
+ * <p>
+ * Initialization acquires resources; starting activates work; stopping
  * quiesces work; closing releases resources. An unstarted subsystem can be
  * closed directly. A running subsystem must be stopped explicitly before close.
  * No other subsystem is coordinated or rolled back by this class.
  *
- * <p>An unchecked initialize/start/stop hook failure is propagated unchanged and
+ * <p>
+ * An unchecked initialize/start/stop hook failure is propagated unchanged and
  * prevents further forward progress, but the owner can still close. Closing is
  * attempted at most once, even if its hook fails. A failed close does not prove
  * resource release; the owner must report that failure.
@@ -27,7 +30,8 @@ public abstract class EngineSubsystem implements AutoCloseable {
     /**
      * Acquires resources once.
      *
-     * @throws IllegalStateException unless this instance is new
+     * @throws IllegalStateException
+     *             unless this instance is new
      */
     public final void initialize() {
         transition("initialize", State.NEW, State.INITIALIZING, State.INITIALIZED, this::onInitialize);
@@ -36,7 +40,8 @@ public abstract class EngineSubsystem implements AutoCloseable {
     /**
      * Activates successfully initialized resources once.
      *
-     * @throws IllegalStateException unless initialization completed successfully
+     * @throws IllegalStateException
+     *             unless initialization completed successfully
      */
     public final void start() {
         transition("start", State.INITIALIZED, State.STARTING, State.STARTED, this::onStart);
@@ -45,7 +50,8 @@ public abstract class EngineSubsystem implements AutoCloseable {
     /**
      * Quiesces a successfully started subsystem once without releasing its resources.
      *
-     * @throws IllegalStateException unless starting completed successfully
+     * @throws IllegalStateException
+     *             unless starting completed successfully
      */
     public final void stop() {
         transition("stop", State.STARTED, State.STOPPING, State.STOPPED, this::onStop);
@@ -55,7 +61,8 @@ public abstract class EngineSubsystem implements AutoCloseable {
      * Attempts resource release once, including after partial initialization or
      * failed activation/stopping. Further calls after this attempt return normally.
      *
-     * @throws IllegalStateException if running or inside any lifecycle hook
+     * @throws IllegalStateException
+     *             if running or inside any lifecycle hook
      */
     @Override
     public final void close() {

@@ -7,8 +7,7 @@ import org.lwjgl.opengl.GL20;
 
 final class OpenGlShader implements AutoCloseable {
     enum Stage {
-        VERTEX(GL20.GL_VERTEX_SHADER),
-        FRAGMENT(GL20.GL_FRAGMENT_SHADER);
+        VERTEX(GL20.GL_VERTEX_SHADER), FRAGMENT(GL20.GL_FRAGMENT_SHADER);
 
         private final int nativeType;
 
@@ -23,22 +22,11 @@ final class OpenGlShader implements AutoCloseable {
         this.owned = owned;
     }
 
-    static OpenGlShader compile(
-            Stage stage,
-            String source,
-            OpenGlThreadGuard guard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend) {
+    static OpenGlShader compile(Stage stage, String source, OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         return compile(stage, "<inline>", source, guard, registry, backend);
     }
 
-    static OpenGlShader compile(
-            Stage stage,
-            String sourceName,
-            String source,
-            OpenGlThreadGuard guard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend) {
+    static OpenGlShader compile(Stage stage, String sourceName, String source, OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         Stage shaderStage = Objects.requireNonNull(stage, "stage");
         String name = Objects.requireNonNull(sourceName, "sourceName");
         String shaderSource = Objects.requireNonNull(source, "source");
@@ -53,17 +41,14 @@ final class OpenGlShader implements AutoCloseable {
             backend.shaderSource(handle, shaderSource);
             backend.compileShader(handle);
             if (!backend.shaderCompileSucceeded(handle)) {
-                throw new IllegalStateException(
-                        "OpenGL shader compilation failed for " + name + " [" + shaderStage + "]: "
-                                + backend.shaderInfoLog(handle));
+                throw new IllegalStateException("OpenGL shader compilation failed for " + name + " [" + shaderStage + "]: " + backend.shaderInfoLog(handle));
             }
         } catch (RuntimeException | Error failure) {
             CleanupFailureSuppression.runAndSuppress(failure, () -> backend.deleteShader(handle));
             throw failure;
         }
 
-        return new OpenGlShader(OwnedOpenGlHandle.register(
-                "OpenGL shader", handle, guard, registry, backend::deleteShader));
+        return new OpenGlShader(OwnedOpenGlHandle.register("OpenGL shader", handle, guard, registry, backend::deleteShader));
     }
 
     int handle() {

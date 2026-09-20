@@ -22,10 +22,7 @@ class SandboxCameraTest {
         Vector3f position = camera.position(new Vector3f());
         assertEquals(0.0f, position.x, EPSILON);
         assertEquals(0.0f, position.y, EPSILON);
-        assertEquals(
-                2.0f - SandboxCamera.MOVE_SPEED_METERS_PER_SECOND * SandboxCamera.FIXED_STEP_SECONDS,
-                position.z,
-                EPSILON);
+        assertEquals(2.0f - SandboxCamera.MOVE_SPEED_METERS_PER_SECOND * SandboxCamera.FIXED_STEP_SECONDS, position.z, EPSILON);
     }
 
     @Test
@@ -63,20 +60,11 @@ class SandboxCameraTest {
         float dx = position.x;
         float dz = position.z - 2.0f;
         float distance = (float) Math.sqrt(dx * dx + dz * dz);
-        assertEquals(
-                SandboxCamera.MOVE_SPEED_METERS_PER_SECOND * SandboxCamera.FIXED_STEP_SECONDS,
-                distance,
-                EPSILON);
+        assertEquals(SandboxCamera.MOVE_SPEED_METERS_PER_SECOND * SandboxCamera.FIXED_STEP_SECONDS, distance, EPSILON);
     }
 
-    private static PlayerInputCommand command(
-            long tick,
-            double moveX,
-            double moveY,
-            double lookX,
-            double lookY) {
-        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states =
-                new EnumMap<>(PlayerInputCommand.DigitalAction.class);
+    private static PlayerInputCommand command(long tick, double moveX, double moveY, double lookX, double lookY) {
+        Map<PlayerInputCommand.DigitalAction, PlayerInputCommand.DigitalState> states = new EnumMap<>(PlayerInputCommand.DigitalAction.class);
         for (PlayerInputCommand.DigitalAction action : PlayerInputCommand.DigitalAction.values()) {
             states.put(action, new PlayerInputCommand.DigitalState(0.0, false, false, false));
         }

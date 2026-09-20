@@ -39,7 +39,6 @@ public record InputBinding(Control control, InputActionComponent component, doub
 
     /** Relative mouse axis available to data-driven bindings. */
     public enum MouseDeltaAxis {
-        X,
-        Y
+        X, Y
     }
 }

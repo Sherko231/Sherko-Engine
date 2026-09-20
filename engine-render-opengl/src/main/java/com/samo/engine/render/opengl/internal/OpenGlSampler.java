@@ -13,14 +13,10 @@ final class OpenGlSampler implements AutoCloseable {
     static OpenGlSampler create(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         guard.assertOwnerThread();
         int handle = backend.createSampler();
-        return new OpenGlSampler(OwnedOpenGlHandle.register(
-                "OpenGL sampler", handle, guard, registry, backend::deleteSampler));
+        return new OpenGlSampler(OwnedOpenGlHandle.register("OpenGL sampler", handle, guard, registry, backend::deleteSampler));
     }
 
-    static OpenGlSampler createLinearClamp(
-            OpenGlThreadGuard guard,
-            NativeResourceRegistry registry,
-            OpenGlResourceBackend backend) {
+    static OpenGlSampler createLinearClamp(OpenGlThreadGuard guard, NativeResourceRegistry registry, OpenGlResourceBackend backend) {
         OpenGlSampler sampler = create(guard, registry, backend);
         try {
             backend.configureLinearClampSampler(sampler.handle());

@@ -4,14 +4,7 @@ import java.util.Objects;
 import org.joml.Vector3fc;
 
 /** Immutable D-041 world-space debug line segment. */
-public record DebugLine(
-        float startX,
-        float startY,
-        float startZ,
-        float endX,
-        float endY,
-        float endZ,
-        DebugColor color) implements DebugPrimitive {
+public record DebugLine(float startX, float startY, float startZ, float endX, float endY, float endZ, DebugColor color) implements DebugPrimitive {
 
     public DebugLine {
         requireFinite("startX", startX);
@@ -24,14 +17,7 @@ public record DebugLine(
     }
 
     public DebugLine(Vector3fc start, Vector3fc end, DebugColor color) {
-        this(
-                Objects.requireNonNull(start, "start").x(),
-                start.y(),
-                start.z(),
-                Objects.requireNonNull(end, "end").x(),
-                end.y(),
-                end.z(),
-                color);
+        this(Objects.requireNonNull(start, "start").x(), start.y(), start.z(), Objects.requireNonNull(end, "end").x(), end.y(), end.z(), color);
     }
 
     private static void requireFinite(String name, float value) {

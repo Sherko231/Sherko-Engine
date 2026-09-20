@@ -653,9 +653,11 @@ Accepted P5R-T18 evidence: corrected final head `5f6ff0c1dfb05a078486abf05f4f108
 
 ## Phase 5R client/server version-report naming — P5R-T19 / Issue #279
 
-The T19 candidate keeps `ClientMain` and `ServerMain` as the canonical executable bootstrap entry points because their current responsibilities are already small and explicit. It renames only the executable-specific internal reporting helpers to `com.samo.game.client.internal.ClientVersionReport` and `com.samo.game.server.internal.ServerVersionReport`.
+The accepted T19 implementation keeps `ClientMain` and `ServerMain` as the canonical executable bootstrap entry points because their current responsibilities are already small and explicit. It renames only the executable-specific internal reporting helpers to `com.samo.game.client.internal.ClientVersionReport` and `com.samo.game.server.internal.ServerVersionReport`.
 
 The rename does not change `runClient` / `runServer`, the main-class FQCNs, default startup/shutdown output, `META-INF/sherko-version.properties`, generated metadata, report key order or values, the client/server dependency graphs, or the server headless-runtime boundary. No shared reporter abstraction or new module edge is introduced merely to remove trivial duplicated reporting code.
 
 Wiki impact: none — these are executable/internal surfaces, not supported engine consumer API.
 Sandbox impact: none — no engine capability or persistent sandbox behavior changes.
+
+Accepted P5R-T19 evidence: final head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed all five required jobs in run #487 / `35524411941`; PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`; exact merged-master Lightweight verification passed in run #488 / `35524646827`, including dependency locks, headless-server runtime isolation, and exact-merge client/server version reporting.

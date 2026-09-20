@@ -112,7 +112,11 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `DirectionalLight` | package-private record | **KEEP** | — | Internal directional-light value is exact. | Internal shader/light semantics. |
 | `DrawSubmission` | package-private record | **KEEP** | — | Internal draw submission descriptor is precise. | Internal render ordering/state semantics. |
 | `DrawSubmissionSorter` | package-private class | **KEEP** | — | Establishes documented draw order; role suffix is correct. | Internal ordering contract. |
-| `ReferenceSceneRenderer` | public-in-internal-package class | **DECOMPOSE** | T10 accepted name; T11 owns later frame-orchestration decomposition | Fixed renderer-owned reference-room/world path. T10 removes room byte construction into `ReferenceRoomFixture` while keeping GL ownership, frame orchestration, culling, draw execution, uniforms, lighting, diagnostics, debug/view-model composition, and cleanup behavior intact. | Implementation type but public modifier for cross-package `OpenGlRenderer` access; excluded from API artifact. |
+| `ReferenceSceneRenderer` | public-in-internal-package class | **DECOMPOSE** | T10 accepted name; T11 active frame-orchestration decomposition | Fixed renderer-owned reference-room/world lifecycle/resource owner and public-facade delegate. T11 extracts non-owning frame collaborators while retaining creation/rollback/close ownership. | Implementation type but public modifier for cross-package `OpenGlRenderer` access; excluded from API artifact. |
+| `RendererFrameUniformUploader` | package-private class | **KEEP** | — | T11 owner for reusable camera/per-frame/local-light packing and upload; borrows buffer handles without owning them. | Internal upload ordering and shader-block ABI consumers. |
+| `ReferenceSceneVisibilityPlanner` | package-private class | **KEEP** | — | T11 owner for frustum extraction, fixed reference-scene visibility, and ordered draw-submission preparation. | Internal culling/sorting semantics; T12 may rename existing subordinate culling/submission/light types only. |
+| `ReferenceSceneDrawExecutor` | package-private class | **KEEP** | — | T11 owner for world/debug/view-model frame execution and GL-state restoration; borrows program/VAO/renderers without closing them. | Internal draw/state/order semantics. |
+| `RendererFrameDiagnostics` | package-private class | **KEEP** | — | T11 owner for latest-success culling/text-counter publication state. | Public facade exposes snapshots but not this owner type. |
 | `LocalLightSelection` | package-private class | **RENAME** | `LocalLightSelector` | This is a stateful bounded selector; role noun should name the actor rather than the result. | Internal selection capacity/logging semantics. |
 | `LocalLightUniformBlock` | package-private class | **KEEP** | — | Payload and shader block role are explicit. | Internal shader ABI/layout. |
 | `LwjglOpenGlDrawBackend` | package-private class | **KEEP** | — | LWJGL adapter implementing the OpenGL draw backend contract. | Internal native adapter/thread affinity. |
@@ -237,6 +241,17 @@ T10 applies the inventory's fixed reference-scene decomposition in one bounded s
 - frame orchestration, culling, sorting, uniform/light upload, draw execution, diagnostics, resource ownership, debug/view-model composition, and cleanup remain in `ReferenceSceneRenderer` for later bounded tasks.
 
 No public renderer/resource/material API is added and no Phase 5 output/state/ownership semantics change.
+
+### P5R-T11 active implementation
+
+T11 decomposes only frame-time orchestration while retaining `ReferenceSceneRenderer` as the lifecycle/native-resource owner:
+
+- `RendererFrameUniformUploader` owns reusable camera/per-frame/local-light block packing and upload order;
+- `ReferenceSceneVisibilityPlanner` owns frustum extraction, reference-room visibility evaluation, camera-depth calculation, and ordered submission preparation;
+- `ReferenceSceneDrawExecutor` owns the existing world -> debug -> view-model draw sequence plus viewport/framebuffer-sRGB restoration;
+- `RendererFrameDiagnostics` owns latest-success culling and debug text-counter snapshots.
+
+All four collaborators are package-private and non-owning. Existing material/light/culling/uniform/presentation/resource names and cleanup behavior remain for T12-T15 rather than being pulled into T11.
 
 ### P5R-T09 accepted KEEP audit
 

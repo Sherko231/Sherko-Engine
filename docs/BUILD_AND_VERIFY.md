@@ -1034,6 +1034,28 @@ Accepted P5R-T10 evidence: final PR head `a3d376eaf786c63e2e8e7e823020c4d2b6312d
 
 Wiki impact: none — supported public renderer API and intended usage are unchanged. Sandbox impact: none — the sandbox continues using `OpenGlRenderer` unchanged.
 
+## P5R-T11 renderer frame-orchestration decomposition verification
+
+Issue #271 keeps the public `OpenGlRenderer` contract and `ReferenceSceneRenderer` native-resource ownership unchanged while extracting package-private non-owning owners for frame-uniform upload, visibility/submission planning, draw execution, and latest-success diagnostics publication.
+
+Focused verification:
+
+```powershell
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RendererFrameDiagnosticsTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source/test review must confirm the extracted collaborators are package-private, do not implement `AutoCloseable`, and do not own/delete native resources; `ReferenceSceneRenderer` retains creation/rollback/close ordering. Existing deterministic renderer tests remain the primary behavior regression for upload ordering, culling/sorting, world/debug/view-model order, GL-state restoration, failure-before-mutation rules, latest-success diagnostics, idempotent close, and partial-creation cleanup. `RendererFrameDiagnosticsTest` directly covers the extracted diagnostics owner's empty initial state and completed-frame publication.
+
+The task changes Java source, so the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #271 can close. No separate native artifact is introduced because T11 changes internal decomposition only; the existing renderer/native Phase 5 regressions remain authoritative.
+
+Wiki impact: none — public renderer API and consumer usage are unchanged. Sandbox impact: none — the persistent sandbox continues through public `OpenGlRenderer` unchanged.
+
 ## P5-T07 first indexed static mesh verification
 
 Issue #189 introduces the first public production renderer path and window-owned presentation.

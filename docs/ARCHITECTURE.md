@@ -280,6 +280,14 @@ Defaults are 1920x1080 and 60 Hz. Width accepts `320..16384`, height accepts `20
 
 Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service; P2-T09 adds only the fixed source layering described below.
 
+## Phase 5R spatial/math naming audit — P5R-T09 / Issue #269
+
+P5R-T09 re-audits the accepted engine-core spatial/math vocabulary against `docs/SPATIAL_CONVENTIONS.md` and D-041 through D-047 and records no rename or structural source change. `Transform`, `CameraMatrices`, `ScreenRays`, `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, `Frustum3f`, `TransformQuantization`, `QuantizedPosition`, and `QuantizedRotation` already name their responsibilities directly and consistently with the accepted world/camera/screen/geometry/quantization contracts.
+
+Implementation-level local/world/cached-matrix, hierarchy invalidation, camera basis, viewport/NDC/unprojection, geometry, frustum-plane, and quantization encode/decode vocabulary is also retained. No split, wrapper, alias, epsilon/tolerance change, allocation change, packet/layout change, package move, or public API change is introduced merely for naming symmetry.
+
+This KEEP audit preserves D-041 handedness/axes/units, D-042 JOML ownership/allocation policy, D-043 transform hierarchy/cache semantics, D-044 exact geometry comparisons, D-045 camera/projection depth convention, D-046 screen-to-world mapping, and D-047 quantization ranges/error/layout meaning exactly. `docs/SPATIAL_CONVENTIONS.md` remains byte-unchanged.
+
 ## Phase 5R core config/logging/timing/native-resource naming audit — P5R-T08 / Issue #268
 
 P5R-T08 re-audits the accepted core configuration, logging, timing, and native-resource ownership vocabulary against the live implementation and records no rename or decomposition. `EngineConfigLoader`, `EngineConfigSchema`, `ConfigKey`, `ConfigEntry`, `ConfigSource`, `ConfigError`, `ConfigValidationException`, `EngineLogger`, `EngineClock`, `FixedStepAccumulator`, `FixedStepCatchUpPolicy`, `NativeResourceRegistry`, and `NativeResourceRegistry.Registration` all already name their current responsibilities directly.

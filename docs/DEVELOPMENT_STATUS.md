@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T19 / Issue #279 is accepted; freshly refine P5R-T20 / Issue #280 against current `master` before implementation |
+| Active executable task | P5R-T20 / Issue #280 — clarify integrated native evidence naming and enforce feasibility-module isolation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -160,6 +160,8 @@ P5R-T18 / Issue #278 is accepted through PR #341. The first final-candidate atte
 
 P5R-T19 / Issue #279 is accepted through PR #343. Final head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed all five required final-candidate jobs in run #487 / `35524411941`: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. The Build job also passed the existing default client/server entry-point runs, headless-server runtime boundary, and end-to-end version-report compatibility check. PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`, and exact merged `master` passed Lightweight verification in run #488 / `35524646827`, including dependency-lock verification, the headless-server runtime boundary, and exact-merge client/server version reporting. The accepted naming cleanup keeps `ClientMain`, `ServerMain`, `runClient`, `runServer`, startup output, metadata generation/resource, report keys/order/value sources, dependency graphs, and server headless semantics unchanged while renaming only the internal helpers to `ClientVersionReport` and `ServerVersionReport`.
 
+P5R-T20 / Issue #280 is active from baseline `f4b5027557d80b7faad99d10b62a8b7787b135cb`. Fresh audit reviewed all nine current top-level feasibility entry/harness types. Eight names are already responsibility-revealing and remain KEEP: `OpenGL46Spike`, `JoltLifecycleSpike`, `OpenAL3DAudioSpike`, `LocalhostUdpSpike`, `NetworkImpairmentHarness`, `SteamInitSpike`, `SteamFlatApiFfmSpike`, and `WindowsNativeCiSmoke`. The only misleading name is `IntegratedNativeSoakSpike`, because the same executable backs both the accepted P0-T12 smoke task and the pending P0-T13 sustained/soak task; the T20 candidate renames it to `IntegratedNativeEvidenceHarness` while preserving both Gradle tasks, durations, evidence labels, JFR paths, and native behavior. The candidate also adds `:feasibility-spikes:verifyFeasibilitySpikeIsolation`, wired into that module's `check`, to reject any project dependency from another declared subproject to the experimental module.
+
 ## Exact next action
 
-Freshly refine **P5R-T20 / Issue #280** against current `master` before implementation. Keep feasibility evidence/scope conclusions intact, preserve spike isolation from production, and keep P6-T01 blocked.
+Complete self-review and final-candidate verification for **P5R-T20 / Issue #280** on `p5r-t20-feasibility-naming-isolation`. P5R-T21 and P6-T01 remain blocked until T20 acceptance.

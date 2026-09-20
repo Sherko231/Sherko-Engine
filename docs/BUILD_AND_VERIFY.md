@@ -1971,3 +1971,18 @@ Sandbox impact: review only — no source/behavior change authorized.
 
 
 Accepted P5R-T26 Phase 5R exit evidence: final candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in PR run #495 / `35537699489`. PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`; exact merged-master Lightweight verification passed in run #496 / `35537989459`, including committed dependency locks, headless-server runtime isolation, and exact-merge client/server version reporting. Phase 5R exit result: PASS. Interactive sandbox/visual-demo windows were not executed in the connected review environment and are not claimed as manual visual evidence; entry wiring, deterministic tests/compilation, and retained native renderer regressions were reconciled and verified.
+
+
+## Java formatting
+
+The repository-wide Java formatter is Spotless `8.10.2` using Eclipse JDT formatter `4.40` with the committed profile `config/formatter/sherko-eclipse-java.xml`.
+
+| Purpose | Windows command | Expected evidence |
+| --- | --- | --- |
+| Apply canonical Java formatting | `.\gradlew.bat spotlessApply` | All authored Java is rewritten to the committed compact Sherko Engine style. |
+| Verify committed Java formatting | `.\gradlew.bat spotlessCheck` | No Java file differs from formatter output. |
+| Verify through the normal quality gate | `.\gradlew.bat check` | `spotlessCheck` runs together with the existing Checkstyle and architecture/source-boundary checks. |
+
+The formatter covers production, tests, visual-demo sources, public-API tests, feasibility spikes, and committed Java fixtures while excluding generated `build/` and Gradle working directories.
+
+PRE-P6 Issue #359 bootstrap evidence: after repository-wide normalization, a clean verification-only run confirmed `spotlessApply` idempotence, `spotlessCheck` success, and lexical equivalence for all 241 changed Java files after ignoring whitespace/comments while preserving literal/text-block contents. The earlier text-block mismatch in `MaterialComparisonOverlay` was rejected and corrected by setting Eclipse `text_block_indentation=3` (preserve) and restoring the original shader text blocks before the clean run.

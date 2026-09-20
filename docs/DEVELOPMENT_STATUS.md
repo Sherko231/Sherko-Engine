@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T07 / Issue #267 is accepted; freshly refine P5R-T08 / Issue #268 against current `master` before implementation |
+| Active executable task | None — P5R-T08 / Issue #268 is accepted as a Markdown-only KEEP audit; freshly refine P5R-T09 / Issue #269 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -136,6 +136,8 @@ P5R-T06 / Issue #266 is accepted through PR #319. Final head `791488bfcbae9573ce
 
 P5R-T07 / Issue #267 is accepted through PR #321. Final head `682f2744d6585c3cefa551fb0264243b8db4ce90` passed all five required final-candidate jobs in run #458 / `35501201828`. PR #321 merged as `ae2a40943b51f5fbeca554e52b9322a52c08dc2a`, and exact merged `master` passed Lightweight verification in run #459 / `35501486272`. D-066 renames `SubsystemStartup` to `SubsystemStartupCoordinator` and `FatalTermination` to `FatalTerminationCoordinator` with no compatibility aliases while retaining `start(...)` / `terminate(...)` behavior, lifecycle ordering, ownership, rollback, suppression, fatal cleanup/reporting/flush sequence, and exit status. Direct tests, CI selectors/artifacts, architecture/refactor docs, and the public wiki are synchronized to the new names. `EngineSubsystem` and `SubsystemGraph` remain unchanged. Independent review was not performed because no separate reviewer/agent was available; the PR records the remaining public-API rename risk and compensating static/CI review.
 
+P5R-T08 / Issue #268 completed as an audit-only KEEP task. The live configuration/logging/timing/native-resource surface was rechecked against T01 naming classifications and D-021 through D-028; every reviewed public and implementation-level name already communicates its current responsibility, so no Java rename, extraction, wrapper, package move, compatibility alias, or new abstraction was introduced. The complete task diff is documentation-only, with no wiki or sandbox impact because consumer usage and runtime behavior are unchanged.
+
 ## Exact next action
 
-Freshly refine **P5R-T08 / Issue #268** against current `master` before implementation. Keep the task bounded to core configuration, logging, timing, and native-resource naming/responsibility audit, preserve behavior/ownership contracts and already-clear names, and do not materialize P6-T01 yet.
+Freshly refine **P5R-T09 / Issue #269** against current `master` before implementation. Keep the task bounded to spatial/math naming and structure, preserve D-041/D-045/D-046/D-047 coordinate/unit/tolerance/allocation/serialization semantics, and do not materialize P6-T01 yet.

@@ -227,6 +227,17 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
+### P5R-T08 accepted KEEP audit
+
+T08 re-audited the live `engine-core` configuration, logging, timing, and native-resource ownership vocabulary and intentionally retained every reviewed name. The result matches the T01 inventory rather than creating rename churn:
+
+- configuration: `EngineConfigLoader`, `EngineConfigSchema`, `ConfigKey`, `ConfigEntry`, `ConfigSource`, `ConfigError`, and `ConfigValidationException` remain exact to their layered-loading/schema/value/source/failure roles;
+- logging: `EngineLogger` plus nested `Level`, `Context`, `Event`, and `Sink` remain explicit for a synchronous structured logging boundary;
+- timing: `EngineClock`, `FixedStepAccumulator`, and `FixedStepCatchUpPolicy` remain responsibility-revealing and aligned with D-021 through D-024;
+- native ownership: `NativeResourceRegistry` and nested `Registration` remain explicit ownership/close-tracking names aligned with D-027.
+
+Implementation-level merge/parse, sink-lock, sampling/baseline, fixed-step progress/catch-up, resource-key/allocation-site/registration-state vocabulary was also reviewed and retained. No ambiguous Manager/Helper/Util-style owner, mixed responsibility, or naming-driven abstraction was found. No Java/public API/wiki/sandbox change is required; broader public naming still belongs to T21 and stable package regrouping to T23.
+
 ### P5R-T07 accepted implementation
 
 The accepted T07 implementation resolves the two T01 lifecycle public-name findings under D-066:

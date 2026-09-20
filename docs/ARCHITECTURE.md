@@ -280,6 +280,14 @@ Defaults are 1920x1080 and 60 Hz. Width accepts `320..16384`, height accepts `20
 
 Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service; P2-T09 adds only the fixed source layering described below.
 
+## Phase 5R core config/logging/timing/native-resource naming audit — P5R-T08 / Issue #268
+
+P5R-T08 re-audits the accepted core configuration, logging, timing, and native-resource ownership vocabulary against the live implementation and records no rename or decomposition. `EngineConfigLoader`, `EngineConfigSchema`, `ConfigKey`, `ConfigEntry`, `ConfigSource`, `ConfigError`, `ConfigValidationException`, `EngineLogger`, `EngineClock`, `FixedStepAccumulator`, `FixedStepCatchUpPolicy`, `NativeResourceRegistry`, and `NativeResourceRegistry.Registration` all already name their current responsibilities directly.
+
+The audit also retains the implementation-level vocabulary used by those contracts: configuration merge/parse helpers, logger sink ownership/serialization, clock sampling/baseline fields, fixed-step elapsed/catch-up fields, and native-resource identity/allocation-site/registration-state names are specific to the behavior they own. No wrapper, manager, coordinator, helper, package move, compatibility alias, or responsibility split is introduced merely for symmetry.
+
+This KEEP decision preserves D-021 through D-028 exactly: monotonic sampling, exact 60 Hz accumulation/interpolation, bounded catch-up, startup-schema validation, layered config precedence/diagnostics, synchronous structured logging, and explicit native ownership/terminal-close diagnostics are unchanged. No public API, configuration key/format, exception behavior, allocation/hot-loop policy, module edge, dependency, wiki usage, or sandbox behavior changes.
+
 ## Layered startup configuration — P2-T09 / Issue #79
 
 `EngineConfigLoader` composes one startup configuration using fixed precedence `EngineConfigSchema` defaults < optional game UTF-8 key/value file < optional user UTF-8 key/value file < already-parsed command-line overrides, then validates the final effective raw map exactly once through D-025. File entries preserve normalized `path:line` sources; missing files are absent layers; malformed lines, blank keys, and duplicate keys within one file fail before schema validation; unreadable existing paths propagate `IOException`.

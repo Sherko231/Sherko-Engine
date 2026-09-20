@@ -1830,3 +1830,21 @@ Sandbox impact: none — no sandbox behavior changes.
 
 
 Accepted P5R-T20 verification evidence: final PR head `244041127c1851d477f557c92734c981ee5649b7` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #489 / `35525360797`. The Build job passed `Build all modules`, which executes the experimental module's `check` and therefore `verifyFeasibilitySpikeIsolation`; the Windows native job also passed the retained root GLFW/OpenAL lifecycle smoke alias. PR #345 merged as `510e61d6d44eab4cb986d5c03078138aaa40a020`, and exact merged-master Lightweight verification passed in run #490 / `35525718982`. No P0-T13 900-second sustained run is claimed or required by this naming/isolation refactor.
+
+
+## P5R-T21 public API naming audit verification
+
+Issue #301 is an audit-only public naming pass. Fresh review of the supported P1-P5 API roots records 60 public top-level types plus 15 supported nested public types in `docs/refactor/PUBLIC_API_NAMING_AUDIT.md`, including their declared public constructors/operations/queries/constants, implicit record accessors, interface methods/defaults, and enum vocabularies.
+
+The current candidate selects no rename and changes no Java, Gradle, resource, workflow, dependency, wiki, or sandbox path. Verification is therefore documentary/source consistency rather than a new runtime claim:
+
+- compare the audit against current source under `com.samo.engine.core.api`, `com.samo.engine.platform.api`, and `com.samo.engine.render.api`;
+- reconcile with `docs/refactor/NAMING_STANDARD.md`, `SYMBOL_INVENTORY.md`, `BOUNDARY_AUDIT.md`, accepted decisions, and `docs/SPATIAL_CONVENTIONS.md`;
+- compare source names and consumer meaning with `wiki/API_INDEX.md`, `wiki/LIMITATIONS.md`, relevant usage pages, and current sandbox imports/usage;
+- search for stale pre-D-066 lifecycle names and treat only explicit historical/rename-provenance references as valid;
+- inspect the complete PR file list before using the Markdown-only exemption.
+
+If every changed path ends in `.md`, the `AGENTS.md` Markdown-only CI exemption applies: no heavy five-job PR matrix and no post-merge Lightweight verifier are required. The absence of those runs is expected and must not be reported as a test pass. If any non-Markdown path appears, the exemption immediately ceases to apply.
+
+Wiki impact: none — no supported public API name/signature/usage changes.
+Sandbox impact: none — no capability or owner-facing usage changes.

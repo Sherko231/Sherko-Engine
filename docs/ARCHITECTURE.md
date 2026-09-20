@@ -603,6 +603,8 @@ This file remains the architecture authority for module roles, boundaries, and a
 
 ## Phase 5R OpenGL ownership cleanup — P5R-T14 / Issue #274
 
-The T14 candidate keeps the established D-050 resource-wrapper and backend vocabulary unchanged: `OwnedOpenGlHandle`, `OpenGlBuffer`, `OpenGlVertexArray`, `OpenGlTexture`, `OpenGlSampler`, `OpenGlShader`, `OpenGlProgram`, `OpenGlFramebuffer`, `OpenGlResourceBackend`, and `LwjglOpenGlResourceBackend` remain the canonical internal names.
+The accepted T14 implementation keeps the established D-050 resource-wrapper and backend vocabulary unchanged: `OwnedOpenGlHandle`, `OpenGlBuffer`, `OpenGlVertexArray`, `OpenGlTexture`, `OpenGlSampler`, `OpenGlShader`, `OpenGlProgram`, `OpenGlFramebuffer`, `OpenGlResourceBackend`, and `LwjglOpenGlResourceBackend` remain the canonical internal names.
 
 The bounded refactor renames only the ambiguous cleanup utility `CleanupFailures` to `CleanupFailureSuppression` and centralizes the exact repeated rollback rule in `runAndSuppress(primary, cleanup)`: run the same cleanup action, preserve the original primary failure, add a distinct cleanup failure as suppressed, and never self-suppress. Resource creation/registration/deletion order, native handle ownership, owner-thread checks, registry behavior, wrapper-level idempotent close, dynamic-buffer fence ownership, and multi-resource close ordering remain unchanged. No resource manager, cache, pool, backend selector, new native abstraction layer, public API, or Phase 6 identity contract is introduced.
+
+Accepted evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` passed all five required jobs in run #469 / `35511357500`; PR #333 merged as `750e36a678ef70e497d019beafa0c0bf97d56324`; exact merged-master Lightweight verification passed in run #470 / `35511620539`.

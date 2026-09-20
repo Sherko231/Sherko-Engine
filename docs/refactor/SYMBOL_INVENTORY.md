@@ -141,7 +141,8 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `TextureColorEncoding` | package-private enum | **KEEP** | — | Distinguishes linear vs sRGB texture storage/interpretation. | Internal D-056 color semantics. |
 | `UniformBlockLayoutVerifier` | package-private class | **KEEP** | — | Verifies reflected block layout against expected ABI; precise. | Internal shader ABI validation. |
 | `ViewFrustumExtractor` | package-private class | **KEEP** | — | Extracts frustum planes from view/projection matrices; exact. | Internal spatial semantics. |
-| `ViewModelProjection` | package-private class | **RENAME** | `ViewModelProjectionFactory` | Stateless builder of the dedicated view-model projection matrix; Factory clarifies creation-only role. | Internal view-model spatial constants must remain unchanged. |
+| `ViewModelProjectionFactory` | package-private class | **KEEP** | — | T15 canonical name for the stateless creator of the dedicated fixed view-model projection matrix. | Internal view-model spatial constants must remain unchanged. |
+| `ViewModelFixtureVertexPacker` | package-private class | **KEEP** | — | T15 owner for the fixed six-vertex validation-fixture byte packing; keeps fixture layout/color data out of the GL resource owner. | Internal validation-fixture bytes must remain unchanged. |
 | `ViewModelRenderer` | package-private class | **KEEP** | — | Dedicated view-model render path and GL ownership; precise. | Internal native ownership/view-model semantics. |
 | `RendererVisualDemo` | visualDemo public class | **DECOMPOSE** | `Keep entry point; extract animated-light model, material-comparison overlay owner, and cleanup/composition responsibilities` | 552-line standalone demo mixes entry point, animation, overlay resources, diagnostics, and lifecycle; P5R-T18 explicitly targets decomposition. | Non-production demo; must remain isolated and behaviorally equivalent. |
 
@@ -379,3 +380,8 @@ Sandbox impact: none — proposals only; no owner-facing behavior changed.
 ### P5R-T14 accepted implementation
 
 T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fresh review. It renames only `CleanupFailures` -> `CleanupFailureSuppression` and centralizes equivalent rollback suppression through `runAndSuppress(...)`; native ownership, registration/deletion order, thread affinity, idempotent close, dynamic-buffer fence behavior, and multi-resource close ordering remain unchanged.
+
+
+### P5R-T15 active implementation
+
+T15 keeps `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` unchanged after fresh review. It renames only `ViewModelProjection` -> `ViewModelProjectionFactory` and extracts fixed six-vertex fixture packing into `ViewModelFixtureVertexPacker`; D-041/D-045/D-064/D-065 spatial/rendering/order/ownership behavior remains unchanged.

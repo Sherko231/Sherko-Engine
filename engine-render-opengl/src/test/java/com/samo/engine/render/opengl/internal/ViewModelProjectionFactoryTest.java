@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
-class ViewModelProjectionTest {
+class ViewModelProjectionFactoryTest {
     private static final float TOLERANCE = 1.0e-6f;
 
     @Test
     void buildsIndependentDocumentedPerspectiveProjection() {
-        Matrix4f projection = ViewModelProjection.build(1600, 900, new Matrix4f());
+        Matrix4f projection = ViewModelProjectionFactory.build(1600, 900, new Matrix4f());
 
         float aspect = 1600.0f / 900.0f;
         float focal = (float) (1.0 / Math.tan(Math.toRadians(55.0) * 0.5));
@@ -31,9 +31,9 @@ class ViewModelProjectionTest {
     void rejectsInvalidFramebufferDimensions() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ViewModelProjection.build(0, 900, new Matrix4f()));
+                () -> ViewModelProjectionFactory.build(0, 900, new Matrix4f()));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ViewModelProjection.build(1600, 0, new Matrix4f()));
+                () -> ViewModelProjectionFactory.build(1600, 0, new Matrix4f()));
     }
 }

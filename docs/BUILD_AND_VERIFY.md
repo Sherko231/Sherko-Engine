@@ -1617,7 +1617,7 @@ P5-T17 adds one bounded internal view-model validation layer after the accepted 
 Focused verification:
 
 ```powershell
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelProjectionTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelProjectionFactoryTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
@@ -1675,3 +1675,28 @@ Because Java/test source changes, the exact final PR head requires the normal fi
 Accepted P5R-T14 evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` passed all five required jobs in run #469 / `35511357500`, including P5-T03 resource ownership, P5-T04 bounded dynamic upload, and P5-T18 integration. PR #333 merged as `750e36a678ef70e497d019beafa0c0bf97d56324`; exact merged-master Lightweight verification passed in run #470 / `35511620539`.
 
 Wiki impact: none — supported renderer API and consumer usage are unchanged. Sandbox impact: none — owner-facing behavior and controls are unchanged.
+
+
+## P5R-T15 debug/view-model internal verification
+
+Issue #275 is a package-private responsibility/naming refactor. `DebugLineVertexPacker`, `DebugLineRenderer`, and `ViewModelRenderer` remain canonical; `ViewModelProjection` becomes `ViewModelProjectionFactory`; and the fixed six-vertex validation fixture packing moves to `ViewModelFixtureVertexPacker`.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DebugLineVertexPackerTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelFixtureVertexPackerTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelProjectionFactoryTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source review must confirm no production/test reference remains to `ViewModelProjection`, debug packing remains unchanged, and the extracted fixture bytes remain the same six positions with fixed linear RGB `0.95/0.55/0.15`. Spatial review must confirm D-041/D-045 conventions plus D-065 55° vertical FOV, framebuffer aspect, 0.01 m near, 10 m far, identity view, conventional OpenGL depth, and world -> debug -> depth-reset -> view-model ordering remain unchanged.
+
+Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native P5-T16/P5-T17/P5-T18 regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #275 can close.
+
+Wiki impact: none — supported debug/render APIs and consumer usage are unchanged. Sandbox impact: none — observable debug/view-model behavior and controls are unchanged.

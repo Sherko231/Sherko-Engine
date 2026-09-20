@@ -210,7 +210,6 @@ They are not permission to add Phase 6+ implementation during P5R.
 | `SandboxControls` | `Action` | package-level nested enum | RENAME | `SandboxAction` | Bare `Action` is ambiguous when extracted/used outside owner context; P5R-T17 may retain nested form if no extraction occurs. |
 | `SandboxControls` | `Input` | package-level nested record | RENAME | `SandboxControlInput` | Bare `Input` is vague; exact name should follow T16/T17 decomposition. |
 | `SandboxDiagnosticFormatter` | `DiagnosticValues` | package-level nested record | KEEP | — | Clear in owner context; no need to churn unless moved. |
-| `SandboxFramebufferSize` | top-level package-private class | KEEP | — | T16 accepted extraction target: mutable current framebuffer pixel dimensions are no longer nested in the public entry point. | Framebuffer pixel dimensions must retain current semantics. |
 
 Private implementation-only enums/records that do not materially affect later Phase 5R planning are intentionally not promoted into the inventory merely to create churn.
 

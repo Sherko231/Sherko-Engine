@@ -5,6 +5,7 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 plugins {
     id("java")
     id("checkstyle")
+    id("com.diffplug.spotless") version "8.10.2"
 }
 
 allprojects {
@@ -37,6 +38,19 @@ checkstyle {
     configFile = rootProject.file("config/checkstyle/checkstyle.xml")
     isIgnoreFailures = false
     maxErrors = 0
+}
+
+spotless {
+    java {
+        target(fileTree(rootDir) {
+            include("**/*.java")
+            exclude("**/build/**")
+            exclude(".gradle/**")
+        })
+        eclipse("4.40").configFile("config/formatter/sherko-eclipse-java.xml")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 val phaseZeroSpikeDir = rootProject.file("feasibility-spikes/src/main/java/com/samo/spike")
@@ -93,6 +107,7 @@ val verifyCheckstyleSourceBoundary by tasks.registering {
 tasks.named("check") {
     dependsOn(verifyCheckstyleSourceBoundary)
     dependsOn(":test-support:test")
+    dependsOn("spotlessCheck")
 }
 
 val engineTestModules = listOf(

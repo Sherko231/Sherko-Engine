@@ -1012,6 +1012,26 @@ The native test compiles/links the committed shader pair, reflects exact block s
 
 This proves the uniform-block ABI/reflection contract only. It does not establish a UBO allocator, world camera ownership, material blocks, or draw correctness.
 
+## P5R-T10 reference-scene renderer decomposition verification
+
+Issue #270 renames the internal fixed reference-room implementation and extracts only fixed CPU-side room fixture data. Public `OpenGlRenderer` behavior/signatures, GL resource ownership/order, shader ABI, material/light state, culling/sorting, presentation, diagnostics, and Phase 5 visual output remain unchanged.
+
+Focused verification:
+
+```powershell
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+Repository/source review must confirm `ReferenceRoomFixture` is package-private, `ReferenceSceneRenderer` remains excluded from the API artifact despite Java-public visibility, old production/test class paths are gone, and the fixture's 24 vertices / 36 indices / 4x4 sRGB texture / world AABB remain byte/meaning compatible. No T11+ frame-orchestration responsibility may be extracted here.
+
+The task changes Java/build/workflow/test source, so the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #270 can close.
+
+Wiki impact: none — supported public renderer API and intended usage are unchanged. Sandbox impact: none — the sandbox continues using `OpenGlRenderer` unchanged.
+
 ## P5-T07 first indexed static mesh verification
 
 Issue #189 introduces the first public production renderer path and window-owned presentation.
@@ -1020,7 +1040,7 @@ Focused deterministic tests:
 
 ```powershell
 .\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 ```
 
 The renderer test verifies exact one-time VAO/VBO/EBO/UBO setup, camera/per-frame binding indices 0/1, full-framebuffer viewport, depth `GL_LESS`, back-face culling, CCW front faces, exactly one indexed triangle draw, wrong-thread/invalid-frame rejection before draw mutation, idempotent close, and partial-creation cleanup.
@@ -1035,7 +1055,7 @@ Real Windows x64 acceptance:
 
 ```powershell
 $env:SHERKO_P5_T07_NATIVE="true"
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshNativeTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererNativeTest" --rerun-tasks
 ```
 
 The native test renders through public `OpenGlRenderer`, requires exactly one generated primitive through an OpenGL pipeline query, polls the production debug window after the draw so staged high-severity errors surface, reads back the default back buffer, retains a PNG with visible triangle pixels, presents through `GlfwWindow.present()`, verifies cleanup, and writes:
@@ -1061,7 +1081,7 @@ Focused verification:
 
 ```powershell
 .\\gradlew.bat :engine-platform-lwjgl:test --tests "com.samo.engine.platform.api.GlfwWindowTest" --rerun-tasks
-.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
 .\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 ```
@@ -1090,7 +1110,7 @@ This gate compiles `src/publicApiTest/java` against the renderer API-only compil
 Continue to run the accepted P5-T07 deterministic renderer regression and architecture boundary test:
 
 ```powershell
-.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 .\\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\\gradlew.bat resolveAndLockAllDependencies
@@ -1110,7 +1130,7 @@ Focused deterministic verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RendererMaterialTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 .\gradlew.bat resolveAndLockAllDependencies
@@ -1131,7 +1151,7 @@ P5-T18 keeps the public renderer and module graph unchanged. It replaces only th
 Focused deterministic verification:
 
 ```powershell
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxCameraTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
@@ -1312,7 +1332,7 @@ Focused verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
@@ -1335,7 +1355,7 @@ Focused verification:
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.CpuFrustumCullerTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewFrustumExtractorTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderCullingCountersTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --tests "com.samo.game.sandbox.SandboxDiagnosticFormatterTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
@@ -1361,7 +1381,7 @@ Focused verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DrawSubmissionSorterTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
 .\gradlew.bat resolveAndLockAllDependencies
@@ -1385,7 +1405,7 @@ Focused verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DirectionalLightTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
@@ -1415,7 +1435,7 @@ Focused verification:
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.OpenGlRendererConfigurationTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightSelectionTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.LocalLightUniformBlockTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
@@ -1452,7 +1472,7 @@ Focused verification:
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbTransferTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.PresentationModeTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
@@ -1482,7 +1502,7 @@ Focused verification:
 .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.DebugFrameTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.api.RenderFramePacketTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DebugLineVertexPackerTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :game-sandbox:test --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
@@ -1518,7 +1538,7 @@ Focused verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ViewModelProjectionTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.IndexedStaticMeshPipelineTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
 .\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
 .\gradlew.bat :game-sandbox:test --rerun-tasks

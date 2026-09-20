@@ -17,15 +17,15 @@ final class UniformBlockLayoutVerifier {
 
         verifyBlock(
                 programHandle,
-                CameraUniformBlock.GLSL_BLOCK_NAME,
-                CameraUniformBlock.SIZE_BYTES,
-                CameraUniformBlock.BINDING,
+                CameraMatricesUniformBlock.GLSL_BLOCK_NAME,
+                CameraMatricesUniformBlock.SIZE_BYTES,
+                CameraMatricesUniformBlock.BINDING,
                 reflection);
         verifyBlock(
                 programHandle,
-                PerFrameUniformBlock.GLSL_BLOCK_NAME,
-                PerFrameUniformBlock.SIZE_BYTES,
-                PerFrameUniformBlock.BINDING,
+                FramebufferMetricsUniformBlock.GLSL_BLOCK_NAME,
+                FramebufferMetricsUniformBlock.SIZE_BYTES,
+                FramebufferMetricsUniformBlock.BINDING,
                 reflection);
         verifyBlock(
                 programHandle,
@@ -44,9 +44,9 @@ final class UniformBlockLayoutVerifier {
         guard.assertOwnerThread();
         verifyBlock(
                 programHandle,
-                CameraUniformBlock.GLSL_BLOCK_NAME,
-                CameraUniformBlock.SIZE_BYTES,
-                CameraUniformBlock.BINDING,
+                CameraMatricesUniformBlock.GLSL_BLOCK_NAME,
+                CameraMatricesUniformBlock.SIZE_BYTES,
+                CameraMatricesUniformBlock.BINDING,
                 reflection);
     }
 

@@ -43,7 +43,7 @@ close()      -> onClose()
 
 ## Multiple subsystems
 
-`SubsystemGraph` represents dependency ordering. `SubsystemStartup` is the coordination layer for ordered startup and rollback/cleanup across multiple subsystems. Do not make one `EngineSubsystem` directly coordinate another subsystem's lifecycle unless the active architecture contract explicitly requires it.
+`SubsystemGraph` represents dependency ordering. `SubsystemStartupCoordinator` is the coordination layer for ordered startup and rollback/cleanup across multiple subsystems. Do not make one `EngineSubsystem` directly coordinate another subsystem's lifecycle unless the active architecture contract explicitly requires it.
 
 ## Native subsystems
 

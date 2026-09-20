@@ -300,3 +300,25 @@ Existing public modifiers in internal/executable surfaces are implementation deb
 Wiki impact: none — existing public consumption boundaries were audited but not changed.
 
 Sandbox impact: none — documentation/boundary audit only.
+
+
+## P5R-T21 public API naming result
+
+T21 re-audits the supported public P1-P5 consumer surface after the internal refactor sequence stabilized. The complete member-level record is `PUBLIC_API_NAMING_AUDIT.md`.
+
+Result: **no additional public rename is justified**.
+
+The accepted public roots remain:
+
+- `com.samo.engine.core.api`;
+- `com.samo.engine.platform.api`;
+- `com.samo.engine.render.api`.
+
+Public-modifier executable/internal/demo/spike surfaces remain excluded exactly as documented above. No T21 change promotes an internal type, changes a package boundary, adds an alias/shim, or changes lifecycle/ownership/threading/spatial/config/binary/render semantics.
+
+The current wiki/API index remains consistent with source naming. Historical pre-D-066 lifecycle names remain valid only in explicit decision/status/refactor provenance that describes the old contract or the rename itself.
+
+Independent public-API-change review is not applicable because the T21 candidate changes no public API. If a rename had been selected, the repository's independent-review requirement would apply to the final renamed candidate.
+
+Wiki impact: none — no public name/signature/usage change.
+Sandbox impact: none — no runtime capability or owner-facing usage change.

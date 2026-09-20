@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T20 / Issue #280 is accepted; freshly refine P5R-T21 / Issue #301 against current `master` before implementation |
+| Active executable task | P5R-T21 / Issue #301 — deliberate public P1-P5 API naming audit; current candidate retains all names |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -162,6 +162,8 @@ P5R-T19 / Issue #279 is accepted through PR #343. Final head `47ae52f78f9f9d99d4
 
 P5R-T20 / Issue #280 is accepted through PR #345. Final head `244041127c1851d477f557c92734c981ee5649b7` passed all five required final-candidate jobs in run #489 / `35525360797`: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. `Build all modules` passed with the new `:feasibility-spikes:verifyFeasibilitySpikeIsolation` check wired into the experimental module's `check`, and the retained Windows GLFW/OpenAL lifecycle alias passed in the native job. PR #345 merged as `510e61d6d44eab4cb986d5c03078138aaa40a020`; exact merged `master` passed Lightweight verification in run #490 / `35525718982`. The accepted audit keeps eight already-clear spike/harness names, renames only `IntegratedNativeSoakSpike` -> `IntegratedNativeEvidenceHarness`, preserves `runIntegratedNativeSmoke` / `runIntegratedNativeSoak`, durations, evidence labels, JFR paths, dependencies, native behavior, and historical conclusions, and enforces that no other declared subproject may acquire a project dependency on `:feasibility-spikes`.
 
+P5R-T21 / Issue #301 is active from baseline `8783cd441b1b126f2bc1858a6706adb3c7bdee66`. Fresh source/wiki/boundary review covers all 60 supported public top-level P1-P5 types plus 15 supported nested public types and their declared public member vocabulary, including record accessors, interface/default methods, enum constants, and public constants. No new rename is justified: the current names are responsibility-revealing, contract-sensitive where applicable, and consistent with accepted decisions/spatial semantics/wiki usage. The candidate therefore records a full KEEP audit in `docs/refactor/PUBLIC_API_NAMING_AUDIT.md` without Java, wiki, sandbox, Gradle, resource, workflow, dependency, or behavior changes.
+
 ## Exact next action
 
-Freshly refine **P5R-T21 / Issue #301** against current `master` before implementation. Review every public P1-P5 type/member for clarity, preserve already-clear names, synchronize any justified public rename across consumers/tests/wiki/docs, and keep P6-T01 blocked.
+Complete documentation/self-review for **P5R-T21 / Issue #301** and confirm the complete final diff is Markdown-only. P5R-T22 and P6-T01 remain blocked until T21 acceptance.

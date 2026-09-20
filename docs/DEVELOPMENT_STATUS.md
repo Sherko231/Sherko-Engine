@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T11 / Issue #271 is accepted; freshly refine P5R-T12 / Issue #272 against current `master` before implementation |
+| Active executable task | P5R-T12 / Issue #272 — renderer material/submission/culling/light internal naming candidate on `p5r-t12-renderer-internal-names`; P5R-T13 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -144,6 +144,8 @@ P5R-T10 / Issue #270 is accepted through PR #325. Final head `a3d376eaf786c63e2e
 
 P5R-T11 / Issue #271 is accepted through PR #327. Final head `2512677512e657de4f82b64e09f0b74fabd75c95` passed all five required final-candidate jobs in run #463 / `35507186284`, including the Windows native renderer regressions and P5-T18 Phase 5 exit integration. PR #327 merged as `71ae263026f674bdfda2462f4bfb8c077ef24098`, and exact merged `master` passed Lightweight verification in run #464 / `35507442998`. The accepted refactor keeps `ReferenceSceneRenderer` as the internal lifecycle/native-resource owner and public-facade delegate while extracting package-private, non-owning `RendererFrameUniformUploader`, `ReferenceSceneVisibilityPlanner`, `ReferenceSceneDrawExecutor`, and `RendererFrameDiagnostics`. The accepted frame sequence remains local-light selection/captured matrices -> frustum extraction -> uniform upload -> visibility/sort planning -> world/debug/view-model draw execution with GL-state restoration -> latest-success diagnostics publication. Public `OpenGlRenderer`, shader/layout semantics, material/light/culling names owned by T12-T15, cleanup order, sandbox usage, and native ownership remain unchanged.
 
+P5R-T12 / Issue #272 is the active candidate from baseline `e4b55db2e6235e7e6fadb837f9c7674721804ca2`. Fresh symbol review retains `DrawSubmission`, `DrawSubmissionSorter`, `CpuFrustumCuller`, `DirectionalLight`, and the subordinate material mode/binding/scalar names because they already communicate their responsibilities. The candidate renames only `RendererMaterial` -> `RenderMaterialDescriptor`, `MaterialStatePolicy` -> `OpenGlMaterialStatePolicy`, and `LocalLightSelection` -> `LocalLightSelector`, including direct tests and the P5-T09 native workflow reference. No public API, draw ordering/state, culling semantics, local-light limits/warnings, shader behavior, module edge, sandbox usage, or native ownership changes are introduced pending verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T12 / Issue #272** against current `master` before implementation. Keep it bounded to renderer material/submission/culling/light internal naming, preserve ordering/state/limits/shader behavior, and do not materialize P6-T01.
+Complete implementation/self-review/verification for **P5R-T12 / Issue #272** on `p5r-t12-renderer-internal-names`, then open the final non-draft PR only when the candidate is ready for the exact-head five-job matrix. P5R-T13 and P6-T01 remain blocked.

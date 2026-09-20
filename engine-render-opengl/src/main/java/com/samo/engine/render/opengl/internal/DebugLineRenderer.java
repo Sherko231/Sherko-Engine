@@ -173,7 +173,7 @@ final class DebugLineRenderer implements AutoCloseable {
         try {
             resource.close();
         } catch (RuntimeException | Error cleanupFailure) {
-            CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
+            CleanupFailureSuppression.addSuppressedUnlessSame(failure, cleanupFailure);
         } catch (Exception impossible) {
             throw new AssertionError(impossible);
         }
@@ -195,7 +195,7 @@ final class DebugLineRenderer implements AutoCloseable {
         }
         Throwable first = failures.getFirst();
         for (int index = 1; index < failures.size(); index++) {
-            CleanupFailures.addSuppressedUnlessSame(first, failures.get(index));
+            CleanupFailureSuppression.addSuppressedUnlessSame(first, failures.get(index));
         }
         if (first instanceof RuntimeException runtimeFailure) {
             throw runtimeFailure;

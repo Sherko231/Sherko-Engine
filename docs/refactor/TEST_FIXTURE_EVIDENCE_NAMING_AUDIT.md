@@ -152,3 +152,16 @@ It does not change:
 Wiki impact: none — no public API or consumer usage changes.
 
 Sandbox impact: none — no runtime capability or owner-facing usage changes.
+
+
+## Acceptance record
+
+P5R-T22 was accepted through PR #349.
+
+- Final candidate: `5bda2120526a40c4176aa161ba1492060118860f`.
+- Heavy verification: run #491 / `35530836855`, all five required jobs passed.
+- Merge commit: `387549c83ffa6af9d8d69b0373772e84ac23053c`.
+- Exact-merge verification: run #492 / `35532808303`, Lightweight master verification passed.
+- Fixture identity: old/new resource content shares Git blob `fe6d5138a34d2a8903ab88b73b54110b25b6adeb`.
+- Historical CI/evidence identifiers: unchanged.
+- Production/wiki/sandbox behavior: unchanged.

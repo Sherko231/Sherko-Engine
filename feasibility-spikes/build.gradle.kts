@@ -162,7 +162,7 @@ fun JavaExec.configureIntegratedNativeEvidence(
     defaultDurationSeconds: String,
     recordingName: String
 ) {
-    useSpikeRuntime("com.samo.spike.integration.IntegratedNativeSoakSpike")
+    useSpikeRuntime("com.samo.spike.integration.IntegratedNativeEvidenceHarness")
     jvmArgs(
         "--enable-native-access=ALL-UNNAMED",
         "-XX:StartFlightRecording=filename=${nativeEvidenceDir.get().file(recordingName).asFile.absolutePath},settings=profile,dumponexit=true"
@@ -187,4 +187,33 @@ tasks.register<JavaExec>("runIntegratedNativeSmoke") {
 tasks.register<JavaExec>("runIntegratedNativeSoak") {
     description = "Runs the P0-T13 15-minute GLFW/OpenGL/Jolt/OpenAL/UDP sustained test under JFR."
     configureIntegratedNativeEvidence("P0-T13", "900", "p0-t13-soak.jfr")
+}
+
+
+val verifyFeasibilitySpikeIsolation by tasks.registering {
+    group = "verification"
+    description = "Verifies that no other subproject depends on the experimental feasibility-spikes module."
+
+    doLast {
+        val dependentConfigurations = rootProject.subprojects
+            .filter { candidate -> candidate.path != project.path }
+            .flatMap { candidate ->
+                candidate.configurations.flatMap { configuration ->
+                    configuration.dependencies
+                        .withType(org.gradle.api.artifacts.ProjectDependency::class.java)
+                        .filter { dependency -> dependency.path == project.path }
+                        .map { "${candidate.path}:${configuration.name}" }
+                }
+            }
+            .sorted()
+
+        check(dependentConfigurations.isEmpty()) {
+            "Production/support/game projects must not depend on :feasibility-spikes. " +
+                "Found: ${dependentConfigurations.joinToString()}"
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(verifyFeasibilitySpikeIsolation)
 }

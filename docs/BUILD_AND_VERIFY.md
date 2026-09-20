@@ -63,15 +63,15 @@ No lockfile change is expected. Use the current CI gate for new work; queued job
 
 ## P2-T03 startup rollback verification
 
-Issue #73 adds stateless `SubsystemStartup` coordination for an already resolved dependency-first order. Run the full routine matrix above and the combined focused suite:
+Issue #73 adds stateless `SubsystemStartupCoordinator` coordination for an already resolved dependency-first order. Run the full routine matrix above and the combined focused suite:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --rerun-tasks
 ```
 
 The rollback suite uses handwritten global hook traces to verify per-subsystem initialize/start activation, close of the currently failing subsystem, reverse stop/close of previously started subsystems, first-element isolation, caller-owned successful shutdown, input snapshotting, original throwable identity, continued cleanup after rollback failures, deterministic suppressed-failure order, and self-suppression avoidance.
 
-Startup XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupTest.xml`. HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact includes lifecycle, graph, and startup XML/HTML; `jacoco-reports` remains unfiltered.
+Startup XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupCoordinatorTest.xml`. HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact includes lifecycle, graph, and startup XML/HTML; `jacoco-reports` remains unfiltered.
 
 These tests use synthetic Java subsystems. They do not establish native restartability, native leak freedom, sustained stability, or D-030's 60-second integrated Phase 2 exit gate. No dependency or lockfile change is expected.
 
@@ -88,7 +88,7 @@ The clock suite uses deterministic injected readings and handwritten expectation
 Also rerun the prior lifecycle/graph/startup suite to guard existing `engine-core` behavior:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --rerun-tasks
 ```
 
 CI runs those four suites together after aggregate `test` so all focused XML files survive in one report directory. Clock XML is `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineClockTest.xml`; HTML remains `engine-core/build/reports/tests/test/index.html`. The `engine-subsystem-tests` artifact name is retained for continuity and now includes lifecycle, graph, startup, and clock XML/HTML. `jacoco-reports` remains the unfiltered coverage artifact.
@@ -108,7 +108,7 @@ The accumulator suite uses exact integer-nanosecond partitions and handwritten/i
 Also rerun all existing `engine-core` lifecycle/timing acceptance suites together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --rerun-tasks
 ```
 
 Accumulator XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepAccumulatorTest.xml`. HTML remains `engine-core/build/reports/tests/test/index.html`. CI retains lifecycle, graph, startup, clock, and accumulator XML plus HTML in the existing `engine-subsystem-tests` artifact; `jacoco-reports` remains the ordinary unfiltered coverage artifact.
@@ -130,7 +130,7 @@ The suite uses integer-nanosecond expectations to cover the default constants, b
 Also rerun all current `engine-core` lifecycle/timing suites together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --rerun-tasks
 ```
 
 Catch-up XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepCatchUpPolicyTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact. `jacoco-reports` remains the ordinary unfiltered coverage artifact.
@@ -152,7 +152,7 @@ The suite uses handwritten integer-derived expectations for fresh state, exact w
 Also rerun all current `engine-core` lifecycle/timing suites together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --rerun-tasks
 ```
 
 Interpolation XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepInterpolationTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; `jacoco-reports` remains unfiltered.
@@ -174,7 +174,7 @@ The suite uses handwritten expectations for defaults, explicit typed values, inc
 Also rerun the current focused engine-core regression set together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --rerun-tasks
 ```
 
 Config XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigSchemaTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
@@ -196,7 +196,7 @@ The suite uses temporary UTF-8 files and handwritten expectations for all four p
 Also rerun the complete focused `engine-core` lifecycle/timing/config regression set together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --rerun-tasks
 ```
 
 Loader XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineConfigLoaderTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
@@ -218,7 +218,7 @@ The suite uses synthetic opaque handles and counted closers with handwritten exp
 Also rerun the complete focused `engine-core` lifecycle/timing/config/native-ownership regression set together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --rerun-tasks
 ```
 
 Registry XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.NativeResourceRegistryTest.xml`. CI includes it in `engine-subsystem-tests`; `jacoco-reports` remains unfiltered.
@@ -262,7 +262,7 @@ The suite uses handwritten capturing, failing, and blocking sinks. It verifies a
 Also rerun the complete current focused `engine-core` regression set together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --rerun-tasks
 ```
 
 Logger XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineLoggerTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; `jacoco-reports` remains unfiltered. P2-T12 does not create a file/console log artifact because it defines no persisted log format.
@@ -271,12 +271,12 @@ P2-T12 proves the typed in-memory event/sink contract only. It does not establis
 
 ## P2-T13 orderly fatal-termination verification
 
-Issue #83 adds the JDK-only `FatalTermination` coordinator in `engine-core`. It composes the existing subsystem lifecycle, native-resource registry, and structured logger without changing their APIs, adding dependencies, or selecting a persisted log format.
+Issue #83 adds the JDK-only `FatalTerminationCoordinator` coordinator in `engine-core`. It composes the existing subsystem lifecycle, native-resource registry, and structured logger without changing their APIs, adding dependencies, or selecting a persisted log format.
 
 Run the focused acceptance suite:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.FatalTerminationTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.FatalTerminationCoordinatorTest" --rerun-tasks
 ```
 
 The suite uses handwritten lifecycle/log traces, counted synthetic resource closers, failing sinks, and an injected package-private terminator seam to verify the exact fatal sequence, reverse subsystem cleanup, stop-then-close behavior after stop failure, non-force-closing registry verification, ordered cleanup-failure diagnostics, flush ordering, unchecked logging/cleanup/verification/flush failure containment, exact terminator throwable identity with suppressed failures, returning-terminator rejection, and one-shot reentrant/concurrent/later-call rejection.
@@ -286,10 +286,10 @@ The same focused JUnit suite launches a bounded child JVM for the real public co
 Also rerun the complete current focused `engine-core` regression set together:
 
 ```powershell
-.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --tests "com.samo.engine.core.api.FatalTerminationTest" --rerun-tasks
+.\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --tests "com.samo.engine.core.api.FatalTerminationCoordinatorTest" --rerun-tasks
 ```
 
-Fatal-shutdown XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FatalTerminationTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; the child marker file remains temporary test evidence and is not a production or retained log format. `jacoco-reports` remains unfiltered.
+Fatal-shutdown XML: `engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FatalTerminationCoordinatorTest.xml`. CI includes it in the existing `engine-subsystem-tests` evidence artifact; the child marker file remains temporary test evidence and is not a production or retained log format. `jacoco-reports` remains unfiltered.
 
 P2-T13 proves Java fatal-shutdown orchestration only. It does not prove actual GLFW/OpenGL/Jolt/OpenAL/Steam native cleanup, long-duration stability, restartability, or D-030's separate 60-second Phase 2 integrated exit gate. P0-T09A/P0-T13/P0-T14 remain independent feasibility gates. No dependency or lockfile change is expected.
 
@@ -313,7 +313,7 @@ The enabled test must:
 - use the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy` in one loop;
 - execute simulation only as whole fixed 60 Hz steps returned by the production policy;
 - inject one real two-second stall after startup and observe at most the configured five exposed catch-up steps; the expected default result for that stall is exactly five exposed steps after the 250 ms clamp;
-- start a synthetic subsystem through `SubsystemStartup`, then stop and close it orderly;
+- start a synthetic subsystem through `SubsystemStartupCoordinator`, then stop and close it orderly;
 - release its tracked `NativeResourceRegistry` registration through owner cleanup exactly once;
 - require `NativeResourceRegistry.assertNoOpenResources()` to pass after cleanup.
 
@@ -672,6 +672,27 @@ The task changes Java source, so the exact final PR head requires the normal fiv
 Accepted P5R-T06 evidence: final PR head `791488bfcbae9573cebdb5fe5c8318d238b79c0f` passed all five required jobs in run #456 / `35499854090`; PR #319 merged as `96c9a331f2e4a5e1807ce830121d7ff714877316`; exact merged-master Lightweight verification passed in run #457 / `35500042897`.
 
 Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
+
+## P5R-T07 core lifecycle naming verification
+
+Issue #267 applies the D-066 public type renames `SubsystemStartupCoordinator` and `FatalTerminationCoordinator` only. Run the focused lifecycle suites:
+
+```powershell
+.\\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorTest" --tests "com.samo.engine.core.api.FatalTerminationCoordinatorTest" --tests "com.samo.engine.core.api.Phase2IntegratedGateTest" --rerun-tasks
+```
+
+Run architecture/headless/dependency checks:
+
+```powershell
+.\\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\\gradlew.bat :game-server:verifyHeadlessServerRuntime
+.\\gradlew.bat resolveAndLockAllDependencies
+```
+
+Repository review must confirm that the former production/test filenames are gone; no compatibility alias remains; the new coordinator files differ from their accepted predecessors only by the authorized declaring/constructor/type-reference names; existing lifecycle assertions/scenarios remain equivalent; D-020/D-029 historical decision rows remain intact; and the API index plus lifecycle/subsystem-composition/fatal-termination wiki pages use the new public names.
+
+The task changes supported public API names and Java source, so the final candidate requires the five-job heavy CI matrix on its exact head. After merge, the exact merged `master` SHA requires Lightweight verification before Issue #267 can close. Independent review is required by policy for the public rename; if unavailable, record that honestly with remaining risk. Sandbox impact is none because the persistent sandbox does not directly consume either lifecycle coordinator.
+
 
 ## P3-T04A historical sandbox-origin verification
 

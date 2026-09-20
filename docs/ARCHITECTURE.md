@@ -21,7 +21,7 @@ The accepted P1-P5 consumer boundary is package- and contract-based, not equival
 
 Java package-private implementation may remain colocated in an API package when that is necessary to support a facade without making the helper a consumer type. Conversely, Java `public` visibility under a declared internal package or executable/demo surface does not by itself create supported engine API. Current examples include renderer-internal `IndexedStaticMeshPipeline`, the standalone renderer visual-demo entry point, client/server version-report helpers, and game/sandbox entry points. These are bounded implementation or executable surfaces and must not be used as precedent for new public internals.
 
-P5R-T03 through P5R-T05 must preserve `GlfwWindow` as the public platform facade and must not promote extracted backend/callback/input/window-mode collaborators to `public` merely to cross a Java package boundary. Package reorganization is normally deferred until P5R-T23 after responsibility groups stabilize. P5R-T10 through P5R-T15 similarly preserve the public `OpenGlRenderer` / render-submission contracts while refactoring renderer internals. Public engine API rename proposals such as `FatalTermination` and `SubsystemStartup` remain deferred to P5R-T21 unless an earlier active Issue explicitly authorizes a public contract change.
+P5R-T03 through P5R-T05 must preserve `GlfwWindow` as the public platform facade and must not promote extracted backend/callback/input/window-mode collaborators to `public` merely to cross a Java package boundary. Package reorganization is normally deferred until P5R-T23 after responsibility groups stabilize. P5R-T10 through P5R-T15 similarly preserve the public `OpenGlRenderer` / render-submission contracts while refactoring renderer internals. P5R-T07 explicitly authorizes the lifecycle public-name corrections `SubsystemStartupCoordinator` and `FatalTerminationCoordinator`; broader public API naming remains deferred to P5R-T21.
 
 The complete type/consumer-role map and later-task deferrals are recorded in `docs/refactor/BOUNDARY_AUDIT.md`. This audit documents existing D-016/D-055 architecture and current source state; it introduces no new dependency/module edge, public contract, visibility rule, or durable decision.
 
@@ -50,6 +50,13 @@ The former nested `Dimensions`, `Position`, `VideoMode`, `WindowGeometry`, `Moni
 The accepted P5R-T06 implementation preserves the public `InputActionBindings`, `InputBinding`, `InputBindingLoadException`, action/component/value/control vocabulary, and strict schema-v1 contract while separating three package-private responsibilities in `com.samo.engine.platform.api`. `InputActionBindingsLoader` owns readable-regular-file checks, UTF-8 reader lifetime, and I/O-to-load-exception wrapping. `InputActionBindingsJsonParser` owns Jackson strict duplicate-field parsing, schema shape/version checks, field/control decoding, numeric scale validation, document-level duplicate detection, and path/context diagnostics. `InputActionBindingsValidator` owns complete-set domain validation plus defensive immutable copying and supplies the shared action/component compatibility check.
 
 The split preserves the existing failure precedence and text for accepted P3-T07 scenarios: malformed/duplicate JSON object fields still fail as read/parse errors; schema/type/enum/context failures remain `InputBindingLoadException`; public-constructor programmer errors remain `IllegalArgumentException` or `NullPointerException` with the existing messages. The committed v1 fixture, Jackson version, Gradle/lockfiles, public signatures, evaluator/sampler behavior, module edges, wiki usage, and sandbox behavior remain unchanged. No package reorganization occurs; T23 remains the package-grouping task.
+
+
+## Phase 5R core lifecycle naming normalization — P5R-T07 / Issue #267
+
+The P5R-T07 candidate changes only two supported public type names under D-066: `SubsystemStartupCoordinator` names the stateless coordinator that starts an already-resolved dependency-first subsystem order and rolls back partial startup, while `FatalTerminationCoordinator` names the one-shot synchronous fatal-shutdown coordinator. The public operations remain `start(...)` and `terminate(...)`; D-020 and D-029 ordering, ownership, failure identity/suppression, cleanup/reporting/flush sequence, and exit status remain unchanged.
+
+`EngineSubsystem` and `SubsystemGraph` are retained because their names already match their responsibilities. No compatibility alias, package move, dependency/module edge, lifecycle state-machine change, shutdown manager, restart contract, or background lifecycle thread is introduced. Historical D-020/D-029 decision rows retain the original accepted type names; D-066 records the current public naming contract. Relevant wiki usage is updated in the same candidate because this is a supported public API rename.
 
 
 P5-T01 extends the existing `GlfwWindow` ownership boundary with optional OpenGL debug-context diagnostics under D-048. `OpenGlDebugMode.DISABLED` preserves the existing release-safe constructors. `FAIL_ON_HIGH_SEVERITY` requests and verifies a debug context, installs one context-bound callback after capabilities exist, reports normalized source/type/severity/message fields through `EngineLogger`, stages callback/logging failures instead of throwing through native code, and surfaces high-severity failures once from owner-thread `pollEvents()`. The callback is released before context detachment and capability clearing during stop/start-failure/close. No raw OpenGL handle, renderer resource API, draw path, dependency, or module edge is introduced.
@@ -213,7 +220,7 @@ The graph never calls lifecycle methods, checks subsystem state, owns resources,
 
 ## Coordinated startup rollback — P2-T03 / Issue #73
 
-`com.samo.engine.core.api.SubsystemStartup` is a stateless utility above D-018 and D-019. It accepts an already-resolved dependency-first `List<EngineSubsystem>`, snapshots the complete list before any hook executes, then calls `initialize()` and `start()` on each subsystem before advancing to the next.
+`com.samo.engine.core.api.SubsystemStartupCoordinator` is a stateless utility above D-018 and D-019. It accepts an already-resolved dependency-first `List<EngineSubsystem>`, snapshots the complete list before any hook executes, then calls `initialize()` and `start()` on each subsystem before advancing to the next.
 
 Successful startup does not transfer ownership or register a normal shutdown callback. The composition owner remains responsible for reverse-order `stop()` and `close()` during ordinary shutdown.
 
@@ -315,7 +322,7 @@ The sink is caller-owned and is not closed by `EngineLogger`. P2-T12 adds no bac
 
 ## Orderly fatal termination — P2-T13 / Issue #83
 
-`FatalTermination` is the D-029 one-shot fatal-shutdown coordinator in `engine-core`. The public constructor receives the existing `EngineLogger`; production termination uses `System.exit(1)`. A package-private `IntConsumer` constructor exists only as a unit-test seam so tests can inspect ordering without terminating the test JVM.
+`FatalTerminationCoordinator` is the D-029 one-shot fatal-shutdown coordinator in `engine-core`. The public constructor receives the existing `EngineLogger`; production termination uses `System.exit(1)`. A package-private `IntConsumer` constructor exists only as a unit-test seam so tests can inspect ordering without terminating the test JVM.
 
 A valid `terminate(message, context, initializationOrder, resourceRegistry)` call validates and snapshots all caller inputs before any side effect, including identity-based duplicate subsystem rejection. The supplied order is the dependency-first order that completed startup successfully. After atomically claiming the coordinator, fatal shutdown runs synchronously on the calling lifecycle/native-affinity thread and does not hold an internal lock across user callbacks.
 
@@ -323,13 +330,13 @@ The exact orchestration is: emit one structured `FATAL` event; visit the subsyst
 
 Unchecked failures from the initial fatal log, stop/close hooks, registry verification, failure-report logs, and flush are accumulated in encounter order instead of aborting later cleanup. Failure-report logging failures are captured but not recursively re-logged. If the test terminator throws, its exact throwable remains primary with prior failures suppressed; if it returns, the coordinator throws terminal `IllegalStateException` because continuing after an expected process exit is invalid.
 
-Each `FatalTermination` instance is one-shot. Reentrant, concurrent, and later calls are rejected before they can duplicate logging, cleanup, verification, flushing, or termination. The coordinator creates no worker, executor, JVM shutdown hook, global singleton, persisted log format, force-close API, module edge, or composition-root wiring.
+Each `FatalTerminationCoordinator` instance is one-shot. Reentrant, concurrent, and later calls are rejected before they can duplicate logging, cleanup, verification, flushing, or termination. The coordinator creates no worker, executor, JVM shutdown hook, global singleton, persisted log format, force-close API, module edge, or composition-root wiring.
 
 JUnit tests use handwritten traces/counters plus a real child JVM. The child uses the public constructor and proves exit status `1` occurs only after a synthetic subsystem stops, closes its registered resource, and flushes its sink. This is Java orchestration evidence only; it does not establish native GLFW/OpenGL/Jolt/OpenAL/Steam cleanup, sustained stability, or restartability. D-030/#135 separately owns the 60-second integrated Phase 2 gate.
 
 ## Phase 2 integrated exit evidence — Issue #135 / D-030
 
-`Phase2IntegratedGateTest` is a test-only integration harness in `engine-core`; it adds no production API, dependency, module edge, lifecycle manager, or force-close behavior. When explicitly enabled, it starts a synthetic `EngineSubsystem` through `SubsystemStartup`, registers one synthetic owned handle through `NativeResourceRegistry`, and then runs a headless loop with the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy`.
+`Phase2IntegratedGateTest` is a test-only integration harness in `engine-core`; it adds no production API, dependency, module edge, lifecycle manager, or force-close behavior. When explicitly enabled, it starts a synthetic `EngineSubsystem` through `SubsystemStartupCoordinator`, registers one synthetic owned handle through `NativeResourceRegistry`, and then runs a headless loop with the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy`.
 
 The gate runs for at least 60 continuous seconds. Normal iterations sample monotonic elapsed time and execute only the whole simulation steps returned by the exact 60 Hz accumulator/policy combination. Once after startup it injects a real two-second delay; the following clock sample must expose no more than the default five catch-up steps, demonstrating the 250 ms input clamp and five-step cap through the integrated path rather than an isolated policy test.
 

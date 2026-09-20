@@ -1,6 +1,6 @@
 # Subsystem composition and startup
 
-`SubsystemGraph` and `SubsystemStartup` help a composition owner start multiple `EngineSubsystem` instances in dependency-safe order without turning `engine-core` into a general dependency-injection or lifecycle framework.
+`SubsystemGraph` and `SubsystemStartupCoordinator` help a composition owner start multiple `EngineSubsystem` instances in dependency-safe order without turning `engine-core` into a general dependency-injection or lifecycle framework.
 
 ## Declare dependencies
 
@@ -46,9 +46,9 @@ The graph itself never calls lifecycle methods, owns resources, or performs clea
 ## Start the resolved order
 
 ```java
-import com.samo.engine.core.api.SubsystemStartup;
+import com.samo.engine.core.api.SubsystemStartupCoordinator;
 
-SubsystemStartup.start(order);
+SubsystemStartupCoordinator.start(order);
 ```
 
 The utility snapshots the order, then performs:
@@ -72,7 +72,7 @@ If a subsystem fails during `initialize()` or `start()`:
 
 ## Successful startup ownership
 
-`SubsystemStartup.start(...)` does **not** become the normal shutdown owner. After successful startup, the composition owner still owns orderly reverse shutdown.
+`SubsystemStartupCoordinator.start(...)` does **not** become the normal shutdown owner. After successful startup, the composition owner still owns orderly reverse shutdown.
 
 A typical owner should retain the dependency-first list and, during normal shutdown, visit it in reverse order and call `stop()` then `close()` according to each subsystem's lifecycle state/contract.
 

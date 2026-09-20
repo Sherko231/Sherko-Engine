@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T06 / Issue #266 is accepted; freshly refine P5R-T07 / Issue #267 against current `master` before implementation |
+| Active executable task | P5R-T07 / Issue #267 — core lifecycle public coordinator naming candidate on `p5r-t07-core-lifecycle-naming`; P5R-T08 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -134,6 +134,8 @@ P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enum
 
 P5R-T06 / Issue #266 is accepted through PR #319. Final head `791488bfcbae9573cebdb5fe5c8318d238b79c0f` passed all five required final-candidate jobs in run #456 / `35499854090`. PR #319 merged as `96c9a331f2e4a5e1807ce830121d7ff714877316`, and exact merged `master` passed Lightweight verification in run #457 / `35500042897`. The accepted refactor narrows package-private `InputActionBindingsLoader` to file loading, extracts `InputActionBindingsJsonParser` for strict schema-v1/Jackson decoding, and extracts `InputActionBindingsValidator` for complete-set domain validation/copying while preserving public declarations, fixture bytes, dependency locks, accepted error ordering/messages, evaluator/sampler behavior, and module boundaries.
 
+P5R-T07 / Issue #267 is the active non-Markdown candidate. D-066 explicitly renames `SubsystemStartup` to `SubsystemStartupCoordinator` and `FatalTermination` to `FatalTerminationCoordinator` with no compatibility aliases while retaining the existing `start(...)` / `terminate(...)` behavior, lifecycle ordering, ownership, rollback, suppression, fatal cleanup/reporting/flush sequence, and exit status. Direct tests, CI selectors/artifacts, architecture/refactor docs, and the public wiki are synchronized to the new names. `EngineSubsystem` and `SubsystemGraph` are retained unchanged.
+
 ## Exact next action
 
-Freshly refine **P5R-T07 / Issue #267** against current `master` before implementation. Keep the task bounded to core lifecycle naming/responsibility normalization, preserve startup/rollback/fatal-shutdown semantics and public contracts unless the active Issue explicitly authorizes otherwise, and do not materialize P6-T01 yet.
+Complete review/verification/merge of **P5R-T07 / Issue #267**. Require exact PR-head heavy CI and exact merged-master Lightweight verification; after acceptance, freshly refine **P5R-T08 / Issue #268**. Do not materialize P6-T01 yet.

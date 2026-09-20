@@ -10,14 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class SubsystemStartupTest {
+class SubsystemStartupCoordinatorTest {
     @Test
     void acceptsEmptyOrderAndRejectsNullsBeforeHooks() {
-        assertDoesNotThrow(() -> SubsystemStartup.start(List.of()));
+        assertDoesNotThrow(() -> SubsystemStartupCoordinator.start(List.of()));
 
         Probe probe = new Probe("only", new ArrayList<>());
-        assertThrows(NullPointerException.class, () -> SubsystemStartup.start(null));
-        assertThrows(NullPointerException.class, () -> SubsystemStartup.start(java.util.Arrays.asList(probe, null)));
+        assertThrows(NullPointerException.class, () -> SubsystemStartupCoordinator.start(null));
+        assertThrows(NullPointerException.class, () -> SubsystemStartupCoordinator.start(java.util.Arrays.asList(probe, null)));
         assertEquals(List.of(), probe.trace);
     }
 
@@ -28,7 +28,7 @@ class SubsystemStartupTest {
         Probe renderer = new Probe("renderer", trace);
         Probe gameplay = new Probe("gameplay", trace);
 
-        SubsystemStartup.start(List.of(assets, renderer, gameplay));
+        SubsystemStartupCoordinator.start(List.of(assets, renderer, gameplay));
 
         assertEquals(List.of(
                 "assets.initialize", "assets.start",
@@ -61,7 +61,7 @@ class SubsystemStartupTest {
         gameplay.fail("initialize", failure);
 
         assertSame(failure, assertThrows(IllegalStateException.class,
-                () -> SubsystemStartup.start(List.of(assets, renderer, gameplay))));
+                () -> SubsystemStartupCoordinator.start(List.of(assets, renderer, gameplay))));
 
         assertEquals(List.of(
                 "assets.initialize", "assets.start",
@@ -83,7 +83,7 @@ class SubsystemStartupTest {
         second.fail("start", failure);
 
         assertSame(failure, assertThrows(AssertionError.class,
-                () -> SubsystemStartup.start(List.of(first, second))));
+                () -> SubsystemStartupCoordinator.start(List.of(first, second))));
 
         assertEquals(List.of(
                 "first.initialize", "first.start",
@@ -100,7 +100,7 @@ class SubsystemStartupTest {
         first.fail("initialize", failure);
 
         assertSame(failure, assertThrows(RuntimeException.class,
-                () -> SubsystemStartup.start(List.of(first, later))));
+                () -> SubsystemStartupCoordinator.start(List.of(first, later))));
 
         assertEquals(List.of("first.initialize", "first.close"), trace);
         assertEquals(0, later.initializeCalls);
@@ -126,7 +126,7 @@ class SubsystemStartupTest {
         first.fail("close", firstClose);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> SubsystemStartup.start(List.of(first, second, third)));
+                () -> SubsystemStartupCoordinator.start(List.of(first, second, third)));
 
         assertSame(original, thrown);
         assertArrayEquals(new Throwable[] {failedClose, secondStop, secondClose, firstClose},
@@ -149,7 +149,7 @@ class SubsystemStartupTest {
         mutable.add(first);
         mutable.add(second);
 
-        SubsystemStartup.start(mutable);
+        SubsystemStartupCoordinator.start(mutable);
 
         assertEquals(List.of(
                 "first.initialize", "first.start",
@@ -171,7 +171,7 @@ class SubsystemStartupTest {
         probe.fail("close", failure);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> SubsystemStartup.start(List.of(probe)));
+                () -> SubsystemStartupCoordinator.start(List.of(probe)));
 
         assertSame(failure, thrown);
         assertEquals(0, thrown.getSuppressed().length);

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class FatalTerminationTest {
+class FatalTerminationCoordinatorTest {
     private static final EngineLogger.Context CONTEXT =
             new EngineLogger.Context(12L, 34L, "core", null, null);
 
@@ -33,7 +33,7 @@ class FatalTerminationTest {
 
         EngineLogger logger = new EngineLogger(new TraceSink(trace));
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             trace.add("terminate:" + status);
             registry.assertNoOpenResources();
             throw signal;
@@ -74,7 +74,7 @@ class FatalTerminationTest {
 
         EngineLogger logger = new EngineLogger(new CapturingSink(events, trace));
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             trace.add("terminate:" + status);
             throw signal;
         });
@@ -115,7 +115,7 @@ class FatalTerminationTest {
 
         EngineLogger logger = new EngineLogger(new CapturingSink(events, trace));
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             trace.add("terminate:" + status);
             throw signal;
         });
@@ -165,7 +165,7 @@ class FatalTerminationTest {
             }
         });
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             trace.add("terminate:" + status);
             throw signal;
         });
@@ -202,7 +202,7 @@ class FatalTerminationTest {
         start(subsystem);
         trace.clear();
         AtomicInteger terminations = new AtomicInteger();
-        FatalTermination fatal = new FatalTermination(new EngineLogger(new TraceSink(trace)), status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(new EngineLogger(new TraceSink(trace)), status -> {
             trace.add("terminate:" + status);
             terminations.incrementAndGet();
         });
@@ -229,7 +229,7 @@ class FatalTerminationTest {
         NativeResourceRegistry registry = new NativeResourceRegistry();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 5L);
         AtomicInteger terminations = new AtomicInteger();
-        FatalTermination fatal = new FatalTermination(
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(
                 new EngineLogger(new TraceSink(trace)),
                 status -> terminations.incrementAndGet());
 
@@ -254,7 +254,7 @@ class FatalTerminationTest {
         List<String> trace = new ArrayList<>();
         NativeResourceRegistry registry = new NativeResourceRegistry();
         EngineLogger logger = new EngineLogger(new TraceSink(trace));
-        AtomicReference<FatalTermination> fatalRef = new AtomicReference<>();
+        AtomicReference<FatalTerminationCoordinator> fatalRef = new AtomicReference<>();
         AtomicReference<Throwable> nestedFailure = new AtomicReference<>();
         AtomicInteger terminations = new AtomicInteger();
         ProbeSubsystem subsystem = new ProbeSubsystem("one", registry, trace, 6L);
@@ -264,7 +264,7 @@ class FatalTerminationTest {
         start(subsystem);
         trace.clear();
 
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             terminations.incrementAndGet();
             throw new TerminationSignal();
         });
@@ -298,7 +298,7 @@ class FatalTerminationTest {
                 await(releaseFatalWrite);
             }
         });
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             terminations.incrementAndGet();
             throw new TerminationSignal();
         });
@@ -332,13 +332,13 @@ class FatalTerminationTest {
                 .toString();
         String childClasspath = String.join(
                 File.pathSeparator,
-                codeSourcePath(FatalTerminationChildProcess.class),
-                codeSourcePath(FatalTermination.class));
+                codeSourcePath(FatalTerminationCoordinatorChildProcess.class),
+                codeSourcePath(FatalTerminationCoordinator.class));
         Process process = new ProcessBuilder(
                         javaExecutable,
                         "-cp",
                         childClasspath,
-                        FatalTerminationChildProcess.class.getName(),
+                        FatalTerminationCoordinatorChildProcess.class.getName(),
                         marker.toString())
                 .redirectErrorStream(true)
                 .start();
@@ -381,7 +381,7 @@ class FatalTerminationTest {
             }
         });
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             trace.add("terminate:" + status);
             registry.assertNoOpenResources();
             throw signal;
@@ -410,7 +410,7 @@ class FatalTerminationTest {
             }
         });
         TerminationSignal signal = new TerminationSignal();
-        FatalTermination fatal = new FatalTermination(logger, status -> {
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> {
             assertEquals(1, status);
             throw signal;
         });
@@ -431,7 +431,7 @@ class FatalTerminationTest {
                 throw earlier;
             }
         });
-        FatalTermination fatal = new FatalTermination(logger, status -> throwUnchecked(terminationFailure));
+        FatalTerminationCoordinator fatal = new FatalTerminationCoordinator(logger, status -> throwUnchecked(terminationFailure));
 
         Throwable actual;
         if (terminationFailure instanceof Error) {

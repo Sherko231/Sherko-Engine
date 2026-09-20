@@ -18,7 +18,7 @@ import java.util.function.IntConsumer;
  * verification, failure reporting, and log flushing are all attempted before
  * the termination action runs.
  */
-public final class FatalTermination {
+public final class FatalTerminationCoordinator {
     private static final int FATAL_EXIT_STATUS = 1;
 
     private final EngineLogger logger;
@@ -31,11 +31,11 @@ public final class FatalTermination {
      * @param logger synchronous structured logger to use for fatal diagnostics
      * @throws NullPointerException if {@code logger} is null
      */
-    public FatalTermination(EngineLogger logger) {
+    public FatalTerminationCoordinator(EngineLogger logger) {
         this(logger, System::exit);
     }
 
-    FatalTermination(EngineLogger logger, IntConsumer terminator) {
+    FatalTerminationCoordinator(EngineLogger logger, IntConsumer terminator) {
         this.logger = Objects.requireNonNull(logger, "logger");
         this.terminator = Objects.requireNonNull(terminator, "terminator");
     }

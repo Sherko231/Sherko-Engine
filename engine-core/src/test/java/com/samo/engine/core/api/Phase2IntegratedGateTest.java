@@ -33,7 +33,7 @@ class Phase2IntegratedGateTest {
         GateSubsystem subsystem = new GateSubsystem(registry, lifecycleTrace);
         List<EngineSubsystem> initializationOrder = List.of(subsystem);
 
-        SubsystemStartup.start(initializationOrder);
+        SubsystemStartupCoordinator.start(initializationOrder);
 
         EngineClock clock = new EngineClock();
         FixedStepAccumulator accumulator = new FixedStepAccumulator();

@@ -11,8 +11,8 @@ import java.util.Objects;
  * {@link SubsystemGraph#initializationOrder()}. Successful startup keeps ownership with the
  * caller; this utility performs cleanup only when initialization or startup fails.
  */
-public final class SubsystemStartup {
-    private SubsystemStartup() {
+public final class SubsystemStartupCoordinator {
+    private SubsystemStartupCoordinator() {
     }
 
     /**

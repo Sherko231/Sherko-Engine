@@ -10,7 +10,7 @@ This page is an orientation index for production public APIs implemented today. 
 | --- | --- |
 | `EngineSubsystem` | Final lifecycle sequencing around `initialize`, `start`, `stop`, and `close`. |
 | `SubsystemGraph` | Declares subsystem dependency relationships and produces dependency-safe ordering. |
-| `SubsystemStartup` | Coordinates ordered subsystem startup and bounded rollback/cleanup when startup fails. |
+| `SubsystemStartupCoordinator` | Coordinates ordered subsystem startup and bounded rollback/cleanup when startup fails. |
 
 Usage: [Lifecycle](CORE/LIFECYCLE.md) and [Subsystem composition/startup](CORE/SUBSYSTEM_COMPOSITION.md).
 
@@ -101,7 +101,7 @@ Current schema keys include `fullscreen.width`, `fullscreen.height`, and the loc
 | `EngineLogger` | Synchronous structured logging with caller-owned sink semantics. |
 | `NativeResourceRegistry` | Tracks explicit native-handle ownership and verifies leak-free terminal state. |
 | `NativeResourceRegistry.Registration` | One close capability for one registered native handle. |
-| `FatalTermination` | Bounded one-shot fatal termination orchestration that attempts cleanup/reporting before termination. |
+| `FatalTerminationCoordinator` | Bounded one-shot fatal termination orchestration that attempts cleanup/reporting before termination. |
 
 Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md), and [Fatal termination](CORE/FATAL_TERMINATION.md).
 

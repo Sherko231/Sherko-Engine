@@ -47,7 +47,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `EngineConfigSchema` | public class | **KEEP** | — | Typed startup configuration schema/validation boundary; name is established and clear. | Public config API. |
 | `EngineLogger` | public class | **KEEP** | — | Structured engine logging boundary; name is accurate. | Public logging API; nested public types retained. |
 | `EngineSubsystem` | public abstract class | **KEEP** | — | Defines subsystem lifecycle contract; name is domain-accurate. | Public lifecycle API. |
-| `FatalTermination` | public class | **RENAME** | `FatalTerminationCoordinator` | Coordinates orderly fatal shutdown before process termination; Coordinator makes sequencing responsibility explicit. | Public API rename deferred to P5R-T21; lifecycle/termination semantics must remain identical. |
+| `FatalTerminationCoordinator` | public class | **KEEP** | — | Coordinates orderly fatal shutdown before process termination; T07 applied the responsibility-revealing Coordinator suffix. | Public lifecycle API; renamed in P5R-T07 with semantics unchanged. |
 | `FixedStepAccumulator` | public class | **KEEP** | — | Exact fixed-step accumulation responsibility is explicit. | Public timing API. |
 | `FixedStepCatchUpPolicy` | public class | **KEEP** | — | Explicit catch-up limiting policy; role suffix is correct. | Public timing policy. |
 | `Frustum3f` | public class | **KEEP** | — | Conventional immutable 3D frustum value. | Public spatial API. |
@@ -60,7 +60,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `ScreenRays` | public class | **KEEP** | — | Builds world rays from screen coordinates; plural utility name is accepted and specific. | Public D-046 spatial API. |
 | `Sphere3f` | public class | **KEEP** | — | Conventional immutable 3D sphere value. | Public spatial API. |
 | `SubsystemGraph` | public class | **KEEP** | — | Immutable subsystem dependency graph is accurately named. | Public lifecycle/dependency contract. |
-| `SubsystemStartup` | public class | **RENAME** | `SubsystemStartupCoordinator` | Owns ordered startup plus rollback sequencing rather than a value named 'startup'. | Public API rename deferred to P5R-T21; rollback semantics must remain identical. |
+| `SubsystemStartupCoordinator` | public class | **KEEP** | — | Coordinates ordered startup plus rollback sequencing; T07 applied the responsibility-revealing Coordinator suffix. | Public lifecycle API; renamed in P5R-T07 with rollback semantics unchanged. |
 | `Transform` | public class | **KEEP** | — | Canonical transform domain type; shorter name is clearer than a suffixed alternative. | Public spatial/hierarchy API. |
 | `TransformQuantization` | public class | **KEEP** | — | Explicit bounded transform quantization boundary. | Public serialization/quantization contract; D-047 sensitive. |
 
@@ -227,6 +227,17 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
+### P5R-T07 candidate
+
+The T07 candidate resolves the two T01 lifecycle public-name findings under D-066:
+
+- `SubsystemStartupCoordinator` replaces `SubsystemStartup` and retains the same stateless `start(...)` coordination, partial-start rollback, caller ownership, failure identity, suppression order, and self-suppression avoidance;
+- `FatalTerminationCoordinator` replaces `FatalTermination` and retains the same synchronous one-shot `terminate(...)` sequence, cleanup/reporting containment, logger flush, and exit-status behavior;
+- `EngineSubsystem` and `SubsystemGraph` remain unchanged because their current names already communicate their roles.
+
+No compatibility aliases, package moves, lifecycle behavior changes, module/dependency changes, or sandbox changes are introduced. Public wiki usage and direct test/CI names are synchronized in the same candidate; historical D-020/D-029 decision text remains unchanged.
+
+
 ### P5R-T06 accepted implementation
 
 The accepted T06 implementation resolves the T01 `InputActionBindingsLoader` decomposition without changing the supported public input API or schema:
@@ -273,7 +284,7 @@ Therefore T01 performs no Java rename, move, split, removal, or behavior change.
 
 Highest-risk future proposals are intentionally deferred:
 
-1. Public lifecycle names (`FatalTermination`, `SubsystemStartup`) — P5R-T21 review required before any rename.
+1. Public lifecycle names `FatalTerminationCoordinator` and `SubsystemStartupCoordinator` — renamed by P5R-T07; broader public API review remains P5R-T21.
 2. `GlfwWindow` decomposition — native callback ownership, focus/cursor safety, thread affinity, and window-mode restoration must remain exact.
 3. Spatial/quantization types — retained by default to avoid semantic churn around D-041/D-045/D-046/D-047.
 4. Renderer uniform/presentation/resource names — any vocabulary cleanup must preserve GLSL ABI, binding/layout, sRGB encoding, draw ordering, and native cleanup.

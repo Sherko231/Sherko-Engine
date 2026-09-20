@@ -1,34 +1,20 @@
 package com.samo.engine.render.opengl.internal;
 
-import com.samo.engine.core.api.Aabb3f;
-import com.samo.engine.core.api.DebugFrame;
 import com.samo.engine.core.api.DebugTextCounter;
 import com.samo.engine.core.api.EngineLogger;
-import com.samo.engine.core.api.Frustum3f;
 import com.samo.engine.core.api.NativeResourceRegistry;
 import com.samo.engine.platform.api.OpenGlThreadGuard;
 import com.samo.engine.render.api.RenderCullingCounters;
 import com.samo.engine.render.api.RenderFramePacket;
 import com.samo.engine.render.api.RenderLocalLight;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-import org.joml.Vector3f;
 
 public final class ReferenceSceneRenderer implements AutoCloseable {
-    private static final int PROGRAM_KEY_REFERENCE = 0;
-    private static final int MATERIAL_KEY_BASELINE = 0;
-    private static final int MESH_KEY_REFERENCE = 0;
-    private static final DirectionalLight REFERENCE_DIRECTIONAL_LIGHT =
-            new DirectionalLight(0.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
-
     private final OpenGlThreadGuard threadGuard;
-    private final OpenGlResourceBackend resourceBackend;
-    private final OpenGlDrawBackend drawBackend;
     private final OpenGlVertexArray vertexArray;
     private final OpenGlBuffer vertexBuffer;
     private final OpenGlBuffer indexBuffer;
@@ -42,21 +28,13 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
     private final OpenGlProgram program;
     private final DebugLineRenderer debugLineRenderer;
     private final ViewModelRenderer viewModelRenderer;
-    private final RendererMaterial baselineMaterial;
-    private final PresentationMode presentationMode;
-    private final CpuFrustumCuller frustumCuller = new CpuFrustumCuller();
-    private final DrawSubmissionSorter submissionSorter = new DrawSubmissionSorter();
     private final LocalLightSelection localLightSelection;
-    private final ByteBuffer cameraBytes =
-            ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
-    private final ByteBuffer perFrameBytes =
-            ByteBuffer.allocateDirect(PerFrameUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
-    private final ByteBuffer localLightBytes =
-            ByteBuffer.allocateDirect(LocalLightUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+    private final RendererFrameUniformUploader frameUniformUploader;
+    private final ReferenceSceneVisibilityPlanner visibilityPlanner;
+    private final ReferenceSceneDrawExecutor drawExecutor;
+    private final RendererFrameDiagnostics frameDiagnostics = new RendererFrameDiagnostics();
     private final Matrix4f submittedView = new Matrix4f();
     private final Matrix4f submittedProjection = new Matrix4f();
-    private RenderCullingCounters lastCullingCounters = RenderCullingCounters.EMPTY;
-    private List<DebugTextCounter> lastDebugTextCounters = List.of();
     private boolean closeAttempted;
 
     private ReferenceSceneRenderer(
@@ -81,8 +59,6 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             EngineLogger logger,
             int maxLocalLights) {
         this.threadGuard = threadGuard;
-        this.resourceBackend = resourceBackend;
-        this.drawBackend = drawBackend;
         this.vertexArray = vertexArray;
         this.vertexBuffer = vertexBuffer;
         this.indexBuffer = indexBuffer;
@@ -96,9 +72,23 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
         this.program = program;
         this.debugLineRenderer = debugLineRenderer;
         this.viewModelRenderer = viewModelRenderer;
-        this.baselineMaterial = baselineMaterial;
-        this.presentationMode = presentationMode;
         this.localLightSelection = new LocalLightSelection(logger, maxLocalLights);
+        this.frameUniformUploader = new RendererFrameUniformUploader(
+                resourceBackend,
+                cameraBuffer.handle(),
+                perFrameBuffer.handle(),
+                localLightBuffer.handle());
+        this.visibilityPlanner = new ReferenceSceneVisibilityPlanner(
+                baselineMaterial,
+                new CpuFrustumCuller(),
+                new DrawSubmissionSorter());
+        this.drawExecutor = new ReferenceSceneDrawExecutor(
+                drawBackend,
+                program.handle(),
+                vertexArray.handle(),
+                debugLineRenderer,
+                viewModelRenderer,
+                presentationMode);
     }
 
     public static ReferenceSceneRenderer createProduction(
@@ -412,131 +402,38 @@ public final class ReferenceSceneRenderer implements AutoCloseable {
             int framebufferWidth,
             int framebufferHeight,
             List<RenderLocalLight> localLights,
-            DebugFrame debugFrame) {
-        Frustum3f frustum = ViewFrustumExtractor.extract(viewMatrix, projectionMatrix);
+            com.samo.engine.core.api.DebugFrame debugFrame) {
+        var frustum = visibilityPlanner.extractFrustum(viewMatrix, projectionMatrix);
 
-        cameraBytes.clear();
-        CameraUniformBlock.write(viewMatrix, projectionMatrix, cameraBytes);
-        cameraBytes.flip();
-        resourceBackend.uploadBufferSubData(cameraBuffer.handle(), 0L, cameraBytes);
+        frameUniformUploader.upload(
+                viewMatrix,
+                projectionMatrix,
+                framebufferWidth,
+                framebufferHeight,
+                localLights);
 
-        perFrameBytes.clear();
-        PerFrameUniformBlock.write(framebufferWidth, framebufferHeight, perFrameBytes);
-        perFrameBytes.flip();
-        resourceBackend.uploadBufferSubData(perFrameBuffer.handle(), 0L, perFrameBytes);
+        ReferenceSceneVisibilityPlanner.VisibilityPlan visibilityPlan =
+                visibilityPlanner.plan(
+                        viewMatrix,
+                        frustum,
+                        framebufferWidth,
+                        framebufferHeight);
 
-        localLightBytes.clear();
-        LocalLightUniformBlock.write(localLights, localLightBytes);
-        localLightBytes.flip();
-        resourceBackend.uploadBufferSubData(localLightBuffer.handle(), 0L, localLightBytes);
+        int submittedDraws = drawExecutor.execute(
+                visibilityPlan.orderedSubmissions(),
+                debugFrame,
+                framebufferWidth,
+                framebufferHeight);
 
-        int testedCandidates = 0;
-        int visibleCandidates = 0;
-        int culledCandidates = 0;
-        int submittedDraws = 0;
-        ArrayList<DrawSubmission> visibleSubmissions = new ArrayList<>(1);
-        float referenceDepth = cameraDepth(viewMatrix, ReferenceRoomFixture.WORLD_BOUNDS);
-
-        testedCandidates++;
-        if (frustumCuller.isVisible(frustum, ReferenceRoomFixture.WORLD_BOUNDS)) {
-            visibleCandidates++;
-            visibleSubmissions.add(new DrawSubmission(
-                    baselineMaterial,
-                    PROGRAM_KEY_REFERENCE,
-                    MATERIAL_KEY_BASELINE,
-                    MESH_KEY_REFERENCE,
-                    referenceDepth,
-                    0,
-                    0,
-                    0,
-                    framebufferWidth,
-                    framebufferHeight));
-        } else {
-            culledCandidates++;
-        }
-
-        List<DrawSubmission> orderedSubmissions = submissionSorter.sort(visibleSubmissions);
-
-        drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
-        drawBackend.setFramebufferSrgbEnabled(presentationMode.framebufferSrgbEnabled());
-        try {
-            drawBackend.clearFrame(presentationMode);
-            for (DrawSubmission submission : orderedSubmissions) {
-                drawMaterial(
-                        submission.material(),
-                        submission.viewportX(),
-                        submission.viewportY(),
-                        submission.viewportWidth(),
-                        submission.viewportHeight());
-                submittedDraws++;
-            }
-            debugLineRenderer.render(debugFrame, framebufferWidth, framebufferHeight);
-            viewModelRenderer.render(framebufferWidth, framebufferHeight);
-        } finally {
-            drawBackend.setViewport(0, 0, framebufferWidth, framebufferHeight);
-            drawBackend.setFramebufferSrgbEnabled(false);
-        }
-
-        lastCullingCounters = new RenderCullingCounters(
-                testedCandidates,
-                visibleCandidates,
-                culledCandidates,
-                submittedDraws);
-        lastDebugTextCounters = debugFrame.textCounters();
+        frameDiagnostics.publish(visibilityPlan, submittedDraws, debugFrame);
     }
 
     public RenderCullingCounters lastCullingCounters() {
-        return lastCullingCounters;
+        return frameDiagnostics.lastCullingCounters();
     }
 
     public List<DebugTextCounter> lastDebugTextCounters() {
-        return lastDebugTextCounters;
-    }
-
-    private static float cameraDepth(Matrix4fc viewMatrix, Aabb3f worldBounds) {
-        Vector3f minimum = worldBounds.minimum(new Vector3f());
-        Vector3f maximum = worldBounds.maximum(new Vector3f());
-        Vector3f center = new Vector3f(
-                (minimum.x() + maximum.x()) * 0.5f,
-                (minimum.y() + maximum.y()) * 0.5f,
-                (minimum.z() + maximum.z()) * 0.5f);
-        viewMatrix.transformPosition(center);
-        float depth = -center.z();
-        if (!Float.isFinite(depth)) {
-            throw new IllegalArgumentException("camera-space submission depth must be finite");
-        }
-        return depth;
-    }
-
-    private void drawMaterial(RendererMaterial material, int x, int y, int width, int height) {
-        int programHandle = programFor(material.shaderVariant());
-        drawBackend.setViewport(x, y, width, height);
-        drawBackend.applyMaterialState(material);
-        for (MaterialTextureBinding textureBinding : material.textures()) {
-            drawBackend.bindTextureAndSampler(
-                    textureBinding.unit(),
-                    textureBinding.textureHandle(),
-                    textureBinding.samplerHandle());
-        }
-        drawBackend.setMaterialScalars(programHandle, material.scalars());
-        drawBackend.setDirectionalLight(programHandle, REFERENCE_DIRECTIONAL_LIGHT);
-        drawBackend.useProgram(programHandle);
-        drawBackend.bindVertexArray(vertexArray.handle());
-        try {
-            drawBackend.drawIndexedTriangles(ReferenceRoomFixture.INDEX_COUNT);
-        } finally {
-            drawBackend.bindDefaultVertexArray();
-            drawBackend.useDefaultProgram();
-            for (MaterialTextureBinding textureBinding : material.textures()) {
-                drawBackend.bindTextureAndSampler(textureBinding.unit(), 0, 0);
-            }
-        }
-    }
-
-    private int programFor(MaterialShaderVariant shaderVariant) {
-        return switch (shaderVariant) {
-            case TEXTURED_REFERENCE -> program.handle();
-        };
+        return frameDiagnostics.lastDebugTextCounters();
     }
 
     private void requireOpen() {

@@ -667,7 +667,11 @@ Require no dependency-lock drift. Repository/source review must confirm the publ
 
 Behavioral review must preserve missing/unreadable/null-path behavior, malformed JSON and duplicate-object-field wrapping, exact schema version/field/control vocabulary, document-level duplicate detection, component/scale validation, complete-action validation, public-constructor exception types/messages, and existing `InputBindingLoadException` path/context/cause meaning.
 
-The task changes Java source, so the exact final PR head requires the normal five-job heavy matrix. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #266 can close. Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
+The task changes Java source, so the exact final PR head requires the normal five-job heavy matrix. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #266 can close.
+
+Accepted P5R-T06 evidence: final PR head `791488bfcbae9573cebdb5fe5c8318d238b79c0f` passed all five required jobs in run #456 / `35499854090`; PR #319 merged as `96c9a331f2e4a5e1807ce830121d7ff714877316`; exact merged-master Lightweight verification passed in run #457 / `35500042897`.
+
+Wiki impact: none — supported public API/schema/error semantics/usage remain unchanged. Sandbox impact: none — the current playground consumes the same public binding/evaluation path.
 
 ## P3-T04A historical sandbox-origin verification
 

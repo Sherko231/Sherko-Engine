@@ -227,9 +227,9 @@ The accepted T04 implementation preserves the public `GlfwWindow` facade and res
 
 `GlfwWindow` retains lifecycle/thread-affinity orchestration, callback registration ownership from T03, staged callback failure surfacing, and all P5R-T05 window-mode/size model responsibilities. No T04 helper is public and no package reorganization is performed.
 
-### P5R-T06 candidate
+### P5R-T06 accepted implementation
 
-The T06 candidate resolves the T01 `InputActionBindingsLoader` decomposition without changing the supported public input API or schema:
+The accepted T06 implementation resolves the T01 `InputActionBindingsLoader` decomposition without changing the supported public input API or schema:
 
 - `InputActionBindingsLoader` is retained and narrowed to readable-file checks, UTF-8 reader lifetime, and I/O failure wrapping;
 - `InputActionBindingsJsonParser` owns strict Jackson parsing, schema-v1 shape/version/field/control decoding, document-level duplicates, scale validation, and path/context load diagnostics;

@@ -76,17 +76,17 @@ interface GlfwNativeBackend {
     default void setRawMouseMotion(long handle, boolean enabled) {
     }
 
-    GlfwWindow.Dimensions queryLogicalSize(long handle);
+    GlfwDimensions queryLogicalSize(long handle);
 
-    GlfwWindow.Dimensions queryFramebufferSize(long handle);
+    GlfwDimensions queryFramebufferSize(long handle);
 
-    GlfwWindow.Position queryWindowPosition(long handle);
+    GlfwPosition queryWindowPosition(long handle);
 
     long primaryMonitor();
 
-    GlfwWindow.VideoMode queryVideoMode(long monitor);
+    GlfwVideoMode queryVideoMode(long monitor);
 
-    GlfwWindow.Position queryMonitorPosition(long monitor);
+    GlfwPosition queryMonitorPosition(long monitor);
 
     void setDecorated(long handle, boolean decorated);
 

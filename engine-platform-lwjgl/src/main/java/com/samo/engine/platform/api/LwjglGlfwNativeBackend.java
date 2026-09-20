@@ -313,32 +313,32 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
     }
 
     @Override
-    public GlfwWindow.Dimensions queryLogicalSize(long handle) {
+    public GlfwDimensions queryLogicalSize(long handle) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer sizeWidth = stack.mallocInt(1);
             IntBuffer sizeHeight = stack.mallocInt(1);
             GLFW.glfwGetWindowSize(handle, sizeWidth, sizeHeight);
-            return new GlfwWindow.Dimensions(sizeWidth.get(0), sizeHeight.get(0));
+            return new GlfwDimensions(sizeWidth.get(0), sizeHeight.get(0));
         }
     }
 
     @Override
-    public GlfwWindow.Dimensions queryFramebufferSize(long handle) {
+    public GlfwDimensions queryFramebufferSize(long handle) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer sizeWidth = stack.mallocInt(1);
             IntBuffer sizeHeight = stack.mallocInt(1);
             GLFW.glfwGetFramebufferSize(handle, sizeWidth, sizeHeight);
-            return new GlfwWindow.Dimensions(sizeWidth.get(0), sizeHeight.get(0));
+            return new GlfwDimensions(sizeWidth.get(0), sizeHeight.get(0));
         }
     }
 
     @Override
-    public GlfwWindow.Position queryWindowPosition(long handle) {
+    public GlfwPosition queryWindowPosition(long handle) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1);
             IntBuffer y = stack.mallocInt(1);
             GLFW.glfwGetWindowPos(handle, x, y);
-            return new GlfwWindow.Position(x.get(0), y.get(0));
+            return new GlfwPosition(x.get(0), y.get(0));
         }
     }
 
@@ -348,21 +348,21 @@ final class LwjglGlfwNativeBackend implements GlfwNativeBackend {
     }
 
     @Override
-    public GlfwWindow.VideoMode queryVideoMode(long monitor) {
+    public GlfwVideoMode queryVideoMode(long monitor) {
         GLFWVidMode mode = GLFW.glfwGetVideoMode(monitor);
         if (mode == null) {
             return null;
         }
-        return new GlfwWindow.VideoMode(mode.width(), mode.height(), mode.refreshRate());
+        return new GlfwVideoMode(mode.width(), mode.height(), mode.refreshRate());
     }
 
     @Override
-    public GlfwWindow.Position queryMonitorPosition(long monitor) {
+    public GlfwPosition queryMonitorPosition(long monitor) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1);
             IntBuffer y = stack.mallocInt(1);
             GLFW.glfwGetMonitorPos(monitor, x, y);
-            return new GlfwWindow.Position(x.get(0), y.get(0));
+            return new GlfwPosition(x.get(0), y.get(0));
         }
     }
 

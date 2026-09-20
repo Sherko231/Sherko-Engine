@@ -117,11 +117,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
             return new BoundedDynamicBufferUploader(
                     guard, resources, gl, buffer, slotCount, slotCapacityBytes);
         } catch (RuntimeException | Error failure) {
-            try {
-                buffer.close();
-            } catch (RuntimeException | Error cleanupFailure) {
-                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
-            }
+            CleanupFailureSuppression.runAndSuppress(failure, buffer::close);
             throw failure;
         }
     }
@@ -185,11 +181,7 @@ final class BoundedDynamicBufferUploader implements AutoCloseable {
                         backend.deleteFence(fenceHandle);
                     });
         } catch (RuntimeException | Error failure) {
-            try {
-                backend.deleteFence(fenceHandle);
-            } catch (RuntimeException | Error cleanupFailure) {
-                CleanupFailures.addSuppressedUnlessSame(failure, cleanupFailure);
-            }
+            CleanupFailureSuppression.runAndSuppress(failure, () -> backend.deleteFence(fenceHandle));
             throw failure;
         }
 

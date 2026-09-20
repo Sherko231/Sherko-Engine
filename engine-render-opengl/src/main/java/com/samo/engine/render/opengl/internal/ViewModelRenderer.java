@@ -10,14 +10,6 @@ import java.util.Objects;
 import org.joml.Matrix4f;
 
 final class ViewModelRenderer implements AutoCloseable {
-    private static final int VERTEX_COUNT = 6;
-    private static final int FLOATS_PER_VERTEX = 6;
-    private static final int VERTEX_BYTES = VERTEX_COUNT * FLOATS_PER_VERTEX * Float.BYTES;
-
-    private static final float COLOR_RED = 0.95f;
-    private static final float COLOR_GREEN = 0.55f;
-    private static final float COLOR_BLUE = 0.15f;
-
     private final OpenGlThreadGuard threadGuard;
     private final OpenGlResourceBackend resourceBackend;
     private final OpenGlDrawBackend drawBackend;
@@ -90,7 +82,7 @@ final class ViewModelRenderer implements AutoCloseable {
         try {
             vao = OpenGlVertexArray.create(guard, resources, gl);
             vertices = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(vertices.handle(), VERTEX_BYTES);
+            gl.allocateDynamicBufferStorage(vertices.handle(), ViewModelFixtureVertexPacker.VERTEX_BYTES);
             gl.uploadBufferSubData(vertices.handle(), 0L, fixtureVertices());
 
             camera = OpenGlBuffer.create(guard, resources, gl);
@@ -148,7 +140,7 @@ final class ViewModelRenderer implements AutoCloseable {
         threadGuard.assertOwnerThread();
         requireOpen();
 
-        ViewModelProjection.build(framebufferWidth, framebufferHeight, projection);
+        ViewModelProjectionFactory.build(framebufferWidth, framebufferHeight, projection);
         cameraBytes.clear();
         CameraMatricesUniformBlock.write(identityView, projection, cameraBytes);
         cameraBytes.flip();
@@ -161,7 +153,7 @@ final class ViewModelRenderer implements AutoCloseable {
             drawBackend.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, cameraBuffer.handle());
             drawBackend.useProgram(program.handle());
             drawBackend.bindVertexArray(vertexArray.handle());
-            drawBackend.drawViewModelTriangles(VERTEX_COUNT);
+            drawBackend.drawViewModelTriangles(ViewModelFixtureVertexPacker.VERTEX_COUNT);
         } finally {
             drawBackend.bindDefaultVertexArray();
             drawBackend.useDefaultProgram();
@@ -170,19 +162,9 @@ final class ViewModelRenderer implements AutoCloseable {
     }
 
     private static ByteBuffer fixtureVertices() {
-        ByteBuffer data = ByteBuffer.allocateDirect(VERTEX_BYTES).order(ByteOrder.nativeOrder());
-        putVertex(data, -0.12f, -0.23f, -0.50f);
-        putVertex(data, 0.36f, -0.23f, -0.50f);
-        putVertex(data, 0.36f, -0.06f, -0.50f);
-        putVertex(data, -0.12f, -0.23f, -0.50f);
-        putVertex(data, 0.36f, -0.06f, -0.50f);
-        putVertex(data, -0.12f, -0.06f, -0.50f);
-        return data.flip();
-    }
-
-    private static void putVertex(ByteBuffer data, float x, float y, float z) {
-        data.putFloat(x).putFloat(y).putFloat(z);
-        data.putFloat(COLOR_RED).putFloat(COLOR_GREEN).putFloat(COLOR_BLUE);
+        ByteBuffer data = ByteBuffer.allocateDirect(ViewModelFixtureVertexPacker.VERTEX_BYTES)
+                .order(ByteOrder.nativeOrder());
+        return ViewModelFixtureVertexPacker.write(data).flip();
     }
 
     private void requireOpen() {

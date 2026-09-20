@@ -29,7 +29,7 @@ final class ViewModelRenderer implements AutoCloseable {
     private final OpenGlProgram program;
     private final int worldCameraBufferHandle;
     private final ByteBuffer cameraBytes =
-            ByteBuffer.allocateDirect(CameraUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
+            ByteBuffer.allocateDirect(CameraMatricesUniformBlock.SIZE_BYTES).order(ByteOrder.nativeOrder());
     private final Matrix4f identityView = new Matrix4f();
     private final Matrix4f projection = new Matrix4f();
     private boolean closeAttempted;
@@ -64,7 +64,7 @@ final class ViewModelRenderer implements AutoCloseable {
             OpenGlDrawBackend drawBackend,
             OpenGlUniformBlockReflectionBackend reflectionBackend,
             int worldCameraBufferHandle,
-            PresentationMode presentationMode,
+            SrgbPresentationMode presentationMode,
             String vertexSource,
             String fragmentSource) {
         OpenGlThreadGuard guard = Objects.requireNonNull(threadGuard, "threadGuard");
@@ -73,7 +73,7 @@ final class ViewModelRenderer implements AutoCloseable {
         OpenGlDrawBackend draw = Objects.requireNonNull(drawBackend, "drawBackend");
         OpenGlUniformBlockReflectionBackend reflection =
                 Objects.requireNonNull(reflectionBackend, "reflectionBackend");
-        PresentationMode mode = Objects.requireNonNull(presentationMode, "presentationMode");
+        SrgbPresentationMode mode = Objects.requireNonNull(presentationMode, "presentationMode");
         String vertSource = Objects.requireNonNull(vertexSource, "vertexSource");
         String fragSource = Objects.requireNonNull(fragmentSource, "fragmentSource");
         if (worldCameraBufferHandle <= 0) {
@@ -94,7 +94,7 @@ final class ViewModelRenderer implements AutoCloseable {
             gl.uploadBufferSubData(vertices.handle(), 0L, fixtureVertices());
 
             camera = OpenGlBuffer.create(guard, resources, gl);
-            gl.allocateDynamicBufferStorage(camera.handle(), CameraUniformBlock.SIZE_BYTES);
+            gl.allocateDynamicBufferStorage(camera.handle(), CameraMatricesUniformBlock.SIZE_BYTES);
 
             vertex = OpenGlShader.compile(
                     OpenGlShader.Stage.VERTEX,
@@ -150,7 +150,7 @@ final class ViewModelRenderer implements AutoCloseable {
 
         ViewModelProjection.build(framebufferWidth, framebufferHeight, projection);
         cameraBytes.clear();
-        CameraUniformBlock.write(identityView, projection, cameraBytes);
+        CameraMatricesUniformBlock.write(identityView, projection, cameraBytes);
         cameraBytes.flip();
         resourceBackend.uploadBufferSubData(cameraBuffer.handle(), 0L, cameraBytes);
 
@@ -158,14 +158,14 @@ final class ViewModelRenderer implements AutoCloseable {
         drawBackend.clearDepthOnly();
         drawBackend.applyViewModelState();
         try {
-            drawBackend.bindUniformBuffer(CameraUniformBlock.BINDING, cameraBuffer.handle());
+            drawBackend.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, cameraBuffer.handle());
             drawBackend.useProgram(program.handle());
             drawBackend.bindVertexArray(vertexArray.handle());
             drawBackend.drawViewModelTriangles(VERTEX_COUNT);
         } finally {
             drawBackend.bindDefaultVertexArray();
             drawBackend.useDefaultProgram();
-            drawBackend.bindUniformBuffer(CameraUniformBlock.BINDING, worldCameraBufferHandle);
+            drawBackend.bindUniformBuffer(CameraMatricesUniformBlock.BINDING, worldCameraBufferHandle);
         }
     }
 

@@ -135,7 +135,7 @@ jobs:
       - name: Verify core lifecycle, timing, config, native ownership, allocation, logging, fatal shutdown, and Phase 2 exit evidence
         env:
           SHERKO_P2_EXIT_GATE: "true"
-        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --tests "com.samo.engine.core.api.FatalTerminationTest" --tests "com.samo.engine.core.api.Phase2IntegratedGateTest" --rerun-tasks
+        run: .\gradlew.bat :engine-core:test --tests "com.samo.engine.core.api.EngineSubsystemTest" --tests "com.samo.engine.core.api.SubsystemGraphTest" --tests "com.samo.engine.core.api.SubsystemStartupCoordinatorCoordinatorTest" --tests "com.samo.engine.core.api.EngineClockTest" --tests "com.samo.engine.core.api.FixedStepAccumulatorTest" --tests "com.samo.engine.core.api.FixedStepCatchUpPolicyTest" --tests "com.samo.engine.core.api.FixedStepInterpolationTest" --tests "com.samo.engine.core.api.EngineConfigSchemaTest" --tests "com.samo.engine.core.api.EngineConfigLoaderTest" --tests "com.samo.engine.core.api.NativeResourceRegistryTest" --tests "com.samo.engine.core.api.AllocationMetricBenchmarkTest" --tests "com.samo.engine.core.api.EngineLoggerTest" --tests "com.samo.engine.core.api.FatalTerminationCoordinatorCoordinatorTest" --tests "com.samo.engine.core.api.Phase2IntegratedGateTest" --rerun-tasks
 
       - name: Upload engine-core acceptance evidence
         if: always()
@@ -145,7 +145,7 @@ jobs:
           path: |
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineSubsystemTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemGraphTest.xml
-            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupTest.xml
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.SubsystemStartupCoordinatorCoordinatorTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineClockTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepAccumulatorTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FixedStepCatchUpPolicyTest.xml
@@ -155,7 +155,7 @@ jobs:
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.NativeResourceRegistryTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.AllocationMetricBenchmarkTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.EngineLoggerTest.xml
-            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FatalTerminationTest.xml
+            engine-core/build/test-results/test/TEST-com.samo.engine.core.api.FatalTerminationCoordinatorCoordinatorTest.xml
             engine-core/build/test-results/test/TEST-com.samo.engine.core.api.Phase2IntegratedGateTest.xml
             engine-core/build/reports/allocation/p2-t11-allocation-metric.txt
             engine-core/build/reports/phase2/p2-exit-60-second-gate.txt

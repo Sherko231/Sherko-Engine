@@ -35,9 +35,3 @@ tasks.register<JavaExec>("runSandbox") {
     description = "Runs the persistent owner-facing Sherko Engine sandbox playground."
     configureSandboxRun("com.samo.game.sandbox.SandboxMain")
 }
-
-tasks.register<JavaExec>("runEngineDemo") {
-    group = "application"
-    description = "Legacy alias for runSandbox."
-    configureSandboxRun("com.samo.game.sandbox.demo.EngineDemoMain")
-}

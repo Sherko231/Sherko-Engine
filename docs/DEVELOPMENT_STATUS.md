@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P5R-T05 / Issue #265 is accepted; freshly refine P5R-T06 / Issue #266 against current `master` before implementation |
+| Active executable task | P5R-T06 / Issue #266 — input-binding loading/parsing/validation decomposition candidate on `p5r-t06-input-binding-parser-validation`; P5R-T07 remains blocked until acceptance |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -132,6 +132,8 @@ P5R-T02 / Issue #262 is accepted through PR #311. The audit documents 60 top-lev
 
 P5R-T01 / Issue #261 is accepted through PR #309. The repository-wide audit enumerated 214 Java files and classified 107 current production/runtime top-level Java files plus relevant nested/package-level types. Feasibility-spike Java remains deliberately deferred to P5R-T20. No source/runtime behavior, public API, module edge, native ownership, spatial semantics, persisted/config/wire format, or shader ABI changed in T01.
 
+P5R-T06 / Issue #266 is the active non-Markdown candidate. It narrows package-private `InputActionBindingsLoader` to the file-loading boundary, extracts `InputActionBindingsJsonParser` for strict schema-v1/Jackson decoding, and extracts `InputActionBindingsValidator` for complete-set domain validation/copying while preserving public declarations, fixture bytes, dependency locks, error ordering/messages, evaluator/sampler behavior, and module boundaries. Final acceptance requires exact-candidate five-job heavy CI and exact merged-master Lightweight verification.
+
 ## Exact next action
 
-Freshly refine **P5R-T06 / Issue #266** against current `master` before implementation. Keep the task bounded to input-binding loading/parsing/validation responsibility and naming cleanup, preserve schema-v1 and existing error semantics, and do not materialize P6-T01 yet.
+Complete review/verification/merge of **P5R-T06 / Issue #266**. Preserve schema-v1 and accepted error semantics; after exact PR-head heavy CI and exact merged-master Lightweight verification pass, freshly refine **P5R-T07 / Issue #267**. Do not materialize P6-T01 yet.

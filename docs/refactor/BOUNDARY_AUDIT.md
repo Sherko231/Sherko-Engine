@@ -233,7 +233,7 @@ The following public visibility is intentional/current implementation or executa
 | `com.samo.game.sandbox.SandboxMain` | Persistent owner-facing playground entry point, not an engine-library API. | T16 keeps the entry point while decomposing internals. |
 | `com.samo.game.sandbox.demo.EngineDemoMain` | Removed legacy compatibility entry point; T17 reference audit found no live code/workflow/test consumer. | Removed in T17; `SandboxMain` / `runSandbox` remain canonical. |
 
-Feasibility-spike entry points are experimental by scope and are handled separately by T20.
+Feasibility-spike entry points are experimental by scope; T20 accepted their naming/isolation audit without promoting them into consumer API.
 
 ## T01 proposal classification and deferral
 
@@ -248,7 +248,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 removes it after repository-wide reference verification; no replacement alias is introduced. |
 | `RendererVisualDemo` decomposition | Non-production visual-demo entry point remains public only within the dedicated source-set executable surface; extracted collaborators are package-private and not present in the production API artifact. | T18 accepted implementation keeps this boundary unchanged. |
 | client/server version-report renames | Internal executable helpers, not engine consumer API. | T19 accepted `ClientVersionReport` / `ServerVersionReport` while preserving exact compatibility output and executable boundaries. |
-| feasibility-spike naming/isolation | Experimental surface. | T20. |
+| feasibility-spike naming/isolation | Experimental surface. | T20 accepted `IntegratedNativeEvidenceHarness` plus a Gradle project-dependency isolation guard; no production promotion. |
 | broad public engine naming review | Supported engine consumer API. | T21. |
 | internal package moves | Implementation package organization after responsibilities stabilize. | T23. |
 
@@ -256,7 +256,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 
 The `feasibility-spikes` subproject is an experimental evidence container, not a production dependency surface. Its Java remains under `com.samo.spike.*`, and no `.api` package is treated as supported consumer API merely because the generic module-boundary registry requires an API-root entry.
 
-The T20 candidate reinforces the already documented boundary in two ways:
+The accepted T20 implementation reinforces the already documented boundary in two ways:
 
 - `IntegratedNativeSoakSpike` is renamed to `IntegratedNativeEvidenceHarness` so one shared smoke/sustained evidence executable is not mislabeled as soak-only.
 - `:feasibility-spikes:verifyFeasibilitySpikeIsolation` inspects declared project dependencies across other subprojects and fails if any configuration depends on `:feasibility-spikes`; the task is wired into `:feasibility-spikes:check`.

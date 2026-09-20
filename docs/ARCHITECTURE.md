@@ -665,7 +665,7 @@ Accepted P5R-T19 evidence: final head `47ae52f78f9f9d99d462975266337025b84ae9f6`
 
 ## Phase 5R feasibility-spike naming and isolation — P5R-T20 / Issue #280
 
-The T20 candidate keeps `feasibility-spikes` as a separate experimental Gradle subproject with external native/network dependencies only for reproducible evidence. Production engine/game/support modules remain forbidden from depending on it, and the existing root `run*Spike` / harness aliases remain historical build conveniences rather than classpath/module dependencies.
+The accepted T20 implementation keeps `feasibility-spikes` as a separate experimental Gradle subproject with external native/network dependencies only for reproducible evidence. Production engine/game/support modules remain forbidden from depending on it, and the existing root `run*Spike` / harness aliases remain historical build conveniences rather than classpath/module dependencies.
 
 A complete top-level naming audit keeps `OpenGL46Spike`, `JoltLifecycleSpike`, `OpenAL3DAudioSpike`, `LocalhostUdpSpike`, `NetworkImpairmentHarness`, `SteamInitSpike`, `SteamFlatApiFfmSpike`, and `WindowsNativeCiSmoke`. The sole rename is `IntegratedNativeSoakSpike` -> `IntegratedNativeEvidenceHarness`, because that one executable backs both the P0-T12 smoke task and P0-T13 sustained task. `runIntegratedNativeSmoke`, `runIntegratedNativeSoak`, evidence-task labels, duration/property semantics, JFR paths, subsystem lifecycle/cleanup behavior, and feasibility conclusions remain unchanged.
 
@@ -674,3 +674,6 @@ The module now owns `verifyFeasibilitySpikeIsolation`, wired into its `check` ta
 Wiki impact: none — feasibility spikes are explicitly not engine-consumer API.
 Sandbox impact: none — experimental evidence executables are not the persistent public-API sandbox.
 Durable decision impact: none — existing experimental isolation is enforced; no new architecture decision is introduced.
+
+
+Accepted P5R-T20 evidence: final head `244041127c1851d477f557c92734c981ee5649b7` passed all five required jobs in run #489 / `35525360797`; PR #345 merged as `510e61d6d44eab4cb986d5c03078138aaa40a020`; exact merged-master Lightweight verification passed in run #490 / `35525718982`. The accepted boundary keeps feasibility code experimental and prevents declared subproject dependencies on `:feasibility-spikes`.

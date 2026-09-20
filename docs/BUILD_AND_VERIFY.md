@@ -1757,4 +1757,6 @@ Source/reference review must prove that `EngineDemoMain.java` and the live `runE
 
 Because Java/test/build source changes, the exact final PR head requires the normal five-job heavy matrix. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #277 can close.
 
+Accepted P5R-T17 evidence: final PR head `31172c12de2eb1a5c78d75a74b1a58268f67faa3` passed all five required jobs in run #482 / `35518803707`, including Windows native P5-T16/P5-T17/P5-T18 regressions. Earlier run #481 / `35518792283` was cancelled after a documentation-only head advance and is not acceptance evidence. PR #339 merged as `62e9bbd1683557193a6afe27e9b08fbacc32212a`; exact merged-master Lightweight verification passed in run #483 / `35519165178`.
+
 Wiki impact: none — the removed surface is a sandbox executable compatibility alias, not supported engine consumer API. Sandbox impact: launch guidance now documents only the canonical `runSandbox`; controls/output/capabilities remain unchanged.

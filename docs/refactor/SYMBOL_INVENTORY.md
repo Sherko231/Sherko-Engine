@@ -112,7 +112,7 @@ Action vocabulary is defined in [NAMING_STANDARD.md](NAMING_STANDARD.md).
 | `DirectionalLight` | package-private record | **KEEP** | — | Internal directional-light value is exact. | Internal shader/light semantics. |
 | `DrawSubmission` | package-private record | **KEEP** | — | Internal draw submission descriptor is precise. | Internal render ordering/state semantics. |
 | `DrawSubmissionSorter` | package-private class | **KEEP** | — | Establishes documented draw order; role suffix is correct. | Internal ordering contract. |
-| `ReferenceSceneRenderer` | public-in-internal-package class | **DECOMPOSE** | T10 accepted name; T11 active frame-orchestration decomposition | Fixed renderer-owned reference-room/world lifecycle/resource owner and public-facade delegate. T11 extracts non-owning frame collaborators while retaining creation/rollback/close ownership. | Implementation type but public modifier for cross-package `OpenGlRenderer` access; excluded from API artifact. |
+| `ReferenceSceneRenderer` | public-in-internal-package class | **DECOMPOSE** | T10 accepted name; T11 accepted frame-orchestration decomposition | Fixed renderer-owned reference-room/world lifecycle/resource owner and public-facade delegate. T11 extracts non-owning frame collaborators while retaining creation/rollback/close ownership. | Implementation type but public modifier for cross-package `OpenGlRenderer` access; excluded from API artifact. |
 | `RendererFrameUniformUploader` | package-private class | **KEEP** | — | T11 owner for reusable camera/per-frame/local-light packing and upload; borrows buffer handles without owning them. | Internal upload ordering and shader-block ABI consumers. |
 | `ReferenceSceneVisibilityPlanner` | package-private class | **KEEP** | — | T11 owner for frustum extraction, fixed reference-scene visibility, and ordered draw-submission preparation. | Internal culling/sorting semantics; T12 may rename existing subordinate culling/submission/light types only. |
 | `ReferenceSceneDrawExecutor` | package-private class | **KEEP** | — | T11 owner for world/debug/view-model frame execution and GL-state restoration; borrows program/VAO/renderers without closing them. | Internal draw/state/order semantics. |
@@ -242,7 +242,7 @@ T10 applies the inventory's fixed reference-scene decomposition in one bounded s
 
 No public renderer/resource/material API is added and no Phase 5 output/state/ownership semantics change.
 
-### P5R-T11 active implementation
+### P5R-T11 accepted implementation
 
 T11 decomposes only frame-time orchestration while retaining `ReferenceSceneRenderer` as the lifecycle/native-resource owner:
 

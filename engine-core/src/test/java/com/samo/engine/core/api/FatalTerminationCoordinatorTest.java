@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class FatalTerminationCoordinatorCoordinatorTest {
+class FatalTerminationCoordinatorTest {
     private static final EngineLogger.Context CONTEXT =
             new EngineLogger.Context(12L, 34L, "core", null, null);
 
@@ -332,13 +332,13 @@ class FatalTerminationCoordinatorCoordinatorTest {
                 .toString();
         String childClasspath = String.join(
                 File.pathSeparator,
-                codeSourcePath(FatalTerminationCoordinatorCoordinatorChildProcess.class),
+                codeSourcePath(FatalTerminationCoordinatorChildProcess.class),
                 codeSourcePath(FatalTerminationCoordinator.class));
         Process process = new ProcessBuilder(
                         javaExecutable,
                         "-cp",
                         childClasspath,
-                        FatalTerminationCoordinatorCoordinatorChildProcess.class.getName(),
+                        FatalTerminationCoordinatorChildProcess.class.getName(),
                         marker.toString())
                 .redirectErrorStream(true)
                 .start();

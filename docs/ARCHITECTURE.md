@@ -637,3 +637,13 @@ Fresh repository-reference verification established that the legacy `EngineDemoM
 Within the package-private owner-control mapper, nested `SandboxControls.SandboxAction` and `SandboxControls.SandboxControlInput` are the canonical responsibility-revealing names after T16 decomposition. Enum members, record fields/order, control resolution, simultaneous-action behavior, and every owner-visible F/R/Right-Shift/Ctrl+Q rule remain unchanged. `SandboxApplicationLoop`, `SandboxControlState`, `SandboxSceneSetup`, `SandboxDiagnostics`, `SandboxFramebufferSize`, `SandboxCamera`, `SandboxControls`, `SandboxDiagnosticFormatter`, and `SandboxDiagnosticFormatter.DiagnosticValues` otherwise remain unchanged.
 
 Accepted P5R-T17 evidence: final PR head `31172c12de2eb1a5c78d75a74b1a58268f67faa3` passed all five required jobs in run #482 / `35518803707`; PR #339 merged as `62e9bbd1683557193a6afe27e9b08fbacc32212a`; exact merged-master Lightweight verification passed in run #483 / `35519165178`. Run #481 / `35518792283` is superseded because a later documentation-only commit advanced the PR head.
+
+
+## Phase 5R standalone renderer visual-demo decomposition — P5R-T18 / Issue #278
+
+The T18 candidate keeps public `RendererVisualDemo` as the owner-facing JavaExec entry point and keeps `:engine-render-opengl:runRendererVisualDemo` unchanged, but removes unrelated responsibilities from that entry class. Package-private `RendererVisualDemoApplication` owns demo composition plus window/native-resource lifecycle, `RendererVisualDemoLoop` owns elapsed-time/input/frame sequencing and renderer -> overlay -> present order, `RendererVisualDemoFramebufferSize` owns framebuffer-size callback state, `AnimatedDemoLighting` owns the exact moving point/spot lights plus their debug crosses/ray, and `MaterialComparisonOverlay` owns the isolated opaque/transparent overlay GL resources, draw state, rollback, and close ordering.
+
+This remains entirely inside the dedicated non-production `visualDemo` source set. The candidate does not change `OpenGlRenderer`, production renderer internals, Gradle dependency/module direction, material/shader ABI or values, D-041/D-045 camera semantics, D-062 local-light semantics, D-063 presentation behavior, native-resource ownership rules, or the persistent `game-sandbox`. No mesh/material/resource API is promoted and no Phase 6 identity/asset work is introduced.
+
+Wiki impact: none — the decomposed types are not supported engine consumer API.
+Sandbox impact: none — the persistent sandbox and its controls remain unchanged; only the already-separate renderer visual demo is refactored internally.

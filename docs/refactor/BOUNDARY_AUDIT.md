@@ -56,7 +56,7 @@ This makes Java visibility discipline important during P5R: implementation helpe
 
 ## Supported engine-consumer API
 
-Source has not changed since the T01 inventory baseline; the intervening commits are Markdown-only. The tables below therefore re-audit the accepted T01 source inventory against the live boundary registry and `wiki/API_INDEX.md`.
+Source has changed through bounded P5R implementation since the T01 inventory baseline. The tables below track the current accepted/candidate consumer boundary against the live boundary registry and `wiki/API_INDEX.md`; T07 changes only the two explicitly authorized public lifecycle coordinator names.
 
 ### `engine-core` — `com.samo.engine.core.api`
 
@@ -112,7 +112,7 @@ Public nested engine-core types that remain supported consumer API:
 - `TransformQuantization.QuantizedPosition`
 - `TransformQuantization.QuantizedRotation`
 
-No P5R task before T21 may rename these public engine-core types merely to implement an internal cleanup.
+Beyond the two D-066 lifecycle coordinator renames explicitly authorized by T07, further public engine-core renames remain deferred to the deliberate T21 public naming pass.
 
 ### `engine-platform-lwjgl` — `com.samo.engine.platform.api`
 

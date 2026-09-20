@@ -1084,6 +1084,32 @@ Accepted P5R-T12 evidence: final PR head `85de9922f0fef5bbedc17add1bc41b1065d94f
 
 Wiki impact: none — no supported public API or consumer usage changes. Sandbox impact: none — owner-facing usage and behavior are unchanged.
 
+## P5R-T13 uniform/color/presentation naming verification
+
+Issue #273 is an internal naming-only refactor. It renames `CameraUniformBlock` to `CameraMatricesUniformBlock`, `PerFrameUniformBlock` to `FramebufferMetricsUniformBlock`, and `PresentationMode` to `SrgbPresentationMode`. `LocalLightUniformBlock`, `UniformBlockLayoutVerifier`, `SrgbTransfer`, `TextureColorEncoding`, shader block names, binding points, byte layouts, transfer math, and presentation encode count remain unchanged.
+
+Focused verification:
+
+```powershell
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.UniformBlockPackingTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.UniformBlockLayoutVerifierTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbPresentationModeTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbTransferTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --rerun-tasks
+.\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks
+.\gradlew.bat :engine-render-opengl:verifyPublicApiBoundary --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Source review must confirm no production/test reference remains to the three replaced Java type symbols while the literal GLSL ABI names `CameraBlock`, `PerFrameBlock`, and `LocalLightBlock` remain unchanged. Bindings 0/1/2, sizes 128/16/528, existing std140 offsets/capacity, `SHERKO_MANUAL_SRGB_ENCODE`, IEC sRGB threshold/constants, and `SRGB_COLOR`/`LINEAR_DATA` texture mappings must remain identical.
+
+Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #273 can close.
+
+Wiki impact: none — supported renderer API and consumer usage are unchanged. Sandbox impact: none — owner-facing controls and rendering behavior are unchanged.
+
 ## P5-T07 first indexed static mesh verification
 
 Issue #189 introduces the first public production renderer path and window-owned presentation.
@@ -1523,7 +1549,7 @@ Focused verification:
 
 ```powershell
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbTransferTest" --rerun-tasks
-.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.PresentationModeTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.SrgbPresentationModeTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.ReferenceSceneRendererTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.OpenGlTextureColorEncodingTest" --rerun-tasks
 .\gradlew.bat :engine-render-opengl:validateGlsl --rerun-tasks

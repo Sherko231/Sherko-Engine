@@ -381,6 +381,26 @@ The deterministic fake-backend tests must preserve their existing scenarios/asse
 
 The task is non-Markdown. The exact final PR head therefore requires the normal five-job heavy CI matrix, including the existing hosted-Windows native platform regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #263 can close. These checks preserve the already accepted P3 window/input/native behavior; T03 adds no new native acceptance scenario.
 
+## P5R-T04 GLFW input/focus/cursor decomposition verification
+
+Issue #264 refactors only the internal input/focus/cursor state behind the unchanged public `GlfwWindow` facade. Package-private `GlfwInputState`, `GlfwMouseMotionTracker`, and `GlfwCursorCaptureController` own the extracted state while P5R-T05 size/window-mode responsibilities remain in the facade.
+
+Run the complete deterministic platform suite:
+
+```powershell
+.\gradlew.bat :engine-platform-lwjgl:test --rerun-tasks
+```
+
+Run the architecture boundary regression:
+
+```powershell
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+```
+
+The existing focus, input-snapshot, and mouse-motion scenarios/assertions must remain behaviorally unchanged. Repository/source review must also confirm that the public `GlfwWindow` constructor/method declaration set is unchanged; all three extracted collaborators remain package-private; focus regain still requires explicit recapture; failed raw/cursor cleanup preserves retry state; and `WindowGeometry`, `MonitorTarget`, `TransitionPlan`, logical/framebuffer staging, and window-mode transition code remain in `GlfwWindow` for P5R-T05.
+
+The task adds no new native behavior, dependency, module edge, or public input surface. The exact final PR head therefore requires the normal five-job heavy CI matrix, including the existing P3 focus-loss/raw-motion/input Windows native regressions. After merge, the exact merged `master` SHA requires the normal Lightweight verifier before Issue #264 can close.
+
 ## P3-T02 logical/framebuffer sizing verification
 
 Issue #85 extends the production `GlfwWindow` boundary with `WindowSizeListener` and owner-thread `pollEvents()` while keeping logical window units distinct from framebuffer pixels. It adds no dependency, renderer, fullscreen/input behavior, raw handle, or content-scale callback API.

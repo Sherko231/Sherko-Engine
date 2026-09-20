@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class UniformBlockPackingTest {
     @Test
-    void cameraBlockWritesHandwrittenStd140Offsets() {
+    void cameraMatricesPackerWritesHandwrittenStd140Offsets() {
         Matrix4f view = new Matrix4f().set(
                 1, 2, 3, 4,
                 5, 6, 7, 8,
@@ -35,7 +35,7 @@ class UniformBlockPackingTest {
     }
 
     @Test
-    void perFrameBlockWritesFramebufferAndInverseAtOffsetZero() {
+    void framebufferMetricsPackerWritesFramebufferAndInverseAtOffsetZero() {
         ByteBuffer buffer = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES)
                 .order(ByteOrder.nativeOrder());
 
@@ -57,12 +57,12 @@ class UniformBlockPackingTest {
                 () -> CameraMatricesUniformBlock.write(new Matrix4f(), new Matrix4f(), camera));
         assertEquals(cameraStart, camera.position());
 
-        ByteBuffer perFrame = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES);
-        int frameStart = perFrame.position();
+        ByteBuffer framebufferMetrics = ByteBuffer.allocateDirect(FramebufferMetricsUniformBlock.SIZE_BYTES);
+        int frameStart = framebufferMetrics.position();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> FramebufferMetricsUniformBlock.write(0, 1080, perFrame));
-        assertEquals(frameStart, perFrame.position());
+                () -> FramebufferMetricsUniformBlock.write(0, 1080, framebufferMetrics));
+        assertEquals(frameStart, framebufferMetrics.position());
     }
 
     @Test

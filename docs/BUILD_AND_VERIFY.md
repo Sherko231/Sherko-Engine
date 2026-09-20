@@ -1895,3 +1895,6 @@ If every final changed path ends in `.md`, the `AGENTS.md` Markdown-only exempti
 
 Wiki impact: none — no public package or usage changes.
 Sandbox impact: none — no owner-facing behavior changes.
+
+
+Accepted P5R-T23 verification evidence: final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` merged through PR #351 as `36352d874c04c383ce53527001e279f7634f973b`. The complete PR diff contained 9 Markdown paths only, so the documented Markdown-only exemption applied. No heavy PR CI or post-merge Lightweight run was required or claimed. The audit introduced no Java/package/build/runtime change.

@@ -341,6 +341,9 @@ Sandbox impact: none.
 
 ## P5R-T23 internal package boundary result
 
+Accepted T23 evidence: Markdown-only PR #351 final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` merged as `36352d874c04c383ce53527001e279f7634f973b` under the repository CI exemption. No package, visibility, public/internal root, or module boundary changed.
+
+
 T23 confirms the current package layout is the stronger encapsulation boundary for the completed P1-P5 codebase.
 
 The renderer's production internal implementation is one connected package-private dependency component. The platform's deferred implementation helpers are also intentionally package-private beside their public facades. Reorganizing either surface into Java subpackages would require visibility widening or bridge/public contracts merely to preserve existing calls, which the P5R public-promotion rule forbids.

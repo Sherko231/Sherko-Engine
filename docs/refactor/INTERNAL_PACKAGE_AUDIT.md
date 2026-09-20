@@ -154,3 +154,15 @@ Wiki impact: none — no supported package/type/signature/consumer usage changes
 Sandbox impact: none — no runtime capability or owner-facing usage changes.
 
 Durable decision impact: none — this audit confirms the current package-private cohesion rather than changing architecture.
+
+
+## Acceptance record
+
+P5R-T23 was accepted through PR #351.
+
+- Final audit head: `d6ce4a096c47ec4226fc070ff65f2a76eba4486e`.
+- Merge commit: `36352d874c04c383ce53527001e279f7634f973b`.
+- Complete PR diff: 9 Markdown files only.
+- CI policy: Markdown-only exemption applied; no heavy PR matrix or post-merge Lightweight verifier was required.
+- Package result: KEEP the current layout.
+- Java/package/API/wiki/sandbox behavior: unchanged.

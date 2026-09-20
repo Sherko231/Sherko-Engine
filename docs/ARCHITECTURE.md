@@ -54,7 +54,7 @@ The split preserves the existing failure precedence and text for accepted P3-T07
 
 ## Phase 5R core lifecycle naming normalization — P5R-T07 / Issue #267
 
-The P5R-T07 candidate changes only two supported public type names under D-066: `SubsystemStartupCoordinator` names the stateless coordinator that starts an already-resolved dependency-first subsystem order and rolls back partial startup, while `FatalTerminationCoordinator` names the one-shot synchronous fatal-shutdown coordinator. The public operations remain `start(...)` and `terminate(...)`; D-020 and D-029 ordering, ownership, failure identity/suppression, cleanup/reporting/flush sequence, and exit status remain unchanged.
+The accepted P5R-T07 implementation changes only two supported public type names under D-066: `SubsystemStartupCoordinator` names the stateless coordinator that starts an already-resolved dependency-first subsystem order and rolls back partial startup, while `FatalTerminationCoordinator` names the one-shot synchronous fatal-shutdown coordinator. The public operations remain `start(...)` and `terminate(...)`; D-020 and D-029 ordering, ownership, failure identity/suppression, cleanup/reporting/flush sequence, and exit status remain unchanged.
 
 `EngineSubsystem` and `SubsystemGraph` are retained because their names already match their responsibilities. No compatibility alias, package move, dependency/module edge, lifecycle state-machine change, shutdown manager, restart contract, or background lifecycle thread is introduced. Historical D-020/D-029 decision rows retain the original accepted type names; D-066 records the current public naming contract. Relevant wiki usage is updated in the same candidate because this is a supported public API rename.
 

@@ -376,6 +376,6 @@ Wiki impact: none — proposals only; no public API changed.
 Sandbox impact: none — proposals only; no owner-facing behavior changed.
 
 
-### P5R-T14 active implementation
+### P5R-T14 accepted implementation
 
 T14 keeps every existing OpenGL resource-wrapper/backend name unchanged after fresh review. It renames only `CleanupFailures` -> `CleanupFailureSuppression` and centralizes equivalent rollback suppression through `runAndSuppress(...)`; native ownership, registration/deletion order, thread affinity, idempotent close, dynamic-buffer fence behavior, and multi-resource close ordering remain unchanged.

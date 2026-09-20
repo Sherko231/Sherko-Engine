@@ -1672,4 +1672,6 @@ Source review must confirm no production/test reference remains to `CleanupFailu
 
 Because Java/test source changes, the exact final PR head requires the normal five-job heavy matrix including Windows native P5-T03/P5-T04 regressions. After merge, the exact merged `master` SHA requires Lightweight master verification before Issue #274 can close.
 
+Accepted P5R-T14 evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` passed all five required jobs in run #469 / `35511357500`, including P5-T03 resource ownership, P5-T04 bounded dynamic upload, and P5-T18 integration. PR #333 merged as `750e36a678ef70e497d019beafa0c0bf97d56324`; exact merged-master Lightweight verification passed in run #470 / `35511620539`.
+
 Wiki impact: none — supported renderer API and consumer usage are unchanged. Sandbox impact: none — owner-facing behavior and controls are unchanged.

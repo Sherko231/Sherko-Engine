@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class SubsystemStartupCoordinatorCoordinatorTest {
+class SubsystemStartupCoordinatorTest {
     @Test
     void acceptsEmptyOrderAndRejectsNullsBeforeHooks() {
         assertDoesNotThrow(() -> SubsystemStartupCoordinator.start(List.of()));

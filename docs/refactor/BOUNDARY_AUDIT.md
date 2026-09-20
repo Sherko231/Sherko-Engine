@@ -112,7 +112,7 @@ Public nested engine-core types that remain supported consumer API:
 - `TransformQuantization.QuantizedPosition`
 - `TransformQuantization.QuantizedRotation`
 
-Beyond the two D-066 lifecycle coordinator renames explicitly authorized by T07, further public engine-core renames remain deferred to the deliberate T21 public naming pass.
+Beyond the two D-066 lifecycle coordinator renames explicitly authorized by T07, further public engine-core renames remain deferred to the deliberate T21 public naming pass. P5R-T08 explicitly re-audited `EngineConfigLoader`, `EngineConfigSchema`, the `Config*` value/error types, `EngineLogger`, `EngineClock`, `FixedStepAccumulator`, `FixedStepCatchUpPolicy`, `NativeResourceRegistry`, and nested public logging/resource vocabulary and retained them unchanged because the live names already match their responsibilities.
 
 ### `engine-platform-lwjgl` — `com.samo.engine.platform.api`
 
@@ -170,6 +170,10 @@ This constraint applies to the T01 candidates `Backend`, `LwjglBackend`, callbac
 | `RenderSpotLight` | Immutable spot-light submission value. | KEEP. |
 
 T10-T15 may rename/decompose renderer internals, but none may expose internal mesh/material/resource/native identities or change these public contracts unless that later Issue explicitly authorizes a public change. T21 remains the deliberate general public naming pass.
+
+### P5R-T08 core naming audit result
+
+The bounded configuration/logging/timing/native-resource surface required no boundary change. Public visibility and ownership stay exactly as documented above; no helper was promoted, no public type was wrapped or aliased, and no implementation responsibility was moved merely to create a rename. T21 remains the deliberate broad public-name review and T23 remains the stable internal package-grouping task.
 
 ## Package-private implementation surfaces
 

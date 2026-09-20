@@ -224,7 +224,7 @@ The following public visibility is intentional/current implementation or executa
 
 | Type | Why it is not engine-consumer API | Later owner |
 | --- | --- | --- |
-| `com.samo.engine.render.opengl.internal.IndexedStaticMeshPipeline` | Public modifier allows cross-package use from the renderer API facade, but the type is in the declared internal root and excluded from the renderer API artifact. | T10-T11 may decompose/reduce this implementation surface; do not use it as precedent for new public internals. |
+| `com.samo.engine.render.opengl.internal.ReferenceSceneRenderer` | Public modifier allows cross-package use from `OpenGlRenderer`, but the type remains in the declared internal root and excluded from the renderer API artifact. | T10 establishes the responsibility-bearing name and extracts package-private `ReferenceRoomFixture`; T11 may further decompose frame orchestration without promoting internals. |
 | `com.samo.engine.render.opengl.internal.RendererVisualDemo` (visualDemo source set) | Owner-facing standalone demo entry point; not in the production consumer API surface. | T18. |
 | `com.samo.game.client.ClientMain` | Executable composition entry point, not reusable engine API. | T19. |
 | `com.samo.game.client.internal.VersionReport` | Executable helper; public modifier supports cross-package call from `ClientMain`, not engine consumption. | T19 may rename/restructure while preserving output. |
@@ -243,7 +243,7 @@ Feasibility-spike entry points are experimental by scope and are handled separat
 | `SubsystemStartupCoordinator` | Supported public lifecycle coordinator name accepted by T07. | **KEEP**; broader public naming review remains T21. |
 | `GlfwWindow` decomposition | Public facade retained; extracted collaborators are implementation. | T03-T05, with no public signature/name change. |
 | `InputActionBindingsLoader` decomposition | Package-private implementation; T06 candidate splits file loading, strict JSON/schema parsing, and domain validation/copying into named package-private collaborators. | T06. |
-| Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. | T10-T15. |
+| Renderer internal renames/decompositions | Internal implementation; public renderer API remains unchanged. T10 renames the fixed room/world owner to `ReferenceSceneRenderer` and extracts package-private `ReferenceRoomFixture`. | T10-T15. |
 | `SandboxMain` decomposition | Game/playground entry point, not engine consumer API; entry point retained. | T16. |
 | `EngineDemoMain` removal | Legacy executable compatibility surface, not engine consumer API. | T17 after reference verification. |
 | `RendererVisualDemo` decomposition | Non-production visual-demo entry point. | T18. |

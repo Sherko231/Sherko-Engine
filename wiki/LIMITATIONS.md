@@ -115,7 +115,7 @@ This is intentionally not a general renderer API yet. The P5-T09 material value 
 
 ## Assets/world/physics/audio/networking/editor
 
-`engine-assets` now exposes only the P6-T01 `AssetId` identity value: a stable path-independent 128-bit identifier with canonical text conversion. Source metadata schemas, asset cooking, manifests, import, runtime resource handles/caches, reference counting, loading, and renderer/world asset submission remain unimplemented. The other target modules in this section still exist according to the repository architecture, but module existence does not mean a consumer API has been implemented. Do not write wiki examples for planned APIs until the corresponding implementation task is complete and verified.
+`engine-assets` now exposes P6-T01 `AssetId` plus the P6-T02 strict source metadata API: `AssetType`, immutable `SourceAssetMetadata`, and `SourceAssetMetadataLoadException`. Metadata schema v1 reads exactly `schemaVersion`, canonical `assetId`, and one of the eight accepted `assetType` values from a caller-supplied file path. Metadata discovery/sidecar naming, writing/saving, migrations, type-specific importer settings, asset cooking, manifests, import, runtime resource handles/caches, reference counting, runtime loading, and renderer/world asset submission remain unimplemented. The other target modules in this section still exist according to the repository architecture, but module existence does not mean a consumer API has been implemented. Do not write wiki examples for planned APIs until the corresponding implementation task is complete and verified.
 
 ## Native evidence limits
 

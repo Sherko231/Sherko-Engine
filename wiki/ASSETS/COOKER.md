@@ -54,7 +54,7 @@ A successful clean cook creates:
 
 P6-T03 derives cooked filenames from `AssetId`, not from source path.
 
-For `MESH` metadata, P6-T07 writes deterministic cooked `SMES` schema v1 bytes instead of copying the source glTF/glb. For `TEXTURE` metadata, P6-T08 decodes supported PNG/JPEG sources offline and writes deterministic cooked `STEX` schema v1 bytes containing RGBA8 mip levels. Other asset types still use the P6-T03 opaque byte-for-byte source payload until their own bounded cooking tasks.
+For `MESH` metadata, P6-T07 writes deterministic cooked `SMES` schema v1 bytes instead of copying the source glTF/glb. For `TEXTURE` metadata, P6-T08 decodes supported PNG/JPEG sources offline and writes deterministic cooked `STEX` schema v1 bytes containing RGBA8 mip levels. For `AUDIO` metadata, P6-T09 validates Ogg Vorbis sources offline and writes deterministic cooked `SAUD` schema v1 bytes containing validated metadata plus the exact compressed Vorbis payload. Other asset types still use the P6-T03 opaque byte-for-byte source payload until their own bounded cooking tasks.
 
 ## Mesh glTF validation/import
 
@@ -120,6 +120,14 @@ Cooked texture files use little-endian `STEX` schema v1. The header contains mag
 
 There is still no public/runtime texture resource API or GPU upload path; source PNG/JPEG decoding is confined to the cooker.
 
+## Audio Ogg Vorbis cooking
+
+For metadata with `assetType: "AUDIO"`, the paired source must use `.ogg` case-insensitively and must be a valid Ogg Vorbis stream accepted by the scope-selected stb_vorbis implementation. Before output creation, the cooker opens the complete in-memory stream through stb_vorbis, reads channel/sample-rate metadata, drains interleaved samples to EOF, requires no terminal decoder error, closes the decoder and frees the temporary validation buffer, accepts only mono or stereo channel counts, requires a positive sample rate, and preserves the original compressed Vorbis bytes exactly.
+
+Cooked audio files use little-endian `SAUD` schema v1. The header contains magic `SAUD`, schema version 1, Ogg Vorbis codec id 1, channel count, sample rate, exact compressed-payload byte length, and CRC32C. The body is the exact validated Ogg Vorbis source payload. Package-private `SAUD` decode validates metadata, exact length/checksum, truncation, and trailing data without invoking stb_vorbis or OpenAL.
+
+P6-T09 does not persist PCM, transcode/resample, define streaming versus whole-clip runtime decode, add loop/loudness metadata, or create a public runtime audio/resource API.
+
 ## Manifest version 1
 
 `manifest.json` is deterministic UTF-8 JSON:
@@ -163,7 +171,7 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 The current Phase 6 cooker still does not perform:
 
 - normal or UV generation;
-- audio decoding;
+- runtime audio decoding/playback;
 - dependency graph/incremental invalidation;
 - runtime manifest loading;
 - resource handles, caches, reference counting, or hot reload;

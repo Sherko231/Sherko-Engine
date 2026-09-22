@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T08 accepted; P6-T09 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T01 through P6-T08 accepted; P6-T09 / Issue #386 is active |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T08 / Issue #383 is accepted; freshly materialize/refine P6-T09 against current `master` before implementation |
+| Active executable task | P6-T09 / Issue #386 — validate mono/stereo Ogg Vorbis AUDIO sources and persist `SAUD` v1 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -212,3 +212,6 @@ P6-T07 / Issue #380 is accepted. Initial candidate run #542 failed only Spotless
 
 
 P6-T08 / Issue #383 is accepted. Initial candidate run #546 exposed incomplete transitive `lwjgl-stb` dependency-lock reconciliation; later candidate runs exposed only repository Spotless shape differences. Final PR #384 head `29e65306385babf2a1e9c10c7b842a49e084acfa` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #553 / `35726845758`. PR #384 merged as `51142468b8186a06b0fe73bfaac117843c065ff3`, and exact merged `master` passed Lightweight master verification in run #554 / `35727487378`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. The accepted contract decodes only PNG/JPEG TEXTURE sources in the offline cooker through LWJGL stb, copies them into Java-owned unflipped RGBA8, explicitly frees native decode buffers, generates a complete deterministic floor-averaged mip chain to 1x1, and persists validated little-endian `STEX` schema v1 with dimensions, mip count, exact body length, ordered mip records, and CRC32C. Source metadata and manifest schemas remain unchanged. No sRGB-versus-linear usage semantics, D-056 change, public runtime texture/resource API, GPU upload, material dependency graph, audio cooking, or P6-T09+ behavior was introduced. Connector-local focused Gradle commands were not executed separately; accepted repository CI is the execution evidence.
+
+
+P6-T09 / Issue #386 is active from baseline `10501b1b5b548a46c715069abc23e6cef7393341`. The bounded contract accepts only case-insensitive `.ogg` AUDIO sources, validates them offline through the already selected LWJGL `stb_vorbis` path, requires exactly one or two channels plus a positive sample rate, opens the in-memory source through `stb_vorbis_open_memory`, reads metadata through `stb_vorbis_get_info`, drains interleaved samples to EOF through `stb_vorbis_get_samples_short_interleaved`, rejects any final decoder error, and closes the decoder plus temporary validation buffer before output creation, preserves the exact validated compressed Vorbis source bytes, and persists them in validated little-endian `SAUD` schema v1 with codec/channel/sample-rate metadata, exact payload length, and CRC32C. Source metadata and manifest schemas remain unchanged. No new dependency/module edge, OpenAL playback, public audio/resource API, PCM persistence, transcoding/resampling, streaming policy, spatialization, dependency graph, or P6-T10+ work is authorized.

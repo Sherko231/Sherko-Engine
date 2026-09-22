@@ -62,15 +62,13 @@ final class SourceAssetMetadataJsonParser {
     private static int requireSchemaVersion(Path path, JsonNode root) {
 
         JsonNode versionNode = requireField(path, root, "schemaVersion");
-        if (!versionNode.isIntegralNumber() || !versionNode.canConvertToInt()) {
+        if (!versionNode.isIntegralNumber()) {
             throw failure(path, "schemaVersion must be an integer");
         }
-
-        int schemaVersion = versionNode.intValue();
-        if (schemaVersion != SourceAssetMetadata.CURRENT_SCHEMA_VERSION) {
-            throw failure(path, "unsupported schemaVersion " + schemaVersion + "; upgrade required");
+        if (!versionNode.canConvertToInt() || versionNode.intValue() != SourceAssetMetadata.CURRENT_SCHEMA_VERSION) {
+            throw failure(path, "unsupported schemaVersion " + versionNode.asText() + "; upgrade required");
         }
-        return schemaVersion;
+        return versionNode.intValue();
 
     }
 

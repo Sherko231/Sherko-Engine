@@ -163,15 +163,25 @@ class CookedMeshBinaryTest {
 
     }
 
+    private static void assertOptionalFloatArray(float[] expected, float[] actual) {
+
+        if (expected == null) {
+            assertThat(actual).isNull();
+        } else {
+            assertThat(actual).containsExactly(expected);
+        }
+
+    }
+
     private static void assertMeshEquals(EngineMesh expected, EngineMesh actual) {
 
         assertThat(actual.meshIndex()).isEqualTo(expected.meshIndex());
         assertThat(actual.name()).isEqualTo(expected.name());
         assertThat(actual.positions()).containsExactly(expected.positions());
-        assertThat(actual.normals()).containsExactly(expected.normals());
-        assertThat(actual.tangents()).containsExactly(expected.tangents());
-        assertThat(actual.tangentSigns()).containsExactly(expected.tangentSigns());
-        assertThat(actual.uv0()).containsExactly(expected.uv0());
+        assertOptionalFloatArray(expected.normals(), actual.normals());
+        assertOptionalFloatArray(expected.tangents(), actual.tangents());
+        assertOptionalFloatArray(expected.tangentSigns(), actual.tangentSigns());
+        assertOptionalFloatArray(expected.uv0(), actual.uv0());
         assertThat(actual.indices()).containsExactly(expected.indices());
 
     }

@@ -146,7 +146,6 @@ The following remain deliberately undefined here and are not implied by D-041/D-
 
 - automatic conversion between GLFW logical-window coordinates and framebuffer pixels;
 - texture/UV/image origin conventions;
-- glTF authoring basis/conversion details;
 - Jolt internal basis/conversion details;
 - OpenAL internal spatial details;
 - Euler-angle storage/order policy;
@@ -172,3 +171,34 @@ Future renderer, physics, and asset-conversion tests must cite the canonical con
 ## Decision authority
 
 D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, and D-047 records transform value quantization in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.
+
+
+## glTF / Assimp mesh import conversion
+
+D-071 / P6-T05 fixes the exactly-once conversion from the accepted P6-T04 Assimp glTF import basis into canonical D-041 engine space.
+
+glTF 2.0 source coordinates are right-handed, use meters, +Y up, +Z forward, and -X right. Canonical engine space is right-handed, uses meters, +Y up, -Z forward, and +X right.
+
+The mesh spatial conversion is therefore:
+
+```text
+engineX = -importX
+engineY =  importY
+engineZ = -importZ
+```
+
+This is a 180-degree rotation around +Y with determinant +1.
+
+Consequences:
+
+- positions use the mapping above with scale factor exactly 1.0;
+- normals use the same mapping;
+- tangent xyz uses the same mapping;
+- triangle winding and index order remain unchanged;
+- UV0 is not part of the spatial conversion and remains exactly as produced by the accepted P6-T04 Assimp import boundary;
+- P6-T04's intrinsic glTF first-use vertex remapping and UV-origin normalization are not repeated;
+- node/world transform baking is not part of P6-T05.
+
+The implementation uses distinct internal `ImportedMesh` and `EngineMesh` values. `MeshCoordinateConverter` accepts only `ImportedMesh` and produces `EngineMesh`, making this the mechanical exactly-once spatial boundary inside the cooker.
+
+A one-meter glTF reference cube must remain exactly one meter wide, tall, and deep after conversion. Later cooking/runtime stages consume engine-basis mesh data and must not apply this conversion again.

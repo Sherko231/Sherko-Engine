@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T04 accepted; P6-T05 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T05 / Issue #374 is the current bounded task |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T04 / Issue #371 is accepted; freshly materialize/refine P6-T05 against current `master` before implementation |
+| Active executable task | P6-T05 / Issue #374 — exactly-once imported mesh coordinate/unit conversion |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Freshly materialize/refine **P6-T05** against current `master` before implementation. Define the exact source-basis-to-engine coordinate/unit conversion contract, affected attributes/topology, exactly-once ownership boundary, fixtures, allowed files/modules, and verification plan. Do not implement P6-T06 tangent/UV policy or later Phase 6 work unless P6-T05 explicitly requires it.
+Complete **P6-T05 / Issue #374** only: implement/verify the `(-X,+Y,-Z)` meter-to-meter ImportedMesh→EngineMesh boundary, one-meter cube AABB, malformed/non-finite validation, spatial docs, and unchanged P6-T03 persisted output. Do not implement P6-T06 tangent/UV policy or later Phase 6 work.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -200,3 +200,6 @@ P6-T03 / Issue #368 is accepted. After two obsolete candidates failed only Spotl
 
 
 P6-T04 / Issue #371 is accepted. Final PR #372 head `1d3ac786664f8e4ea1f892f600e4ed42326febb3` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #531 / `35712370651`. PR #372 merged as `cf034184495f0e914032d330eca85dd869694d71`, and exact-merge Lightweight master verification passed in run #532 / `35713724011`. The accepted contract activates LWJGL 3.4.3 Assimp in `engine-assets`, validates/imports MESH `.gltf` / `.glb` before output creation, copies Assimp results into Java-owned internal values, releases native scenes before return, and preserves the documented pre-engine-conversion import basis. Assimp's intrinsic glTF first-use vertex remapping and UV-origin normalization are explicitly recorded; no P6-T05 engine coordinate/unit conversion, tangent generation, final mesh binary schema, runtime loader/resource API, renderer/world/editor integration, or new module edge was introduced. Sandbox impact: none — offline importer infrastructure is not a runtime playground capability.
+
+
+P6-T05 / Issue #374 is active from baseline `1de28699ee81dd559260e6d9ee74f77081e0fbea`. The refined contract defines the exactly-once Assimp-import-basis to D-041 engine conversion as `(-X,+Y,-Z)` with scale factor 1.0 for positions, normals, and tangent xyz. The determinant is +1, so winding/indices stay unchanged; UV0 remains the accepted P6-T04 Assimp value. Distinct package-private `ImportedMesh` and `EngineMesh` types establish the mechanical conversion boundary, and the cooker retains only engine-basis meshes after import. A one-meter identity-node glTF cube must remain exactly one meter on all engine AABB axes. P6-T03 manifest/temp payload remain unchanged; no P6-T06 tangent policy, P6-T07 serialization, runtime resource API, renderer/world/editor integration, new dependency/module edge, public API, or sandbox source change is included.

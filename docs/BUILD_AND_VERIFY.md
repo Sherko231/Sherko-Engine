@@ -2090,3 +2090,26 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T04 verification evidence: after earlier candidate corrections for Assimp import-basis expectations, transitive dependency locks, and Spotless formatting, final PR #372 head `1d3ac786664f8e4ea1f892f600e4ed42326febb3` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #531 / `35712370651`. The passing Build job verified the reconciled dependency locks, and the passing Unit/native jobs exercised the LWJGL Assimp path and committed glTF/GLB fixtures. PR #372 merged as `cf034184495f0e914032d330eca85dd869694d71`; exact-merge Lightweight master verification passed in run #532 / `35713724011`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T04 acceptance is therefore complete. The connector environment did not separately execute the documented focused Gradle commands locally; the accepted repository CI is the execution evidence.
+
+
+## P6-T05 mesh coordinate conversion verification
+
+Issue #374 defines the exactly-once Assimp-import-basis to D-041 engine-space mesh conversion.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.MeshCoordinateConverterTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance hard-codes the P6-T04 Assimp import-basis reference triangle and verifies engine positions `(-7,-8,-9), (-1,2,-3), (4,5,-6)`, -Z normals, -X tangent xyz, unchanged accepted UV0, and unchanged indices `[0,1,2]`. A committed identity-node one-meter glTF cube is imported through Assimp and converted, then test-only AABB calculation must measure exactly 1.0 meter on all three axes. Additional tests cover missing optional attributes, malformed attribute lengths, null misuse, and non-finite positions/normals/tangents.
+
+Complete dependency-lock diff must remain empty. The final implementation must contain no tangent generation/required-UV policy, persisted mesh schema, runtime resource loader, renderer/world integration, public API, or new dependency/module edge.
+
+Because P6-T05 changes durable spatial semantics and production cooker Java code/tests/resources, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #374 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands are not locally claimed as passing unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

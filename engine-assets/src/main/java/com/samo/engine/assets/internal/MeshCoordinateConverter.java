@@ -65,11 +65,17 @@ final class MeshCoordinateConverter {
             float y = values[index + 1];
             float z = values[index + 2];
             requireFinite(mesh, label, index / 3, x, y, z);
-            converted[index] = -x;
-            converted[index + 1] = y;
-            converted[index + 2] = -z;
+            converted[index] = canonicalZero(-x);
+            converted[index + 1] = canonicalZero(y);
+            converted[index + 2] = canonicalZero(-z);
         }
         return converted;
+
+    }
+
+    private static float canonicalZero(float value) {
+
+        return value == 0.0f ? 0.0f : value;
 
     }
 

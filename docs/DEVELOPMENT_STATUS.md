@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T03 accepted; P6-T04 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T04 / Issue #371 is the current bounded task |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T03 / Issue #368 is accepted; freshly materialize/refine P6-T04 against current `master` before implementation |
+| Active executable task | P6-T04 / Issue #371 — import glTF mesh attributes through Assimp in the cooker |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Freshly materialize/refine **P6-T04** against current `master` before implementation. Define the exact Assimp/glTF mesh-import contract, accepted reference fixture and attributes, source-basis behavior, dependency/native ownership and failure semantics, allowed files/modules, and verification plan. Do not implement P6-T05 coordinate/unit conversion or later Phase 6 work unless P6-T04 explicitly requires it.
+Complete **P6-T04 / Issue #371** only: verify exact Assimp glTF positions/normals/tangents/UV0/indices against the committed reference asset, native scene release, pre-output cooker validation, dependency locks, and the explicit source-basis boundary. Do not implement P6-T05 coordinate/unit conversion or later Phase 6 work.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -197,3 +197,6 @@ P6-T02 / Issue #365 is accepted. After the initial candidate failed only Spotles
 
 
 P6-T03 / Issue #368 is accepted. After two obsolete candidates failed only Spotless formatting, final PR #369 head `1843321e380302c9748fd55a61db5353076c6e3e` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #511 / `35705042938`. PR #369 merged as `3d73c0de0cc534a95021b38560f8690e24a18065`, and exact-merge Lightweight master verification passed in run #512 / `35705539253`. The accepted contract adds canonical `:engine-assets:runAssetCooker`, recursive `<source>.asset.json` discovery without symbolic-link traversal, deterministic `manifest.json` schema v1, AssetId-based `assets/<AssetId>.bin` output, opaque nonzero byte-for-byte pass-through payloads, pre-write validation, output-overlap/existing-path protection, duplicate/zero-byte rejection, best-effort cleanup of owned partial output, D-069, and synchronized tooling guidance. No Assimp/glTF import, coordinate conversion, tangent generation, final binary schema/checksum, image/audio decoding, dependency graph, runtime manifest/resource loading, renderer/world/editor integration, new dependency, module edge, or P6-T04+ behavior was introduced. Sandbox impact: none — offline cooker tooling is not a runtime playground capability.
+
+
+P6-T04 / Issue #371 is active from baseline `c42e0bc16408352b281b2fda3b9998e44ff8295c`. The refined contract activates only the already scope-locked LWJGL 3.4.3 Assimp binding in `engine-assets`, imports MESH `.gltf` / `.glb` sources during cooker validation with `aiImportFile(..., 0)`, copies native mesh data immediately into Java-owned internal arrays, and releases each non-null Assimp scene before return. The task explicitly preserves source/Assimp-basis positions, normals, tangent xyz, UV0, vertex/face/index order and winding; P6-T05 remains the sole exactly-once engine coordinate/unit conversion boundary. P6-T03 manifest/output layout and temporary source-byte payload remain unchanged; no tangent generation, final binary schema, runtime loading/resource API, renderer/world/editor integration, module edge, or P6-T05+ behavior is included. Sandbox impact: none — offline importer infrastructure is not a runtime playground capability.

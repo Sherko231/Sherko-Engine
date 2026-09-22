@@ -205,7 +205,7 @@ class AssetCookerTest {
         writeMetadata(multichannel.resolveSibling(multichannel.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
         Path multichannelOutput = tempDir.resolve("multichannel-audio-output");
         assertThatThrownBy(() -> AssetCooker.cook(multichannelInput, multichannelOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(multichannel.toString())
-            .hasMessageContaining("open failed");
+            .hasMessageContaining("mono or stereo");
         assertThat(multichannelOutput).doesNotExist();
 
     }

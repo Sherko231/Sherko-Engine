@@ -128,6 +128,14 @@ Cooked audio files use little-endian `SAUD` schema v1. The header contains magic
 
 P6-T09 does not persist PCM, transcode/resample, define streaming versus whole-clip runtime decode, add loop/loudness metadata, or create a public runtime audio/resource API.
 
+## Dependency sidecars and graph
+
+P6-T10 adds an optional adjacent `<source>.deps.json` only for MATERIAL, PREFAB, and SCENE assets. It is separate from the unchanged three-field `<source>.asset.json` schema v1.
+
+The dependency sidecar contains exactly `schemaVersion`, `assetDependencies`, and `shaderDependencies`. Asset references use canonical existing `AssetId` text. MATERIAL asset dependencies may reference TEXTURE assets only and may also declare lowercase opaque logical shader keys; those shader keys are not paths, AssetIds, a SHADER asset type, or a runtime shader API. PREFAB and SCENE may reference existing AssetIds and must keep `shaderDependencies` empty.
+
+The cooker rejects duplicate/self/missing/type-invalid references, cycles, orphan sidecars, and dependency sidecars attached to other asset types before output creation. A successful cook writes deterministic `dependencies.json` schema v1 with MATERIAL/PREFAB/SCENE owners sorted by AssetId and their dependency arrays sorted canonically. The graph can calculate reverse transitive dependents for a changed AssetId or logical shader key. P6-T10 does not update an existing cache; P6-T03's fresh-output rule remains unchanged.
+
 ## Manifest version 1
 
 `manifest.json` is deterministic UTF-8 JSON:
@@ -172,7 +180,7 @@ The current Phase 6 cooker still does not perform:
 
 - normal or UV generation;
 - runtime audio decoding/playback;
-- dependency graph/incremental invalidation;
+- incremental cache mutation/recooking (dependency graph and invalidation closure now exist);
 - runtime manifest loading;
 - resource handles, caches, reference counting, or hot reload;
 - renderer/world/editor integration.

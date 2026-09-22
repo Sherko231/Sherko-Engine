@@ -149,12 +149,17 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 | Type | Purpose |
 | --- | --- |
 | `AssetId` | Immutable path-independent 128-bit asset identity with generation plus canonical lowercase UUID-style text parse/format. |
+| `AssetType` | Source metadata category: MESH, TEXTURE, MATERIAL, SKELETON, ANIMATION, AUDIO, PREFAB, or SCENE. |
+| `SourceAssetMetadata` | Immutable strict schema-v1 source metadata carrying schema version, `AssetId`, and `AssetType`; `load(Path)` reads UTF-8 JSON atomically. |
+| `SourceAssetMetadataLoadException` | Public catch type for source metadata file/JSON/schema/value failures without exposing Jackson. |
 
-`AssetId` contains only identity bits. Construct it directly from two 64-bit halves when restoring an already-known identity, use `AssetId.generate()` when authoring a new identity, and use `AssetId.parse(text)` / `toString()` for the canonical 36-character lowercase textual form. Moving a source file does not change an existing reference as long as the metadata carrying that identity keeps the same `AssetId`.
+`AssetId` contains only identity bits. Construct it directly from two 64-bit halves when restoring an already-known identity, use `AssetId.generate()` when authoring a new identity, and use `AssetId.parse(text)` / `toString()` for the canonical 36-character lowercase textual form. Moving a source file does not change an existing reference as long as metadata retains the same `AssetId`.
 
-P6-T01 does not define source metadata files, cooking, manifests, runtime handles, caches, import, reference counting, or loading. Do not infer those APIs from `AssetId`.
+`SourceAssetMetadata.load(Path)` loads strict UTF-8 JSON schema version 1 with exactly `schemaVersion`, `assetId`, and `assetType`. Unknown/duplicate fields, malformed or wrong-type values, noncanonical IDs, unknown asset types, missing/unreadable files, and missing fields fail without returning partial metadata. Any schema version other than 1 fails with an `upgrade required` diagnostic. Jackson remains an implementation detail.
 
-Usage: [Asset identity](ASSETS/ASSET_ID.md).
+P6-T02 still does not define metadata discovery/sidecar naming, writing/saving, migration, type-specific import settings, cooking, manifests, runtime resource handles/caches, import, reference counting, or renderer/world consumption.
+
+Usage: [Asset identity](ASSETS/ASSET_ID.md) and [Source metadata](ASSETS/SOURCE_METADATA.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 
@@ -194,4 +199,5 @@ The repository also contains game composition entry points, build/test utilities
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
 - [Platform input and tick commands](PLATFORM/INPUT.md)
 - [Asset identity](ASSETS/ASSET_ID.md)
+- [Source metadata](ASSETS/SOURCE_METADATA.md)
 - [Current limitations](LIMITATIONS.md)

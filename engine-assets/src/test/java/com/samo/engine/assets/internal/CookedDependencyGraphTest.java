@@ -22,7 +22,7 @@ class CookedDependencyGraphTest {
         AssetDependencyGraph graph = AssetDependencyGraph.fromPersisted(
             List.of(new AssetDependencyGraph.Entry(PREFAB, AssetType.PREFAB, List.of(MATERIAL), List.of()),
                 new AssetDependencyGraph.Entry(MATERIAL, AssetType.MATERIAL, List.of(TEXTURE), List.of("opaque-baseline"))),
-            known.keySet());
+            known);
 
         String first = CookedDependencyGraphJson.write(graph);
         String second = CookedDependencyGraphJson.write(graph);

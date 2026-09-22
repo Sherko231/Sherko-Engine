@@ -21,6 +21,9 @@ final class MeshCoordinateConverter {
         float[] tangents = importedMesh.tangents();
         validateOptionalVec3Array(importedMesh, "tangents", tangents, positions.length);
 
+        float[] tangentSigns = importedMesh.tangentSigns();
+        validateTangentSigns(importedMesh, tangentSigns, tangents, vertexCount);
+
         float[] uv0 = importedMesh.uv0();
         if (uv0 != null && uv0.length != Math.multiplyExact(vertexCount, 2)) {
             throw failure(importedMesh, "UV0 length must equal vertexCount * 2");
@@ -30,7 +33,7 @@ final class MeshCoordinateConverter {
         float[] engineNormals = normals == null ? null : convertVec3(importedMesh, "normals", normals);
         float[] engineTangents = tangents == null ? null : convertVec3(importedMesh, "tangents", tangents);
 
-        return new EngineMesh(importedMesh.meshIndex(), importedMesh.name(), enginePositions, engineNormals, engineTangents, uv0, importedMesh.indices());
+        return new EngineMesh(importedMesh.meshIndex(), importedMesh.name(), enginePositions, engineNormals, engineTangents, tangentSigns, uv0, importedMesh.indices());
 
     }
 
@@ -54,6 +57,26 @@ final class MeshCoordinateConverter {
             throw failure(mesh, label + " length must equal positions length");
         }
         validateVec3Array(mesh, label, values, false);
+
+    }
+
+    private static void validateTangentSigns(ImportedMesh mesh, float[] signs, float[] tangents, int vertexCount) {
+
+        if ((signs == null) != (tangents == null)) {
+            throw failure(mesh, "tangent signs and tangent xyz must both be present or absent");
+        }
+        if (signs == null) {
+            return;
+        }
+        if (signs.length != vertexCount) {
+            throw failure(mesh, "tangentSigns length must equal vertexCount");
+        }
+        for (int index = 0; index < signs.length; index++) {
+            float sign = signs[index];
+            if (sign != 1.0f && sign != -1.0f) {
+                throw failure(mesh, "tangentSigns[" + index + "] must be exactly +1 or -1");
+            }
+        }
 
     }
 

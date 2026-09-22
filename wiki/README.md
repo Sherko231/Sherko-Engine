@@ -34,8 +34,9 @@ Use it when you want to answer questions such as:
 14. [Create a window example](EXAMPLES/CREATE_A_WINDOW.md)
 15. [Asset identity](ASSETS/ASSET_ID.md)
 16. [Source metadata](ASSETS/SOURCE_METADATA.md)
-17. [Current limitations](LIMITATIONS.md)
-18. [How this wiki must be maintained](MAINTENANCE.md)
+17. [Asset cooker](ASSETS/COOKER.md)
+18. [Current limitations](LIMITATIONS.md)
+19. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

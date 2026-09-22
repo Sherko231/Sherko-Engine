@@ -52,6 +52,10 @@ class AssetCookerTest {
         assertThat(second.get("sourcePath").textValue()).isEqualTo("z/second.bin");
         assertThat(second.get("byteSize").longValue()).isEqualTo(3);
 
+        Path secondOutput = tempDir.resolve("second-output");
+        AssetCooker.cook(input, secondOutput);
+        assertThat(Files.readAllBytes(secondOutput.resolve("manifest.json"))).isEqualTo(Files.readAllBytes(output.resolve("manifest.json")));
+
     }
 
     @Test

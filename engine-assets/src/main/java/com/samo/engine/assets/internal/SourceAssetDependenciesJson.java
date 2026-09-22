@@ -34,7 +34,7 @@ final class SourceAssetDependenciesJson {
         } catch (AssetCookerException exception) {
             throw exception;
         } catch (IOException exception) {
-            throw new AssetCookerException(path + ": failed to read dependency sidecar", exception);
+            throw new AssetCookerException(path + ": failed to read dependency sidecar: " + exception.getMessage(), exception);
         }
 
     }

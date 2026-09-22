@@ -777,3 +777,17 @@ P6-T03 manifest schema v1, AssetId-based output paths, and temporary `.bin` pass
 
 Wiki impact: yes — cooker MESH import behavior and source-basis limitation are documented under `wiki/ASSETS/COOKER.md` and `wiki/LIMITATIONS.md`.
 Sandbox impact: none — this is offline importer infrastructure with no authorized public runtime mesh/resource API.
+
+
+## Phase 6 engine-basis mesh conversion — P6-T05 / Issue #374
+
+`engine-assets` now converts every P6-T04 MESH import exactly once from Assimp import basis into D-041 engine basis before output-cache creation. Package-private `MeshCoordinateConverter` accepts only `ImportedMesh` and returns a distinct Java-owned `EngineMesh`; the P6-T03 source-work item retains engine-basis meshes, not import-basis meshes.
+
+The conversion is `(-X,+Y,-Z)` for positions, normals, and tangent xyz with scale factor 1.0. Because this is a 180-degree +Y rotation with determinant +1, winding and index order remain unchanged. UV0 remains unchanged from P6-T04 import-basis values; Assimp's intrinsic glTF UV-origin normalization and first-use vertex remapping are not repeated.
+
+The converter validates internal attribute lengths and rejects non-finite positions/normals/tangents with mesh context. Missing optional normals/tangents/UV0 remain absent. It does not normalize, repair, generate, clamp, bake node transforms, or perform P6-T06 tangent/UV policy.
+
+A committed one-meter cube fixture proves importer + converter output retains a 1m × 1m × 1m engine-space AABB. P6-T03 manifest schema/output paths and temporary source-byte payloads remain unchanged until P6-T07.
+
+Wiki impact: yes — the offline cooker now crosses explicitly into D-041 engine basis.
+Sandbox impact: none — converted mesh data remains package-internal cooker state and no public/runtime mesh loading path exists yet.

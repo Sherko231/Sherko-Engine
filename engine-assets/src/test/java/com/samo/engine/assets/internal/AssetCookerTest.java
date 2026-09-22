@@ -144,7 +144,6 @@ class AssetCookerTest {
 
     }
 
-
     @Test
     void importsMeshBeforeOutputAndPreservesTemporaryPassThroughPayload() throws Exception {
 
@@ -208,7 +207,6 @@ class AssetCookerTest {
             .hasMessageContaining("exactly two arguments");
 
     }
-
 
     private static Path resourcePath(String name) {
 

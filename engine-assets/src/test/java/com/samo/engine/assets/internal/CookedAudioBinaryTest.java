@@ -39,6 +39,15 @@ class CookedAudioBinaryTest {
     }
 
     @Test
+    void rejectsInvalidChannelPolicyAtValueBoundary() {
+
+        assertThatThrownBy(() -> new CookedAudio(3, 32000, new byte[]{1}))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("mono or stereo");
+
+    }
+
+    @Test
     void rejectsHeaderMetadataChecksumLengthTruncationAndTrailingCorruption() {
 
         byte[] valid = CookedAudioBinary.encode(new CookedAudio(1, 22050, new byte[]{1, 2, 3, 4, 5}));

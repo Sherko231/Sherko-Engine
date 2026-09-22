@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T02 / Issue #365 is the current bounded task |
+| Active phase | Phase 6 active — P6-T01 and P6-T02 accepted; P6-T03 is the next task to freshly materialize/refine |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-T02 / Issue #365 — define strict versioned source asset metadata |
+| Active executable task | None — P6-T02 / Issue #365 is accepted; freshly materialize/refine P6-T03 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Complete **P6-T02 / Issue #365** only: implement/verify strict schema-v1 source metadata loading, reconcile dependency locks and consumer guidance, require exact-candidate five-job CI, then exact-merge Lightweight verification. Do not implement P6-T03 cooking or later Phase 6 work.
+Freshly materialize/refine **P6-T03** against current `master` before implementation. Define the exact command-line cooker input/output contract, manifest/cooked-file behavior, failure/cleanup semantics, allowed files/modules, and verification plan. Do not implement P6-T04 importing or later Phase 6 work unless P6-T03 explicitly requires it.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -193,4 +193,4 @@ PRE-P6 Issue #359 is accepted. PR #360 final head `d13d78995f37701692c74f0197d91
 P6-T01 / Issue #362 is accepted. Final PR #363 head `ae34d0cd84be2899fecd821f9af485a6f4c1f084` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #504 / `35698629954`. PR #363 merged as `37f3c163d2bb492ee08f6306e07b017c6ea26119`, and exact-merge Lightweight master verification passed in run #505 / `35700148367`. The accepted contract adds only public immutable 128-bit `AssetId`, canonical lowercase UUID-style text, generation/parsing, focused path-independence tests, D-067, and synchronized wiki/architecture guidance. No P6-T02 metadata schema, cooker, manifest, runtime resource manager, renderer/world integration, dependency, or module edge was introduced. Sandbox impact: none — nonvisual identity infrastructure is not meaningfully exercisable in the persistent playground yet.
 
 
-P6-T02 / Issue #365 is active from baseline `c9affeafcedd5a418f78727244103d3cf33724bd`. The refined contract defines strict UTF-8 JSON schema v1 with only `schemaVersion`, canonical P6-T01 `assetId`, and one of eight `assetType` values. Public `SourceAssetMetadata.load(Path)`, `AssetType`, and `SourceAssetMetadataLoadException` are bounded to file/schema validation; package-private helpers reuse repository-selected Jackson 2.21.2. No metadata discovery/writer, type-specific importer settings, cooker, manifest, cooked format, runtime resource manager, renderer/world/editor integration, or new module edge is included. Sandbox impact: none — source-authoring metadata loading is not meaningfully observable in the persistent playground yet.
+P6-T02 / Issue #365 is accepted. After the initial candidate failed only Spotless formatting, final PR #366 head `ab15ccb5f1b03f9b2d655ce846afb6f849f87e4b` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #507 / `35701724532`. PR #366 merged as `f91956c7d455b01d0895ca787bb110b802083ec1`, and exact-merge Lightweight master verification passed in run #508 / `35702272507`. The accepted contract defines strict UTF-8 JSON schema v1 with exactly `schemaVersion`, canonical P6-T01 `assetId`, and one of eight `assetType` values; public `SourceAssetMetadata.load(Path)`, `AssetType`, and `SourceAssetMetadataLoadException`; D-068; implementation-only Jackson 2.21.2 reuse; expected dependency-lock updates; and synchronized wiki/architecture guidance. No metadata discovery/writer, type-specific importer settings, cooker, manifest, cooked format, runtime resource manager, renderer/world/editor integration, new module edge, or P6-T03+ behavior was introduced. Sandbox impact: none — source-authoring metadata loading is not meaningfully observable in the persistent playground yet.

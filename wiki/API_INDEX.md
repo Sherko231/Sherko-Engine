@@ -193,4 +193,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Fatal termination](CORE/FATAL_TERMINATION.md)
 - [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md)
 - [Platform input and tick commands](PLATFORM/INPUT.md)
+- [Asset identity](ASSETS/ASSET_ID.md)
 - [Current limitations](LIMITATIONS.md)

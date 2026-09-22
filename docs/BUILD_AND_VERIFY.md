@@ -2064,3 +2064,26 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T03 verification evidence: two earlier PR candidates failed only the repository Spotless formatting gate and became obsolete after formatter-only corrections. Final PR #369 head `1843321e380302c9748fd55a61db5353076c6e3e` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #511 / `35705042938`. The Build job resolved committed dependency locks successfully with no lockfile drift or new dependency/module edge. PR #369 merged as `3d73c0de0cc534a95021b38560f8690e24a18065`; exact-merge Lightweight master verification passed in run #512 / `35705539253`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T03 acceptance is therefore complete. The connector environment did not separately execute the documented focused Gradle cooker command locally; repository-wide tests/quality gates include `AssetCookerTest`, Spotless enforcement, and the committed `runAssetCooker` build configuration.
+
+
+## P6-T04 Assimp glTF mesh import verification
+
+Issue #371 activates the scope-locked LWJGL 3.4.3 Assimp binding inside the offline `engine-assets` cooker.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.AssimpGltfMeshImporterTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance uses committed self-contained glTF fixtures with independently authored expected values. The reference triangle must preserve exact positions `(1,2,3), (-4,5,6), (7,-8,9)`, +Z normals, +X tangent xyz, UV0 `(0.25,0.75), (0.5,0.125), (1,0)`, mesh name `ReferenceTriangle`, and indices `[2,0,1]`. Additional coverage verifies optional normals/tangents/UV0 remain absent rather than generated, unsupported MESH extensions fail before output creation, malformed/no-mesh input is path-diagnostic, non-triangle topology is rejected without triangulation, non-MESH P6-T03 pass-through remains valid, and successful cooker output still writes the original source bytes until P6-T07.
+
+Dependency review must confirm only existing LWJGL 3.4.3 core/Assimp modules and Windows native artifacts are added to `engine-assets` lock configurations, with no new module edge or unrelated version drift. Spatial review must confirm `aiImportFile(..., 0)` remains free of post-process flags and no P6-T05 conversion is present.
+
+Because P6-T04 adds native importer execution, dependency/lock changes, Java/tests/resources, and a durable source-basis boundary, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #371 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands are not locally claimed as passing unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

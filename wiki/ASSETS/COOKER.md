@@ -54,7 +54,25 @@ A successful clean cook creates:
 
 P6-T03 derives cooked filenames from `AssetId`, not from source path.
 
-Every current `.bin` payload is an opaque byte-for-byte copy of the source and must be nonzero. This is temporary cooker-foundation behavior, not the final format-specific cooked representation.
+Every current `.bin` payload is still an opaque byte-for-byte copy of the source and must be nonzero. For `MESH` metadata, P6-T04 now first imports `.gltf` / `.glb` through LWJGL Assimp during validation, but the persisted payload remains the original source bytes until P6-T07 defines the final mesh schema.
+
+## Mesh glTF validation/import
+
+For metadata with `assetType: "MESH"`, the paired source must use a `.gltf` or `.glb` extension.
+
+Before creating the output cache, the cooker imports every Assimp mesh and copies these values into Java-owned internal data:
+
+- positions as XYZ;
+- normals as XYZ when authored;
+- tangent XYZ when authored;
+- UV channel 0 as XY when authored;
+- triangle indices in Assimp face order.
+
+P6-T04 uses no Assimp post-process flags. It does not flip UVs or winding, change handedness, pre-transform nodes, generate normals/tangents, join/reorder vertices, optimize meshes, or convert coordinates/units.
+
+The imported values are therefore source/Assimp-basis data, not D-041 engine-space data. P6-T05 owns the exactly-once coordinate/unit conversion.
+
+Missing normals, tangents, or UV0 remain absent. Non-triangle faces and out-of-range indices fail import. Assimp scene memory is released before import returns; native pointers do not escape into later cooker/runtime code.
 
 ## Manifest version 1
 
@@ -96,9 +114,8 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 
 ## Not implemented yet
 
-P6-T03 does not perform:
+The current P6-T04 cooker still does not perform:
 
-- glTF/Assimp import;
 - coordinate/unit conversion;
 - tangent generation or UV validation;
 - final mesh binary schema, magic, bounds, or checksum;

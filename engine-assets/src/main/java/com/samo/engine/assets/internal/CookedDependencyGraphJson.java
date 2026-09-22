@@ -14,12 +14,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 final class CookedDependencyGraphJson {
     static final int SCHEMA_VERSION = 1;
     private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "assets");
-    private static final Set<String> ENTRY_FIELDS = Set.of("assetId", "assetType", "assetDependencies", "shaderDependencies");
+    private static final Set<String> ENTRY_FIELDS = Set.of("assetId", "assetDependencies", "shaderDependencies");
     private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
 
     private CookedDependencyGraphJson() {
@@ -34,7 +35,6 @@ final class CookedDependencyGraphJson {
         for (AssetDependencyGraph.Entry entry : graph.entries()) {
             ObjectNode asset = assets.addObject();
             asset.put("assetId", entry.assetId().toString());
-            asset.put("assetType", entry.assetType().name());
             ArrayNode dependencies = asset.putArray("assetDependencies");
             entry.assetDependencies().forEach(assetId -> dependencies.add(assetId.toString()));
             ArrayNode shaders = asset.putArray("shaderDependencies");
@@ -49,13 +49,13 @@ final class CookedDependencyGraphJson {
 
     }
 
-    static AssetDependencyGraph decode(String json, Set<AssetId> knownAssetIds) {
+    static AssetDependencyGraph decode(String json, Map<AssetId, AssetType> knownAssets) {
 
         if (json == null) {
             throw new NullPointerException("json");
         }
-        if (knownAssetIds == null) {
-            throw new NullPointerException("knownAssetIds");
+        if (knownAssets == null) {
+            throw new NullPointerException("knownAssets");
         }
 
         try {
@@ -81,12 +81,15 @@ final class CookedDependencyGraphJson {
                 if (!owners.add(owner)) {
                     throw new AssetCookerException("Invalid dependency graph: duplicate owner " + owner);
                 }
-                AssetType type = parseOwnerType(requireText(node, "assetType"));
+                AssetType type = knownAssets.get(owner);
+                if (type != AssetType.MATERIAL && type != AssetType.PREFAB && type != AssetType.SCENE) {
+                    throw new AssetCookerException("Invalid dependency graph: owner is not MATERIAL, PREFAB, or SCENE " + owner);
+                }
                 List<AssetId> dependencies = parseAssetIds(requireField(node, "assetDependencies", "asset entry"));
                 List<String> shaders = parseShaderKeys(requireField(node, "shaderDependencies", "asset entry"));
                 entries.add(new AssetDependencyGraph.Entry(owner, type, dependencies, shaders));
             }
-            return AssetDependencyGraph.fromPersisted(entries, knownAssetIds);
+            return AssetDependencyGraph.fromPersisted(entries, knownAssets.keySet());
         } catch (AssetCookerException exception) {
             throw exception;
         } catch (IOException exception) {
@@ -143,20 +146,6 @@ final class CookedDependencyGraphJson {
             return AssetId.parse(text);
         } catch (IllegalArgumentException exception) {
             throw new AssetCookerException("Invalid dependency graph: " + field + " must be canonical AssetId text", exception);
-        }
-
-    }
-
-    private static AssetType parseOwnerType(String text) {
-
-        try {
-            AssetType type = AssetType.valueOf(text);
-            if (type != AssetType.MATERIAL && type != AssetType.PREFAB && type != AssetType.SCENE) {
-                throw new AssetCookerException("Invalid dependency graph: unsupported owner assetType " + type);
-            }
-            return type;
-        } catch (IllegalArgumentException exception) {
-            throw new AssetCookerException("Invalid dependency graph: unknown assetType " + text, exception);
         }
 
     }

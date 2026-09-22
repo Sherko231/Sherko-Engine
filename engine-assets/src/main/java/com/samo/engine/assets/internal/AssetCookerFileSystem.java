@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.stream.Stream;
 
 interface AssetCookerFileSystem {
+    void createDirectory(Path path) throws IOException;
+
     void createDirectories(Path path) throws IOException;
 
     void copy(Path source, Path target) throws IOException;
@@ -21,6 +23,17 @@ interface AssetCookerFileSystem {
     static AssetCookerFileSystem system() {
 
         return new AssetCookerFileSystem() {
+            @Override
+            public void createDirectory(Path path) throws IOException {
+
+                Path parent = path.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                Files.createDirectory(path);
+
+            }
+
             @Override
             public void createDirectories(Path path) throws IOException {
 

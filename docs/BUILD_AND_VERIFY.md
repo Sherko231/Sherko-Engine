@@ -2116,3 +2116,26 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T05 verification evidence: an earlier candidate exposed two bounded corrections before acceptance — IEEE signed-zero normalization in rotated zero components and repository Spotless formatting. Final PR #375 head `f9291a8143b514fe3ad4e3954dd664b3a012ed5e` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #536 / `35715570825`. That run includes the committed one-meter cube importer/converter test, exact reference-triangle engine-basis assertions, malformed/non-finite conversion tests, no-lock-drift build validation, and retained Windows native regression coverage. PR #375 merged as `019bbaec98b37d92791c375bc8d553c06257b1ee`; exact-merge Lightweight master verification passed in run #537 / `35716215981`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T05 acceptance is therefore complete. The connector environment did not separately execute the documented focused Gradle commands locally; the accepted repository CI is the execution evidence.
+
+
+## P6-T06 tangent-space generation and required-UV verification
+
+Issue #377 enables exactly one new Assimp post-process flag for MESH import: `aiProcess_CalcTangentSpace`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.AssimpGltfMeshImporterTest" --tests "com.samo.engine.assets.internal.MeshCoordinateConverterTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers a self-contained triangle with normals + UV0 but no authored tangent, proving Assimp-generated tangent/bitangent data is copied, tangent xyz reaches D-041 engine basis, and per-vertex handedness signs are retained as ±1. A valid glTF normal-mapped material using UV0 succeeds. Normal-mapped fixtures missing UV0 or normals fail with exact source path plus mesh index/name, and cooker coverage proves required-UV failure happens before output-cache creation. Existing no-UV non-normal-mapped mesh import remains accepted.
+
+Review must confirm the importer uses only `aiProcess_CalcTangentSpace`, no dependency/module-edge/metadata-schema changes exist, P6-T03 persisted manifest/temp payload remains unchanged, and no P6-T07+ serialization/runtime work is pulled forward.
+
+Because P6-T06 changes native importer behavior, internal mesh values/tests/resources, and durable tangent-space semantics, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #377 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands are not locally claimed as passing unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

@@ -19,23 +19,23 @@ final class AssetDependencyGraph {
     private final Map<AssetId, Entry> entries;
     private final Map<AssetId, List<AssetId>> reverseAssetDependencies;
     private final Map<String, List<AssetId>> reverseShaderDependencies;
-    private final Set<AssetId> knownAssets.keySet();
+    private final Set<AssetId> knownAssetIds;
 
     private AssetDependencyGraph(Map<AssetId, Entry> entries, Map<AssetId, List<AssetId>> reverseAssetDependencies, Map<String, List<AssetId>> reverseShaderDependencies,
-        Set<AssetId> knownAssets.keySet()) {
+        Set<AssetId> knownAssetIds) {
 
         this.entries = Map.copyOf(entries);
         this.reverseAssetDependencies = Map.copyOf(reverseAssetDependencies);
         this.reverseShaderDependencies = Map.copyOf(reverseShaderDependencies);
-        this.knownAssets.keySet() = Set.copyOf(knownAssets.keySet());
+        this.knownAssetIds = Set.copyOf(knownAssetIds);
 
     }
 
     static AssetDependencyGraph fromSources(List<AssetCooker.SourceAsset> sources) {
 
-        HashMap<AssetId, AssetType> types = new HashMap<>();
+        HashMap<AssetId, AssetType> knownAssets = new HashMap<>();
         for (AssetCooker.SourceAsset source : sources) {
-            types.put(source.metadata().assetId(), source.metadata().assetType());
+            knownAssets.put(source.metadata().assetId(), source.metadata().assetType());
         }
 
         LinkedHashMap<AssetId, Entry> entries = new LinkedHashMap<>();
@@ -50,44 +50,39 @@ final class AssetDependencyGraph {
                 continue;
             }
 
-            validateOwner(source, dependencies, types);
-            ArrayList<AssetId> assetDependencies = new ArrayList<>(dependencies.assetDependencies());
-            assetDependencies.sort(ASSET_ID_ORDER);
-            ArrayList<String> shaderDependencies = new ArrayList<>(dependencies.shaderDependencies());
-            shaderDependencies.sort(String::compareTo);
-            entries.put(source.metadata().assetId(), new Entry(source.metadata().assetId(), type, assetDependencies, shaderDependencies));
+            validateOwner(source.sourcePath().toString(), source.metadata().assetId(), type, dependencies, knownAssets);
+            entries.put(source.metadata().assetId(), sortedEntry(source.metadata().assetId(), type, dependencies.assetDependencies(), dependencies.shaderDependencies()));
         }
 
         rejectCycles(entries);
-        return build(entries, types.keySet());
+        return build(entries, knownAssets.keySet());
 
     }
 
     static AssetDependencyGraph fromPersisted(Collection<Entry> persistedEntries, Map<AssetId, AssetType> knownAssets) {
 
+        if (persistedEntries == null) {
+            throw new NullPointerException("persistedEntries");
+        }
+        if (knownAssets == null) {
+            throw new NullPointerException("knownAssets");
+        }
+
         LinkedHashMap<AssetId, Entry> entries = new LinkedHashMap<>();
         for (Entry entry : persistedEntries) {
-            if (!knownAssets.keySet().contains(entry.assetId())) {
+            AssetType knownOwnerType = knownAssets.get(entry.assetId());
+            if (knownOwnerType == null) {
                 throw new AssetCookerException("Dependency graph owner is not present in known assets: " + entry.assetId());
+            }
+            if (knownOwnerType != entry.assetType()) {
+                throw new AssetCookerException("Dependency graph owner type mismatch for " + entry.assetId());
             }
             if (entries.putIfAbsent(entry.assetId(), entry) != null) {
                 throw new AssetCookerException("Duplicate dependency graph owner " + entry.assetId());
             }
-            for (AssetId dependency : entry.assetDependencies()) {
-                AssetType dependencyType = knownAssets.get(dependency);
-                if (dependencyType == null) {
-                    throw new AssetCookerException("Dependency graph references missing asset " + dependency);
-                }
-                if (dependency.equals(entry.assetId())) {
-                    throw new AssetCookerException("Dependency graph owner cannot depend on itself: " + entry.assetId());
-                }
-                if (entry.assetType() == AssetType.MATERIAL && dependencyType != AssetType.TEXTURE) {
-                    throw new AssetCookerException("MATERIAL dependency graph entries must reference TEXTURE assets, got " + dependencyType + " for " + dependency);
-                }
-            }
-            if (entry.assetType() != AssetType.MATERIAL && !entry.shaderDependencies().isEmpty()) {
-                throw new AssetCookerException("Only MATERIAL dependency entries may contain shader dependencies: " + entry.assetId());
-            }
+
+            SourceAssetDependencies dependencies = new SourceAssetDependencies(entry.assetDependencies(), entry.shaderDependencies());
+            validateOwner("Dependency graph owner " + entry.assetId(), entry.assetId(), entry.assetType(), dependencies, knownAssets);
         }
 
         rejectCycles(entries);
@@ -122,9 +117,9 @@ final class AssetDependencyGraph {
 
     }
 
-    Set<AssetId> knownAssets.keySet()() {
+    Set<AssetId> knownAssetIds() {
 
-        return knownAssets.keySet();
+        return knownAssetIds;
 
     }
 
@@ -143,29 +138,37 @@ final class AssetDependencyGraph {
 
     }
 
-    private static void validateOwner(AssetCooker.SourceAsset source, SourceAssetDependencies dependencies, Map<AssetId, AssetType> types) {
+    private static void validateOwner(String context, AssetId owner, AssetType ownerType, SourceAssetDependencies dependencies, Map<AssetId, AssetType> knownAssets) {
 
-        AssetId owner = source.metadata().assetId();
-        AssetType ownerType = source.metadata().assetType();
         for (AssetId dependency : dependencies.assetDependencies()) {
             if (dependency.equals(owner)) {
-                throw new AssetCookerException(source.sourcePath() + ": asset cannot depend on itself: " + owner);
+                throw new AssetCookerException(context + ": asset cannot depend on itself: " + owner);
             }
-            AssetType dependencyType = types.get(dependency);
+            AssetType dependencyType = knownAssets.get(dependency);
             if (dependencyType == null) {
-                throw new AssetCookerException(source.sourcePath() + ": missing asset dependency " + dependency);
+                throw new AssetCookerException(context + ": missing asset dependency " + dependency);
             }
             if (ownerType == AssetType.MATERIAL && dependencyType != AssetType.TEXTURE) {
-                throw new AssetCookerException(source.sourcePath() + ": MATERIAL asset dependencies must reference TEXTURE assets, got " + dependencyType + " for " + dependency);
+                throw new AssetCookerException(context + ": MATERIAL asset dependencies must reference TEXTURE assets, got " + dependencyType + " for " + dependency);
             }
         }
         if (ownerType != AssetType.MATERIAL && !dependencies.shaderDependencies().isEmpty()) {
-            throw new AssetCookerException(source.sourcePath() + ": only MATERIAL assets may declare shaderDependencies");
+            throw new AssetCookerException(context + ": only MATERIAL assets may declare shaderDependencies");
         }
 
     }
 
-    private static AssetDependencyGraph build(Map<AssetId, Entry> entries, Set<AssetId> knownAssets.keySet()) {
+    private static Entry sortedEntry(AssetId assetId, AssetType assetType, List<AssetId> assetDependencies, List<String> shaderDependencies) {
+
+        ArrayList<AssetId> assets = new ArrayList<>(assetDependencies);
+        assets.sort(ASSET_ID_ORDER);
+        ArrayList<String> shaders = new ArrayList<>(shaderDependencies);
+        shaders.sort(String::compareTo);
+        return new Entry(assetId, assetType, assets, shaders);
+
+    }
+
+    private static AssetDependencyGraph build(Map<AssetId, Entry> entries, Set<AssetId> knownAssetIds) {
 
         HashMap<AssetId, ArrayList<AssetId>> reverseAssets = new HashMap<>();
         HashMap<String, ArrayList<AssetId>> reverseShaders = new HashMap<>();
@@ -185,7 +188,7 @@ final class AssetDependencyGraph {
         Map<String, List<AssetId>> immutableReverseShaders = new HashMap<>();
         reverseShaders.forEach((key, value) -> immutableReverseShaders.put(key, List.copyOf(value)));
 
-        return new AssetDependencyGraph(entries, immutableReverseAssets, immutableReverseShaders, knownAssets.keySet());
+        return new AssetDependencyGraph(entries, immutableReverseAssets, immutableReverseShaders, knownAssetIds);
 
     }
 
@@ -234,6 +237,20 @@ final class AssetDependencyGraph {
             if (assetType != AssetType.MATERIAL && assetType != AssetType.PREFAB && assetType != AssetType.SCENE) {
                 throw new IllegalArgumentException("Dependency graph entry type must be MATERIAL, PREFAB, or SCENE");
             }
+
+            HashSet<AssetId> uniqueAssets = new HashSet<>();
+            for (AssetId dependency : assetDependencies) {
+                if (dependency == null || !uniqueAssets.add(dependency)) {
+                    throw new IllegalArgumentException("Dependency graph asset dependencies must be nonnull and unique");
+                }
+            }
+            HashSet<String> uniqueShaders = new HashSet<>();
+            for (String shader : shaderDependencies) {
+                if (!SourceAssetDependenciesJson.isCanonicalShaderKey(shader) || !uniqueShaders.add(shader)) {
+                    throw new IllegalArgumentException("Dependency graph shader dependencies must be canonical and unique");
+                }
+            }
+
             assetDependencies = List.copyOf(assetDependencies);
             shaderDependencies = List.copyOf(shaderDependencies);
 

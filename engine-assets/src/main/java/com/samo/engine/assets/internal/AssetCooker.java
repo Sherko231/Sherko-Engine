@@ -206,7 +206,9 @@ final class AssetCooker {
         List<TextureMipLevel> textureMipLevels = metadata.assetType() == AssetType.TEXTURE ? TextureMipChain.generate(StbTextureImporter.importFile(sourcePath)) : List.of();
         CookedAudio cookedAudio = metadata.assetType() == AssetType.AUDIO ? StbVorbisAudioImporter.importFile(sourcePath) : null;
         Path dependenciesPath = sourcePath.resolveSibling(sourcePath.getFileName() + DEPENDENCIES_SUFFIX);
-        SourceAssetDependencies dependencies = Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS) ? SourceAssetDependenciesJson.load(dependenciesPath) : SourceAssetDependencies.EMPTY;
+        SourceAssetDependencies dependencies = Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS)
+            ? SourceAssetDependenciesJson.load(dependenciesPath)
+            : SourceAssetDependencies.EMPTY;
         if (Files.isSymbolicLink(dependenciesPath)) {
             throw new AssetCookerException(dependenciesPath + ": asset sidecar symbolic links are not supported");
         }

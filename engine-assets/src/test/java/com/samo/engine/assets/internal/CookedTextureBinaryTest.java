@@ -14,7 +14,8 @@ class CookedTextureBinaryTest {
     @Test
     void encodesLittleEndianHeaderAndRoundTripsCompleteMipChainDeterministically() {
 
-        List<TextureMipLevel> levels = List.of(new TextureMipLevel(2, 2, new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), new TextureMipLevel(1, 1, new byte[]{7, 8, 9, 10}));
+        List<TextureMipLevel> levels = List.of(new TextureMipLevel(2, 2, new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}),
+            new TextureMipLevel(1, 1, new byte[]{7, 8, 9, 10}));
 
         byte[] first = CookedTextureBinary.encode(levels);
         byte[] second = CookedTextureBinary.encode(levels);

@@ -6,7 +6,6 @@ import com.samo.engine.assets.api.SourceAssetMetadata;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -107,7 +106,7 @@ final class AssetCooker {
     private static List<SourceAsset> discoverSources(Path input) {
 
         ArrayList<Path> metadataPaths = new ArrayList<>();
-        try (Stream<Path> paths = Files.walk(input, FileVisitOption.FOLLOW_LINKS)) {
+        try (Stream<Path> paths = Files.walk(input)) {
             paths.forEach(path -> inspectDiscoveredPath(input, path, metadataPaths));
         } catch (IOException exception) {
             throw new AssetCookerException(input + ": failed to scan input directory", exception);

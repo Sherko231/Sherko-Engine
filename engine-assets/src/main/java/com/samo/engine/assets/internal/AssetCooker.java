@@ -214,7 +214,8 @@ final class AssetCooker {
 
     }
 
-    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels, CookedAudio cookedAudio) {
+    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels,
+        CookedAudio cookedAudio) {
         SourceAsset {
 
             engineMeshes = List.copyOf(engineMeshes);

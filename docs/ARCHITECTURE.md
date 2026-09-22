@@ -96,7 +96,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | --- | --- | --- | --- |
 | `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13), device-neutral tick command/codec (P3-T09), deterministic input-response settings (P3-T10), canonical spatial convention (P4-T01), JOML hot-loop allocation evidence (P4-T02), public cached hierarchical `Transform` and public JOML spatial math ownership (P4-T03); P2-T11 and #135 add test/evidence paths only | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; P3-T02 logical/framebuffer size separation and owner-thread polling; P3-T03 in-place primary-monitor windowed/borderless/exclusive transitions; P3-T04 focus-loss-safe cursor capture and held-input cleanup; P3-T05 raw/fallback relative mouse acquisition; P3-T06 immutable renderer-frame `InputSnapshot` plus engine-defined key/button vocabulary; P3-T07 immutable action/binding metadata plus strict versioned JSON loading; P3-T08 caller-owned renderer-frame action aggregation/transitions; P3-T09 renderer-frame-to-tick command sampling; P3-T10 deterministic mouse response application; controller capture remains planned | `engine-core` |
-| `engine-assets` | Runtime asset handles/formats and loading contracts | Skeleton | `engine-core` |
+| `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 adds public path-independent 128-bit `AssetId`; metadata/cooking/loading/resource lifetime remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
 | `engine-world` | Scene/world/component/prefab runtime | Skeleton | `engine-core`, `engine-assets` |
@@ -727,3 +727,13 @@ This is a reconciliation result, not a new durable architecture decision. Final 
 
 
 Accepted P5R-T26 exit evidence: exact candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in run #495 / `35537699489`; PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`; exact-merge Lightweight verification passed in run #496 / `35537989459`. The reconciliation found no new architecture decision requirement. Phase 5R exit result: PASS; Phase 6 may proceed only through a freshly refined P6-T01 contract.
+
+
+## Phase 6 asset identity — P6-T01 / Issue #362
+
+`engine-assets` now begins its production public surface with `com.samo.engine.assets.api.AssetId`. The value is exactly two 64-bit halves and contains no source path, metadata path, cache path, file handle, native ownership, or renderer/world reference. Canonical text is lowercase UUID-style hexadecimal and round-trips the full 128-bit value.
+
+The identity boundary is deliberately narrower than a resource system. P6-T02 remains responsible for versioned source metadata; later Phase 6 tasks own cooking, manifests, imported formats, cache layout, runtime handles, reference counting, and renderer/world consumption. P6-T01 therefore adds no module edge, production dependency, persisted metadata schema, or ownership/lifetime behavior.
+
+Wiki impact: yes — `AssetId` is a new supported public asset API and is documented under `wiki/ASSETS/ASSET_ID.md`.
+Sandbox impact: none — a nonvisual identity value has no meaningful owner-facing sandbox behavior without pulling later metadata/loading systems forward.

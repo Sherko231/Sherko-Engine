@@ -31,7 +31,7 @@ class StbVorbisAudioImporterTest {
     @Test
     void validatesStereoWithIndependentMetadataOracle() throws Exception {
 
-        byte[] sourceBytes = VorbisTestFixtures.read("p6/stereo-44100.ogg.b64");
+        byte[] sourceBytes = VorbisTestFixtures.read("p6/stereo-44100.ogg");
         Path source = tempDir.resolve("stereo.ogg");
         Files.write(source, sourceBytes);
 

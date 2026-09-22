@@ -13,7 +13,8 @@ final class VorbisTestFixtures {
     static byte[] read(String resourceName) {
 
         try (InputStream input = Objects.requireNonNull(VorbisTestFixtures.class.getClassLoader().getResourceAsStream(resourceName), "Missing test resource " + resourceName)) {
-            return Base64.getMimeDecoder().decode(input.readAllBytes());
+            byte[] bytes = input.readAllBytes();
+            return resourceName.endsWith(".b64") ? Base64.getMimeDecoder().decode(bytes) : bytes;
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to read test resource " + resourceName, exception);
         }

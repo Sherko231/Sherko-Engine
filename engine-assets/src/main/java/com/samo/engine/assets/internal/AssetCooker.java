@@ -181,7 +181,8 @@ final class AssetCooker {
         }
 
         SourceAssetMetadata metadata = SourceAssetMetadata.load(metadataPath);
-        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath));
+        List<ImportedMesh> importedMeshes = metadata.assetType() == AssetType.MESH ? AssimpGltfMeshImporter.importFile(sourcePath) : List.of();
+        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), importedMeshes);
 
     }
 
@@ -201,8 +202,12 @@ final class AssetCooker {
 
     }
 
-    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath) {
+    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<ImportedMesh> importedMeshes) {
+        SourceAsset {
 
+            importedMeshes = List.copyOf(importedMeshes);
+
+        }
     }
 
     record AssetManifestEntry(AssetId assetId, AssetType assetType, String sourcePath, String cookedPath, long byteSize) {

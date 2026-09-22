@@ -89,7 +89,7 @@ final class CookedDependencyGraphJson {
                 List<String> shaders = parseShaderKeys(requireField(node, "shaderDependencies", "asset entry"));
                 entries.add(new AssetDependencyGraph.Entry(owner, type, dependencies, shaders));
             }
-            return AssetDependencyGraph.fromPersisted(entries, knownAssets.keySet());
+            return AssetDependencyGraph.fromPersisted(entries, knownAssets);
         } catch (AssetCookerException exception) {
             throw exception;
         } catch (IOException exception) {

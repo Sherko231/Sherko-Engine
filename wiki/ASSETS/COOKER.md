@@ -68,7 +68,7 @@ Before creating the output cache, the cooker imports every Assimp mesh and copie
 - UV channel 0 as XY when authored;
 - triangle indices in Assimp face order.
 
-P6-T04 uses no Assimp post-process flags. It does not flip UVs or winding, change handedness, pre-transform nodes, generate normals/tangents, join/reorder vertices, optimize meshes, or convert coordinates/units.
+P6-T04 uses no Assimp post-process flags. Assimp's glTF importer itself compacts/remaps indexed vertices by first use and converts glTF UV V to its lower-left convention; the cooker accepts those format-intrinsic decode semantics. It does not add a second UV flip, flip winding, change handedness, pre-transform nodes, generate normals/tangents, optimize meshes, or convert spatial coordinates/units.
 
 The imported values are therefore source/Assimp-basis data, not D-041 engine-space data. P6-T05 owns the exactly-once coordinate/unit conversion.
 

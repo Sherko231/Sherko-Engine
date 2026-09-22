@@ -50,6 +50,8 @@ final class AssetCooker {
                 Path cookedPath = output.resolve(cookedRelative.replace('/', java.io.File.separatorChar));
                 if (source.metadata().assetType() == AssetType.MESH) {
                     fileSystem.writeBytes(cookedPath, CookedMeshBinary.encode(source.engineMeshes()));
+                } else if (source.metadata().assetType() == AssetType.TEXTURE) {
+                    fileSystem.writeBytes(cookedPath, CookedTextureBinary.encode(source.textureMipLevels()));
                 } else {
                     fileSystem.copy(source.sourcePath(), cookedPath);
                 }
@@ -188,7 +190,8 @@ final class AssetCooker {
         List<EngineMesh> engineMeshes = metadata.assetType() == AssetType.MESH
             ? AssimpGltfMeshImporter.importFile(sourcePath).stream().map(MeshCoordinateConverter::toEngineSpace).toList()
             : List.of();
-        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes);
+        List<TextureMipLevel> textureMipLevels = metadata.assetType() == AssetType.TEXTURE ? TextureMipChain.generate(StbTextureImporter.importFile(sourcePath)) : List.of();
+        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels);
 
     }
 
@@ -208,10 +211,11 @@ final class AssetCooker {
 
     }
 
-    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes) {
+    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels) {
         SourceAsset {
 
             engineMeshes = List.copyOf(engineMeshes);
+            textureMipLevels = List.copyOf(textureMipLevels);
 
         }
     }

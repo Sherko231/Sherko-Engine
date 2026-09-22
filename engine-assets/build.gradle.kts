@@ -7,9 +7,11 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.lwjgl.core)
     implementation(libs.lwjgl.assimp)
+    implementation(libs.lwjgl.stb)
 
     runtimeOnly("org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-windows")
     runtimeOnly("org.lwjgl:lwjgl-assimp:${libs.versions.lwjgl.get()}:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl-stb:${libs.versions.lwjgl.get()}:natives-windows")
 }
 
 tasks.register<JavaExec>("runAssetCooker") {

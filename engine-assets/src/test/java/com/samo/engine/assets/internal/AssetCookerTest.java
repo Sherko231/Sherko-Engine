@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -68,7 +70,7 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         Files.writeString(input.resolve("ignored.txt"), "ignored", StandardCharsets.UTF_8);
-        createAsset(input.resolve("kept.bin"), FIRST_ID, "TEXTURE", new byte[]{5});
+        createAsset(input.resolve("kept.bin"), FIRST_ID, "MATERIAL", new byte[]{5});
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
@@ -137,10 +139,66 @@ class AssetCookerTest {
 
         Path duplicateInput = Files.createDirectory(tempDir.resolve("duplicate"));
         createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
-        createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "TEXTURE", new byte[]{2});
+        createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "PREFAB", new byte[]{2});
         Path duplicateOutput = tempDir.resolve("duplicate-output");
         assertThatThrownBy(() -> AssetCooker.cook(duplicateInput, duplicateOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("duplicate assetId");
         assertThat(duplicateOutput).doesNotExist();
+
+    }
+
+    @Test
+    void cooksTextureToStexMipChainAndRecordsActualByteSize() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("texture-input"));
+        Path source = input.resolve("albedo.png");
+        BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_ARGB);
+        image.setRGB(0, 0, 0xFF0A141E);
+        image.setRGB(1, 0, 0xFF28323C);
+        image.setRGB(0, 1, 0xFF46505A);
+        image.setRGB(1, 1, 0xFF646E78);
+        assertThat(ImageIO.write(image, "png", source.toFile())).isTrue();
+        writeMetadata(source.resolveSibling(source.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "TEXTURE");
+
+        Path output = tempDir.resolve("texture-output");
+        AssetCooker.cook(input, output);
+
+        byte[] cooked = Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"));
+        assertThat(cooked).startsWith((byte) 'S', (byte) 'T', (byte) 'E', (byte) 'X');
+        assertThat(cooked).isNotEqualTo(Files.readAllBytes(source));
+
+        CookedTexture texture = CookedTextureBinary.decode(cooked);
+        assertThat(texture.width()).isEqualTo(2);
+        assertThat(texture.height()).isEqualTo(2);
+        assertThat(texture.mipLevels()).hasSize(2);
+        assertThat(texture.mipLevels().get(1).rgba8()).containsExactly((byte) 55, (byte) 65, (byte) 75, (byte) 255);
+
+        JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
+        assertThat(manifest.get("assets").get(0).get("assetType").textValue()).isEqualTo("TEXTURE");
+        assertThat(manifest.get("assets").get(0).get("sourcePath").textValue()).isEqualTo("albedo.png");
+        assertThat(manifest.get("assets").get(0).get("byteSize").longValue()).isEqualTo(cooked.length);
+
+    }
+
+    @Test
+    void rejectsUnsupportedOrMalformedTextureBeforeCreatingOutput() throws Exception {
+
+        Path unsupportedInput = Files.createDirectory(tempDir.resolve("unsupported-texture-input"));
+        Path unsupported = unsupportedInput.resolve("texture.bin");
+        Files.write(unsupported, new byte[]{1});
+        writeMetadata(unsupported.resolveSibling(unsupported.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "TEXTURE");
+        Path unsupportedOutput = tempDir.resolve("unsupported-texture-output");
+        assertThatThrownBy(() -> AssetCooker.cook(unsupportedInput, unsupportedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(unsupported.toString())
+            .hasMessageContaining(".png");
+        assertThat(unsupportedOutput).doesNotExist();
+
+        Path malformedInput = Files.createDirectory(tempDir.resolve("malformed-texture-input"));
+        Path malformed = malformedInput.resolve("broken.png");
+        Files.write(malformed, new byte[]{1, 2, 3});
+        writeMetadata(malformed.resolveSibling(malformed.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "TEXTURE");
+        Path malformedOutput = tempDir.resolve("malformed-texture-output");
+        assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
+            .hasMessageContaining("decode failed");
+        assertThat(malformedOutput).doesNotExist();
 
     }
 

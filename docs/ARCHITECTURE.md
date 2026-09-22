@@ -825,3 +825,12 @@ No runtime manifest loader, public mesh/resource API, GPU upload, renderer/world
 
 Wiki impact: yes — MESH cooker output is now a documented cooked binary instead of source pass-through.
 Sandbox impact: none — this is package-internal offline persistence/validation with no public runtime loading path yet.
+
+
+## P6-T08 offline texture cooking
+
+`engine-assets` now owns package-private PNG/JPEG texture decoding through the scope-selected LWJGL 3.4.3 stb binding. For `AssetType.TEXTURE`, only `.png`, `.jpg`, and `.jpeg` sources are accepted case-insensitively. The cooker requests four channels from stb, retains top-to-bottom source row order, copies the native result immediately into Java-owned RGBA8 bytes, and frees the stb image allocation before returning.
+
+`TextureMipChain` generates the full deterministic chain to 1x1. Each next dimension is `max(1, previous / 2)`; channels are averaged independently as unsigned RGBA8 values with integer floor division over available in-bounds 2x2 samples. P6-T08 performs no gamma/color-space transform, normal-map renormalization, alpha premultiplication, compression, or semantic filtering. Source metadata schema v1 has no texture-usage/color-space field, so cooked bytes deliberately carry sample values and dimensions only; D-056 renderer sRGB/linear interpretation is not redefined.
+
+TEXTURE payloads now use package-private little-endian `STEX` schema v1 instead of P6-T03 source pass-through. The 32-byte header stores magic, schema version, fixed RGBA8 format, base width/height, complete mip count, exact body length, and CRC32C. Each body record stores mip width, height, byte length, and tightly packed RGBA8 bytes. Decode checks exact total length and checksum before record parsing, then requires the complete expected mip sequence with exact byte sizes and no trailing data. Manifest v1, AssetId-derived cooked paths, MESH `SMES` behavior, and non-MESH/non-TEXTURE pass-through remain unchanged. No public runtime texture/resource API or GPU upload path is introduced.

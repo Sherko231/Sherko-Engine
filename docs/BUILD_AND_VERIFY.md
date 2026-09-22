@@ -2168,3 +2168,24 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T07 verification evidence: initial exact-candidate run #542 / `35722147969` compiled the new codec/cooker path and exposed only Spotless formatting differences; Unit tests, Architecture tests, and JaCoCo passed on that obsolete candidate. The formatter shape was corrected without changing behavior. Final PR #381 head `57b6926e9626cc96bee47453e6d249057a064972` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #544 / `35722428096`. The passing tests verify exact SMES header/record layout, little-endian interpretation, CRC32C, deterministic encoding, optional attributes, strict UTF-8, D-041 AABB persistence, tangent handedness persistence, checksum-first corruption rejection, semantic corruption with recomputed checksum, cooker MESH binary output/manifest byteSize, non-MESH pass-through, and cleanup on binary-write failure. Build verified committed dependency locks without drift. PR #381 merged as `c43e703e54ee325b0be5287a4520a38fc05da939`; exact-merge Lightweight master verification passed in run #545 / `35723120057`, including committed dependency locks, headless-server runtime boundary, and exact-merge client/server version reporting. P6-T07 acceptance is therefore complete. The connector environment did not separately execute the focused Gradle commands locally; accepted repository CI is the execution evidence.
+
+
+## P6-T08 texture cooking verification
+
+Issue #383 introduces offline PNG/JPEG decoding, deterministic mip generation, and persisted `STEX` schema v1 in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.StbTextureImporterTest" --tests "com.samo.engine.assets.internal.TextureMipChainTest" --tests "com.samo.engine.assets.internal.CookedTextureBinaryTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers PNG and JPEG decode through stb, unflipped RGBA8 sample preservation, mixed-case supported extensions, unsupported/malformed source diagnostics, independently calculated odd-size mip dimensions and byte averages, deterministic `STEX` bytes, header/format/count/length/CRC32C validation, checksum and semantic corruption, truncation/trailing data, cooker integration/manifest byte size, and retained MESH/non-TEXTURE behavior.
+
+Dependency review must confirm that only the existing LWJGL 3.4.3 family gains `lwjgl-stb` in `engine-assets`, with no unrelated version drift. P6-T08 changes executable Java/build behavior and a persisted texture format, so the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #383 closes.
+
+Connector execution note: the GitHub connector environment cannot execute the Gradle wrapper directly. Focused commands are therefore not locally claimed as passing unless repository CI executes equivalent coverage; exact final-candidate CI remains mandatory.

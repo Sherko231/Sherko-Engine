@@ -167,7 +167,8 @@ class AssetCookerTest {
 
         assertThatThrownBy(() -> AssetCookerMain.main(new String[0])).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
         assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
-        assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one", "two", "three"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
+        assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one", "two", "three"})).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("exactly two arguments");
 
     }
 

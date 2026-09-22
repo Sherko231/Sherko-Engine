@@ -7,7 +7,8 @@ import java.util.regex.Pattern;
 /**
  * Stable 128-bit asset identity independent of source-file location.
  *
- * <p>The two record components are the complete identity value. Source paths, metadata paths, and
+ * <p>
+ * The two record components are the complete identity value. Source paths, metadata paths, and
  * runtime cache locations are deliberately not part of this type.
  */
 public record AssetId(long highBits, long lowBits) {
@@ -28,10 +29,13 @@ public record AssetId(long highBits, long lowBits) {
     /**
      * Parses the canonical lowercase UUID-style textual representation of an asset identity.
      *
-     * @param text canonical 36-character identity text
+     * @param text
+     *            canonical 36-character identity text
      * @return the parsed asset identity
-     * @throws NullPointerException if {@code text} is null
-     * @throws IllegalArgumentException if {@code text} is not canonical identity text
+     * @throws NullPointerException
+     *             if {@code text} is null
+     * @throws IllegalArgumentException
+     *             if {@code text} is not canonical identity text
      */
     public static AssetId parse(String text) {
 

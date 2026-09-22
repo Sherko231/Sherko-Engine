@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -35,12 +34,12 @@ class AssetCookerTest {
         assertThat(Files.readAllBytes(output.resolve("assets/" + SECOND_ID + ".bin"))).containsExactly(9, 8, 7);
 
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
-        assertThat(manifest.fieldNames()).toIterable().containsExactly("schemaVersion", "assets");
+        assertThat(fieldNames(manifest)).containsExactly("schemaVersion", "assets");
         assertThat(manifest.get("schemaVersion").intValue()).isEqualTo(1);
         assertThat(manifest.get("assets")).hasSize(2);
 
         JsonNode first = manifest.get("assets").get(0);
-        assertThat(first.fieldNames()).toIterable().containsExactly("assetId", "assetType", "sourcePath", "cookedPath", "byteSize");
+        assertThat(fieldNames(first)).containsExactly("assetId", "assetType", "sourcePath", "cookedPath", "byteSize");
         assertThat(first.get("assetId").textValue()).isEqualTo(FIRST_ID);
         assertThat(first.get("assetType").textValue()).isEqualTo("MESH");
         assertThat(first.get("sourcePath").textValue()).isEqualTo("a/first.bin");
@@ -115,6 +114,19 @@ class AssetCookerTest {
         assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(RuntimeException.class);
         assertThat(malformedOutput).doesNotExist();
 
+        Path unsupportedInput = Files.createDirectory(tempDir.resolve("unsupported"));
+        Files.write(unsupportedInput.resolve("future.bin"), new byte[] {1});
+        Files.writeString(unsupportedInput.resolve("future.bin.asset.json"), """
+            {
+              "schemaVersion": 2,
+              "assetId": "%s",
+              "assetType": "MESH"
+            }
+            """.formatted(FIRST_ID), StandardCharsets.UTF_8);
+        Path unsupportedOutput = tempDir.resolve("unsupported-output");
+        assertThatThrownBy(() -> AssetCooker.cook(unsupportedInput, unsupportedOutput)).isInstanceOf(RuntimeException.class).hasMessageContaining("upgrade required");
+        assertThat(unsupportedOutput).doesNotExist();
+
         Path duplicateInput = Files.createDirectory(tempDir.resolve("duplicate"));
         createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MESH", new byte[] {1});
         createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "TEXTURE", new byte[] {2});
@@ -171,6 +183,14 @@ class AssetCookerTest {
               "assetType": "%s"
             }
             """.formatted(assetId, assetType), StandardCharsets.UTF_8);
+
+    }
+
+    private static java.util.List<String> fieldNames(JsonNode node) {
+
+        java.util.ArrayList<String> names = new java.util.ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return java.util.List.copyOf(names);
 
     }
 

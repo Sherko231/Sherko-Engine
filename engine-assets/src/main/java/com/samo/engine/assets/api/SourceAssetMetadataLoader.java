@@ -20,7 +20,7 @@ final class SourceAssetMetadataLoader {
         try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             return SourceAssetMetadataJsonParser.parse(path, reader);
         } catch (IOException exception) {
-            throw failure(path, "failed to read metadata JSON", exception);
+            throw failure(path, "failed to read metadata JSON: " + exception.getMessage(), exception);
         }
 
     }

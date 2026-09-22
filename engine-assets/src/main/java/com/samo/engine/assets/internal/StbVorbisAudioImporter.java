@@ -74,16 +74,16 @@ final class StbVorbisAudioImporter {
 
         ShortBuffer decodeBuffer = stack.mallocShort(DECODE_BUFFER_FRAMES * channels);
         while (true) {
+            STBVorbis.stb_vorbis_get_error(decoder);
             decodeBuffer.clear();
             int decodedFrames = STBVorbis.stb_vorbis_get_samples_short_interleaved(decoder, channels, decodeBuffer);
+            int decodeError = STBVorbis.stb_vorbis_get_error(decoder);
+            if (decodeError != STBVorbis.VORBIS__no_error) {
+                throw new AssetCookerException(sourcePath + ": Ogg Vorbis decode failed with stb_vorbis error " + decodeError);
+            }
             if (decodedFrames == 0) {
                 break;
             }
-        }
-
-        int decodeError = STBVorbis.stb_vorbis_get_error(decoder);
-        if (decodeError != STBVorbis.VORBIS__no_error) {
-            throw new AssetCookerException(sourcePath + ": Ogg Vorbis decode failed with stb_vorbis error " + decodeError);
         }
 
     }

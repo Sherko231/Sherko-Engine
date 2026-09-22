@@ -29,11 +29,8 @@ class StbTextureImporterTest {
 
         assertThat(decoded.width()).isEqualTo(2);
         assertThat(decoded.height()).isEqualTo(2);
-        assertThat(decoded.rgba8()).containsExactly(
-            (byte) 10, (byte) 20, (byte) 30, (byte) 255,
-            (byte) 40, (byte) 50, (byte) 60, (byte) 255,
-            (byte) 70, (byte) 80, (byte) 90, (byte) 255,
-            (byte) 100, (byte) 110, (byte) 120, (byte) 128);
+        assertThat(decoded.rgba8()).containsExactly((byte) 10, (byte) 20, (byte) 30, (byte) 255, (byte) 40, (byte) 50, (byte) 60, (byte) 255, (byte) 70, (byte) 80,
+            (byte) 90, (byte) 255, (byte) 100, (byte) 110, (byte) 120, (byte) 128);
 
     }
 
@@ -66,16 +63,12 @@ class StbTextureImporterTest {
 
         Path unsupported = tempDir.resolve("texture.tga");
         Files.write(unsupported, new byte[]{1, 2, 3});
-        assertThatThrownBy(() -> StbTextureImporter.importFile(unsupported))
-            .isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining(unsupported.toString())
+        assertThatThrownBy(() -> StbTextureImporter.importFile(unsupported)).isInstanceOf(AssetCookerException.class).hasMessageContaining(unsupported.toString())
             .hasMessageContaining(".png");
 
         Path malformed = tempDir.resolve("broken.png");
         Files.write(malformed, new byte[]{1, 2, 3, 4});
-        assertThatThrownBy(() -> StbTextureImporter.importFile(malformed))
-            .isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining(malformed.toString())
+        assertThatThrownBy(() -> StbTextureImporter.importFile(malformed)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
             .hasMessageContaining("decode failed");
 
     }

@@ -115,7 +115,7 @@ This is intentionally not a general renderer API yet. The P5-T09 material value 
 
 ## Assets/world/physics/audio/networking/editor
 
-The target modules exist according to the repository architecture, but a module's existence does not mean its consumer API has been implemented. Do not write wiki examples for planned APIs until the corresponding implementation task is complete and verified.
+`engine-assets` now exposes only the P6-T01 `AssetId` identity value: a stable path-independent 128-bit identifier with canonical text conversion. Source metadata schemas, asset cooking, manifests, import, runtime resource handles/caches, reference counting, loading, and renderer/world asset submission remain unimplemented. The other target modules in this section still exist according to the repository architecture, but module existence does not mean a consumer API has been implemented. Do not write wiki examples for planned APIs until the corresponding implementation task is complete and verified.
 
 ## Native evidence limits
 

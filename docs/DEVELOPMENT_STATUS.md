@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T09 accepted; P6-T10 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T01 through P6-T09 accepted; P6-T10 / Issue #390 is active |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T09 / Issue #386 is accepted; freshly materialize/refine P6-T10 against current `master` before implementation |
+| Active executable task | P6-T10 / Issue #390 — deterministic asset dependency graph, logical shader keys, reverse invalidation, and `dependencies.json` |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -218,3 +218,6 @@ P6-T09 / Issue #386 is active from baseline `10501b1b5b548a46c715069abc23e6cef73
 
 
 P6-T09 / Issue #386 is accepted. Final PR #388 head `7e6aabbfb58bddc84abd3a10c674c2a003d67221` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #579 / `35781036481`. PR #388 merged as `4de4f3a9e9ca67857f9fe6f3b0bb159e4b6749d3`, and exact merged `master` passed Lightweight master verification in run #580 / `35783262964`. The accepted AUDIO contract validates case-insensitive Ogg Vorbis sources offline through an explicit stb_vorbis open/info/sample-drain/error/close lifecycle, requires mono or stereo plus positive sample rate, preserves exact validated compressed source bytes, and persists validated little-endian `SAUD` schema v1 with codec/channel/sample-rate metadata, exact payload length, and CRC32C. No runtime OpenAL playback, public audio/resource API, PCM persistence, transcoding/resampling, streaming policy, spatialization, dependency graph, or P6-T10+ behavior was introduced.
+
+
+P6-T10 / Issue #390 is active from baseline `e7012ceaeddb9526c1c8360f512b9d740e3114bb`. The bounded contract keeps D-068 source metadata schema v1 unchanged and does not add a SHADER `AssetType`. Optional adjacent `<source>.deps.json` sidecars are limited to MATERIAL/PREFAB/SCENE assets. Asset-to-asset edges use canonical existing `AssetId` values; MATERIAL may additionally name canonical opaque logical shader keys that are neither paths nor asset identities. The cooker validates missing/self/type-invalid references, rejects cycles and orphan/unsupported sidecars before output creation, builds deterministic reverse-transitive invalidation closure, and emits deterministic `dependencies.json` schema v1 alongside unchanged manifest v1/cooked payload conventions. P6-T10 does not mutate an existing cache or implement incremental recooking; the backlog invalidation acceptance is proven by exact affected-dependent queries. No public Java API, source metadata v1 change, manifest schema change, shader asset/public shader API, renderer/world integration, new dependency/module edge, runtime resource handles/cache/loading, or P6-T11+ work is authorized.

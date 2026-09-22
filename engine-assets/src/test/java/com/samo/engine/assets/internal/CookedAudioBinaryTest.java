@@ -41,9 +41,7 @@ class CookedAudioBinaryTest {
     @Test
     void rejectsInvalidChannelPolicyAtValueBoundary() {
 
-        assertThatThrownBy(() -> new CookedAudio(3, 32000, new byte[]{1}))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("mono or stereo");
+        assertThatThrownBy(() -> new CookedAudio(3, 32000, new byte[]{1})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mono or stereo");
 
     }
 

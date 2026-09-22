@@ -26,8 +26,8 @@ class AssetCookerTest {
     void cooksDeterministicManifestAndOpaqueNonzeroPayloads() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
-        createAsset(input.resolve("z/second.bin"), SECOND_ID, "AUDIO", new byte[] {9, 8, 7});
-        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MESH", new byte[] {1, 2, 3, 4});
+        createAsset(input.resolve("z/second.bin"), SECOND_ID, "AUDIO", new byte[]{9, 8, 7});
+        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MESH", new byte[]{1, 2, 3, 4});
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
@@ -65,7 +65,7 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         Files.writeString(input.resolve("ignored.txt"), "ignored", StandardCharsets.UTF_8);
-        createAsset(input.resolve("kept.bin"), FIRST_ID, "TEXTURE", new byte[] {5});
+        createAsset(input.resolve("kept.bin"), FIRST_ID, "TEXTURE", new byte[]{5});
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
@@ -80,8 +80,7 @@ class AssetCookerTest {
     void rejectsMissingInputExistingOutputOverlapAndEmptySetsWithoutCreatingOutput() throws Exception {
 
         Path missing = tempDir.resolve("missing");
-        assertThatThrownBy(() -> AssetCooker.cook(missing, tempDir.resolve("missing-output"))).isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining("input must be");
+        assertThatThrownBy(() -> AssetCooker.cook(missing, tempDir.resolve("missing-output"))).isInstanceOf(AssetCookerException.class).hasMessageContaining("input must be");
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         Path existingOutput = Files.createDirectory(tempDir.resolve("existing-output"));
@@ -114,14 +113,14 @@ class AssetCookerTest {
         assertThat(zeroOutput).doesNotExist();
 
         Path malformedInput = Files.createDirectory(tempDir.resolve("malformed"));
-        Files.write(malformedInput.resolve("bad.bin"), new byte[] {1});
+        Files.write(malformedInput.resolve("bad.bin"), new byte[]{1});
         Files.writeString(malformedInput.resolve("bad.bin.asset.json"), "{", StandardCharsets.UTF_8);
         Path malformedOutput = tempDir.resolve("malformed-output");
         assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(RuntimeException.class);
         assertThat(malformedOutput).doesNotExist();
 
         Path unsupportedInput = Files.createDirectory(tempDir.resolve("unsupported"));
-        Files.write(unsupportedInput.resolve("future.bin"), new byte[] {1});
+        Files.write(unsupportedInput.resolve("future.bin"), new byte[]{1});
         Files.writeString(unsupportedInput.resolve("future.bin.asset.json"), """
             {
               "schemaVersion": 2,
@@ -134,8 +133,8 @@ class AssetCookerTest {
         assertThat(unsupportedOutput).doesNotExist();
 
         Path duplicateInput = Files.createDirectory(tempDir.resolve("duplicate"));
-        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MESH", new byte[] {1});
-        createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "TEXTURE", new byte[] {2});
+        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MESH", new byte[]{1});
+        createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "TEXTURE", new byte[]{2});
         Path duplicateOutput = tempDir.resolve("duplicate-output");
         assertThatThrownBy(() -> AssetCooker.cook(duplicateInput, duplicateOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("duplicate assetId");
         assertThat(duplicateOutput).doesNotExist();
@@ -146,7 +145,7 @@ class AssetCookerTest {
     void cleansNewOutputTreeWhenWriteStageFails() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
-        createAsset(input.resolve("source.bin"), FIRST_ID, "MATERIAL", new byte[] {1, 2});
+        createAsset(input.resolve("source.bin"), FIRST_ID, "MATERIAL", new byte[]{1, 2});
         Path output = tempDir.resolve("output");
 
         AssetCookerFileSystem failing = new DelegatingFileSystem() {
@@ -167,8 +166,8 @@ class AssetCookerTest {
     void cliRequiresExactlyTwoArguments() {
 
         assertThatThrownBy(() -> AssetCookerMain.main(new String[0])).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
-        assertThatThrownBy(() -> AssetCookerMain.main(new String[] {"one"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
-        assertThatThrownBy(() -> AssetCookerMain.main(new String[] {"one", "two", "three"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
+        assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
+        assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one", "two", "three"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
 
     }
 

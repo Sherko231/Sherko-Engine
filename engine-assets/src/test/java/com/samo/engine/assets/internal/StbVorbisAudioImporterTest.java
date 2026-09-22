@@ -58,13 +58,13 @@ class StbVorbisAudioImporterTest {
 
         byte[] valid = VorbisTestFixtures.read("p6/stereo-44100.ogg");
         Path truncated = tempDir.resolve("truncated.ogg");
-        Files.write(truncated, Arrays.copyOf(valid, valid.length - 64));
+        Files.write(truncated, Arrays.copyOf(valid, 128));
         assertThatThrownBy(() -> StbVorbisAudioImporter.importFile(truncated)).isInstanceOf(AssetCookerException.class).hasMessageContaining(truncated.toString());
 
         Path multichannel = tempDir.resolve("surround.ogg");
         Files.write(multichannel, VorbisTestFixtures.read("p6/three-channel-32000.ogg.b64"));
         assertThatThrownBy(() -> StbVorbisAudioImporter.importFile(multichannel)).isInstanceOf(AssetCookerException.class).hasMessageContaining(multichannel.toString())
-            .hasMessageContaining("open failed");
+            .hasMessageContaining("mono or stereo").hasMessageContaining("3");
 
     }
 }

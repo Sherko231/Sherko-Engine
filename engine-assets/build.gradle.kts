@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     implementation(project(":engine-core"))
+    implementation(libs.jackson.databind)
 }

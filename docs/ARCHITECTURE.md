@@ -737,3 +737,15 @@ The identity boundary is deliberately narrower than a resource system. P6-T02 re
 
 Wiki impact: yes — `AssetId` is a new supported public asset API and is documented under `wiki/ASSETS/ASSET_ID.md`.
 Sandbox impact: none — a nonvisual identity value has no meaningful owner-facing sandbox behavior without pulling later metadata/loading systems forward.
+
+
+## Phase 6 versioned source metadata — P6-T02 / Issue #365
+
+`engine-assets` now owns strict source metadata loading in addition to P6-T01 identity. Public `SourceAssetMetadata` carries schema version, `AssetId`, and `AssetType`; `AssetType` contains exactly MESH, TEXTURE, MATERIAL, SKELETON, ANIMATION, AUDIO, PREFAB, and SCENE. `SourceAssetMetadata.load(Path)` is the public file-loading boundary and reports data/file failures through `SourceAssetMetadataLoadException` while null-path misuse remains a programmer-contract `NullPointerException`.
+
+Schema v1 is UTF-8 JSON with exactly `schemaVersion`, `assetId`, and `assetType`. Package-private loader/parser helpers separate file I/O from strict Jackson decoding. Duplicate fields are rejected by Jackson strict duplicate detection; unknown fields, malformed/wrong-type values, unknown asset types, noncanonical P6-T01 IDs, and missing required fields fail atomically. Unsupported versions do not migrate or fall back; they fail with an `upgrade required` diagnostic.
+
+The schema is intentionally common-only. P6-T02 introduces no sidecar discovery/name convention, writer/save API, importer settings, cooker, manifest, dependency graph, cooked schema, cache, runtime resource lifetime, renderer/world integration, or editor behavior. Jackson 2.21.2 is reused as an implementation-only dependency of `engine-assets`; no new library/version is selected and no Jackson type enters public API.
+
+Wiki impact: yes — public metadata API and strict failure behavior are documented under `wiki/ASSETS/SOURCE_METADATA.md`.
+Sandbox impact: none — source-authoring metadata loading is nonvisual infrastructure and has no meaningful persistent-playground behavior before cooker/runtime asset loading exists.

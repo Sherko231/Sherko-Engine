@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 5R complete — exit PASS recorded; Phase 6 may be freshly activated starting with P6-T01 |
+| Active phase | Phase 6 active — P6-T01 / Issue #362 is the current bounded task |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |

@@ -4,10 +4,12 @@ import java.util.List;
 
 record CookedTexture(List<TextureMipLevel> mipLevels) {
     CookedTexture {
+
         if (mipLevels == null || mipLevels.isEmpty()) {
             throw new IllegalArgumentException("Cooked texture requires at least one mip level");
         }
         mipLevels = List.copyOf(mipLevels);
+
     }
 
     int width() {

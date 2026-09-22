@@ -763,3 +763,17 @@ A package-private filesystem seam exists only to test cleanup deterministically.
 
 Wiki impact: yes — offline cooker usage and current pass-through limitation are documented under `wiki/ASSETS/COOKER.md`.
 Sandbox impact: none — this is an offline content-authoring command, not a runtime playground capability.
+
+
+## Phase 6 glTF mesh import boundary — P6-T04 / Issue #371
+
+`engine-assets` now activates the already scope-locked LWJGL 3.4.3 Assimp binding for offline MESH import. The package-private `AssimpGltfMeshImporter` accepts only `.gltf` / `.glb` MESH source files, calls `aiImportFile(..., 0)` with no post-process flags, copies every Assimp mesh into Java-owned package-private `ImportedMesh` values, and releases every non-null `AIScene` in `finally` before returning. No Assimp pointer or struct becomes engine API or survives the import call.
+
+Imported values are deliberately pre-engine-conversion Assimp import-basis data. The Assimp glTF importer itself compacts/remaps indexed vertices by first index use and converts glTF UV V to Assimp's lower-left UV convention even with zero post-process flags. P6-T04 accepts those two format-intrinsic decode semantics and adds no left/right-handed conversion, axis swap/negation, unit scaling, second UV flip, winding reversal, node pre-transform, generated normals/tangents, vertex optimization, or other post-process rewrite. P6-T05 is the sole next boundary authorized to convert Assimp-import-basis spatial coordinates/units into the D-041 engine convention exactly once.
+
+The importer is invoked during P6-T03 source validation before output-cache creation. Unsupported MESH extensions, native import failure/no meshes, non-triangle faces, out-of-range indices, and invalid glTF therefore fail before any successful output tree is created. Missing normals/tangents/UV0 remain absent; P6-T06 owns later tangent/required-UV policy.
+
+P6-T03 manifest schema v1, AssetId-based output paths, and temporary `.bin` pass-through bytes remain unchanged. P6-T04 introduces no persisted mesh schema, renderer/world/runtime resource API, module edge, or sandbox behavior.
+
+Wiki impact: yes — cooker MESH import behavior and source-basis limitation are documented under `wiki/ASSETS/COOKER.md` and `wiki/LIMITATIONS.md`.
+Sandbox impact: none — this is offline importer infrastructure with no authorized public runtime mesh/resource API.

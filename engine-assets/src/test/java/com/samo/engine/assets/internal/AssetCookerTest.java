@@ -6,11 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -27,7 +30,7 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         createAsset(input.resolve("z/second.bin"), SECOND_ID, "AUDIO", new byte[]{9, 8, 7});
-        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MESH", new byte[]{1, 2, 3, 4});
+        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MATERIAL", new byte[]{1, 2, 3, 4});
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
@@ -43,7 +46,7 @@ class AssetCookerTest {
         JsonNode first = manifest.get("assets").get(0);
         assertThat(fieldNames(first)).containsExactly("assetId", "assetType", "sourcePath", "cookedPath", "byteSize");
         assertThat(first.get("assetId").textValue()).isEqualTo(FIRST_ID);
-        assertThat(first.get("assetType").textValue()).isEqualTo("MESH");
+        assertThat(first.get("assetType").textValue()).isEqualTo("MATERIAL");
         assertThat(first.get("sourcePath").textValue()).isEqualTo("a/first.bin");
         assertThat(first.get("cookedPath").textValue()).isEqualTo("assets/" + FIRST_ID + ".bin");
         assertThat(first.get("byteSize").longValue()).isEqualTo(4);
@@ -133,11 +136,44 @@ class AssetCookerTest {
         assertThat(unsupportedOutput).doesNotExist();
 
         Path duplicateInput = Files.createDirectory(tempDir.resolve("duplicate"));
-        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MESH", new byte[]{1});
+        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
         createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "TEXTURE", new byte[]{2});
         Path duplicateOutput = tempDir.resolve("duplicate-output");
         assertThatThrownBy(() -> AssetCooker.cook(duplicateInput, duplicateOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("duplicate assetId");
         assertThat(duplicateOutput).doesNotExist();
+
+    }
+
+    @Test
+    void importsMeshBeforeOutputAndPreservesTemporaryPassThroughPayload() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("mesh-input"));
+        Path source = input.resolve("reference.gltf");
+        Files.copy(resourcePath("p6/reference-triangle.gltf"), source);
+        writeMetadata(source.resolveSibling("reference.gltf" + AssetCooker.METADATA_SUFFIX), FIRST_ID, "MESH");
+
+        Path output = tempDir.resolve("mesh-output");
+        AssetCooker.cook(input, output);
+
+        assertThat(Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"))).isEqualTo(Files.readAllBytes(source));
+        JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
+        assertThat(manifest.get("assets").get(0).get("assetType").textValue()).isEqualTo("MESH");
+        assertThat(manifest.get("assets").get(0).get("sourcePath").textValue()).isEqualTo("reference.gltf");
+
+    }
+
+    @Test
+    void rejectsUnsupportedMeshExtensionBeforeCreatingOutput() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("unsupported-mesh-input"));
+        Path source = input.resolve("mesh.obj");
+        Files.write(source, new byte[]{1, 2, 3});
+        writeMetadata(source.resolveSibling("mesh.obj" + AssetCooker.METADATA_SUFFIX), FIRST_ID, "MESH");
+
+        Path output = tempDir.resolve("unsupported-mesh-output");
+        assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining(source.toString())
+            .hasMessageContaining(".gltf or .glb");
+        assertThat(output).doesNotExist();
 
     }
 
@@ -169,6 +205,17 @@ class AssetCookerTest {
         assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one"})).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
         assertThatThrownBy(() -> AssetCookerMain.main(new String[]{"one", "two", "three"})).isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("exactly two arguments");
+
+    }
+
+    private static Path resourcePath(String name) {
+
+        URL resource = Objects.requireNonNull(AssetCookerTest.class.getClassLoader().getResource(name), "Missing test resource " + name);
+        try {
+            return Path.of(resource.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalStateException("Invalid test resource URI for " + name, exception);
+        }
 
     }
 

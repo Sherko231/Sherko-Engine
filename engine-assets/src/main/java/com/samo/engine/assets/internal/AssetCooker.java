@@ -37,10 +37,9 @@ final class AssetCooker {
         Path output = requireOutputPath(input, outputCache);
         List<SourceAsset> sources = discoverSources(input);
 
-        boolean outputCreated = false;
+        boolean outputOwned = true;
         try {
             fileSystem.createDirectories(output);
-            outputCreated = true;
             Path assetsDirectory = output.resolve(ASSETS_DIRECTORY);
             fileSystem.createDirectories(assetsDirectory);
 
@@ -58,12 +57,12 @@ final class AssetCooker {
 
             fileSystem.writeString(output.resolve(MANIFEST_FILE), AssetManifestJson.write(entries));
         } catch (IOException exception) {
-            if (outputCreated) {
+            if (outputOwned) {
                 cleanup(output, fileSystem, exception);
             }
             throw new AssetCookerException("Asset cooking failed: " + exception.getMessage(), exception);
         } catch (RuntimeException exception) {
-            if (outputCreated) {
+            if (outputOwned) {
                 cleanup(output, fileSystem, exception);
             }
             throw exception;

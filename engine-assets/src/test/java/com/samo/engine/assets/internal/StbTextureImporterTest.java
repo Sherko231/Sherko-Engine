@@ -29,8 +29,8 @@ class StbTextureImporterTest {
 
         assertThat(decoded.width()).isEqualTo(2);
         assertThat(decoded.height()).isEqualTo(2);
-        assertThat(decoded.rgba8()).containsExactly((byte) 10, (byte) 20, (byte) 30, (byte) 255, (byte) 40, (byte) 50, (byte) 60, (byte) 255, (byte) 70, (byte) 80,
-            (byte) 90, (byte) 255, (byte) 100, (byte) 110, (byte) 120, (byte) 128);
+        assertThat(decoded.rgba8()).containsExactly((byte) 10, (byte) 20, (byte) 30, (byte) 255, (byte) 40, (byte) 50, (byte) 60, (byte) 255, (byte) 70, (byte) 80, (byte) 90,
+            (byte) 255, (byte) 100, (byte) 110, (byte) 120, (byte) 128);
 
     }
 

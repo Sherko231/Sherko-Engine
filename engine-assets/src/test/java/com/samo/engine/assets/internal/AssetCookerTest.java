@@ -170,8 +170,7 @@ class AssetCookerTest {
         assertThat(texture.width()).isEqualTo(2);
         assertThat(texture.height()).isEqualTo(2);
         assertThat(texture.mipLevels()).hasSize(2);
-        assertThat(texture.mipLevels().get(1).rgba8()).containsExactly(
-            (byte) 55, (byte) 65, (byte) 75, (byte) 255);
+        assertThat(texture.mipLevels().get(1).rgba8()).containsExactly((byte) 55, (byte) 65, (byte) 75, (byte) 255);
 
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
         assertThat(manifest.get("assets").get(0).get("assetType").textValue()).isEqualTo("TEXTURE");
@@ -188,9 +187,7 @@ class AssetCookerTest {
         Files.write(unsupported, new byte[]{1});
         writeMetadata(unsupported.resolveSibling(unsupported.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "TEXTURE");
         Path unsupportedOutput = tempDir.resolve("unsupported-texture-output");
-        assertThatThrownBy(() -> AssetCooker.cook(unsupportedInput, unsupportedOutput))
-            .isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining(unsupported.toString())
+        assertThatThrownBy(() -> AssetCooker.cook(unsupportedInput, unsupportedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(unsupported.toString())
             .hasMessageContaining(".png");
         assertThat(unsupportedOutput).doesNotExist();
 
@@ -199,9 +196,7 @@ class AssetCookerTest {
         Files.write(malformed, new byte[]{1, 2, 3});
         writeMetadata(malformed.resolveSibling(malformed.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "TEXTURE");
         Path malformedOutput = tempDir.resolve("malformed-texture-output");
-        assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput))
-            .isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining(malformed.toString())
+        assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
             .hasMessageContaining("decode failed");
         assertThat(malformedOutput).doesNotExist();
 

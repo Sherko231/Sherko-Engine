@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T05 accepted; P6-T06 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T06 / Issue #377 is the current bounded task |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T05 / Issue #374 is accepted; freshly materialize/refine P6-T06 against current `master` before implementation |
+| Active executable task | P6-T06 / Issue #377 — tangent generation and required normal-map UV validation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -203,3 +203,6 @@ P6-T04 / Issue #371 is accepted. Final PR #372 head `1d3ac786664f8e4ea1f892f600e
 
 
 P6-T05 / Issue #374 is accepted. After one obsolete candidate exposed IEEE signed-zero expectations and Spotless formatting differences, final PR #375 head `f9291a8143b514fe3ad4e3954dd664b3a012ed5e` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #536 / `35715570825`. PR #375 merged as `019bbaec98b37d92791c375bc8d553c06257b1ee`, and exact-merge Lightweight master verification passed in run #537 / `35716215981`. The accepted contract fixes the exactly-once Assimp-import-basis to D-041 engine conversion as `(-X,+Y,-Z)` with scale 1.0, preserves winding/indices and P6-T04 UV0, introduces distinct internal `ImportedMesh -> EngineMesh` ownership, canonicalizes rotated signed zero, and proves an identity-node one-meter glTF cube remains exactly one meter on all engine AABB axes. P6-T03 manifest/temp payload remains unchanged; no P6-T06 tangent policy, P6-T07 serialization, runtime resource API, renderer/world/editor integration, new dependency/module edge, public API, or sandbox source change was introduced.
+
+
+P6-T06 / Issue #377 is active from baseline `cb8b6c6bfae002b9b91358e81a6b11d6c681c686`. The refined contract enables exactly `aiProcess_CalcTangentSpace` for glTF MESH import, detects tangent-space requirement from the referenced Assimp material's normal texture, supports UV0 only for that normal map, and fails missing required UV0/normals/tangent output with path + mesh context before output creation. Internal `ImportedMesh` and `EngineMesh` now preserve per-vertex tangent handedness signs as ±1, unchanged through P6-T05's determinant +1 coordinate conversion. No source metadata schema, dependency, module edge, P6-T07 persisted mesh format, runtime resource API, renderer/world/editor integration, or sandbox source change is included.

@@ -52,6 +52,8 @@ final class AssetCooker {
                     fileSystem.writeBytes(cookedPath, CookedMeshBinary.encode(source.engineMeshes()));
                 } else if (source.metadata().assetType() == AssetType.TEXTURE) {
                     fileSystem.writeBytes(cookedPath, CookedTextureBinary.encode(source.textureMipLevels()));
+                } else if (source.metadata().assetType() == AssetType.AUDIO) {
+                    fileSystem.writeBytes(cookedPath, CookedAudioBinary.encode(source.cookedAudio()));
                 } else {
                     fileSystem.copy(source.sourcePath(), cookedPath);
                 }
@@ -191,7 +193,8 @@ final class AssetCooker {
             ? AssimpGltfMeshImporter.importFile(sourcePath).stream().map(MeshCoordinateConverter::toEngineSpace).toList()
             : List.of();
         List<TextureMipLevel> textureMipLevels = metadata.assetType() == AssetType.TEXTURE ? TextureMipChain.generate(StbTextureImporter.importFile(sourcePath)) : List.of();
-        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels);
+        CookedAudio cookedAudio = metadata.assetType() == AssetType.AUDIO ? StbVorbisAudioImporter.importFile(sourcePath) : null;
+        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels, cookedAudio);
 
     }
 
@@ -211,7 +214,7 @@ final class AssetCooker {
 
     }
 
-    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels) {
+    record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels, CookedAudio cookedAudio) {
         SourceAsset {
 
             engineMeshes = List.copyOf(engineMeshes);

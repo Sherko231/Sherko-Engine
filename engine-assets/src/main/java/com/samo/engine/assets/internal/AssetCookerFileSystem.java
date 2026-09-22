@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
@@ -32,7 +31,7 @@ interface AssetCookerFileSystem {
             @Override
             public void copy(Path source, Path target) throws IOException {
 
-                Files.copy(source, target, StandardCopyOption.COPY_ATTRIBUTES);
+                Files.copy(source, target);
 
             }
 

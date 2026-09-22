@@ -26,7 +26,7 @@ class CookedTextureBinaryTest {
         assertThat(second).isEqualTo(first);
 
         ByteBuffer header = ByteBuffer.wrap(first).order(ByteOrder.LITTLE_ENDIAN);
-        assertThat(new byte[]{header.get(), header.get(), header.get(), header.get()}).containsExactly('S', 'T', 'E', 'X');
+        assertThat(new byte[]{header.get(), header.get(), header.get(), header.get()}).containsExactly((byte) 'S', (byte) 'T', (byte) 'E', (byte) 'X');
         assertThat(header.getInt()).isEqualTo(1);
         assertThat(header.getInt()).isEqualTo(1);
         assertThat(header.getInt()).isEqualTo(2);

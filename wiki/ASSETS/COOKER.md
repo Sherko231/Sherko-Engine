@@ -54,7 +54,7 @@ A successful clean cook creates:
 
 P6-T03 derives cooked filenames from `AssetId`, not from source path.
 
-For `MESH` metadata, P6-T07 now writes deterministic cooked `SMES` schema v1 bytes instead of copying the source glTF/glb. Non-MESH asset types still use the P6-T03 opaque byte-for-byte source payload until their own bounded cooking tasks.
+For `MESH` metadata, P6-T07 writes deterministic cooked `SMES` schema v1 bytes instead of copying the source glTF/glb. For `TEXTURE` metadata, P6-T08 decodes supported PNG/JPEG sources offline and writes deterministic cooked `STEX` schema v1 bytes containing RGBA8 mip levels. Other asset types still use the P6-T03 opaque byte-for-byte source payload until their own bounded cooking tasks.
 
 ## Mesh glTF validation/import
 
@@ -110,6 +110,16 @@ The decoder rejects bad magic/version/length/checksum, malformed UTF-8, unknown 
 
 This format is package-internal today. There is still no public/runtime resource loader or GPU upload path; a later runtime path must validate cooked bytes before upload.
 
+## Texture PNG/JPEG cooking
+
+For metadata with `assetType: "TEXTURE"`, the paired source must use `.png`, `.jpg`, or `.jpeg` case-insensitively. The offline cooker decodes through LWJGL stb to tightly packed RGBA8 without vertical flipping, then frees the native decode buffer before later cooking continues.
+
+P6-T08 builds a complete deterministic mip chain to 1x1. Each next width/height is `max(1, previous / 2)`; each RGBA channel is the unsigned integer floor-average of available in-bounds 2x2 source samples. This is a byte-space filter only. The source metadata schema currently has no color-space/usage field, so P6-T08 does not declare the texture to be sRGB or linear, does not gamma-correct mip generation, does not renormalize normal maps, and does not premultiply alpha.
+
+Cooked texture files use little-endian `STEX` schema v1. The header contains magic `STEX`, schema version 1, fixed RGBA8 format, base width/height, complete mip count, exact body byte length, and CRC32C. The body stores one ordered record per mip with width, height, byte length, and tightly packed RGBA8 bytes. Package-private decode validates exact length/checksum and the complete expected mip sequence before returning cooked texture values.
+
+There is still no public/runtime texture resource API or GPU upload path; source PNG/JPEG decoding is confined to the cooker.
+
 ## Manifest version 1
 
 `manifest.json` is deterministic UTF-8 JSON:
@@ -150,10 +160,10 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 
 ## Not implemented yet
 
-The current P6-T07 cooker still does not perform:
+The current Phase 6 cooker still does not perform:
 
 - normal or UV generation;
-- PNG/JPEG or audio decoding;
+- audio decoding;
 - dependency graph/incremental invalidation;
 - runtime manifest loading;
 - resource handles, caches, reference counting, or hot reload;

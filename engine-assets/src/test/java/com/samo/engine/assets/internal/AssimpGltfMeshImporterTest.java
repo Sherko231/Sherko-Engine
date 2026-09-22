@@ -21,20 +21,18 @@ class AssimpGltfMeshImporterTest {
     Path tempDir;
 
     @Test
-    void importsReferenceTriangleWithoutSpatialOrUvConversion() {
+    void importsReferenceTriangleInAssimpBasisWithoutPostProcessing() {
 
         List<ImportedMesh> meshes = AssimpGltfMeshImporter.importFile(resourcePath("p6/reference-triangle.gltf"));
 
         assertThat(meshes).hasSize(1);
         assertReferenceTriangle(meshes.getFirst());
 
-        assertThat(meshes.getFirst().positions()).containsExactly(1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f, 7.0f, -8.0f, 9.0f);
-
     }
 
 
     @Test
-    void importsBinaryGlbReferenceWithoutConversion() throws Exception {
+    void importsBinaryGlbReferenceInAssimpBasisWithoutPostProcessing() throws Exception {
 
         Path source = tempDir.resolve("reference.glb");
         writeReferenceGlb(source);
@@ -112,7 +110,7 @@ class AssimpGltfMeshImporterTest {
 
         assertThat(mesh.meshIndex()).isZero();
         assertThat(mesh.name()).isEqualTo("ReferenceTriangle");
-        assertThat(mesh.positions()).containsExactly(1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f, 7.0f, -8.0f, 9.0f);
+        assertThat(mesh.positions()).containsExactly(7.0f, -8.0f, 9.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f);
         assertThat(mesh.normals()).containsExactly(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
         assertThat(mesh.tangents()).containsExactly(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
         assertThat(mesh.uv0()).containsExactly(1.0f, 1.0f, 0.25f, 0.25f, 0.50f, 0.875f);

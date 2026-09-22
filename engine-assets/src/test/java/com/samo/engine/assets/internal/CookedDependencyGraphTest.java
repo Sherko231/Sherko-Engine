@@ -14,6 +14,7 @@ class CookedDependencyGraphTest {
     private static final AssetId TEXTURE = new AssetId(0, 1);
     private static final AssetId MATERIAL = new AssetId(0, 2);
     private static final AssetId PREFAB = new AssetId(0, 3);
+    private static final AssetId SCENE = new AssetId(0, 4);
 
     @Test
     void writesDeterministicMinimalSchemaAndDecodesAgainstKnownAssets() {
@@ -60,7 +61,7 @@ class CookedDependencyGraphTest {
               {"assetId":"%s","assetDependencies":["%s"],"shaderDependencies":[]},
               {"assetId":"%s","assetDependencies":["%s"],"shaderDependencies":[]}
             ]}
-            """.formatted(MATERIAL, PREFAB, PREFAB, MATERIAL), known, "cycle");
+            """.formatted(PREFAB, SCENE, SCENE, PREFAB), known, "cycle");
         assertRejected("""
             {"schemaVersion":1,"assets":[
               {"assetId":"%s","assetDependencies":[],"shaderDependencies":["not/valid"]}

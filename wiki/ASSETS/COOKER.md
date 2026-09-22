@@ -64,11 +64,12 @@ Before creating the output cache, the cooker imports every Assimp mesh and copie
 
 - positions as XYZ;
 - normals as XYZ when authored;
-- tangent XYZ when authored;
+- tangent XYZ when authored or generated;
+- one tangent-handedness sign per tangent vertex;
 - UV channel 0 as XY when authored;
 - triangle indices in Assimp face order.
 
-P6-T04 uses no Assimp post-process flags. Assimp's glTF importer itself compacts/remaps indexed vertices by first use and converts glTF UV V to its lower-left convention; the cooker accepts those format-intrinsic decode semantics. It does not add a second UV flip, flip winding, change handedness, pre-transform nodes, generate normals/tangents, optimize meshes, or convert spatial coordinates/units.
+P6-T06 enables exactly one Assimp post-process flag: `aiProcess_CalcTangentSpace`. Assimp's glTF importer still compacts/remaps indexed vertices by first use and converts glTF UV V to its lower-left convention; the cooker accepts those format-intrinsic decode semantics. It does not add a second UV flip, flip winding, change handedness, pre-transform nodes, generate normals/UVs, optimize meshes, or perform spatial coordinate/unit conversion inside Assimp.
 
 The imported values first exist in Assimp import basis. P6-T05 then converts every imported mesh exactly once into D-041 engine space before output-cache creation:
 
@@ -78,9 +79,9 @@ engineY =  importY
 engineZ = -importZ
 ```
 
-Positions, normals, and tangent xyz use that mapping with scale factor 1.0. Because the mapping is a 180-degree +Y rotation with determinant +1, winding and triangle indices remain unchanged. UV0 remains exactly the accepted P6-T04 Assimp value. Distinct internal `ImportedMesh` and `EngineMesh` values prevent accidental repeat conversion.
+Positions, normals, and tangent xyz use that mapping with scale factor 1.0. Because the mapping is a 180-degree +Y rotation with determinant +1, winding, triangle indices, and tangent handedness signs remain unchanged. UV0 remains exactly the accepted Assimp value. Distinct internal `ImportedMesh` and `EngineMesh` values prevent accidental repeat conversion.
 
-Missing normals, tangents, or UV0 remain absent. Non-triangle faces and out-of-range indices fail import. Assimp scene memory is released before import returns; native pointers do not escape into later cooker/runtime code.
+For meshes whose referenced glTF material contains a tangent-space normal map, UV0 and authored normals are required. Normal maps selecting another UV channel are rejected in this slice. Missing required UV0/normals or missing tangent-generation output fails before output creation with source-path and mesh-name context. Meshes without tangent-space normal mapping are not forced to provide UV0. Non-triangle faces and out-of-range indices still fail import. Assimp scene memory is released before import returns; native pointers do not escape into later cooker/runtime code.
 
 ## Manifest version 1
 
@@ -122,9 +123,9 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 
 ## Not implemented yet
 
-The current P6-T05 cooker still does not perform:
+The current P6-T06 cooker still does not perform:
 
-- tangent generation or UV validation;
+- normal or UV generation;
 - final mesh binary schema, magic, bounds, or checksum;
 - PNG/JPEG or audio decoding;
 - dependency graph/incremental invalidation;

@@ -119,7 +119,7 @@ class AssimpGltfMeshImporterTest {
     private static void writeReferenceGlb(Path path) throws Exception {
 
         String binaryBase64 = "AACAPwAAAEAAAEBAAACAwAAAoEAAAMBAAADgQAAAAMEAABBBAAAAAAAAAAAAAIA/" + "AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAAAA"
-                + "AAAAgD8AAIA/AAAAAAAAAAAAAIA/AACAPgAAQD8AAAA/AAAAPgAAgD8AAAAAAgAAAAEA" + "AAA=";
+            + "AAAAgD8AAIA/AAAAAAAAAAAAAIA/AACAPgAAQD8AAAA/AAAAPgAAgD8AAAAAAgAAAAEA" + "AAA=";
         byte[] binary = Base64.getDecoder().decode(binaryBase64);
         byte[] json = """
             {

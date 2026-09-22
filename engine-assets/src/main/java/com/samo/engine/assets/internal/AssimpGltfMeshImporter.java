@@ -137,13 +137,7 @@ final class AssimpGltfMeshImporter {
 
     }
 
-    private static TangentData copyTangents(
-        AIVector3D.Buffer tangents,
-        AIVector3D.Buffer bitangents,
-        AIVector3D.Buffer normals,
-        int vertexCount,
-        Path sourcePath,
-        int meshIndex,
+    private static TangentData copyTangents(AIVector3D.Buffer tangents, AIVector3D.Buffer bitangents, AIVector3D.Buffer normals, int vertexCount, Path sourcePath, int meshIndex,
         AIMesh mesh) {
 
         if (tangents == null && bitangents == null) {

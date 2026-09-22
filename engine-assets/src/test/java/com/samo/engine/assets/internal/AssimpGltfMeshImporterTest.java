@@ -52,11 +52,11 @@ class AssimpGltfMeshImporterTest {
         ImportedMesh mesh = AssimpGltfMeshImporter.importFile(resourcePath("p6/positions-only-triangle.gltf")).getFirst();
 
         assertThat(mesh.name()).isEqualTo("PositionsOnly");
-        assertThat(mesh.positions()).containsExactly(1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f, 7.0f, -8.0f, 9.0f);
+        assertThat(mesh.positions()).containsExactly(7.0f, -8.0f, 9.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f);
         assertThat(mesh.normals()).isNull();
         assertThat(mesh.tangents()).isNull();
         assertThat(mesh.uv0()).isNull();
-        assertThat(mesh.indices()).containsExactly(2, 0, 1);
+        assertThat(mesh.indices()).containsExactly(0, 1, 2);
 
     }
 
@@ -115,8 +115,8 @@ class AssimpGltfMeshImporterTest {
         assertThat(mesh.positions()).containsExactly(1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f, 7.0f, -8.0f, 9.0f);
         assertThat(mesh.normals()).containsExactly(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
         assertThat(mesh.tangents()).containsExactly(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
-        assertThat(mesh.uv0()).containsExactly(0.25f, 0.75f, 0.50f, 0.125f, 1.0f, 0.0f);
-        assertThat(mesh.indices()).containsExactly(2, 0, 1);
+        assertThat(mesh.uv0()).containsExactly(1.0f, 1.0f, 0.25f, 0.25f, 0.50f, 0.875f);
+        assertThat(mesh.indices()).containsExactly(0, 1, 2);
 
     }
 

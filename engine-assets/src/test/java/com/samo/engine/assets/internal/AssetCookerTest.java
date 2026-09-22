@@ -145,7 +145,7 @@ class AssetCookerTest {
     }
 
     @Test
-    void importsMeshBeforeOutputAndPreservesTemporaryPassThroughPayload() throws Exception {
+    void cooksMeshBinaryAndRecordsActualByteSize() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("mesh-input"));
         Path source = input.resolve("reference.gltf");
@@ -155,10 +155,21 @@ class AssetCookerTest {
         Path output = tempDir.resolve("mesh-output");
         AssetCooker.cook(input, output);
 
-        assertThat(Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"))).isEqualTo(Files.readAllBytes(source));
+        byte[] cooked = Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"));
+        assertThat(cooked).startsWith((byte) 'S', (byte) 'M', (byte) 'E', (byte) 'S');
+        assertThat(cooked).isNotEqualTo(Files.readAllBytes(source));
+
+        List<EngineMesh> decoded = CookedMeshBinary.decode(cooked);
+        assertThat(decoded).hasSize(1);
+        EngineMesh mesh = decoded.getFirst();
+        assertThat(mesh.name()).isEqualTo("ReferenceTriangle");
+        assertThat(mesh.positions()).containsExactly(-7.0f, -8.0f, -9.0f, -1.0f, 2.0f, -3.0f, 4.0f, 5.0f, -6.0f);
+        assertThat(mesh.indices()).containsExactly(0, 1, 2);
+
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
         assertThat(manifest.get("assets").get(0).get("assetType").textValue()).isEqualTo("MESH");
         assertThat(manifest.get("assets").get(0).get("sourcePath").textValue()).isEqualTo("reference.gltf");
+        assertThat(manifest.get("assets").get(0).get("byteSize").longValue()).isEqualTo(cooked.length);
 
     }
 
@@ -188,6 +199,29 @@ class AssetCookerTest {
         Path output = tempDir.resolve("unsupported-mesh-output");
         assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining(source.toString())
             .hasMessageContaining(".gltf or .glb");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
+    void cleansNewOutputTreeWhenMeshBinaryWriteFails() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("mesh-write-failure-input"));
+        Path source = input.resolve("reference.gltf");
+        Files.copy(resourcePath("p6/reference-triangle.gltf"), source);
+        writeMetadata(source.resolveSibling(source.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "MESH");
+        Path output = tempDir.resolve("mesh-write-failure-output");
+
+        AssetCookerFileSystem failing = new DelegatingFileSystem() {
+            @Override
+            public void writeBytes(Path path, byte[] bytes) throws IOException {
+
+                throw new IOException("intentional mesh binary failure");
+
+            }
+        };
+
+        assertThatThrownBy(() -> AssetCooker.cook(input, output, failing)).isInstanceOf(AssetCookerException.class).hasMessageContaining("intentional mesh binary failure");
         assertThat(output).doesNotExist();
 
     }
@@ -283,6 +317,13 @@ class AssetCookerTest {
         public void copy(Path source, Path target) throws IOException {
 
             delegate.copy(source, target);
+
+        }
+
+        @Override
+        public void writeBytes(Path path, byte[] bytes) throws IOException {
+
+            delegate.writeBytes(path, bytes);
 
         }
 

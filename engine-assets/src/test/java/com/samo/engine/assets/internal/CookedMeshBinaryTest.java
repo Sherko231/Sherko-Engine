@@ -127,15 +127,8 @@ class CookedMeshBinaryTest {
         EngineMesh invalidIndex = new EngineMesh(1, "BadIndex", new float[]{0.0f, 0.0f, 0.0f}, null, null, null, null, new int[]{0, 0, 2});
         assertThatThrownBy(() -> CookedMeshBinary.encode(List.of(invalidIndex))).isInstanceOf(CookedMeshFormatException.class).hasMessageContaining("outside vertex range");
 
-        EngineMesh invalidSign = new EngineMesh(
-            2,
-            "BadSign",
-            new float[]{0.0f, 0.0f, 0.0f},
-            null,
-            new float[]{1.0f, 0.0f, 0.0f},
-            new float[]{0.0f},
-            null,
-            new int[]{0, 0, 0});
+        float[] invalidTangent = new float[]{1.0f, 0.0f, 0.0f};
+        EngineMesh invalidSign = new EngineMesh(2, "BadSign", new float[]{0.0f, 0.0f, 0.0f}, null, invalidTangent, new float[]{0.0f}, null, new int[]{0, 0, 0});
         assertThatThrownBy(() -> CookedMeshBinary.encode(List.of(invalidSign))).isInstanceOf(CookedMeshFormatException.class).hasMessageContaining("exactly +1 or -1");
 
         EngineMesh nonFinite = new EngineMesh(3, "NonFinite", new float[]{Float.NaN, 0.0f, 0.0f}, null, null, null, null, new int[]{0, 0, 0});
@@ -149,15 +142,12 @@ class CookedMeshBinaryTest {
 
     private static EngineMesh fullMesh(int meshIndex, String name) {
 
-        return new EngineMesh(
-            meshIndex,
-            name,
-            new float[]{1.0f, 2.0f, 3.0f, -4.0f, 5.0f, -6.0f, 7.0f, -8.0f, 9.0f},
-            new float[]{0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f},
-            new float[]{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-            new float[]{1.0f, -1.0f, 1.0f},
-            new float[]{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},
-            new int[]{0, 1, 2});
+        float[] positions = new float[]{1.0f, 2.0f, 3.0f, -4.0f, 5.0f, -6.0f, 7.0f, -8.0f, 9.0f};
+        float[] normals = new float[]{0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f};
+        float[] tangents = new float[]{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+        float[] signs = new float[]{1.0f, -1.0f, 1.0f};
+        float[] uv0 = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+        return new EngineMesh(meshIndex, name, positions, normals, tangents, signs, uv0, new int[]{0, 1, 2});
 
     }
 

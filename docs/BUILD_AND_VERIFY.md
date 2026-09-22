@@ -2142,3 +2142,26 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T06 verification evidence: initial exact-candidate run #538 / `35719047919` executed the new Assimp tangent path and exposed only an incorrect pre-execution `+1` tangent-sign oracle for the generated fixture plus one Spotless method-wrapping difference. The active Issue was refined to preserve the executed Assimp handedness (`-1` for that fixture) rather than artificially flipping it, and the formatter diff was applied. Final PR #378 head `3e531c87e5c6438a722d8b00db59a9259ba2f542` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #540 / `35719320776`. The passing tests exercise missing-tangent generation, valid normal-mapped UV0 use, missing UV0/normals diagnostics, tangent-sign preservation through P6-T05, and pre-output cooker failure; Build verified dependency locks without drift. PR #378 merged as `7b0a59a1518dd58804e81c6bae5b83cc9095cec8`; exact-merge Lightweight master verification passed in run #541 / `35719896845`, including committed dependency locks, headless-server runtime boundary, and exact-merge client/server version reporting. P6-T06 acceptance is therefore complete. The connector environment did not separately execute the focused Gradle commands locally; accepted repository CI is the execution evidence.
+
+
+## P6-T07 cooked mesh binary verification
+
+Issue #380 defines persisted MESH `SMES` schema v1 and the package-private encode/decode validation boundary.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.CookedMeshBinaryTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --tests "com.samo.engine.assets.internal.MeshCoordinateConverterTest" --tests "com.samo.engine.assets.internal.AssimpGltfMeshImporterTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance independently inspects the encoded little-endian header/record layout, magic `SMES`, schema version, mesh/body counts, CRC32C, attribute flags/stride, exact engine-space bounds, strict UTF-8 name, deterministic bytes, optional attribute combinations, and multi-mesh order. Round-trip tests verify positions, normals, tangent xyz, P6-T06 tangent signs, UV0, and int32 indices. Corruption coverage flips body bytes without updating CRC, mutates semantic fields with a recomputed valid checksum, and exercises bad magic/version/truncation/trailing data. Cooker tests verify MESH output is SMES rather than source glTF bytes, manifest byteSize equals the actual cooked file, non-MESH pass-through remains unchanged, and binary-write failure preserves P6-T03 cleanup behavior.
+
+Complete dependency-lock diff must remain empty. No runtime manifest/resource loader, public mesh API, GPU upload, renderer/world integration, compression, metadata/manifest schema change, or P6-T08+ implementation is allowed.
+
+Because P6-T07 introduces a persisted binary format and production cooker Java/tests/docs, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #380 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands are not locally claimed as passing unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

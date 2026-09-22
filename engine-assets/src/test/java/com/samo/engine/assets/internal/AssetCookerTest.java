@@ -31,7 +31,7 @@ class AssetCookerTest {
     void cooksDeterministicManifestAndOpaqueNonzeroPayloads() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
-        createAsset(input.resolve("z/second.bin"), SECOND_ID, "AUDIO", new byte[]{9, 8, 7});
+        createAsset(input.resolve("z/second.bin"), SECOND_ID, "SCENE", new byte[]{9, 8, 7});
         createAsset(input.resolve("a/first.bin"), FIRST_ID, "MATERIAL", new byte[]{1, 2, 3, 4});
 
         Path output = tempDir.resolve("output");
@@ -55,7 +55,7 @@ class AssetCookerTest {
 
         JsonNode second = manifest.get("assets").get(1);
         assertThat(second.get("assetId").textValue()).isEqualTo(SECOND_ID);
-        assertThat(second.get("assetType").textValue()).isEqualTo("AUDIO");
+        assertThat(second.get("assetType").textValue()).isEqualTo("SCENE");
         assertThat(second.get("sourcePath").textValue()).isEqualTo("z/second.bin");
         assertThat(second.get("byteSize").longValue()).isEqualTo(3);
 
@@ -143,6 +143,93 @@ class AssetCookerTest {
         Path duplicateOutput = tempDir.resolve("duplicate-output");
         assertThatThrownBy(() -> AssetCooker.cook(duplicateInput, duplicateOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("duplicate assetId");
         assertThat(duplicateOutput).doesNotExist();
+
+    }
+
+    @Test
+    void cooksAudioToSaudWithValidatedMetadataAndExactVorbisPayload() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("audio-input"));
+        Path source = input.resolve("confirm.ogg");
+        byte[] sourceBytes = VorbisTestFixtures.read("p6/mono-22050.ogg.b64");
+        Files.write(source, sourceBytes);
+        writeMetadata(source.resolveSibling(source.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
+
+        Path output = tempDir.resolve("audio-output");
+        AssetCooker.cook(input, output);
+
+        byte[] cooked = Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"));
+        assertThat(cooked).startsWith((byte) 'S', (byte) 'A', (byte) 'U', (byte) 'D');
+        assertThat(cooked).isNotEqualTo(sourceBytes);
+
+        CookedAudio audio = CookedAudioBinary.decode(cooked);
+        assertThat(audio.channels()).isEqualTo(1);
+        assertThat(audio.sampleRate()).isEqualTo(22050);
+        assertThat(audio.vorbisPayload()).isEqualTo(sourceBytes);
+
+        JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
+        assertThat(manifest.get("assets").get(0).get("assetType").textValue()).isEqualTo("AUDIO");
+        assertThat(manifest.get("assets").get(0).get("sourcePath").textValue()).isEqualTo("confirm.ogg");
+        assertThat(manifest.get("assets").get(0).get("byteSize").longValue()).isEqualTo(cooked.length);
+
+        Path secondOutput = tempDir.resolve("audio-second-output");
+        AssetCooker.cook(input, secondOutput);
+        assertThat(Files.readAllBytes(secondOutput.resolve("assets/" + FIRST_ID + ".bin"))).isEqualTo(cooked);
+
+    }
+
+    @Test
+    void rejectsUnsupportedMalformedAndMultichannelAudioBeforeCreatingOutput() throws Exception {
+
+        Path unsupportedInput = Files.createDirectory(tempDir.resolve("unsupported-audio-input"));
+        Path unsupported = unsupportedInput.resolve("audio.wav");
+        Files.write(unsupported, new byte[]{1, 2, 3});
+        writeMetadata(unsupported.resolveSibling(unsupported.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
+        Path unsupportedOutput = tempDir.resolve("unsupported-audio-output");
+        assertThatThrownBy(() -> AssetCooker.cook(unsupportedInput, unsupportedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(unsupported.toString())
+            .hasMessageContaining(".ogg");
+        assertThat(unsupportedOutput).doesNotExist();
+
+        Path malformedInput = Files.createDirectory(tempDir.resolve("malformed-audio-input"));
+        Path malformed = malformedInput.resolve("broken.ogg");
+        Files.write(malformed, new byte[]{'O', 'g', 'g', 'S', 1, 2, 3});
+        writeMetadata(malformed.resolveSibling(malformed.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
+        Path malformedOutput = tempDir.resolve("malformed-audio-output");
+        assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
+            .hasMessageContaining("open failed");
+        assertThat(malformedOutput).doesNotExist();
+
+        Path multichannelInput = Files.createDirectory(tempDir.resolve("multichannel-audio-input"));
+        Path multichannel = multichannelInput.resolve("surround.ogg");
+        Files.write(multichannel, VorbisTestFixtures.read("p6/three-channel-32000.ogg.b64"));
+        writeMetadata(multichannel.resolveSibling(multichannel.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
+        Path multichannelOutput = tempDir.resolve("multichannel-audio-output");
+        assertThatThrownBy(() -> AssetCooker.cook(multichannelInput, multichannelOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(multichannel.toString())
+            .hasMessageContaining("mono or stereo");
+        assertThat(multichannelOutput).doesNotExist();
+
+    }
+
+    @Test
+    void cleansNewOutputTreeWhenAudioBinaryWriteFails() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("audio-write-failure-input"));
+        Path source = input.resolve("confirm.ogg");
+        Files.write(source, VorbisTestFixtures.read("p6/mono-22050.ogg.b64"));
+        writeMetadata(source.resolveSibling(source.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
+        Path output = tempDir.resolve("audio-write-failure-output");
+
+        AssetCookerFileSystem failing = new DelegatingFileSystem() {
+            @Override
+            public void writeBytes(Path path, byte[] bytes) throws IOException {
+
+                throw new IOException("intentional audio binary failure");
+
+            }
+        };
+
+        assertThatThrownBy(() -> AssetCooker.cook(input, output, failing)).isInstanceOf(AssetCookerException.class).hasMessageContaining("intentional audio binary failure");
+        assertThat(output).doesNotExist();
 
     }
 

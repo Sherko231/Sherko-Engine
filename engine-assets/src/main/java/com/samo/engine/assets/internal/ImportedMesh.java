@@ -1,6 +1,5 @@
 package com.samo.engine.assets.internal;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 final class ImportedMesh {
@@ -69,35 +68,4 @@ final class ImportedMesh {
 
     }
 
-    @Override
-    public boolean equals(Object other) {
-
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof ImportedMesh that)) {
-            return false;
-        }
-        return meshIndex == that.meshIndex
-                && name.equals(that.name)
-                && Arrays.equals(positions, that.positions)
-                && Arrays.equals(normals, that.normals)
-                && Arrays.equals(tangents, that.tangents)
-                && Arrays.equals(uv0, that.uv0)
-                && Arrays.equals(indices, that.indices);
-
-    }
-
-    @Override
-    public int hashCode() {
-
-        int result = Objects.hash(meshIndex, name);
-        result = 31 * result + Arrays.hashCode(positions);
-        result = 31 * result + Arrays.hashCode(normals);
-        result = 31 * result + Arrays.hashCode(tangents);
-        result = 31 * result + Arrays.hashCode(uv0);
-        result = 31 * result + Arrays.hashCode(indices);
-        return result;
-
-    }
 }

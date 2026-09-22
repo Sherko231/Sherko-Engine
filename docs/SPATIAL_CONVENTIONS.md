@@ -202,4 +202,4 @@ Consequences:
 
 The implementation uses distinct internal `ImportedMesh` and `EngineMesh` values. `MeshCoordinateConverter` accepts only `ImportedMesh` and produces `EngineMesh`, making this the mechanical exactly-once spatial boundary inside the cooker.
 
-A one-meter glTF reference cube must remain exactly one meter wide, tall, and deep after conversion. Later cooking/runtime stages consume engine-basis mesh data and must not apply this conversion again.
+A one-meter glTF reference cube must remain exactly one meter wide, tall, and deep after conversion. P6-T07 persists these already-converted positions, tangent xyz values, and per-mesh AABBs directly in D-041 engine space; serialization must not apply another coordinate/unit conversion. Later cooking/runtime stages consume engine-basis mesh data and must not apply this conversion again.

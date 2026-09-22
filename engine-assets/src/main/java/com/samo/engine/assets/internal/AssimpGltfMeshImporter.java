@@ -8,8 +8,10 @@ import java.util.Locale;
 import java.util.Objects;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.AIFace;
+import org.lwjgl.assimp.AIMaterial;
 import org.lwjgl.assimp.AIMesh;
 import org.lwjgl.assimp.AIScene;
+import org.lwjgl.assimp.AIString;
 import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.Assimp;
 
@@ -23,7 +25,7 @@ final class AssimpGltfMeshImporter {
         Objects.requireNonNull(sourcePath, "sourcePath");
         requireSupportedExtension(sourcePath);
 
-        AIScene scene = Assimp.aiImportFile(sourcePath.toString(), 0);
+        AIScene scene = Assimp.aiImportFile(sourcePath.toString(), Assimp.aiProcess_CalcTangentSpace);
         if (scene == null) {
             String diagnostic = Assimp.aiGetErrorString();
             throw new AssetCookerException(sourcePath + ": Assimp failed to import glTF" + diagnosticSuffix(diagnostic));
@@ -39,7 +41,7 @@ final class AssimpGltfMeshImporter {
             ArrayList<ImportedMesh> meshes = new ArrayList<>(meshCount);
             for (int meshIndex = 0; meshIndex < meshCount; meshIndex++) {
                 AIMesh mesh = AIMesh.create(meshPointers.get(meshIndex));
-                meshes.add(copyMesh(sourcePath, meshIndex, mesh));
+                meshes.add(copyMesh(sourcePath, meshIndex, mesh, scene));
             }
             return List.copyOf(meshes);
         } finally {
@@ -57,7 +59,7 @@ final class AssimpGltfMeshImporter {
 
     }
 
-    private static ImportedMesh copyMesh(Path sourcePath, int meshIndex, AIMesh mesh) {
+    private static ImportedMesh copyMesh(Path sourcePath, int meshIndex, AIMesh mesh, AIScene scene) {
 
         int vertexCount = mesh.mNumVertices();
         if (vertexCount <= 0) {
@@ -69,13 +71,124 @@ final class AssimpGltfMeshImporter {
             throw meshFailure(sourcePath, meshIndex, mesh, "mesh has no position buffer");
         }
 
+        boolean tangentSpaceRequired = tangentSpaceRequired(sourcePath, meshIndex, mesh, scene);
+        AIVector3D.Buffer normalBuffer = mesh.mNormals();
+        AIVector3D.Buffer tangentBuffer = mesh.mTangents();
+        AIVector3D.Buffer bitangentBuffer = mesh.mBitangents();
+        AIVector3D.Buffer uv0Buffer = mesh.mTextureCoords(0);
+
+        if (tangentSpaceRequired) {
+            if (normalBuffer == null) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space normal map requires authored normals");
+            }
+            if (uv0Buffer == null) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space normal map requires UV0");
+            }
+            if (tangentBuffer == null || bitangentBuffer == null) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space normal map requires tangent generation result");
+            }
+        }
+
         float[] positions = copyVec3(vertices, vertexCount);
-        float[] normals = copyOptionalVec3(mesh.mNormals(), vertexCount, sourcePath, meshIndex, mesh, "normal");
-        float[] tangents = copyOptionalVec3(mesh.mTangents(), vertexCount, sourcePath, meshIndex, mesh, "tangent");
-        float[] uv0 = copyOptionalUv0(mesh.mTextureCoords(0), vertexCount, sourcePath, meshIndex, mesh);
+        float[] normals = copyOptionalVec3(normalBuffer, vertexCount, sourcePath, meshIndex, mesh, "normal");
+        TangentData tangentData = copyTangents(tangentBuffer, bitangentBuffer, normalBuffer, vertexCount, sourcePath, meshIndex, mesh);
+        float[] uv0 = copyOptionalUv0(uv0Buffer, vertexCount, sourcePath, meshIndex, mesh);
         int[] indices = copyTriangleIndices(sourcePath, meshIndex, mesh, vertexCount);
 
-        return new ImportedMesh(meshIndex, mesh.mName().dataString(), positions, normals, tangents, uv0, indices);
+        return new ImportedMesh(meshIndex, mesh.mName().dataString(), positions, normals, tangentData.xyz(), tangentData.signs(), uv0, indices);
+
+    }
+
+    private static boolean tangentSpaceRequired(Path sourcePath, int meshIndex, AIMesh mesh, AIScene scene) {
+
+        int materialIndex = mesh.mMaterialIndex();
+        int materialCount = scene.mNumMaterials();
+        PointerBuffer materialPointers = scene.mMaterials();
+        if (materialIndex < 0 || materialIndex >= materialCount || materialPointers == null) {
+            throw meshFailure(sourcePath, meshIndex, mesh, "material index " + materialIndex + " is outside material range 0.." + Math.max(materialCount - 1, 0));
+        }
+
+        AIMaterial material = AIMaterial.create(materialPointers.get(materialIndex));
+        int normalTextureCount = Assimp.aiGetMaterialTextureCount(material, Assimp.aiTextureType_NORMALS);
+        if (normalTextureCount <= 0) {
+            return false;
+        }
+
+        for (int textureIndex = 0; textureIndex < normalTextureCount; textureIndex++) {
+            int uvIndex = normalTextureUvIndex(sourcePath, meshIndex, mesh, material, textureIndex);
+            if (uvIndex != 0) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space normal map uses unsupported UV channel " + uvIndex + "; only UV0 is supported");
+            }
+        }
+        return true;
+
+    }
+
+    private static int normalTextureUvIndex(Path sourcePath, int meshIndex, AIMesh mesh, AIMaterial material, int textureIndex) {
+
+        int[] uvIndex = new int[]{0};
+        try (AIString texturePath = AIString.calloc()) {
+            int result = Assimp.aiGetMaterialTexture(material, Assimp.aiTextureType_NORMALS, textureIndex, texturePath, null, uvIndex, null, null, null, null);
+            if (result != Assimp.aiReturn_SUCCESS) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "failed to inspect tangent-space normal map UV channel");
+            }
+        }
+        return uvIndex[0];
+
+    }
+
+    private static TangentData copyTangents(AIVector3D.Buffer tangents, AIVector3D.Buffer bitangents, AIVector3D.Buffer normals, int vertexCount, Path sourcePath, int meshIndex, AIMesh mesh) {
+
+        if (tangents == null && bitangents == null) {
+            return TangentData.absent();
+        }
+        if (tangents == null || bitangents == null) {
+            throw meshFailure(sourcePath, meshIndex, mesh, "tangent and bitangent buffers must both be present or absent");
+        }
+        if (normals == null) {
+            throw meshFailure(sourcePath, meshIndex, mesh, "tangent data requires normals");
+        }
+        if (tangents.remaining() < vertexCount || bitangents.remaining() < vertexCount || normals.remaining() < vertexCount) {
+            throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space buffer is shorter than vertex count");
+        }
+
+        float[] xyz = new float[Math.multiplyExact(vertexCount, 3)];
+        float[] signs = new float[vertexCount];
+        for (int index = 0; index < vertexCount; index++) {
+            AIVector3D normal = normals.get(index);
+            AIVector3D tangent = tangents.get(index);
+            AIVector3D bitangent = bitangents.get(index);
+            requireFiniteTangentSpace(sourcePath, meshIndex, mesh, index, normal, tangent, bitangent);
+
+            int base = index * 3;
+            xyz[base] = tangent.x();
+            xyz[base + 1] = tangent.y();
+            xyz[base + 2] = tangent.z();
+
+            float crossX = normal.y() * tangent.z() - normal.z() * tangent.y();
+            float crossY = normal.z() * tangent.x() - normal.x() * tangent.z();
+            float crossZ = normal.x() * tangent.y() - normal.y() * tangent.x();
+            float handedness = crossX * bitangent.x() + crossY * bitangent.y() + crossZ * bitangent.z();
+            if (!Float.isFinite(handedness) || handedness == 0.0f) {
+                throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space handedness is degenerate at vertex " + index);
+            }
+            signs[index] = handedness < 0.0f ? -1.0f : 1.0f;
+        }
+        return new TangentData(xyz, signs);
+
+    }
+
+    private static void requireFiniteTangentSpace(Path sourcePath, int meshIndex, AIMesh mesh, int vertexIndex, AIVector3D normal, AIVector3D tangent, AIVector3D bitangent) {
+
+        if (!finite(normal) || !finite(tangent) || !finite(bitangent)) {
+            throw meshFailure(sourcePath, meshIndex, mesh, "tangent-space data contains non-finite values at vertex " + vertexIndex);
+        }
+
+    }
+
+    private static boolean finite(AIVector3D vector) {
+
+        return Float.isFinite(vector.x()) && Float.isFinite(vector.y()) && Float.isFinite(vector.z());
 
     }
 
@@ -165,5 +278,13 @@ final class AssimpGltfMeshImporter {
 
         return diagnostic == null || diagnostic.isBlank() ? "" : ": " + diagnostic;
 
+    }
+
+    private record TangentData(float[] xyz, float[] signs) {
+        private static TangentData absent() {
+
+            return new TangentData(null, null);
+
+        }
     }
 }

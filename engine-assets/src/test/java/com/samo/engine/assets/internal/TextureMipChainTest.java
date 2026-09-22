@@ -29,11 +29,8 @@ class TextureMipChainTest {
         assertThat(levels.get(2).width()).isEqualTo(1);
         assertThat(levels.get(2).height()).isEqualTo(1);
 
-        assertThat(levels.get(1).rgba8()).containsExactly(
-            (byte) 20, (byte) 21, (byte) 22, (byte) 255,
-            (byte) 80, (byte) 81, (byte) 82, (byte) 255);
-        assertThat(levels.get(2).rgba8()).containsExactly(
-            (byte) 50, (byte) 51, (byte) 52, (byte) 255);
+        assertThat(levels.get(1).rgba8()).containsExactly((byte) 20, (byte) 21, (byte) 22, (byte) 255, (byte) 80, (byte) 81, (byte) 82, (byte) 255);
+        assertThat(levels.get(2).rgba8()).containsExactly((byte) 50, (byte) 51, (byte) 52, (byte) 255);
 
     }
 }

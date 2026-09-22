@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -36,7 +38,7 @@ class AssetCookerTest {
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
         assertThat(fieldNames(manifest)).containsExactly("schemaVersion", "assets");
         assertThat(manifest.get("schemaVersion").intValue()).isEqualTo(1);
-        assertThat(manifest.get("assets")).hasSize(2);
+        assertThat(manifest.get("assets").size()).isEqualTo(2);
 
         JsonNode first = manifest.get("assets").get(0);
         assertThat(fieldNames(first)).containsExactly("assetId", "assetType", "sourcePath", "cookedPath", "byteSize");
@@ -69,7 +71,7 @@ class AssetCookerTest {
         AssetCooker.cook(input, output);
 
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
-        assertThat(manifest.get("assets")).hasSize(1);
+        assertThat(manifest.get("assets").size()).isEqualTo(1);
         assertThat(manifest.get("assets").get(0).get("sourcePath").textValue()).isEqualTo("kept.bin");
 
     }
@@ -190,11 +192,11 @@ class AssetCookerTest {
 
     }
 
-    private static java.util.List<String> fieldNames(JsonNode node) {
+    private static List<String> fieldNames(JsonNode node) {
 
-        java.util.ArrayList<String> names = new java.util.ArrayList<>();
+        ArrayList<String> names = new ArrayList<>();
         node.fieldNames().forEachRemaining(names::add);
-        return java.util.List.copyOf(names);
+        return List.copyOf(names);
 
     }
 

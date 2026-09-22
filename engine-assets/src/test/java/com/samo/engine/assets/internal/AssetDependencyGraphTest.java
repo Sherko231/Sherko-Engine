@@ -24,8 +24,7 @@ class AssetDependencyGraphTest {
         AssetDependencyGraph graph = AssetDependencyGraph.fromSources(List.of(source(TEXTURE, AssetType.TEXTURE, SourceAssetDependencies.EMPTY),
             source(MATERIAL, AssetType.MATERIAL, new SourceAssetDependencies(List.of(TEXTURE), List.of("opaque-baseline"))),
             source(PREFAB, AssetType.PREFAB, new SourceAssetDependencies(List.of(MATERIAL), List.of())),
-            source(SCENE, AssetType.SCENE, new SourceAssetDependencies(List.of(PREFAB), List.of())),
-            source(OTHER_TEXTURE, AssetType.TEXTURE, SourceAssetDependencies.EMPTY),
+            source(SCENE, AssetType.SCENE, new SourceAssetDependencies(List.of(PREFAB), List.of())), source(OTHER_TEXTURE, AssetType.TEXTURE, SourceAssetDependencies.EMPTY),
             source(OTHER_MATERIAL, AssetType.MATERIAL, new SourceAssetDependencies(List.of(OTHER_TEXTURE), List.of("other")))));
 
         assertThat(graph.dependentsOfAsset(TEXTURE)).containsExactly(MATERIAL, PREFAB, SCENE);
@@ -42,7 +41,8 @@ class AssetDependencyGraphTest {
         AssetId prefabB = id(11);
         AssetId scene = id(12);
         AssetDependencyGraph graph = AssetDependencyGraph.fromSources(List.of(source(TEXTURE, AssetType.TEXTURE, SourceAssetDependencies.EMPTY),
-            source(MATERIAL, AssetType.MATERIAL, new SourceAssetDependencies(List.of(TEXTURE), List.of())), source(prefabA, AssetType.PREFAB, new SourceAssetDependencies(List.of(MATERIAL), List.of())),
+            source(MATERIAL, AssetType.MATERIAL, new SourceAssetDependencies(List.of(TEXTURE), List.of())),
+            source(prefabA, AssetType.PREFAB, new SourceAssetDependencies(List.of(MATERIAL), List.of())),
             source(prefabB, AssetType.PREFAB, new SourceAssetDependencies(List.of(MATERIAL), List.of())),
             source(scene, AssetType.SCENE, new SourceAssetDependencies(List.of(prefabA, prefabB), List.of()))));
 
@@ -67,8 +67,8 @@ class AssetDependencyGraphTest {
             .isInstanceOf(AssetCookerException.class).hasMessageContaining("only MATERIAL");
 
         assertThatThrownBy(() -> AssetDependencyGraph.fromSources(List.of(source(PREFAB, AssetType.PREFAB, new SourceAssetDependencies(List.of(SCENE), List.of())),
-            source(SCENE, AssetType.SCENE, new SourceAssetDependencies(List.of(PREFAB), List.of()))))).isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining("cycle").hasMessageContaining(PREFAB.toString()).hasMessageContaining(SCENE.toString());
+            source(SCENE, AssetType.SCENE, new SourceAssetDependencies(List.of(PREFAB), List.of()))))).isInstanceOf(AssetCookerException.class).hasMessageContaining("cycle")
+            .hasMessageContaining(PREFAB.toString()).hasMessageContaining(SCENE.toString());
 
     }
 

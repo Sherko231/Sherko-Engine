@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 / Issue #362 is the current bounded task |
+| Active phase | Phase 6 active — P6-T01 accepted; P6-T02 is the next task to freshly materialize/refine |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-T01 / Issue #362 — define stable path-independent 128-bit `AssetId` in `engine-assets` |
+| Active executable task | None — P6-T01 / Issue #362 is accepted; freshly materialize/refine P6-T02 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Complete **P6-T01 / Issue #362** only: implement and verify the bounded public `AssetId` contract, synchronize API/architecture guidance, require exact-candidate five-job CI, then exact-merge Lightweight verification. Do not implement P6-T02 metadata or later Phase 6 work.
+Freshly materialize/refine **P6-T02** against current `master` before implementation. Define the exact versioned source-metadata contract, supported asset kinds, failure/version semantics, allowed files/modules, and verification plan. Do not implement P6-T03 cooking or later Phase 6 work unless P6-T02 explicitly requires it.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -190,4 +190,4 @@ PRE-P6 Issue #359 is active from baseline `91015f6246a4daed16fb3ec707fa758ca8872
 PRE-P6 Issue #359 is accepted. PR #360 final head `d13d78995f37701692c74f0197d9151c0108a414` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #501 / `35541101685`. It merged as `4425e5eb9c1d7faf4706946b28443e59f9c7f5c5`, and exact-merge Lightweight master verification passed in run #502 / `35541422410`. Spotless 8.10.2 + Eclipse JDT 4.40 is now the enforced repository Java formatter, `spotlessCheck` is part of the root quality gate, and the clean bootstrap audit proved lexical equivalence across all 241 changed Java files. No Java behavior, API, module, ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox behavior changed.
 
 
-P6-T01 / Issue #362 is active from baseline `4b0f73d55049b316203aa969ec947a818e17cfe2`. The refined contract adds only a public immutable 128-bit `AssetId` to `engine-assets.api`, canonical lowercase UUID-style text, generation/parsing, focused identity tests, and synchronized architecture/wiki guidance. The metadata-move acceptance is represented only by a test-local fixture; no P6-T02 metadata schema, cooker, manifest, runtime resource manager, renderer/world integration, or new module edge is included. Sandbox impact: none — nonvisual identity infrastructure is not meaningfully exercisable in the persistent playground yet.
+P6-T01 / Issue #362 is accepted. Final PR #363 head `ae34d0cd84be2899fecd821f9af485a6f4c1f084` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #504 / `35698629954`. PR #363 merged as `37f3c163d2bb492ee08f6306e07b017c6ea26119`, and exact-merge Lightweight master verification passed in run #505 / `35700148367`. The accepted contract adds only public immutable 128-bit `AssetId`, canonical lowercase UUID-style text, generation/parsing, focused path-independence tests, D-067, and synchronized wiki/architecture guidance. No P6-T02 metadata schema, cooker, manifest, runtime resource manager, renderer/world integration, dependency, or module edge was introduced. Sandbox impact: none — nonvisual identity infrastructure is not meaningfully exercisable in the persistent playground yet.

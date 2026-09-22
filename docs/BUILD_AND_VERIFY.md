@@ -1989,3 +1989,24 @@ PRE-P6 Issue #359 bootstrap evidence: after repository-wide normalization, a cle
 
 
 Accepted PRE-P6 Issue #359 evidence: PR #360 exact head `d13d78995f37701692c74f0197d9151c0108a414` passed the full five-job matrix in run #501 / `35541101685`. The PR merged as `4425e5eb9c1d7faf4706946b28443e59f9c7f5c5`; exact-merge Lightweight master verification passed in run #502 / `35541422410`. Prior verification-only bootstrap run #6 proved `spotlessApply` idempotence, `spotlessCheck` success, and lexical equivalence for all 241 changed Java files. The temporary bootstrap workflow was removed before PR #360. Canonical formatting commands remain `.\gradlew.bat spotlessApply` and `.\gradlew.bat spotlessCheck`.
+
+
+## P6-T01 stable AssetId verification
+
+Issue #362 introduces the first production `engine-assets` API: path-independent 128-bit `AssetId`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.api.AssetIdTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+The focused test must prove exact 128-bit canonical text round-trip, generated canonical text, deterministic rejection of null/noncanonical text, validity of the all-zero value, and the P6-T01 acceptance scenario: changing a metadata-like source path while retaining the same `AssetId` leaves an existing identity reference unchanged. The fixture is test-only and must not become a P6-T02 metadata implementation.
+
+Because P6-T01 adds public Java source/tests and consumer documentation, the final candidate requires the normal five-job PR matrix on the exact head: Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. After merge, require Lightweight master verification on the exact merge SHA before closing Issue #362.
+
+Connector execution note: the GitHub connector environment cannot execute the Gradle wrapper directly. Focused commands must therefore be recorded as not locally executed unless run by an available repository workflow; the exact final-candidate GitHub Actions matrix remains mandatory and is not replaced by source inspection.

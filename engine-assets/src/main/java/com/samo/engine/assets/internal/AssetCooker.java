@@ -37,9 +37,10 @@ final class AssetCooker {
         Path output = requireOutputPath(input, outputCache);
         List<SourceAsset> sources = discoverSources(input);
 
-        boolean outputOwned = true;
+        boolean outputOwned = false;
         try {
-            fileSystem.createDirectories(output);
+            fileSystem.createDirectory(output);
+            outputOwned = true;
             Path assetsDirectory = output.resolve(ASSETS_DIRECTORY);
             fileSystem.createDirectories(assetsDirectory);
 

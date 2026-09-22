@@ -99,7 +99,8 @@ class MeshCoordinateConverterTest {
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFinitePosition)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[8] 'NonFinite'")
             .hasMessageContaining("non-finite");
 
-        ImportedMesh nonFiniteNormal = new ImportedMesh(9, "BadNormal", new float[]{0.0f, 0.0f, 0.0f}, new float[]{Float.POSITIVE_INFINITY, 0.0f, 0.0f}, null, null, null, new int[]{0});
+        float[] nonFiniteNormals = new float[]{Float.POSITIVE_INFINITY, 0.0f, 0.0f};
+        ImportedMesh nonFiniteNormal = new ImportedMesh(9, "BadNormal", new float[]{0.0f, 0.0f, 0.0f}, nonFiniteNormals, null, null, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFiniteNormal)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[9] 'BadNormal'")
             .hasMessageContaining("non-finite");
 
@@ -113,7 +114,8 @@ class MeshCoordinateConverterTest {
     @Test
     void rejectsInvalidTangentSignStream() {
 
-        ImportedMesh wrongLength = new ImportedMesh(11, "WrongSigns", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{1.0f, 0.0f, 0.0f}, new float[]{1.0f, -1.0f}, null, new int[]{0});
+        float[] wrongSigns = new float[]{1.0f, -1.0f};
+        ImportedMesh wrongLength = new ImportedMesh(11, "WrongSigns", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{1.0f, 0.0f, 0.0f}, wrongSigns, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(wrongLength)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("tangentSigns length");
 
         ImportedMesh invalidSign = new ImportedMesh(12, "InvalidSign", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{1.0f, 0.0f, 0.0f}, new float[]{0.0f}, null, new int[]{0});

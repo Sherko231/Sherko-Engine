@@ -65,11 +65,11 @@ class AssimpGltfMeshImporterTest {
 
         assertThat(mesh.name()).isEqualTo("GeneratedTangent");
         assertThat(mesh.tangents()).containsExactly(-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-        assertThat(mesh.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+        assertThat(mesh.tangentSigns()).containsExactly(-1.0f, -1.0f, -1.0f);
 
         EngineMesh engine = MeshCoordinateConverter.toEngineSpace(mesh);
         assertThat(engine.tangents()).containsExactly(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
-        assertThat(engine.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+        assertThat(engine.tangentSigns()).containsExactly(-1.0f, -1.0f, -1.0f);
 
     }
 
@@ -81,7 +81,7 @@ class AssimpGltfMeshImporterTest {
         assertThat(mesh.name()).isEqualTo("NormalMappedTriangle");
         assertThat(mesh.uv0()).isNotNull();
         assertThat(mesh.tangents()).isNotNull();
-        assertThat(mesh.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+        assertThat(mesh.tangentSigns()).containsExactly(-1.0f, -1.0f, -1.0f);
 
     }
 

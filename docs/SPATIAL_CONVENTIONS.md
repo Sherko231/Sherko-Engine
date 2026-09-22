@@ -194,6 +194,7 @@ Consequences:
 - positions use the mapping above with scale factor exactly 1.0;
 - normals use the same mapping;
 - tangent xyz uses the same mapping;
+- P6-T06 tangent handedness sign is unchanged because this mapping has determinant +1;
 - triangle winding and index order remain unchanged;
 - UV0 is not part of the spatial conversion and remains exactly as produced by the accepted P6-T04 Assimp import boundary;
 - P6-T04's intrinsic glTF first-use vertex remapping and UV-origin normalization are not repeated;

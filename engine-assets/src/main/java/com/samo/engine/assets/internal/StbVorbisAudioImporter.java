@@ -2,18 +2,16 @@ package com.samo.engine.assets.internal;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import org.lwjgl.stb.STBVorbis;
-import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 final class StbVorbisAudioImporter {
-    private static final int DECODE_BUFFER_FRAMES = 4096;
-
     private StbVorbisAudioImporter() {
 
     }
@@ -37,53 +35,32 @@ final class StbVorbisAudioImporter {
         }
 
         ByteBuffer nativeBytes = MemoryUtil.memAlloc(sourceBytes.length);
-        long decoder = 0L;
+        ShortBuffer decodedPcm = null;
         try {
             nativeBytes.put(sourceBytes).flip();
             try (MemoryStack stack = MemoryStack.stackPush()) {
-                int[] openError = new int[1];
-                decoder = STBVorbis.stb_vorbis_open_memory(nativeBytes, openError, null);
-                if (decoder == 0L) {
-                    throw new AssetCookerException(sourcePath + ": Ogg Vorbis open failed with stb_vorbis error " + openError[0]);
+                IntBuffer channelsValue = stack.mallocInt(1);
+                IntBuffer sampleRateValue = stack.mallocInt(1);
+                decodedPcm = STBVorbis.stb_vorbis_decode_memory(nativeBytes, channelsValue, sampleRateValue);
+                if (decodedPcm == null) {
+                    throw new AssetCookerException(sourcePath + ": Ogg Vorbis full decode failed");
                 }
 
-                STBVorbisInfo info = STBVorbisInfo.malloc(stack);
-                STBVorbis.stb_vorbis_get_info(decoder, info);
-                int channels = info.channels();
-                int sampleRate = info.sample_rate();
+                int channels = channelsValue.get(0);
+                int sampleRate = sampleRateValue.get(0);
                 if (channels != 1 && channels != 2) {
                     throw new AssetCookerException(sourcePath + ": Ogg Vorbis channel count must be mono or stereo, got " + channels);
                 }
                 if (sampleRate <= 0) {
                     throw new AssetCookerException(sourcePath + ": Ogg Vorbis sample rate must be positive, got " + sampleRate);
                 }
-
-                validateCompleteDecode(sourcePath, decoder, channels, stack);
                 return new CookedAudio(channels, sampleRate, sourceBytes);
             }
         } finally {
-            if (decoder != 0L) {
-                STBVorbis.stb_vorbis_close(decoder);
+            if (decodedPcm != null) {
+                MemoryUtil.memFree(decodedPcm);
             }
             MemoryUtil.memFree(nativeBytes);
-        }
-
-    }
-
-    private static void validateCompleteDecode(Path sourcePath, long decoder, int channels, MemoryStack stack) {
-
-        ShortBuffer decodeBuffer = stack.mallocShort(DECODE_BUFFER_FRAMES * channels);
-        while (true) {
-            STBVorbis.stb_vorbis_get_error(decoder);
-            decodeBuffer.clear();
-            int decodedFrames = STBVorbis.stb_vorbis_get_samples_short_interleaved(decoder, channels, decodeBuffer);
-            int decodeError = STBVorbis.stb_vorbis_get_error(decoder);
-            if (decodeError != STBVorbis.VORBIS__no_error) {
-                throw new AssetCookerException(sourcePath + ": Ogg Vorbis decode failed with stb_vorbis error " + decodeError);
-            }
-            if (decodedFrames == 0) {
-                break;
-            }
         }
 
     }

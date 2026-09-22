@@ -807,3 +807,21 @@ P6-T03 manifest schema/output paths and temporary source-byte MESH payloads rema
 
 Wiki impact: yes — offline MESH cooking now includes tangent-space generation and required normal-map UV validation.
 Sandbox impact: none — tangent-space values remain package-internal cooker state and no public/runtime mesh-loading path exists yet.
+
+
+## Phase 6 cooked mesh binary — P6-T07 / Issue #380
+
+`engine-assets` now persists MESH assets as package-internal `SMES` schema v1 instead of the temporary source-byte pass-through used by P6-T03 through P6-T06. Non-MESH asset types keep the existing opaque source-byte payload until their own bounded cooking tasks.
+
+`CookedMeshBinary` is the sole schema-v1 codec boundary. It writes and validates little-endian bytes with a 20-byte file header: ASCII `SMES`, schema version 1, positive mesh count, exact body byte length, and CRC32C over the full body. Decode validates the header, exact total length, and CRC32C before parsing any mesh record.
+
+Each body record has a fixed 48-byte header containing mesh index, UTF-8 name length, vertex/index counts, attribute flags, exact vertex stride, and six D-041 engine-space AABB floats. Name bytes are strict UTF-8. Vertices are interleaved as position XYZ, optional normal XYZ, optional tangent XYZS, and optional UV0 XY. Tangent S is the accepted P6-T06 handedness sign. Indices are little-endian int32 triangles.
+
+The codec validates finite numeric data, exact stream lengths/stride, supported flags only, paired tangent/sign streams, signs exactly ±1, valid triangle indices, unique nonnegative meshIndex values, exact recomputed AABB equality, strict UTF-8, overflow/truncation/trailing data, and checksum integrity. It does not repair or transform data.
+
+The cooker writes `CookedMeshBinary.encode(source.engineMeshes())` only for MESH assets. Manifest v1 and `assets/<AssetId>.bin` naming are unchanged; manifest `byteSize` reflects the actual SMES file size. The existing output-tree ownership and cleanup rules remain unchanged.
+
+No runtime manifest loader, public mesh/resource API, GPU upload, renderer/world/editor integration, compression, or P6-T08+ work is introduced. A later runtime path must cross the same validated binary boundary before mesh values can become eligible for GPU upload.
+
+Wiki impact: yes — MESH cooker output is now a documented cooked binary instead of source pass-through.
+Sandbox impact: none — this is package-internal offline persistence/validation with no public runtime loading path yet.

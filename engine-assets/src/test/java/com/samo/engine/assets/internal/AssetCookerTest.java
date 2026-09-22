@@ -196,7 +196,7 @@ class AssetCookerTest {
         writeMetadata(malformed.resolveSibling(malformed.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "AUDIO");
         Path malformedOutput = tempDir.resolve("malformed-audio-output");
         assertThatThrownBy(() -> AssetCooker.cook(malformedInput, malformedOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
-            .hasMessageContaining("open failed");
+            .hasMessageContaining("full decode failed");
         assertThat(malformedOutput).doesNotExist();
 
         Path multichannelInput = Files.createDirectory(tempDir.resolve("multichannel-audio-input"));

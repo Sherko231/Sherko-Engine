@@ -122,7 +122,7 @@ There is still no public/runtime texture resource API or GPU upload path; source
 
 ## Audio Ogg Vorbis cooking
 
-For metadata with `assetType: "AUDIO"`, the paired source must use `.ogg` case-insensitively and must be a valid Ogg Vorbis stream accepted by the scope-selected stb_vorbis implementation. Before output creation, the cooker validates the complete stream, accepts only mono or stereo channel counts, requires a positive sample rate, drains decode through end-of-stream, closes the native decoder handle, and preserves the original compressed Vorbis bytes exactly.
+For metadata with `assetType: "AUDIO"`, the paired source must use `.ogg` case-insensitively and must be a valid Ogg Vorbis stream accepted by the scope-selected stb_vorbis implementation. Before output creation, the cooker fully decodes the complete in-memory stream through stb_vorbis, accepts only mono or stereo channel counts, requires a positive sample rate, immediately frees the temporary decoded PCM, and preserves the original compressed Vorbis bytes exactly.
 
 Cooked audio files use little-endian `SAUD` schema v1. The header contains magic `SAUD`, schema version 1, Ogg Vorbis codec id 1, channel count, sample rate, exact compressed-payload byte length, and CRC32C. The body is the exact validated Ogg Vorbis source payload. Package-private `SAUD` decode validates metadata, exact length/checksum, truncation, and trailing data without invoking stb_vorbis or OpenAL.
 

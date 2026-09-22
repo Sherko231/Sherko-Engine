@@ -111,8 +111,8 @@ class SourceAssetMetadataTest {
     void separatesProgrammerContractFailuresFromMetadataDataFailures() {
 
         assertThatThrownBy(() -> SourceAssetMetadata.load(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("path");
-        assertThatThrownBy(() -> SourceAssetMetadata.load(tempDir.resolve("missing.assetmeta"))).isInstanceOf(SourceAssetMetadataLoadException.class)
-            .hasMessageContaining("missing.assetmeta").hasMessageContaining("missing or unreadable");
+        assertThatThrownBy(() -> SourceAssetMetadata.load(tempDir.resolve("missing.json"))).isInstanceOf(SourceAssetMetadataLoadException.class)
+            .hasMessageContaining("missing.json").hasMessageContaining("missing or unreadable");
 
         assertThatThrownBy(() -> new SourceAssetMetadata(2, AssetId.parse(ASSET_ID), AssetType.MESH)).isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("schemaVersion");
@@ -132,7 +132,7 @@ class SourceAssetMetadataTest {
 
     private Path writeMetadata(String json) throws IOException {
 
-        Path path = tempDir.resolve("fixture.assetmeta");
+        Path path = tempDir.resolve("fixture.json");
         Files.writeString(path, json, StandardCharsets.UTF_8);
         return path;
 

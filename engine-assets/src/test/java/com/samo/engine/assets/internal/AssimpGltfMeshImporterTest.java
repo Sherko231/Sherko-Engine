@@ -86,6 +86,16 @@ class AssimpGltfMeshImporterTest {
     }
 
     @Test
+    void rejectsNormalMappedMeshMissingNormalsWithPathAndMeshName() {
+
+        Path source = resourcePath("p6/normal-mapped-missing-normals.gltf");
+
+        assertThatThrownBy(() -> AssimpGltfMeshImporter.importFile(source)).isInstanceOf(AssetCookerException.class).hasMessageContaining(source.toString())
+            .hasMessageContaining("mesh[0] 'MissingNormalsTriangle'").hasMessageContaining("requires authored normals");
+
+    }
+
+    @Test
     void rejectsNormalMappedMeshMissingUv0WithPathAndMeshName() {
 
         Path source = resourcePath("p6/normal-mapped-missing-uv.gltf");

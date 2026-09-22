@@ -7,7 +7,6 @@ import com.samo.engine.assets.api.AssetId;
 import com.samo.engine.assets.api.AssetType;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class CookedDependencyGraphTest {
@@ -42,7 +41,7 @@ class CookedDependencyGraphTest {
     @Test
     void rejectsMalformedVersionDuplicateOwnerMissingReferenceAndCycle() {
 
-        Map<AssetId, AssetType> known = Map.of(TEXTURE, AssetType.TEXTURE, MATERIAL, AssetType.MATERIAL, PREFAB, AssetType.PREFAB);
+        Map<AssetId, AssetType> known = Map.of(TEXTURE, AssetType.TEXTURE, MATERIAL, AssetType.MATERIAL, PREFAB, AssetType.PREFAB, SCENE, AssetType.SCENE);
 
         assertRejected("{\"schemaVersion\":2,\"assets\":[]}", known, "upgrade required");
         assertRejected("""

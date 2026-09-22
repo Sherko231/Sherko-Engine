@@ -18,7 +18,9 @@ import java.util.stream.Stream;
 
 final class AssetCooker {
     static final String METADATA_SUFFIX = ".asset.json";
+    static final String DEPENDENCIES_SUFFIX = ".deps.json";
     private static final String MANIFEST_FILE = "manifest.json";
+    private static final String DEPENDENCIES_FILE = "dependencies.json";
     private static final String ASSETS_DIRECTORY = "assets";
 
     private AssetCooker() {
@@ -36,6 +38,7 @@ final class AssetCooker {
         Path input = requireInputDirectory(inputDirectory);
         Path output = requireOutputPath(input, outputCache);
         List<SourceAsset> sources = discoverSources(input);
+        AssetDependencyGraph dependencyGraph = AssetDependencyGraph.fromSources(sources);
 
         boolean outputOwned = false;
         try {
@@ -64,6 +67,7 @@ final class AssetCooker {
                 entries.add(new AssetManifestEntry(source.metadata().assetId(), source.metadata().assetType(), source.relativeSourcePath(), cookedRelative, cookedSize));
             }
 
+            fileSystem.writeString(output.resolve(DEPENDENCIES_FILE), CookedDependencyGraphJson.write(dependencyGraph));
             fileSystem.writeString(output.resolve(MANIFEST_FILE), AssetManifestJson.write(entries));
         } catch (IOException exception) {
             if (outputOwned) {
@@ -113,8 +117,9 @@ final class AssetCooker {
     private static List<SourceAsset> discoverSources(Path input) {
 
         ArrayList<Path> metadataPaths = new ArrayList<>();
+        ArrayList<Path> dependencyPaths = new ArrayList<>();
         try (Stream<Path> paths = Files.walk(input)) {
-            paths.forEach(path -> inspectDiscoveredPath(input, path, metadataPaths));
+            paths.forEach(path -> inspectDiscoveredPath(input, path, metadataPaths, dependencyPaths));
         } catch (IOException exception) {
             throw new AssetCookerException(input + ": failed to scan input directory", exception);
         } catch (UncheckedIOException exception) {
@@ -137,12 +142,14 @@ final class AssetCooker {
             sources.add(source);
         }
 
+        validateDependencySidecars(input, sources, dependencyPaths);
+
         sources.sort(Comparator.comparing(source -> source.metadata().assetId().toString()));
         return List.copyOf(sources);
 
     }
 
-    private static void inspectDiscoveredPath(Path input, Path path, List<Path> metadataPaths) {
+    private static void inspectDiscoveredPath(Path input, Path path, List<Path> metadataPaths, List<Path> dependencyPaths) {
 
         if (path.equals(input)) {
             return;
@@ -150,14 +157,18 @@ final class AssetCooker {
 
         String fileName = path.getFileName().toString();
         if (Files.isSymbolicLink(path)) {
-            if (fileName.endsWith(METADATA_SUFFIX)) {
-                throw new AssetCookerException(path + ": metadata symbolic links are not supported");
+            if (fileName.endsWith(METADATA_SUFFIX) || fileName.endsWith(DEPENDENCIES_SUFFIX)) {
+                throw new AssetCookerException(path + ": asset sidecar symbolic links are not supported");
             }
             return;
         }
 
-        if (fileName.endsWith(METADATA_SUFFIX) && Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-            metadataPaths.add(path);
+        if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+            if (fileName.endsWith(METADATA_SUFFIX)) {
+                metadataPaths.add(path);
+            } else if (fileName.endsWith(DEPENDENCIES_SUFFIX)) {
+                dependencyPaths.add(path);
+            }
         }
 
     }
@@ -194,7 +205,36 @@ final class AssetCooker {
             : List.of();
         List<TextureMipLevel> textureMipLevels = metadata.assetType() == AssetType.TEXTURE ? TextureMipChain.generate(StbTextureImporter.importFile(sourcePath)) : List.of();
         CookedAudio cookedAudio = metadata.assetType() == AssetType.AUDIO ? StbVorbisAudioImporter.importFile(sourcePath) : null;
-        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels, cookedAudio);
+        Path dependenciesPath = sourcePath.resolveSibling(sourcePath.getFileName() + DEPENDENCIES_SUFFIX);
+        SourceAssetDependencies dependencies = Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS)
+            ? SourceAssetDependenciesJson.load(dependenciesPath)
+            : SourceAssetDependencies.EMPTY;
+        if (Files.isSymbolicLink(dependenciesPath)) {
+            throw new AssetCookerException(dependenciesPath + ": asset sidecar symbolic links are not supported");
+        }
+        if (Files.exists(dependenciesPath, LinkOption.NOFOLLOW_LINKS) && !Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new AssetCookerException(dependenciesPath + ": dependency sidecar must be a regular file");
+        }
+        if (Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS) && metadata.assetType() != AssetType.MATERIAL && metadata.assetType() != AssetType.PREFAB
+            && metadata.assetType() != AssetType.SCENE) {
+            throw new AssetCookerException(dependenciesPath + ": dependency sidecars are supported only for MATERIAL, PREFAB, or SCENE assets");
+        }
+        return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels, cookedAudio, dependencies);
+
+    }
+
+    private static void validateDependencySidecars(Path input, List<SourceAsset> sources, List<Path> dependencyPaths) {
+
+        Set<Path> expected = new HashSet<>();
+        for (SourceAsset source : sources) {
+            expected.add(source.sourcePath().resolveSibling(source.sourcePath().getFileName() + DEPENDENCIES_SUFFIX).toAbsolutePath().normalize());
+        }
+        for (Path dependencyPath : dependencyPaths) {
+            Path normalized = dependencyPath.toAbsolutePath().normalize();
+            if (!expected.contains(normalized)) {
+                throw new AssetCookerException(dependencyPath + ": orphan dependency sidecar has no matching source asset metadata");
+            }
+        }
 
     }
 
@@ -215,11 +255,14 @@ final class AssetCooker {
     }
 
     record SourceAsset(Path sourcePath, SourceAssetMetadata metadata, String relativeSourcePath, List<EngineMesh> engineMeshes, List<TextureMipLevel> textureMipLevels,
-        CookedAudio cookedAudio) {
+        CookedAudio cookedAudio, SourceAssetDependencies dependencies) {
         SourceAsset {
 
             engineMeshes = List.copyOf(engineMeshes);
             textureMipLevels = List.copyOf(textureMipLevels);
+            if (dependencies == null) {
+                throw new NullPointerException("dependencies");
+            }
 
         }
     }

@@ -393,6 +393,78 @@ class AssetCookerTest {
     }
 
     @Test
+    void writesDependencyGraphAndRejectsOrphanSidecars() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("dependency-input"));
+        Path material = input.resolve("material.bin");
+        createAsset(material, FIRST_ID, "MATERIAL", new byte[]{1});
+        writeDependencies(material.resolveSibling(material.getFileName() + AssetCooker.DEPENDENCIES_SUFFIX), List.of(), List.of("opaque-baseline"));
+
+        Path prefab = input.resolve("prefab.bin");
+        createAsset(prefab, SECOND_ID, "PREFAB", new byte[]{2});
+        writeDependencies(prefab.resolveSibling(prefab.getFileName() + AssetCooker.DEPENDENCIES_SUFFIX), List.of(FIRST_ID), List.of());
+
+        Path output = tempDir.resolve("dependency-output");
+        AssetCooker.cook(input, output);
+
+        JsonNode dependencies = MAPPER.readTree(output.resolve("dependencies.json").toFile());
+        assertThat(fieldNames(dependencies)).containsExactly("schemaVersion", "assets");
+        assertThat(dependencies.get("schemaVersion").intValue()).isEqualTo(1);
+        assertThat(dependencies.get("assets").size()).isEqualTo(2);
+        assertThat(dependencies.get("assets").get(0).get("assetId").textValue()).isEqualTo(FIRST_ID);
+        assertThat(dependencies.get("assets").get(0).get("shaderDependencies").get(0).textValue()).isEqualTo("opaque-baseline");
+        assertThat(dependencies.get("assets").get(1).get("assetDependencies").get(0).textValue()).isEqualTo(FIRST_ID);
+
+        Path orphanInput = Files.createDirectory(tempDir.resolve("orphan-input"));
+        createAsset(orphanInput.resolve("valid.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
+        Files.writeString(orphanInput.resolve("ghost.bin" + AssetCooker.DEPENDENCIES_SUFFIX), """
+            {"schemaVersion":1,"assetDependencies":[],"shaderDependencies":[]}
+            """);
+        Path orphanOutput = tempDir.resolve("orphan-output");
+        assertThatThrownBy(() -> AssetCooker.cook(orphanInput, orphanOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("orphan dependency sidecar");
+        assertThat(orphanOutput).doesNotExist();
+
+    }
+
+    @Test
+    void rejectsDependencySidecarForUnsupportedOwnerTypeBeforeOutputCreation() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("unsupported-dependency-owner"));
+        Path audio = input.resolve("audio.bin");
+        createAsset(audio, FIRST_ID, "SKELETON", new byte[]{1});
+        writeDependencies(audio.resolveSibling(audio.getFileName() + AssetCooker.DEPENDENCIES_SUFFIX), List.of(), List.of());
+
+        Path output = tempDir.resolve("unsupported-dependency-output");
+        assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining("only for MATERIAL, PREFAB, or SCENE");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
+    void cleansNewOutputTreeWhenDependencyGraphWriteFails() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("dependency-write-failure-input"));
+        createAsset(input.resolve("material.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
+        Path output = tempDir.resolve("dependency-write-failure-output");
+
+        AssetCookerFileSystem failing = new DelegatingFileSystem() {
+            @Override
+            public void writeString(Path path, String content) throws IOException {
+
+                if (path.getFileName().toString().equals("dependencies.json")) {
+                    throw new IOException("intentional dependency graph failure");
+                }
+                super.writeString(path, content);
+
+            }
+        };
+
+        assertThatThrownBy(() -> AssetCooker.cook(input, output, failing)).isInstanceOf(AssetCookerException.class).hasMessageContaining("intentional dependency graph failure");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
     void cliRequiresExactlyTwoArguments() {
 
         assertThatThrownBy(() -> AssetCookerMain.main(new String[0])).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");
@@ -430,6 +502,20 @@ class AssetCookerTest {
               "assetType": "%s"
             }
             """.formatted(assetId, assetType), StandardCharsets.UTF_8);
+
+    }
+
+    private void writeDependencies(Path path, List<String> assetDependencies, List<String> shaderDependencies) throws IOException {
+
+        String assets = assetDependencies.stream().map(value -> "\"" + value + "\"").reduce((left, right) -> left + "," + right).orElse("");
+        String shaders = shaderDependencies.stream().map(value -> "\"" + value + "\"").reduce((left, right) -> left + "," + right).orElse("");
+        Files.writeString(path, """
+            {
+              "schemaVersion": 1,
+              "assetDependencies": [%s],
+              "shaderDependencies": [%s]
+            }
+            """.formatted(assets, shaders), StandardCharsets.UTF_8);
 
     }
 

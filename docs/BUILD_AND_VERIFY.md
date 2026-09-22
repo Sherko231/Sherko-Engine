@@ -2216,3 +2216,24 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T09 verification evidence: final PR #388 head `7e6aabbfb58bddc84abd3a10c674c2a003d67221` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #579 / `35781036481`. Earlier candidate runs exposed fixture compatibility and documentation-consistency issues; the final accepted implementation uses the explicit stb_vorbis open/info/sample-drain/error/close lifecycle with committed mono/stereo/multichannel fixtures and synchronized durable documentation. PR #388 merged as `4de4f3a9e9ca67857f9fe6f3b0bb159e4b6749d3`; exact-merge Lightweight master verification passed in run #580 / `35783262964`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T09 acceptance is complete.
+
+
+## P6-T10 asset dependency graph verification
+
+Issue #390 introduces strict optional `<source>.deps.json` authoring sidecars, package-private dependency graph/invalidation logic, and deterministic persisted `dependencies.json` schema v1 in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.SourceAssetDependenciesTest" --tests "com.samo.engine.assets.internal.AssetDependencyGraphTest" --tests "com.samo.engine.assets.internal.CookedDependencyGraphTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers strict sidecar fields/version/canonical AssetIds, canonical logical shader keys, duplicate/self/missing/type-invalid references, unsupported/orphan sidecars, cycle rejection, exact reverse-transitive invalidation including diamond deduplication and unrelated-branch exclusion, deterministic persisted ordering/bytes, malformed persisted graph rejection, cooker integration, and owned-output cleanup when `dependencies.json` writing fails. Expected invalidation sets are authored independently from production traversal.
+
+Dependency-lock diff must remain empty. No `AssetType`/source metadata v1/manifest schema/public API/module-edge/dependency change is permitted. The final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #390 closes.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; exact final-candidate repository CI remains mandatory.

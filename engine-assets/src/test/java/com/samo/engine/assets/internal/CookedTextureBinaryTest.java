@@ -14,12 +14,7 @@ class CookedTextureBinaryTest {
     @Test
     void encodesLittleEndianHeaderAndRoundTripsCompleteMipChainDeterministically() {
 
-        List<TextureMipLevel> levels = List.of(
-            new TextureMipLevel(2, 2, new byte[]{
-                1, 2, 3, 4, 5, 6, 7, 8,
-                9, 10, 11, 12, 13, 14, 15, 16
-            }),
-            new TextureMipLevel(1, 1, new byte[]{7, 8, 9, 10}));
+        List<TextureMipLevel> levels = List.of(new TextureMipLevel(2, 2, new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), new TextureMipLevel(1, 1, new byte[]{7, 8, 9, 10}));
 
         byte[] first = CookedTextureBinary.encode(levels);
         byte[] second = CookedTextureBinary.encode(levels);
@@ -46,15 +41,11 @@ class CookedTextureBinaryTest {
     @Test
     void rejectsChecksumAndStructuralCorruptionBeforeReturningTexture() {
 
-        byte[] valid = CookedTextureBinary.encode(List.of(
-            new TextureMipLevel(2, 2, new byte[16]),
-            new TextureMipLevel(1, 1, new byte[4])));
+        byte[] valid = CookedTextureBinary.encode(List.of(new TextureMipLevel(2, 2, new byte[16]), new TextureMipLevel(1, 1, new byte[4])));
 
         byte[] checksumCorrupt = valid.clone();
         checksumCorrupt[checksumCorrupt.length - 1] ^= 1;
-        assertThatThrownBy(() -> CookedTextureBinary.decode(checksumCorrupt))
-            .isInstanceOf(AssetCookerException.class)
-            .hasMessageContaining("checksum");
+        assertThatThrownBy(() -> CookedTextureBinary.decode(checksumCorrupt)).isInstanceOf(AssetCookerException.class).hasMessageContaining("checksum");
 
         byte[] badMagic = valid.clone();
         badMagic[0] = 'X';
@@ -74,8 +65,7 @@ class CookedTextureBinaryTest {
         rewriteChecksum(semanticCorrupt);
         assertThatThrownBy(() -> CookedTextureBinary.decode(semanticCorrupt)).hasMessageContaining("dimensions");
 
-        assertThatThrownBy(() -> CookedTextureBinary.decode(Arrays.copyOf(valid, valid.length - 1)))
-            .hasMessageContaining("body length");
+        assertThatThrownBy(() -> CookedTextureBinary.decode(Arrays.copyOf(valid, valid.length - 1))).hasMessageContaining("body length");
 
         byte[] trailing = Arrays.copyOf(valid, valid.length + 1);
         assertThatThrownBy(() -> CookedTextureBinary.decode(trailing)).hasMessageContaining("body length");

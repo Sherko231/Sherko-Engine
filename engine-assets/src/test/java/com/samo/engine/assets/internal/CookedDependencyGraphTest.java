@@ -19,10 +19,8 @@ class CookedDependencyGraphTest {
     void writesDeterministicMinimalSchemaAndDecodesAgainstKnownAssets() {
 
         Map<AssetId, AssetType> known = Map.of(TEXTURE, AssetType.TEXTURE, MATERIAL, AssetType.MATERIAL, PREFAB, AssetType.PREFAB);
-        AssetDependencyGraph graph = AssetDependencyGraph.fromPersisted(
-            List.of(new AssetDependencyGraph.Entry(PREFAB, AssetType.PREFAB, List.of(MATERIAL), List.of()),
-                new AssetDependencyGraph.Entry(MATERIAL, AssetType.MATERIAL, List.of(TEXTURE), List.of("opaque-baseline"))),
-            known);
+        AssetDependencyGraph graph = AssetDependencyGraph.fromPersisted(List.of(new AssetDependencyGraph.Entry(PREFAB, AssetType.PREFAB, List.of(MATERIAL), List.of()),
+            new AssetDependencyGraph.Entry(MATERIAL, AssetType.MATERIAL, List.of(TEXTURE), List.of("opaque-baseline"))), known);
 
         String first = CookedDependencyGraphJson.write(graph);
         String second = CookedDependencyGraphJson.write(graph);

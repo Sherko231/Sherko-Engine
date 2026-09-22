@@ -177,20 +177,7 @@ final class CookedMeshBinary {
         recordByteLength = addExact(recordByteLength, vertexBytes, "Mesh record is too large");
         recordByteLength = addExact(recordByteLength, indexBytes, "Mesh record is too large");
 
-        return new EncodedMesh(
-            meshIndex,
-            nameBytes,
-            vertexCount,
-            indices.length,
-            flags,
-            strideBytes,
-            bounds,
-            positions,
-            normals,
-            tangents,
-            tangentSigns,
-            uv0,
-            indices,
+        return new EncodedMesh(meshIndex, nameBytes, vertexCount, indices.length, flags, strideBytes, bounds, positions, normals, tangents, tangentSigns, uv0, indices,
             recordByteLength);
 
     }
@@ -522,20 +509,7 @@ final class CookedMeshBinary {
 
     }
 
-    private record EncodedMesh(
-        int meshIndex,
-        byte[] nameBytes,
-        int vertexCount,
-        int indexCount,
-        int flags,
-        int strideBytes,
-        float[] bounds,
-        float[] positions,
-        float[] normals,
-        float[] tangents,
-        float[] tangentSigns,
-        float[] uv0,
-        int[] indices,
-        int recordByteLength) {
+    private record EncodedMesh(int meshIndex, byte[] nameBytes, int vertexCount, int indexCount, int flags, int strideBytes, float[] bounds, float[] positions, float[] normals,
+        float[] tangents, float[] tangentSigns, float[] uv0, int[] indices, int recordByteLength) {
     }
 }

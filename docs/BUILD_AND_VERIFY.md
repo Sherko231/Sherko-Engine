@@ -2192,3 +2192,24 @@ Connector execution note: the GitHub connector environment cannot execute the Gr
 
 
 Accepted P6-T08 verification evidence: initial candidate run #546 / `35725924137` exposed incomplete transitive `lwjgl-stb` dependency-lock state after `engine-assets` itself compiled and its tests executed; the lock graph was reconciled across affected runtime/test consumers. Subsequent candidates exposed repository Spotless-only differences, which were corrected without changing behavior. Final PR #384 head `29e65306385babf2a1e9c10c7b842a49e084acfa` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #553 / `35726845758`. The passing Build job resolved committed dependency locks successfully and enforced the pinned formatter; Unit/JaCoCo exercised PNG/JPEG decode, deterministic mip generation, `STEX` encoding/decoding/corruption handling, and cooker integration. PR #384 merged as `51142468b8186a06b0fe73bfaac117843c065ff3`; exact-merge Lightweight master verification passed in run #554 / `35727487378`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T08 acceptance is therefore complete. The connector environment did not separately execute the focused Gradle command sequence locally; accepted repository CI is the execution evidence.
+
+
+## P6-T09 Ogg Vorbis audio cooking verification
+
+Issue #386 introduces offline Ogg Vorbis validation plus persisted `SAUD` schema v1 in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.StbVorbisAudioImporterTest" --tests "com.samo.engine.assets.internal.CookedAudioBinaryTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers committed Base64-encoded Ogg Vorbis fixtures whose metadata oracles are independently authored from their generation parameters: mono 22050 Hz, stereo 44100 Hz, and an unsupported three-channel 32000 Hz stream. Tests verify case-insensitive `.ogg`, exact source-payload preservation, complete decoder drain/error checking, path-diagnostic unsupported/malformed/truncated/multichannel failures, deterministic `SAUD` bytes, explicit little-endian header fields, mono/stereo/sample-rate validation, CRC32C, semantic metadata/length corruption, truncation/trailing data, cooker manifest byte size, and cleanup on cooked-audio write failure while retaining MESH/TEXTURE/non-AUDIO regressions.
+
+Dependency review must confirm no new dependency family, module edge, or unrelated lock drift; P6-T09 reuses the `lwjgl-stb` 3.4.3 dependency already present from P6-T08. The final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #386 closes.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are therefore not locally claimed as passing unless repository CI executes equivalent coverage; exact final-candidate CI remains mandatory.

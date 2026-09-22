@@ -31,13 +31,13 @@ Parsing preserves all 128 bits exactly. Null or noncanonical text is rejected. T
 
 References should persist the identity, not the source path. If authoring metadata moves together with a source file and keeps the same `AssetId`, existing references remain the same identity value.
 
-P6-T01 does not yet define how metadata is stored on disk. That belongs to P6-T02. The important boundary is that the identity itself is not derived from the current path.
+P6-T02 now defines strict schema-v1 source metadata containing `schemaVersion`, canonical `assetId`, and `assetType`. The important boundary remains unchanged: identity itself is not derived from the current source path. See [Source metadata](SOURCE_METADATA.md).
 
 ## Not implemented yet
 
-P6-T01 does not provide:
+The current asset foundation still does not provide:
 
-- a source metadata schema or metadata parser;
+- metadata discovery/sidecar naming, writing, or migration;
 - an asset cooker or manifest;
 - glTF/texture/audio import;
 - runtime asset handles or caches;

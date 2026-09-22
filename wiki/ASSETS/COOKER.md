@@ -54,7 +54,7 @@ A successful clean cook creates:
 
 P6-T03 derives cooked filenames from `AssetId`, not from source path.
 
-Every current `.bin` payload is still an opaque byte-for-byte copy of the source and must be nonzero. For `MESH` metadata, P6-T04 now first imports `.gltf` / `.glb` through LWJGL Assimp during validation, but the persisted payload remains the original source bytes until P6-T07 defines the final mesh schema.
+For `MESH` metadata, P6-T07 now writes deterministic cooked `SMES` schema v1 bytes instead of copying the source glTF/glb. Non-MESH asset types still use the P6-T03 opaque byte-for-byte source payload until their own bounded cooking tasks.
 
 ## Mesh glTF validation/import
 
@@ -82,6 +82,33 @@ engineZ = -importZ
 Positions, normals, and tangent xyz use that mapping with scale factor 1.0. Because the mapping is a 180-degree +Y rotation with determinant +1, winding, triangle indices, and tangent handedness signs remain unchanged. UV0 remains exactly the accepted Assimp value. Distinct internal `ImportedMesh` and `EngineMesh` values prevent accidental repeat conversion.
 
 For meshes whose referenced glTF material contains a tangent-space normal map, UV0 and authored normals are required. Normal maps selecting another UV channel are rejected in this slice. Missing required UV0/normals or missing tangent-generation output fails before output creation with source-path and mesh-name context. Meshes without tangent-space normal mapping are not forced to provide UV0. Non-triangle faces and out-of-range indices still fail import. Assimp scene memory is released before import returns; native pointers do not escape into later cooker/runtime code.
+
+## Cooked MESH binary version 1
+
+MESH `.bin` files use little-endian `SMES` schema v1.
+
+The file begins with a 20-byte header:
+
+- 4 raw bytes: ASCII `SMES`;
+- int32 schema version: `1`;
+- int32 positive mesh count;
+- int32 exact body byte length;
+- uint32 CRC32C bits for the complete body.
+
+CRC32C is verified before mesh records are parsed.
+
+The body is a sequence of mesh records with no padding. Every record starts with a 48-byte header containing mesh index, strict UTF-8 name length, vertex count, triangle-index count, attribute flags, exact vertex stride, and min/max XYZ AABB in already-converted D-041 engine space. It is followed by name bytes, interleaved vertices, and little-endian int32 indices.
+
+Vertex order is fixed:
+
+1. position XYZ;
+2. optional normal XYZ;
+3. optional tangent XYZS, where S is the P6-T06 handedness sign;
+4. optional UV0 XY.
+
+The decoder rejects bad magic/version/length/checksum, malformed UTF-8, unknown flags, invalid stride/counts, non-finite numeric data, invalid tangent signs, invalid triangle indices, duplicate mesh indices, AABB mismatch, truncation, and trailing bytes. No mesh value is returned when validation fails.
+
+This format is package-internal today. There is still no public/runtime resource loader or GPU upload path; a later runtime path must validate cooked bytes before upload.
 
 ## Manifest version 1
 
@@ -123,10 +150,9 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 
 ## Not implemented yet
 
-The current P6-T06 cooker still does not perform:
+The current P6-T07 cooker still does not perform:
 
 - normal or UV generation;
-- final mesh binary schema, magic, bounds, or checksum;
 - PNG/JPEG or audio decoding;
 - dependency graph/incremental invalidation;
 - runtime manifest loading;

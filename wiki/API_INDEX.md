@@ -157,9 +157,11 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 
 `SourceAssetMetadata.load(Path)` loads strict UTF-8 JSON schema version 1 with exactly `schemaVersion`, `assetId`, and `assetType`. Unknown/duplicate fields, malformed or wrong-type values, noncanonical IDs, unknown asset types, missing/unreadable files, and missing fields fail without returning partial metadata. Any schema version other than 1 fails with an `upgrade required` diagnostic. Jackson remains an implementation detail.
 
-P6-T02 still does not define metadata discovery/sidecar naming, writing/saving, migration, type-specific import settings, cooking, manifests, runtime resource handles/caches, import, reference counting, or renderer/world consumption.
+The public asset API remains limited to identity and source metadata. P6-T03 adds an internal offline cooker with adjacent `<source>.asset.json` discovery, deterministic manifest v1, and AssetId-based cache paths. P6-T04 adds internal Assimp validation/import for MESH `.gltf` / `.glb` sources only. Neither task adds a public mesh/runtime-resource API; imported values remain pre-engine-conversion implementation state and persisted mesh payloads remain temporary source-byte copies.
 
-Usage: [Asset identity](ASSETS/ASSET_ID.md) and [Source metadata](ASSETS/SOURCE_METADATA.md).
+Metadata writing/saving, migration, runtime resource handles/caches, source-to-engine mesh conversion, final cooked mesh schemas, reference counting, and renderer/world consumption remain unimplemented.
+
+Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), and [Asset cooker](ASSETS/COOKER.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 

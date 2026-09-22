@@ -70,7 +70,15 @@ Before creating the output cache, the cooker imports every Assimp mesh and copie
 
 P6-T04 uses no Assimp post-process flags. Assimp's glTF importer itself compacts/remaps indexed vertices by first use and converts glTF UV V to its lower-left convention; the cooker accepts those format-intrinsic decode semantics. It does not add a second UV flip, flip winding, change handedness, pre-transform nodes, generate normals/tangents, optimize meshes, or convert spatial coordinates/units.
 
-The imported values are therefore Assimp import-basis data, not raw accessor order and not D-041 engine-space data. P6-T05 owns the exactly-once coordinate/unit conversion.
+The imported values first exist in Assimp import basis. P6-T05 then converts every imported mesh exactly once into D-041 engine space before output-cache creation:
+
+```text
+engineX = -importX
+engineY =  importY
+engineZ = -importZ
+```
+
+Positions, normals, and tangent xyz use that mapping with scale factor 1.0. Because the mapping is a 180-degree +Y rotation with determinant +1, winding and triangle indices remain unchanged. UV0 remains exactly the accepted P6-T04 Assimp value. Distinct internal `ImportedMesh` and `EngineMesh` values prevent accidental repeat conversion.
 
 Missing normals, tangents, or UV0 remain absent. Non-triangle faces and out-of-range indices fail import. Assimp scene memory is released before import returns; native pointers do not escape into later cooker/runtime code.
 
@@ -114,9 +122,8 @@ A pre-existing output path is never deleted or overwritten. If a failure occurs 
 
 ## Not implemented yet
 
-The current P6-T04 cooker still does not perform:
+The current P6-T05 cooker still does not perform:
 
-- coordinate/unit conversion;
 - tangent generation or UV validation;
 - final mesh binary schema, magic, bounds, or checksum;
 - PNG/JPEG or audio decoding;

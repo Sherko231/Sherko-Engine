@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T07 / Issue #380 is the current bounded task |
+| Active phase | Phase 6 active — P6-T01 through P6-T07 accepted; P6-T08 is the next task to freshly materialize/refine |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-T07 / Issue #380 — persisted cooked MESH binary schema v1 and corruption validation |
+| Active executable task | None — P6-T07 / Issue #380 is accepted; freshly materialize/refine P6-T08 against current `master` before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -208,4 +208,4 @@ P6-T05 / Issue #374 is accepted. After one obsolete candidate exposed IEEE signe
 P6-T06 / Issue #377 is accepted. Initial candidate run #538 exposed an incorrect pre-execution +1 handedness assumption for the generated tangent fixture and one Spotless wrapping difference; the Issue oracle was refined to the executed Assimp result instead of flipping imported handedness. Final PR #378 head `3e531c87e5c6438a722d8b00db59a9259ba2f542` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #540 / `35719320776`. PR #378 merged as `7b0a59a1518dd58804e81c6bae5b83cc9095cec8`, and exact-merge Lightweight master verification passed in run #541 / `35719896845`. The accepted contract enables exactly `aiProcess_CalcTangentSpace`, detects normal-map tangent-space requirement from the referenced Assimp material, validates UV0/authored normals/tangent output before cache creation, preserves per-vertex tangent handedness signs as ±1 through the determinant +1 P6-T05 conversion, and leaves P6-T03 persisted payloads unchanged. No source metadata schema, dependency/module edge, P6-T07 mesh format, runtime resource API, renderer/world/editor integration, or sandbox source change was introduced.
 
 
-P6-T07 / Issue #380 is active from baseline `90ca66df7ee89037181c9b8ef5d6d141f2833bde`. The refined contract replaces only MESH source-byte pass-through with deterministic little-endian `SMES` schema v1: a 20-byte magic/version/count/body-length/CRC32C header followed by sequential mesh records carrying strict UTF-8 names, vertex/index counts, attribute flags/stride, exact D-041 engine-space AABBs, interleaved position/normal/tangent-XYZS/UV0 streams, and int32 triangle indices. Decode verifies exact length and CRC32C before record parsing, then enforces structural/numeric/index/bounds validation before returning any `EngineMesh` values. Manifest v1/path naming and non-MESH pass-through remain unchanged. No dependency/module edge, public API, runtime resource loader, GPU upload, renderer/world/editor integration, P6-T08+, metadata schema, manifest schema, or sandbox source change is included.
+P6-T07 / Issue #380 is accepted. Initial candidate run #542 failed only Spotless formatting while compilation, architecture, unit, and JaCoCo paths otherwise executed; the formatter shape was corrected without changing behavior. Final PR #381 head `57b6926e9626cc96bee47453e6d249057a064972` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #544 / `35722428096`. PR #381 merged as `c43e703e54ee325b0be5287a4520a38fc05da939`, and exact-merge Lightweight master verification passed in run #545 / `35723120057`. The accepted contract replaces MESH source-byte pass-through with deterministic little-endian `SMES` schema v1, validates exact length and CRC32C before record parsing, persists strict UTF-8 names, counts, flags/stride, D-041 AABBs, interleaved position/normal/tangent-XYZS/UV0 streams, and int32 indices, and rejects malformed/corrupt payloads before returning any mesh values. Manifest v1/path naming and non-MESH pass-through remain unchanged; no dependency/module edge, public API, runtime resource loader, GPU upload, renderer/world/editor integration, P6-T08+, metadata schema, manifest schema, or sandbox source change was introduced.

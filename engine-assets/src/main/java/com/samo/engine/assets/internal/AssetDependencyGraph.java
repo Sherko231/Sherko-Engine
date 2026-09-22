@@ -77,12 +77,12 @@ final class AssetDependencyGraph {
             if (knownOwnerType != entry.assetType()) {
                 throw new AssetCookerException("Dependency graph owner type mismatch for " + entry.assetId());
             }
-            if (entries.putIfAbsent(entry.assetId(), entry) != null) {
-                throw new AssetCookerException("Duplicate dependency graph owner " + entry.assetId());
-            }
-
             SourceAssetDependencies dependencies = new SourceAssetDependencies(entry.assetDependencies(), entry.shaderDependencies());
             validateOwner("Dependency graph owner " + entry.assetId(), entry.assetId(), entry.assetType(), dependencies, knownAssets);
+            Entry normalized = sortedEntry(entry.assetId(), entry.assetType(), entry.assetDependencies(), entry.shaderDependencies());
+            if (entries.putIfAbsent(entry.assetId(), normalized) != null) {
+                throw new AssetCookerException("Duplicate dependency graph owner " + entry.assetId());
+            }
         }
 
         rejectCycles(entries);

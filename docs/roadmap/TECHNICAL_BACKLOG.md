@@ -180,7 +180,7 @@ Exit gate: **PASS.** The completed P1-P5 codebase passed full repository verific
 
 Goal: remove source-format parsing and raw file paths from runtime gameplay.
 
-- [ ] P6-T01 Define `AssetId` as a stable 128-bit identifier independent of file path. Acceptance: moving a source file does not change references after metadata moves with it.
+- [ ] P6-T01 Define `AssetId` as a stable 128-bit identifier independent of file path. Acceptance: moving a source file does not change references after metadata moves with it. Active executable contract: Issue #362, freshly refined from `master` `4b0f73d55049b316203aa969ec947a818e17cfe2`; P6-T02+ remain out of scope.
 - [ ] P6-T02 Define versioned source metadata for mesh, texture, material, skeleton, animation, audio, prefab, and scene assets. Acceptance: unknown versions fail with an upgrade-required message.
 - [ ] P6-T03 Implement a command-line asset cooker with one input directory and one output cache. Acceptance: clean cooking produces a manifest and nonzero cooked files.
 - [ ] P6-T04 Import glTF meshes through Assimp in the cooker. Acceptance: positions, normals, tangents, UVs, and indices match a known reference asset.

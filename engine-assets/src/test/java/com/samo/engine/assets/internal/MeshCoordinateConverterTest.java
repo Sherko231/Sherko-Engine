@@ -23,6 +23,7 @@ class MeshCoordinateConverterTest {
         assertThat(engine.positions()).containsExactly(-7.0f, -8.0f, -9.0f, -1.0f, 2.0f, -3.0f, 4.0f, 5.0f, -6.0f);
         assertThat(engine.normals()).containsExactly(0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f);
         assertThat(engine.tangents()).containsExactly(-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+        assertThat(engine.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
         assertThat(engine.uv0()).containsExactly(1.0f, 1.0f, 0.25f, 0.25f, 0.50f, 0.875f);
         assertThat(engine.indices()).containsExactly(0, 1, 2);
 
@@ -67,6 +68,7 @@ class MeshCoordinateConverterTest {
 
         assertThat(engine.normals()).isNull();
         assertThat(engine.tangents()).isNull();
+        assertThat(engine.tangentSigns()).isNull();
         assertThat(engine.uv0()).isNull();
         assertThat(engine.indices()).containsExactly(imported.indices());
 
@@ -75,17 +77,17 @@ class MeshCoordinateConverterTest {
     @Test
     void rejectsMalformedInternalAttributeLengths() {
 
-        ImportedMesh badPositions = new ImportedMesh(4, "BrokenPositions", new float[]{1.0f, 2.0f}, null, null, null, new int[]{0});
+        ImportedMesh badPositions = new ImportedMesh(4, "BrokenPositions", new float[]{1.0f, 2.0f}, null, null, null, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(badPositions)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[4] 'BrokenPositions'")
             .hasMessageContaining("positions length");
 
-        ImportedMesh badNormals = new ImportedMesh(5, "BrokenNormals", new float[]{1.0f, 2.0f, 3.0f}, new float[]{0.0f, 1.0f}, null, null, new int[]{0});
+        ImportedMesh badNormals = new ImportedMesh(5, "BrokenNormals", new float[]{1.0f, 2.0f, 3.0f}, new float[]{0.0f, 1.0f}, null, null, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(badNormals)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("normals length");
 
-        ImportedMesh badTangents = new ImportedMesh(6, "BrokenTangents", new float[]{1.0f, 2.0f, 3.0f}, null, new float[]{1.0f, 0.0f}, null, new int[]{0});
+        ImportedMesh badTangents = new ImportedMesh(6, "BrokenTangents", new float[]{1.0f, 2.0f, 3.0f}, null, new float[]{1.0f, 0.0f}, new float[]{1.0f}, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(badTangents)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("tangents length");
 
-        ImportedMesh badUv = new ImportedMesh(7, "BrokenUv", new float[]{1.0f, 2.0f, 3.0f}, null, null, new float[]{0.5f}, new int[]{0});
+        ImportedMesh badUv = new ImportedMesh(7, "BrokenUv", new float[]{1.0f, 2.0f, 3.0f}, null, null, null, new float[]{0.5f}, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(badUv)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("UV0 length");
 
     }
@@ -93,18 +95,29 @@ class MeshCoordinateConverterTest {
     @Test
     void rejectsNonFiniteSpatialDataWithMeshContext() {
 
-        ImportedMesh nonFinitePosition = new ImportedMesh(8, "NonFinite", new float[]{Float.NaN, 0.0f, 0.0f}, null, null, null, new int[]{0});
+        ImportedMesh nonFinitePosition = new ImportedMesh(8, "NonFinite", new float[]{Float.NaN, 0.0f, 0.0f}, null, null, null, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFinitePosition)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[8] 'NonFinite'")
             .hasMessageContaining("non-finite");
 
-        ImportedMesh nonFiniteNormal = new ImportedMesh(9, "BadNormal", new float[]{0.0f, 0.0f, 0.0f}, new float[]{Float.POSITIVE_INFINITY, 0.0f, 0.0f}, null, null, new int[]{0});
+        ImportedMesh nonFiniteNormal = new ImportedMesh(9, "BadNormal", new float[]{0.0f, 0.0f, 0.0f}, new float[]{Float.POSITIVE_INFINITY, 0.0f, 0.0f}, null, null, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFiniteNormal)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[9] 'BadNormal'")
             .hasMessageContaining("non-finite");
 
         float[] nonFiniteTangentValues = new float[]{0.0f, Float.NEGATIVE_INFINITY, 0.0f};
-        ImportedMesh nonFiniteTangent = new ImportedMesh(10, "BadTangent", new float[]{0.0f, 0.0f, 0.0f}, null, nonFiniteTangentValues, null, new int[]{0});
+        ImportedMesh nonFiniteTangent = new ImportedMesh(10, "BadTangent", new float[]{0.0f, 0.0f, 0.0f}, null, nonFiniteTangentValues, new float[]{1.0f}, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFiniteTangent)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("mesh[10] 'BadTangent'")
             .hasMessageContaining("non-finite");
+
+    }
+
+    @Test
+    void rejectsInvalidTangentSignStream() {
+
+        ImportedMesh wrongLength = new ImportedMesh(11, "WrongSigns", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{1.0f, 0.0f, 0.0f}, new float[]{1.0f, -1.0f}, null, new int[]{0});
+        assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(wrongLength)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("tangentSigns length");
+
+        ImportedMesh invalidSign = new ImportedMesh(12, "InvalidSign", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{1.0f, 0.0f, 0.0f}, new float[]{0.0f}, null, new int[]{0});
+        assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(invalidSign)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly +1 or -1");
 
     }
 

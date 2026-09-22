@@ -144,6 +144,18 @@ Usage: [Logging](CORE/LOGGING.md), [Native resources](CORE/NATIVE_RESOURCES.md),
 
 Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick commands](PLATFORM/INPUT.md), and [Create a window example](EXAMPLES/CREATE_A_WINDOW.md).
 
+## `engine-assets` — `com.samo.engine.assets.api`
+
+| Type | Purpose |
+| --- | --- |
+| `AssetId` | Immutable path-independent 128-bit asset identity with generation plus canonical lowercase UUID-style text parse/format. |
+
+`AssetId` contains only identity bits. Construct it directly from two 64-bit halves when restoring an already-known identity, use `AssetId.generate()` when authoring a new identity, and use `AssetId.parse(text)` / `toString()` for the canonical 36-character lowercase textual form. Moving a source file does not change an existing reference as long as the metadata carrying that identity keeps the same `AssetId`.
+
+P6-T01 does not define source metadata files, cooking, manifests, runtime handles, caches, import, reference counting, or loading. Do not infer those APIs from `AssetId`.
+
+Usage: [Asset identity](ASSETS/ASSET_ID.md).
+
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 
 | Type | Purpose |

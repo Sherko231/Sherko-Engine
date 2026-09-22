@@ -65,8 +65,8 @@ class SourceAssetMetadataTest {
             }
             """.formatted(ASSET_ID));
 
-        assertThatThrownBy(() -> SourceAssetMetadata.load(metadataPath)).isInstanceOf(SourceAssetMetadataLoadException.class)
-            .hasMessageContaining(metadataPath.toString()).hasMessageContaining("upgrade required");
+        assertThatThrownBy(() -> SourceAssetMetadata.load(metadataPath)).isInstanceOf(SourceAssetMetadataLoadException.class).hasMessageContaining(metadataPath.toString())
+            .hasMessageContaining("upgrade required");
 
     }
 
@@ -125,8 +125,8 @@ class SourceAssetMetadataTest {
 
         Path metadataPath = writeMetadata(json);
 
-        assertThatThrownBy(() -> SourceAssetMetadata.load(metadataPath)).isInstanceOf(SourceAssetMetadataLoadException.class)
-            .hasMessageContaining(metadataPath.toString()).hasMessageContaining(messagePart);
+        assertThatThrownBy(() -> SourceAssetMetadata.load(metadataPath)).isInstanceOf(SourceAssetMetadataLoadException.class).hasMessageContaining(metadataPath.toString())
+            .hasMessageContaining(messagePart);
 
     }
 

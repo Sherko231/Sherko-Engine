@@ -103,7 +103,8 @@ class MeshCoordinateConverterTest {
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFiniteNormal)).isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("mesh[9] 'BadNormal'").hasMessageContaining("non-finite");
 
-        ImportedMesh nonFiniteTangent = new ImportedMesh(10, "BadTangent", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{0.0f, Float.NEGATIVE_INFINITY, 0.0f}, null, new int[]{0});
+        ImportedMesh nonFiniteTangent =
+                new ImportedMesh(10, "BadTangent", new float[]{0.0f, 0.0f, 0.0f}, null, new float[]{0.0f, Float.NEGATIVE_INFINITY, 0.0f}, null, new int[]{0});
         assertThatThrownBy(() -> MeshCoordinateConverter.toEngineSpace(nonFiniteTangent)).isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("mesh[10] 'BadTangent'").hasMessageContaining("non-finite");
 

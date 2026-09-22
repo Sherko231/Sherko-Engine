@@ -10,3 +10,4 @@ org.lwjgl:lwjgl-glfw:3.4.3=runtimeClasspath,testRuntimeClasspath
 org.lwjgl:lwjgl-opengl:3.4.3=runtimeClasspath,testRuntimeClasspath
 org.lwjgl:lwjgl:3.4.3=runtimeClasspath,testRuntimeClasspath
 empty=annotationProcessor,testAnnotationProcessor
+org.lwjgl:lwjgl-assimp:3.4.3=runtimeClasspath,testRuntimeClasspath

@@ -14,6 +14,8 @@ interface AssetCookerFileSystem {
 
     void copy(Path source, Path target) throws IOException;
 
+    void writeBytes(Path path, byte[] bytes) throws IOException;
+
     long size(Path path) throws IOException;
 
     void writeString(Path path, String content) throws IOException;
@@ -45,6 +47,13 @@ interface AssetCookerFileSystem {
             public void copy(Path source, Path target) throws IOException {
 
                 Files.copy(source, target);
+
+            }
+
+            @Override
+            public void writeBytes(Path path, byte[] bytes) throws IOException {
+
+                Files.write(path, bytes);
 
             }
 

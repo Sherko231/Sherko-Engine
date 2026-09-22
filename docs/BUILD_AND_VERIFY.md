@@ -2013,3 +2013,26 @@ Connector execution note: the GitHub connector environment cannot execute the Gr
 
 
 Accepted P6-T01 verification evidence: after the initial candidate correctly failed Spotless, the formatter-only correction produced final PR #363 head `ae34d0cd84be2899fecd821f9af485a6f4c1f084`. That exact head passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #504 / `35698629954`. PR #363 merged as `37f3c163d2bb492ee08f6306e07b017c6ea26119`; exact-merge Lightweight master verification passed in run #505 / `35700148367`. P6-T01 acceptance is therefore complete. The connector environment did not separately execute the documented focused Gradle command locally; the passing repository-wide Unit tests and quality gates include the committed `AssetIdTest` and Spotless enforcement.
+
+
+## P6-T02 source metadata verification
+
+Issue #365 defines strict versioned source metadata loading in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.api.SourceAssetMetadataTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers all eight schema-v1 asset types, exact persisted P6-T01 identity, field-order independence, unsupported-version `upgrade required` failure, malformed/missing/unknown/duplicate/wrong-type fields, noncanonical IDs, unknown asset types, missing files, null path, and direct-construction validation. The test oracle uses handwritten schema-v1 JSON and explicit expected values/messages rather than production serialization output.
+
+Dependency review must confirm `engine-assets` reuses repository-selected Jackson 2.21.2 as implementation-only, no version-catalog drift occurs, and only lock configurations that newly resolve Jackson change. No P6-T03+ cooker/import/runtime behavior is authorized.
+
+Because P6-T02 adds public Java API, persisted-format semantics, implementation dependency ownership, tests, locks, and wiki guidance, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #365 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands must be recorded as not locally executed unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

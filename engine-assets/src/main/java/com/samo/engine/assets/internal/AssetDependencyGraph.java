@@ -19,15 +19,15 @@ final class AssetDependencyGraph {
     private final Map<AssetId, Entry> entries;
     private final Map<AssetId, List<AssetId>> reverseAssetDependencies;
     private final Map<String, List<AssetId>> reverseShaderDependencies;
-    private final Set<AssetId> knownAssetIds;
+    private final Set<AssetId> knownAssets.keySet();
 
     private AssetDependencyGraph(Map<AssetId, Entry> entries, Map<AssetId, List<AssetId>> reverseAssetDependencies, Map<String, List<AssetId>> reverseShaderDependencies,
-        Set<AssetId> knownAssetIds) {
+        Set<AssetId> knownAssets.keySet()) {
 
         this.entries = Map.copyOf(entries);
         this.reverseAssetDependencies = Map.copyOf(reverseAssetDependencies);
         this.reverseShaderDependencies = Map.copyOf(reverseShaderDependencies);
-        this.knownAssetIds = Set.copyOf(knownAssetIds);
+        this.knownAssets.keySet() = Set.copyOf(knownAssets.keySet());
 
     }
 
@@ -63,22 +63,26 @@ final class AssetDependencyGraph {
 
     }
 
-    static AssetDependencyGraph fromPersisted(Collection<Entry> persistedEntries, Set<AssetId> knownAssetIds) {
+    static AssetDependencyGraph fromPersisted(Collection<Entry> persistedEntries, Map<AssetId, AssetType> knownAssets) {
 
         LinkedHashMap<AssetId, Entry> entries = new LinkedHashMap<>();
         for (Entry entry : persistedEntries) {
-            if (!knownAssetIds.contains(entry.assetId())) {
+            if (!knownAssets.keySet().contains(entry.assetId())) {
                 throw new AssetCookerException("Dependency graph owner is not present in known assets: " + entry.assetId());
             }
             if (entries.putIfAbsent(entry.assetId(), entry) != null) {
                 throw new AssetCookerException("Duplicate dependency graph owner " + entry.assetId());
             }
             for (AssetId dependency : entry.assetDependencies()) {
-                if (!knownAssetIds.contains(dependency)) {
+                AssetType dependencyType = knownAssets.get(dependency);
+                if (dependencyType == null) {
                     throw new AssetCookerException("Dependency graph references missing asset " + dependency);
                 }
                 if (dependency.equals(entry.assetId())) {
                     throw new AssetCookerException("Dependency graph owner cannot depend on itself: " + entry.assetId());
+                }
+                if (entry.assetType() == AssetType.MATERIAL && dependencyType != AssetType.TEXTURE) {
+                    throw new AssetCookerException("MATERIAL dependency graph entries must reference TEXTURE assets, got " + dependencyType + " for " + dependency);
                 }
             }
             if (entry.assetType() != AssetType.MATERIAL && !entry.shaderDependencies().isEmpty()) {
@@ -87,7 +91,7 @@ final class AssetDependencyGraph {
         }
 
         rejectCycles(entries);
-        return build(entries, knownAssetIds);
+        return build(entries, knownAssets.keySet());
 
     }
 
@@ -118,9 +122,9 @@ final class AssetDependencyGraph {
 
     }
 
-    Set<AssetId> knownAssetIds() {
+    Set<AssetId> knownAssets.keySet()() {
 
-        return knownAssetIds;
+        return knownAssets.keySet();
 
     }
 
@@ -161,7 +165,7 @@ final class AssetDependencyGraph {
 
     }
 
-    private static AssetDependencyGraph build(Map<AssetId, Entry> entries, Set<AssetId> knownAssetIds) {
+    private static AssetDependencyGraph build(Map<AssetId, Entry> entries, Set<AssetId> knownAssets.keySet()) {
 
         HashMap<AssetId, ArrayList<AssetId>> reverseAssets = new HashMap<>();
         HashMap<String, ArrayList<AssetId>> reverseShaders = new HashMap<>();
@@ -181,7 +185,7 @@ final class AssetDependencyGraph {
         Map<String, List<AssetId>> immutableReverseShaders = new HashMap<>();
         reverseShaders.forEach((key, value) -> immutableReverseShaders.put(key, List.copyOf(value)));
 
-        return new AssetDependencyGraph(entries, immutableReverseAssets, immutableReverseShaders, knownAssetIds);
+        return new AssetDependencyGraph(entries, immutableReverseAssets, immutableReverseShaders, knownAssets.keySet());
 
     }
 

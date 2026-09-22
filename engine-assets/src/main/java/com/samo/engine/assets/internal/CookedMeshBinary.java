@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -175,7 +177,21 @@ final class CookedMeshBinary {
         recordByteLength = addExact(recordByteLength, vertexBytes, "Mesh record is too large");
         recordByteLength = addExact(recordByteLength, indexBytes, "Mesh record is too large");
 
-        return new EncodedMesh(meshIndex, nameBytes, vertexCount, indices.length, flags, strideBytes, bounds, positions, normals, tangents, tangentSigns, uv0, indices, recordByteLength);
+        return new EncodedMesh(
+            meshIndex,
+            nameBytes,
+            vertexCount,
+            indices.length,
+            flags,
+            strideBytes,
+            bounds,
+            positions,
+            normals,
+            tangents,
+            tangentSigns,
+            uv0,
+            indices,
+            recordByteLength);
 
     }
 
@@ -323,7 +339,8 @@ final class CookedMeshBinary {
 
         Objects.requireNonNull(value, "name");
         try {
-            ByteBuffer encoded = StandardCharsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).encode(CharBuffer.wrap(value));
+            CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
+            ByteBuffer encoded = encoder.encode(CharBuffer.wrap(value));
             byte[] bytes = new byte[encoded.remaining()];
             encoded.get(bytes);
             return bytes;
@@ -336,7 +353,8 @@ final class CookedMeshBinary {
     private static String decodeUtf8(byte[] bytes, int meshIndex) {
 
         try {
-            return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString();
+            CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
+            return decoder.decode(ByteBuffer.wrap(bytes)).toString();
         } catch (CharacterCodingException exception) {
             throw failure(meshIndex, "mesh name is not valid UTF-8", exception);
         }

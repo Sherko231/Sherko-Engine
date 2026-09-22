@@ -213,8 +213,8 @@ final class AssetCooker {
         if (Files.exists(dependenciesPath, LinkOption.NOFOLLOW_LINKS) && !Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS)) {
             throw new AssetCookerException(dependenciesPath + ": dependency sidecar must be a regular file");
         }
-        if ((!dependencies.assetDependencies().isEmpty() || !dependencies.shaderDependencies().isEmpty())
-            && metadata.assetType() != AssetType.MATERIAL && metadata.assetType() != AssetType.PREFAB && metadata.assetType() != AssetType.SCENE) {
+        if (Files.isRegularFile(dependenciesPath, LinkOption.NOFOLLOW_LINKS) && metadata.assetType() != AssetType.MATERIAL && metadata.assetType() != AssetType.PREFAB
+            && metadata.assetType() != AssetType.SCENE) {
             throw new AssetCookerException(dependenciesPath + ": dependency sidecars are supported only for MATERIAL, PREFAB, or SCENE assets");
         }
         return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels, cookedAudio, dependencies);

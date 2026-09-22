@@ -54,7 +54,7 @@ class StbVorbisAudioImporterTest {
         Path malformed = tempDir.resolve("malformed.ogg");
         Files.write(malformed, new byte[]{'O', 'g', 'g', 'S', 1, 2, 3, 4});
         assertThatThrownBy(() -> StbVorbisAudioImporter.importFile(malformed)).isInstanceOf(AssetCookerException.class).hasMessageContaining(malformed.toString())
-            .hasMessageContaining("open failed");
+            .hasMessageContaining("full decode failed");
 
         byte[] valid = VorbisTestFixtures.read("p6/stereo-44100.ogg.b64");
         Path truncated = tempDir.resolve("truncated.ogg");

@@ -163,6 +163,21 @@ class AssetCookerTest {
     }
 
     @Test
+    void rejectsNormalMappedMeshMissingUvBeforeCreatingOutputWithPathAndMeshName() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("missing-normal-map-uv-input"));
+        Path source = input.resolve("normal-mapped-missing-uv.gltf");
+        Files.copy(resourcePath("p6/normal-mapped-missing-uv.gltf"), source);
+        writeMetadata(source.resolveSibling(source.getFileName() + AssetCooker.METADATA_SUFFIX), FIRST_ID, "MESH");
+
+        Path output = tempDir.resolve("missing-normal-map-uv-output");
+        assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining(source.toString())
+            .hasMessageContaining("mesh[0] 'MissingUvTriangle'").hasMessageContaining("requires UV0");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
     void rejectsUnsupportedMeshExtensionBeforeCreatingOutput() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("unsupported-mesh-input"));

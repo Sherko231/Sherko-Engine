@@ -21,7 +21,7 @@ class AssimpGltfMeshImporterTest {
     Path tempDir;
 
     @Test
-    void importsReferenceTriangleInAssimpBasisWithoutPostProcessing() {
+    void importsReferenceTriangleWithTangentSpacePostProcess() {
 
         List<ImportedMesh> meshes = AssimpGltfMeshImporter.importFile(resourcePath("p6/reference-triangle.gltf"));
 
@@ -31,7 +31,7 @@ class AssimpGltfMeshImporterTest {
     }
 
     @Test
-    void importsBinaryGlbReferenceInAssimpBasisWithoutPostProcessing() throws Exception {
+    void importsBinaryGlbReferenceWithTangentSpacePostProcess() throws Exception {
 
         Path source = tempDir.resolve("reference.glb");
         writeReferenceGlb(source);
@@ -52,8 +52,46 @@ class AssimpGltfMeshImporterTest {
         assertThat(mesh.positions()).containsExactly(7.0f, -8.0f, 9.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f);
         assertThat(mesh.normals()).isNull();
         assertThat(mesh.tangents()).isNull();
+        assertThat(mesh.tangentSigns()).isNull();
         assertThat(mesh.uv0()).isNull();
         assertThat(mesh.indices()).containsExactly(0, 1, 2);
+
+    }
+
+    @Test
+    void generatesMissingTangentsAndPreservesHandedness() {
+
+        ImportedMesh mesh = AssimpGltfMeshImporter.importFile(resourcePath("p6/generated-tangent-triangle.gltf")).getFirst();
+
+        assertThat(mesh.name()).isEqualTo("GeneratedTangent");
+        assertThat(mesh.tangents()).containsExactly(-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+        assertThat(mesh.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+
+        EngineMesh engine = MeshCoordinateConverter.toEngineSpace(mesh);
+        assertThat(engine.tangents()).containsExactly(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+        assertThat(engine.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+
+    }
+
+    @Test
+    void acceptsNormalMappedMeshWithUv0AndGeneratedTangents() {
+
+        ImportedMesh mesh = AssimpGltfMeshImporter.importFile(resourcePath("p6/normal-mapped-triangle.gltf")).getFirst();
+
+        assertThat(mesh.name()).isEqualTo("NormalMappedTriangle");
+        assertThat(mesh.uv0()).isNotNull();
+        assertThat(mesh.tangents()).isNotNull();
+        assertThat(mesh.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
+
+    }
+
+    @Test
+    void rejectsNormalMappedMeshMissingUv0WithPathAndMeshName() {
+
+        Path source = resourcePath("p6/normal-mapped-missing-uv.gltf");
+
+        assertThatThrownBy(() -> AssimpGltfMeshImporter.importFile(source)).isInstanceOf(AssetCookerException.class).hasMessageContaining(source.toString())
+            .hasMessageContaining("mesh[0] 'MissingUvTriangle'").hasMessageContaining("requires UV0");
 
     }
 
@@ -111,6 +149,7 @@ class AssimpGltfMeshImporterTest {
         assertThat(mesh.positions()).containsExactly(7.0f, -8.0f, 9.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 6.0f);
         assertThat(mesh.normals()).containsExactly(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
         assertThat(mesh.tangents()).containsExactly(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+        assertThat(mesh.tangentSigns()).containsExactly(1.0f, 1.0f, 1.0f);
         assertThat(mesh.uv0()).containsExactly(1.0f, 1.0f, 0.25f, 0.25f, 0.50f, 0.875f);
         assertThat(mesh.indices()).containsExactly(0, 1, 2);
 

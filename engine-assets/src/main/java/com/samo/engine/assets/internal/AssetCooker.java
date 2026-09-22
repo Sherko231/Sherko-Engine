@@ -48,7 +48,11 @@ final class AssetCooker {
             for (SourceAsset source : sources) {
                 String cookedRelative = ASSETS_DIRECTORY + "/" + source.metadata().assetId() + ".bin";
                 Path cookedPath = output.resolve(cookedRelative.replace('/', java.io.File.separatorChar));
-                fileSystem.copy(source.sourcePath(), cookedPath);
+                if (source.metadata().assetType() == AssetType.MESH) {
+                    fileSystem.writeBytes(cookedPath, CookedMeshBinary.encode(source.engineMeshes()));
+                } else {
+                    fileSystem.copy(source.sourcePath(), cookedPath);
+                }
                 long cookedSize = fileSystem.size(cookedPath);
                 if (cookedSize <= 0) {
                     throw new AssetCookerException("Cooked payload is empty for asset " + source.metadata().assetId());

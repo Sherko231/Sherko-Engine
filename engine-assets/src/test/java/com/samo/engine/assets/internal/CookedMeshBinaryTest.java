@@ -18,7 +18,7 @@ class CookedMeshBinaryTest {
         byte[] encoded = CookedMeshBinary.encode(List.of(mesh));
 
         assertThat(encoded).hasSize(232);
-        assertThat(new byte[]{encoded[0], encoded[1], encoded[2], encoded[3]}).containsExactly('S', 'M', 'E', 'S');
+        assertThat(new byte[]{encoded[0], encoded[1], encoded[2], encoded[3]}).containsExactly((byte) 'S', (byte) 'M', (byte) 'E', (byte) 'S');
 
         ByteBuffer bytes = ByteBuffer.wrap(encoded).order(ByteOrder.LITTLE_ENDIAN);
         bytes.position(4);
@@ -126,6 +126,20 @@ class CookedMeshBinaryTest {
 
         EngineMesh invalidIndex = new EngineMesh(1, "BadIndex", new float[]{0.0f, 0.0f, 0.0f}, null, null, null, null, new int[]{0, 0, 2});
         assertThatThrownBy(() -> CookedMeshBinary.encode(List.of(invalidIndex))).isInstanceOf(CookedMeshFormatException.class).hasMessageContaining("outside vertex range");
+
+        EngineMesh invalidSign = new EngineMesh(
+            2,
+            "BadSign",
+            new float[]{0.0f, 0.0f, 0.0f},
+            null,
+            new float[]{1.0f, 0.0f, 0.0f},
+            new float[]{0.0f},
+            null,
+            new int[]{0, 0, 0});
+        assertThatThrownBy(() -> CookedMeshBinary.encode(List.of(invalidSign))).isInstanceOf(CookedMeshFormatException.class).hasMessageContaining("exactly +1 or -1");
+
+        EngineMesh nonFinite = new EngineMesh(3, "NonFinite", new float[]{Float.NaN, 0.0f, 0.0f}, null, null, null, null, new int[]{0, 0, 0});
+        assertThatThrownBy(() -> CookedMeshBinary.encode(List.of(nonFinite))).isInstanceOf(CookedMeshFormatException.class).hasMessageContaining("must be finite");
 
         EngineMesh first = positionsOnlyMesh(5, "One");
         EngineMesh duplicate = positionsOnlyMesh(5, "Two");

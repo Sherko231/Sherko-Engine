@@ -791,3 +791,19 @@ A committed one-meter cube fixture proves importer + converter output retains a 
 
 Wiki impact: yes — the offline cooker now crosses explicitly into D-041 engine basis.
 Sandbox impact: none — converted mesh data remains package-internal cooker state and no public/runtime mesh loading path exists yet.
+
+
+## Phase 6 tangent-space preparation — P6-T06 / Issue #377
+
+`engine-assets` now runs Assimp glTF MESH import with exactly `aiProcess_CalcTangentSpace`. No other Assimp post-process flag is enabled. P6-T04's accepted glTF decode behavior and P6-T05's exactly-once D-041 conversion remain otherwise unchanged.
+
+The importer detects tangent-space normal-map use from the mesh's referenced Assimp material containing `aiTextureType_NORMALS`. UV0 is the only supported normal-map UV channel in this bounded slice. A tangent-space-required mesh fails before output-cache creation when it lacks UV0 or authored normals, selects a normal-map UV channel other than 0, or Assimp does not provide tangent/bitangent output.
+
+When tangent and bitangent data are present, the importer copies tangent xyz and derives a per-vertex handedness sign using `dot(cross(normal, tangent), bitangent)`. Signs are exactly ±1 and are retained as Java-owned internal data. Inconsistent tangent/bitangent presence, non-finite tangent-space vectors, or degenerate handedness fail with source-path and mesh context. P6-T05 converts tangent xyz with `(-X,+Y,-Z)` and copies signs unchanged because D-071 has determinant +1.
+
+Meshes without a tangent-space normal map are not forced to provide UV0. Assimp may still generate tangents when normals and UV0 are available. The task does not generate normals or UVs, decode normal-map images, change source metadata, serialize final mesh streams, or introduce a runtime material/resource API.
+
+P6-T03 manifest schema/output paths and temporary source-byte MESH payloads remain unchanged until P6-T07.
+
+Wiki impact: yes — offline MESH cooking now includes tangent-space generation and required normal-map UV validation.
+Sandbox impact: none — tangent-space values remain package-internal cooker state and no public/runtime mesh-loading path exists yet.

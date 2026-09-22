@@ -202,6 +202,13 @@ class AssetCookerTest {
         private final AssetCookerFileSystem delegate = AssetCookerFileSystem.system();
 
         @Override
+        public void createDirectory(Path path) throws IOException {
+
+            delegate.createDirectory(path);
+
+        }
+
+        @Override
         public void createDirectories(Path path) throws IOException {
 
             delegate.createDirectories(path);

@@ -2039,3 +2039,25 @@ Connector execution note: this GitHub-only environment cannot run the Gradle wra
 
 
 Accepted P6-T02 verification evidence: the initial PR candidate failed only the Spotless formatting gate; the formatter-only correction produced final PR #366 head `ab15ccb5f1b03f9b2d655ce846afb6f849f87e4b`. That exact head passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #507 / `35701724532`. The Build job also resolved the committed dependency locks successfully, confirming the expected existing Jackson 2.21.2 graph changes without lock drift. PR #366 merged as `f91956c7d455b01d0895ca787bb110b802083ec1`; exact-merge Lightweight master verification passed in run #508 / `35702272507`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T02 acceptance is therefore complete. The connector environment did not separately execute the documented focused Gradle command locally; the passing repository-wide Unit tests and quality gates include `SourceAssetMetadataTest` and Spotless enforcement.
+
+
+## P6-T03 asset cooker verification
+
+Issue #368 introduces the deterministic command-line cooker foundation in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat :engine-assets:runAssetCooker --args="<fixture-input> <fresh-fixture-output>"
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers exact CLI arity, valid recursive sidecar discovery, ignored unpaired ordinary files, missing/non-directory input, pre-existing output preservation, input/output overlap, empty metadata sets, missing source pairs, zero-byte sources, malformed/unsupported metadata, duplicate identities, deterministic AssetId-sorted manifest bytes across repeated clean cooks, byte-for-byte opaque payload copying, actual positive emitted byte size, and deterministic cleanup of a newly created output tree through the package-private filesystem seam.
+
+Review must confirm no dependency-lock drift, no new module edge/dependency, no P6-T04+ importer/coordinate/tangent/final-binary/decode/runtime-resource behavior, and no public Java API change. Because P6-T03 changes executable Java/build behavior and introduces durable persisted cache/manifest conventions, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight verification before Issue #368 closes.
+
+Connector execution note: this GitHub-only environment cannot run the Gradle wrapper directly; focused commands are not locally claimed as passing unless repository CI executes equivalent coverage. Exact final-candidate CI remains mandatory.

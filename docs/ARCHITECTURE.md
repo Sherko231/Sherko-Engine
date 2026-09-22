@@ -749,3 +749,17 @@ The schema is intentionally common-only. P6-T02 introduces no sidecar discovery/
 
 Wiki impact: yes — public metadata API and strict failure behavior are documented under `wiki/ASSETS/SOURCE_METADATA.md`.
 Sandbox impact: none — source-authoring metadata loading is nonvisual infrastructure and has no meaningful persistent-playground behavior before cooker/runtime asset loading exists.
+
+
+## Phase 6 command-line cooker foundation — P6-T03 / Issue #368
+
+`engine-assets` now also owns the first offline authoring cooker entry point under its internal package boundary. `:engine-assets:runAssetCooker --args="<input-directory> <output-cache>"` invokes `AssetCookerMain`, which accepts exactly one input directory and one fresh output cache path. The tooling entry point is not supported engine-library API.
+
+Discovery recursively scans without following symbolic links and recognizes only adjacent `<source>.asset.json` sidecars. Each sidecar is loaded through the accepted P6-T02 `SourceAssetMetadata.load(Path)` contract, paired with the same path minus `.asset.json`, and validated before output creation. Missing pairs, symbolic-link metadata/sources, zero-byte sources, duplicate `AssetId` values, invalid metadata, empty metadata sets, overlapping input/output paths, and pre-existing output paths fail without a successful partial result.
+
+A successful clean cook creates `manifest.json` schema v1 and `assets/<AssetId>.bin`. Manifest entries are sorted by canonical identity and contain exact identity/type, normalized source/cooked relative paths, and positive emitted byte size. The T03 payload is intentionally an opaque byte-for-byte copy of the source; this proves the command/discovery/cache/manifest boundary only. No Assimp/stb/audio import, coordinate conversion, tangent generation, final binary envelope/checksum, dependency graph, runtime manifest loader, resource handle/cache, renderer/world/editor integration, or new module/dependency edge is introduced.
+
+A package-private filesystem seam exists only to test cleanup deterministically. If a write-stage failure occurs after the cooker creates its fresh output tree, cleanup is attempted recursively and the original failure is propagated; pre-existing paths are never deleted by this task.
+
+Wiki impact: yes — offline cooker usage and current pass-through limitation are documented under `wiki/ASSETS/COOKER.md`.
+Sandbox impact: none — this is an offline content-authoring command, not a runtime playground capability.

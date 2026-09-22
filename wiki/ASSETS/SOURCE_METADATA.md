@@ -77,17 +77,31 @@ SourceAssetMetadata metadata =
 
 Direct construction rejects unsupported schema versions and null identity/type values.
 
+## Cooker discovery
+
+P6-T03 defines the first metadata discovery convention for the offline cooker.
+
+A source file and its metadata sidecar are adjacent:
+
+```text
+models/crate.glb
+models/crate.glb.asset.json
+```
+
+The cooker recursively discovers files ending in `.asset.json`, removes that suffix to find the paired source path, and loads the sidecar through `SourceAssetMetadata.load(Path)`. Source files without a sidecar are ignored by P6-T03.
+
+See [Asset cooker](COOKER.md) for the command, output layout, manifest, and current pass-through payload behavior.
+
 ## Not implemented yet
 
-P6-T02 does not define:
+The current metadata/cooker foundation still does not define:
 
-- how metadata files are named or discovered beside source files;
 - a metadata writer/save API;
 - schema migration tooling;
-- type-specific importer/cooker options;
-- the P6-T03 command-line cooker;
-- asset manifests or dependency graphs;
-- cooked binary formats;
+- type-specific importer/cooker settings;
+- Assimp/glTF, image, or audio decoding;
+- dependency graphs/incremental invalidation;
+- final cooked binary schemas/checksums;
 - runtime resource handles, caches, reference counting, or hot reload;
 - renderer/world/editor integration.
 

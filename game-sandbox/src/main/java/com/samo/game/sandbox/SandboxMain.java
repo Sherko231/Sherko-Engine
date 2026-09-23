@@ -48,7 +48,7 @@ public final class SandboxMain {
             window.start();
             started = true;
             renderer = OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources, logger, 4);
-            assetLab = SandboxAssetLab.open(message -> log(logger, EngineLogger.Level.INFO, message));
+            assetLab = createAssetLab(logger);
             new SandboxApplicationLoop(window, renderer, framebufferSize, logger, actionEvaluator, commandSampler, responseSettings, assetLab).run();
         } catch (InterruptedException failure) {
             primaryFailure = failure;
@@ -60,6 +60,12 @@ public final class SandboxMain {
         } finally {
             cleanup(window, renderer, assetLab, nativeResources, logger, started, primaryFailure);
         }
+
+    }
+
+    private static SandboxAssetLab createAssetLab(EngineLogger logger) {
+
+        return SandboxAssetLab.open(message -> log(logger, EngineLogger.Level.INFO, message));
 
     }
 

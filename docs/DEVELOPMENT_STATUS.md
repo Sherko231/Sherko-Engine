@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T13 accepted; P6-T14 / Issue #402 is active |
+| Active phase | Phase 6 implementation complete — P6-T01 through P6-T14 accepted; Phase 6 exit gate/readiness review is next |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-T14 / Issue #402 — development shader/material hot reload with last-valid-resource preservation |
+| Active executable task | None — P6-T14 / Issue #402 is accepted; freshly materialize the Phase 6 exit-gate/readiness review before Phase 7 |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -235,4 +235,4 @@ P6-T12 / Issue #396 is accepted. Candidate runs #592 / `35905334367` and #593 / 
 P6-T13 / Issue #399 is accepted. Initial PR #400 candidate run #596 / `35914868005` exposed only repository Spotless formatting differences and became obsolete after formatter-only corrections. Final PR #400 head `d8f3fa6d7f7726a54edd4db16a8c9998af209813` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #599 / `35915145529`. PR #400 merged as `dd93d99803f3fba5c6cfe091ce35bd7937a77422`, and exact merged `master` passed Lightweight master verification in run #600 / `35915817236`. The accepted contract adds strict runtime manifest-v1 indexing plus public `MeshAsset`, `AssetLoader`, and `AssetLoaders` for asynchronous MESH file read and SMES validation/decode on Java virtual threads, reuses the P6-T12 fallback mesh for missing identity/file, adds READ_FAILED and INVALID_CONTENT diagnostics, prevents late worker completion from resurrecting RELEASED handles, and adds a package-private D-049-guarded OpenGL vertex/index buffer uploader with rollback/close ownership. The independent >1 MiB SMES acceptance fixture proves worker-side loading performs no OpenGL/backend call before explicit owner-thread upload. No dependency/module edge, persisted schema, cache/reference counting, runtime loader for other asset types, arbitrary mesh draw submission, compression format, world/game/sandbox source, hot reload, or P6-T14 behavior was introduced.
 
 
-P6-T14 / Issue #402 is active from baseline `5d00e69b81deccecf9f99dfcf1ae66ff7c03cd61`. The bounded contract adds strict runtime MATERIAL schema v1, asynchronous public MATERIAL loading through the existing AssetLoader boundary, opt-in polling-based development MATERIAL replacement on the same READY handle, and a renderer-internal D-049-guarded shader/material reloader. Invalid material candidates emit HOT_RELOAD_FAILED and preserve the prior READY value; shader read/compile/link failures preserve the prior valid program/descriptor and clean only candidate resources. No SHADER AssetType/public shader API, new dependency/module edge, background watcher, general cache/reference counting, MESH/TEXTURE/AUDIO hot reload, arbitrary renderer submission, world/game integration, or sandbox source change is authorized.
+P6-T14 / Issue #402 is accepted. The first candidate run #601 / `35919410976` exposed one stale AssetLoadErrorCode enum expectation; run #602 / `35919607952` then exposed only three Spotless formatting differences, and both candidates became obsolete after bounded corrections. Final PR #403 head `4b638925a12a683c5a5c0b4bae02ab7cb84ea71b` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #603 / `35919894825`. PR #403 merged as `240fce2858402134532876cb40cc2904e99c4f04`, and exact merged `master` passed Lightweight master verification in run #604 / `35920655044`. The accepted contract adds strict MATERIAL schema v1, asynchronous public MATERIAL loading, same-READY-handle polling reload, HOT_RELOAD_FAILED last-valid-value preservation, and a renderer-internal D-049-guarded shader/material candidate swap. No SHADER AssetType/public shader API, dependency/module edge, background watcher, general cache/reference counting, MESH/TEXTURE/AUDIO hot reload, arbitrary renderer submission, world/game integration, or sandbox source change was introduced. Phase 6 implementation tasks are complete; the Phase 6 exit gate/readiness review is the next action.

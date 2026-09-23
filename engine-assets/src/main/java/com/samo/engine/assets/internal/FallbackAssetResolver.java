@@ -49,36 +49,16 @@ final class FallbackAssetResolver {
 
     private static EngineMesh fallbackMesh() {
 
-        float[] positions = {
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            -0.5f, 0.5f, -0.5f,
-            -0.5f, -0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f
-        };
-        int[] indices = {
-            0, 2, 1, 0, 3, 2,
-            4, 5, 6, 4, 6, 7,
-            0, 1, 5, 0, 5, 4,
-            3, 7, 6, 3, 6, 2,
-            1, 2, 6, 1, 6, 5,
-            0, 4, 7, 0, 7, 3
-        };
+        float[] positions = {-0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f,
+            0.5f};
+        int[] indices = {0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2, 1, 2, 6, 1, 6, 5, 0, 4, 7, 0, 7, 3};
         return new EngineMesh(0, "FallbackCube", positions, null, null, null, null, indices);
 
     }
 
     private static CookedTexture fallbackTexture() {
 
-        byte[] base = {
-            MAGENTA, BLACK, MAGENTA, OPAQUE,
-            BLACK, BLACK, BLACK, OPAQUE,
-            BLACK, BLACK, BLACK, OPAQUE,
-            MAGENTA, BLACK, MAGENTA, OPAQUE
-        };
+        byte[] base = {MAGENTA, BLACK, MAGENTA, OPAQUE, BLACK, BLACK, BLACK, OPAQUE, BLACK, BLACK, BLACK, OPAQUE, MAGENTA, BLACK, MAGENTA, OPAQUE};
         byte[] mip = {(byte) 127, BLACK, (byte) 127, OPAQUE};
         return new CookedTexture(List.of(new TextureMipLevel(2, 2, base), new TextureMipLevel(1, 1, mip)));
 
@@ -99,7 +79,8 @@ final class FallbackAssetResolver {
 
         ResourceHandleCell<T> handle = new ResourceHandleCell<>(assetId);
         handle.completeReady(value);
-        AssetLoadError error = new AssetLoadError(assetId, assetType, AssetLoadErrorCode.MISSING_CONTENT, "Missing " + assetType + " content for asset " + assetId + "; using built-in fallback");
+        AssetLoadError error = new AssetLoadError(assetId, assetType, AssetLoadErrorCode.MISSING_CONTENT,
+            "Missing " + assetType + " content for asset " + assetId + "; using built-in fallback");
         return new FallbackResolution<>(handle, error);
 
     }

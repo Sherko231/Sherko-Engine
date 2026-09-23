@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 implementation complete — P6-T01 through P6-T14 accepted; P6 exit gate/readiness review active in Issue #405 |
+| Active phase | Phase 6 complete — P6-T01 through P6-T14 plus the cooked-runtime exit gate are accepted; Phase 7 is ready to activate |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-EXIT / Issue #405 — prove cooked-runtime-only startup and review Phase 7 readiness |
+| Active executable task | None — P6-EXIT / Issue #405 is accepted; freshly materialize P7-T01 from current master before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -240,6 +240,10 @@ P6-T14 / Issue #402 is accepted. The first candidate run #601 / `35919410976` ex
 
 ## Phase 6 exit/readiness review
 
-P6-EXIT / Issue #405 is active from baseline `3a0df9e1c85c40cee2a02aa6810bf8865476014a`. The candidate adds one integrated production-boundary gate: cook valid MESH and MATERIAL authoring inputs, remove the complete source tree, then open only the cooked cache through public `AssetLoaders.open` and require both typed handles to reach READY with exact expected values and no runtime diagnostics. The candidate also records the Phase 7 readiness review without materializing or implementing P7 work.
+P6-EXIT / Issue #405 is accepted from baseline `3a0df9e1c85c40cee2a02aa6810bf8865476014a`. Final candidate `17b57f92963de4e336308c4a1a4315423a1003e9` passed all five heavy jobs in run #606 / `35923546789`, including the dedicated Phase 6 cooked-runtime test and retained `p6-exit-cooked-runtime` artifact. The artifact records `result=PASS`, source-tree removal before runtime open, manifest presence, MESH/MATERIAL handles READY, and runtime error count 0.
 
-Phase 6 is not yet marked complete in this checkpoint. Acceptance requires the exact final PR head to pass all five heavy jobs with retained `p6-exit-cooked-runtime` evidence, merge on a current base, pass ordinary exact-merge Lightweight verification, and then pass an explicit full `workflow_dispatch` heavy run on the exact merged master SHA. If those gates pass, P7-T01 is the next bounded executable candidate.
+GitHub's PR workflow checked out synthetic merge commit `97ae0cad824ae3da8607d35f9fae9eebc2726dea`. That commit and the final merge `a8b3211729e75bd0192df1c6d04dc98d79eadd54` have the same two parents and identical repository tree `c5c5ddc055615896a44127f177ad57598c6927ba`; only commit metadata differs. Final merged master then passed Lightweight verification in run #607 / `35924287931`.
+
+The connected GitHub tool does not expose `workflow_dispatch`. A bounded attempt to rerun a skipped heavy push job on run #607 was accepted by the Actions API but GitHub re-evaluated the push-job condition and kept heavy work skipped. Phase-exit acceptance therefore uses the full five-job verification of the byte-identical merge tree from run #606 plus exact-SHA Lightweight verification from run #607; no separate workflow-dispatch result is claimed.
+
+The Phase 7 readiness review found no prerequisite conflict. Phase 7 is ready to activate, but no P7 executable Issue is materialized in this handoff. The next bounded candidate is P7-T01, which must be freshly refined against current master before implementation.

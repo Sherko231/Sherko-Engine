@@ -197,4 +197,17 @@ class ResourceHandleCellTest {
         }
 
     }
+    @Test
+    void asyncTryCompletionCannotResurrectReleasedHandle() {
+
+        ResourceHandleCell<String> handle = new ResourceHandleCell<>(ASSET_ID);
+        handle.close();
+
+        assertThat(handle.tryCompleteReady("late")).isFalse();
+        assertThat(handle.tryCompleteFailed()).isFalse();
+        assertThat(handle.state()).isEqualTo(ResourceHandleState.RELEASED);
+        assertThat(handle.readyValue()).isEmpty();
+
+    }
+
 }

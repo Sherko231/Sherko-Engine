@@ -195,7 +195,7 @@ Goal: remove source-format parsing and raw file paths from runtime gameplay.
 - [ ] P6-T13 Implement asynchronous file read/decompression but perform GPU upload on the render thread. Acceptance: loading a large mesh does not call OpenGL off-thread. Accepted through Issue #399 / PR #400; final head `d8f3fa6d7f7726a54edd4db16a8c9998af209813` passed run #599 / `35915145529`, merged as `dd93d99803f3fba5c6cfe091ce35bd7937a77422`, and exact-merge Lightweight verification passed in run #600 / `35915817236`.
 - [ ] P6-T14 Add development hot reload for shader and material assets only. Acceptance: a material edit appears without restarting and failed reload preserves the prior valid resource. Accepted through Issue #402 / PR #403; final head `4b638925a12a683c5a5c0b4bae02ab7cb84ea71b` passed run #603 / `35919894825`, merged as `240fce2858402134532876cb40cc2904e99c4f04`, and exact-merge Lightweight verification passed in run #604 / `35920655044`.
 
-Exit gate: the runtime starts using only a cooked asset directory and manifest.
+Exit gate: the runtime starts using only a cooked asset directory and manifest. Accepted through P6-EXIT / Issue #405 / PR #406: final candidate `17b57f92963de4e336308c4a1a4315423a1003e9` passed run #606 / `35923546789` with retained cooked-runtime evidence, merged as `a8b3211729e75bd0192df1c6d04dc98d79eadd54`, and exact-merge Lightweight verification passed in run #607 / `35924287931`.
 
 ## Phase 7 - World, entities, components, prefabs, and scenes
 

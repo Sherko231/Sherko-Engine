@@ -2363,6 +2363,12 @@ Retained evidence:
 - report: `engine-assets/build/reports/p6/p6-exit-cooked-runtime.txt`
 - CI artifact: `p6-exit-cooked-runtime`
 
-The final non-exempt PR candidate requires the normal five-job matrix. Because Issue #405 is a phase-exit gate, after merge the exact merged `master` must additionally receive an explicit full `workflow_dispatch` heavy run; the ordinary Lightweight push verifier still runs and remains required. Do not mark Phase 6 complete from historical isolated P6 task runs alone.
+The final non-exempt PR candidate requires the normal five-job matrix, followed by exact-merge verification. Historical isolated P6 task runs do not substitute for the integrated phase evidence.
 
-The Phase 7 readiness review is retained in `docs/phase-exit/PHASE_6_EXIT_REVIEW.md`. No P7 executable Issue may be materialized until the Phase 6 gate records PASS.
+Accepted P6-EXIT evidence: the first PR candidate run #605 / `35923328388` proved the new integration scenario but failed only repository Spotless formatting and became obsolete. Final candidate `17b57f92963de4e336308c4a1a4315423a1003e9` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #606 / `35923546789`. The retained `p6-exit-cooked-runtime` artifact reports `result=PASS`, source-tree removal before runtime open, manifest presence, READY MESH/MATERIAL handles, and runtime error count 0.
+
+For PR workflows, Actions checked out synthetic merge commit `97ae0cad824ae3da8607d35f9fae9eebc2726dea`. It has the same two parents and exact repository tree `c5c5ddc055615896a44127f177ad57598c6927ba` as final merge `a8b3211729e75bd0192df1c6d04dc98d79eadd54`. Exact merged master then passed Lightweight verification in run #607 / `35924287931`.
+
+The connected GitHub surface did not expose a direct `workflow_dispatch` action. A rerun request against a heavy job that was skipped on the push run re-evaluated the push-only job condition and remained skipped. No separate workflow-dispatch pass is claimed. Phase-exit acceptance therefore rests on the five-job test of the byte-identical final merge tree plus exact-SHA Lightweight verification, which preserves the intended no-stale-base/no-tree-drift guarantee.
+
+The Phase 7 readiness review is retained in `docs/phase-exit/PHASE_6_EXIT_REVIEW.md`. P7-T01 is the next bounded executable candidate and must be freshly materialized from current master.

@@ -54,8 +54,8 @@ final class SandboxSceneSetup {
 
         SandboxLightPalette palette = SandboxLightPalette.from(material);
         RenderPointLight point = new RenderPointLight(0.40f, 0.30f, 1.20f, palette.pointRed(), palette.pointGreen(), palette.pointBlue(), 0.40f, 4.0f);
-        RenderSpotLight spot = new RenderSpotLight(-0.40f, 0.20f, 1.50f, 0.40f, -0.20f, -1.50f, palette.spotRed(), palette.spotGreen(), palette.spotBlue(), 0.35f, 5.0f,
-            0.25f, 0.60f);
+        RenderSpotLight spot = new RenderSpotLight(-0.40f, 0.20f, 1.50f, 0.40f, -0.20f, -1.50f, palette.spotRed(), palette.spotGreen(), palette.spotBlue(), 0.35f, 5.0f, 0.25f,
+            0.60f);
         return List.of(point, spot);
 
     }

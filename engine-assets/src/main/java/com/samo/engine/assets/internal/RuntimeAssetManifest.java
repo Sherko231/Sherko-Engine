@@ -72,7 +72,7 @@ final class RuntimeAssetManifest {
                 throw new IllegalArgumentException("asset[" + index + "].cookedPath must equal " + expectedPath);
             }
             JsonNode size = node.get("byteSize");
-            if (!size.canConvertToLong() || size.longValue() <= 0L) {
+            if (!size.isIntegralNumber() || !size.canConvertToLong() || size.longValue() <= 0L) {
                 throw new IllegalArgumentException("asset[" + index + "].byteSize must be positive");
             }
             Entry entry = new Entry(assetId, assetType, root.resolve(cookedPath.replace('/', java.io.File.separatorChar)).normalize(), size.longValue());

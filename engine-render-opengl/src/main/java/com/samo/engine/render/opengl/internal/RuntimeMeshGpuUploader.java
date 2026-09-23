@@ -118,6 +118,17 @@ final class RuntimeMeshGpuUploader {
 
     }
 
+    private static void rethrow(Throwable failure) {
+
+        if (failure instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+        }
+        if (failure instanceof Error error) {
+            throw error;
+        }
+
+    }
+
     static final class UploadedRuntimeMesh implements AutoCloseable {
         private final OpenGlThreadGuard threadGuard;
         private final List<UploadedPrimitive> primitives;
@@ -144,11 +155,11 @@ final class RuntimeMeshGpuUploader {
             }
             threadGuard.assertOwnerThread();
             closeAttempted = true;
-            RuntimeException firstFailure = null;
+            Throwable firstFailure = null;
             for (int index = primitives.size() - 1; index >= 0; index--) {
                 try {
                     primitives.get(index).close();
-                } catch (RuntimeException failure) {
+                } catch (RuntimeException | Error failure) {
                     if (firstFailure == null) {
                         firstFailure = failure;
                     } else {
@@ -156,9 +167,7 @@ final class RuntimeMeshGpuUploader {
                     }
                 }
             }
-            if (firstFailure != null) {
-                throw firstFailure;
-            }
+            rethrow(firstFailure);
 
         }
     }
@@ -205,24 +214,22 @@ final class RuntimeMeshGpuUploader {
             }
             threadGuard.assertOwnerThread();
             closeAttempted = true;
-            RuntimeException firstFailure = null;
+            Throwable firstFailure = null;
             try {
                 indexBuffer.close();
-            } catch (RuntimeException failure) {
+            } catch (RuntimeException | Error failure) {
                 firstFailure = failure;
             }
             try {
                 vertexBuffer.close();
-            } catch (RuntimeException failure) {
+            } catch (RuntimeException | Error failure) {
                 if (firstFailure == null) {
                     firstFailure = failure;
                 } else {
                     CleanupFailureSuppression.addSuppressedUnlessSame(firstFailure, failure);
                 }
             }
-            if (firstFailure != null) {
-                throw firstFailure;
-            }
+            rethrow(firstFailure);
 
         }
     }

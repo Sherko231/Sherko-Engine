@@ -38,8 +38,8 @@ class MeshAssetTest {
     @Test
     void publicRuntimeMeshSurfaceContainsNoNativeBackendTypes() {
 
-        assertThat(MeshAsset.class.getRecordComponents()).allSatisfy(component -> assertThat(component.getType().getName()).doesNotStartWith("org.lwjgl").doesNotContain("opengl")
-            .doesNotContain("openal"));
+        assertThat(MeshAsset.class.getRecordComponents())
+            .allSatisfy(component -> assertThat(component.getType().getName()).doesNotStartWith("org.lwjgl").doesNotContain("opengl").doesNotContain("openal"));
         assertThat(MeshAsset.Primitive.class.getDeclaredMethods()).allSatisfy(method -> {
             assertThat(method.getReturnType()).isNotEqualTo(ByteBuffer.class);
             assertThat(method.getReturnType().getName()).doesNotStartWith("org.lwjgl").doesNotContain("opengl").doesNotContain("openal");

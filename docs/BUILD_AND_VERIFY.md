@@ -2264,3 +2264,26 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T11 verification evidence: initial candidate run #588 / `35849147685` exposed only repository Spotless formatting differences and one Checkstyle empty-catch violation in the concurrency test; both were corrected without changing the public lifecycle contract. Final PR #394 head `b22258a8e9b7102de4c5ec14af987b751ca009ce` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #590 / `35849372952`. The passing tests cover the exact public state set, no producer/native public surface, READY/FAILED completion, non-ready diagnostics, terminal/idempotent release, clearing retained READY values, illegal completion rejection, and synchronized concurrent observation/completion/release. PR #394 merged as `b761d15f07eaeeb2d082fc8e8dea53bfb641cefd`; exact-merge Lightweight master verification passed in run #591 / `35849980110`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T11 acceptance is complete. The connector environment did not separately execute the focused Gradle command sequence locally; accepted repository CI is the execution evidence.
+
+
+## P6-T12 fallback asset verification
+
+Issue #396 introduces deterministic missing-content fallback values plus public structured `AssetLoadError` diagnostics in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.api.AssetLoadErrorTest" --tests "com.samo.engine.assets.internal.FallbackAssetResolverTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance independently verifies a centered closed one-meter D-041 cube, exact 2x2 magenta/black RGBA8 checker and 1x1 mip, finite opaque-magenta material components, deterministic non-silent mono PCM16 22050 Hz sound with repeated sign crossings, READY fallback handles preserving requested AssetIds, structured MISSING_CONTENT diagnostics, deterministic repeated resolution with independent handle lifetime, null rejection, and absence of native/backend types from the public diagnostic API.
+
+Dependency-lock diff must remain empty. D-041 mesh basis/units, D-074 texture color semantics, D-075 SAUD persistence, P6-T11 handle API, and all module edges remain unchanged. No runtime manifest/file reading, cache/reference counting, async execution, native allocation/upload/playback, renderer/world integration, or P6-T13+ implementation is permitted.
+
+Because P6-T12 adds public structured diagnostic API and runtime fallback lifecycle behavior, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #396 closes.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; exact final-candidate repository CI remains mandatory.

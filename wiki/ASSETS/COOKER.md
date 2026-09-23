@@ -181,10 +181,10 @@ The current Phase 6 cooker still does not perform:
 - normal or UV generation;
 - runtime audio decoding/playback;
 - incremental cache mutation/recooking (dependency graph and invalidation closure now exist);
-- runtime manifest loading;
-- resource handles, caches, reference counting, or hot reload;
+- runtime manifest/file loading;
+- resource caches, reference counting, fallback resources, asynchronous loading/upload, or hot reload;
 - renderer/world/editor integration.
 
-Those remain later bounded Phase 6 tasks.
+P6-T11 now provides the public typed `ResourceHandle<T>` lifecycle boundary, but the cooker does not create runtime handles and no public runtime loader/factory exists yet. Those remain later bounded Phase 6 tasks.
 
 See [Source metadata](SOURCE_METADATA.md) and [Asset identity](ASSET_ID.md) for the contracts consumed by the cooker.

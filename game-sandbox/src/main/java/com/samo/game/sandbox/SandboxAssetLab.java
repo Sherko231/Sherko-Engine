@@ -164,6 +164,18 @@ final class SandboxAssetLab implements AutoCloseable {
 
     }
 
+    ResourceHandleState meshState() {
+
+        return meshHandle.state();
+
+    }
+
+    ResourceHandleState materialState() {
+
+        return materialHandle.state();
+
+    }
+
     private void startLoads() {
 
         meshHandle = loader.loadMesh(MESH_ID);

@@ -166,7 +166,7 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 
 The public asset API now includes identity, strict source metadata, and the P6-T11 typed resource-handle lifecycle boundary. `ResourceHandle<T>` is intentionally not a loader or cache: callers cannot create READY values through the public surface, cannot obtain backend/native IDs, and cannot infer native destruction from `close()`.
 
-P6-T13 now provides strict manifest-backed asynchronous runtime MESH loading into `MeshAsset` values and an internal renderer-thread GPU buffer uploader. Resource caches/reference counting, texture/audio/material runtime loaders, arbitrary mesh renderer submission, and world consumption remain unimplemented.
+P6-T13 provides strict manifest-backed asynchronous runtime MESH loading into `MeshAsset` values and an internal renderer-thread GPU buffer uploader. P6-T14 adds public immutable `MaterialAsset`, `AssetLoader.loadMaterial(...)`, and explicit `pollDevelopmentReloads()` for last-valid MATERIAL replacement; shader hot reload remains renderer-internal and keyed by D-076 logical shader names. Resource caches/reference counting, texture/audio runtime loaders, arbitrary mesh/material renderer submission, and world consumption remain unimplemented.
 
 Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), [Asset cooker](ASSETS/COOKER.md), [Resource handles](ASSETS/RESOURCE_HANDLES.md), and [Fallback assets](ASSETS/FALLBACKS.md), and [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md).
 

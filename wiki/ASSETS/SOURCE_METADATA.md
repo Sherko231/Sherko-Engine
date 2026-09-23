@@ -98,11 +98,12 @@ The current metadata/cooker foundation still does not define:
 
 - a metadata writer/save API;
 - schema migration tooling;
-- type-specific importer/cooker settings;
-- Assimp/glTF, image, or audio decoding;
-- dependency graphs/incremental invalidation;
-- final cooked binary schemas/checksums;
-- runtime resource handles, caches, reference counting, or hot reload;
+- broader type-specific importer/cooker settings;
+- incremental cache mutation/recooking;
+- a public runtime manifest/file loader or resource cache;
+- reference counting, fallback resources, asynchronous loading/upload, or hot reload;
 - renderer/world/editor integration.
+
+P6-T11 now defines public typed `ResourceHandle<T>` lifecycle semantics, but it does not provide a public loader/factory or cache.
 
 See [Asset identity](ASSET_ID.md) for the P6-T01 identity contract and [Current limitations](../LIMITATIONS.md) for broader status.

@@ -2240,3 +2240,24 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T10 verification evidence: final PR #391 head `f831c9eb548b049ae284b353a9b308679914f1b1` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #586 / `35786375612`. Earlier candidates exposed only test-fixture ordering/context mistakes and repository Spotless shape differences; production dependency semantics remained within Issue #390. PR #391 merged as `7b5843968b58193f249f54f6d5665e7435f8fd37`; exact-merge Lightweight master verification passed in run #587 / `35786970766`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T10 acceptance is complete.
+
+
+## P6-T11 resource handle verification
+
+Issue #393 introduces the first public typed runtime resource-handle lifecycle boundary in `engine-assets`.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.api.ResourceHandleTest" --tests "com.samo.engine.assets.internal.ResourceHandleCellTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance covers exact public states, no producer/native public surface, non-null AssetId construction, initial LOADING, READY identity preservation, FAILED completion, AssetId/state diagnostics from non-ready required access, null/duplicate/terminal completion rejection without mutation, idempotent release from LOADING/READY/FAILED, clearing the retained READY value on release, terminal RELEASED behavior, and synchronized concurrent observation/completion/release without stable impossible state/value combinations.
+
+Dependency-lock diff must remain empty. No module edge/dependency change, runtime loader/cache/reference counting, fallback asset, async I/O, GPU/OpenAL upload, renderer/world integration, or P6-T12+ behavior is permitted. Because P6-T11 adds public API and lifecycle semantics, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #393 closes.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; exact final-candidate repository CI remains mandatory.

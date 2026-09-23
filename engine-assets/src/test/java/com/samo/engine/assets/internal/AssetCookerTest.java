@@ -466,6 +466,18 @@ class AssetCookerTest {
     }
 
     @Test
+    void rejectsInvalidMaterialBeforeOutputCreation() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("invalid-material-input"));
+        createAsset(input.resolve("bad.material"), FIRST_ID, "MATERIAL", "{broken".getBytes(StandardCharsets.UTF_8));
+        Path output = tempDir.resolve("invalid-material-output");
+
+        assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining("invalid MATERIAL source");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
     void cliRequiresExactlyTwoArguments() {
 
         assertThatThrownBy(() -> AssetCookerMain.main(new String[0])).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactly two arguments");

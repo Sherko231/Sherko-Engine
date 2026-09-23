@@ -1,5 +1,7 @@
 package com.samo.engine.assets.internal;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samo.engine.assets.api.AssetId;
@@ -16,7 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 final class RuntimeAssetManifest {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
     private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "assets");
     private static final Set<String> ENTRY_FIELDS = Set.of("assetId", "assetType", "sourcePath", "cookedPath", "byteSize");
     private final Path cacheRoot;

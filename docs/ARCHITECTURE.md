@@ -96,7 +96,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | --- | --- | --- | --- |
 | `engine-core` | Lifecycle, time, IDs, events, math/spatial contracts | Lifecycle (P2-T01), dependency ordering (P2-T02), startup rollback (P2-T03), monotonic clock (P2-T04), fixed-step accumulator (P2-T05), bounded catch-up policy (P2-T06), interpolation alpha exposure (P2-T07), typed config validation (P2-T08), layered config loading (P2-T09), native-resource registry (P2-T10), structured logging boundary (P2-T12), orderly fatal termination (P2-T13), device-neutral tick command/codec (P3-T09), deterministic input-response settings (P3-T10), canonical spatial convention (P4-T01), JOML hot-loop allocation evidence (P4-T02), public cached hierarchical `Transform` and public JOML spatial math ownership (P4-T03); P2-T11 and #135 add test/evidence paths only | None |
 | `engine-platform-lwjgl` | GLFW/window/input and platform-native boundary | P3-T01 production `GlfwWindow` lifecycle; P3-T02 logical/framebuffer size separation and owner-thread polling; P3-T03 in-place primary-monitor windowed/borderless/exclusive transitions; P3-T04 focus-loss-safe cursor capture and held-input cleanup; P3-T05 raw/fallback relative mouse acquisition; P3-T06 immutable renderer-frame `InputSnapshot` plus engine-defined key/button vocabulary; P3-T07 immutable action/binding metadata plus strict versioned JSON loading; P3-T08 caller-owned renderer-frame action aggregation/transitions; P3-T09 renderer-frame-to-tick command sampling; P3-T10 deterministic mouse response application; controller capture remains planned | `engine-core` |
-| `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 adds public path-independent 128-bit `AssetId`; metadata/cooking/loading/resource lifetime remain planned | `engine-core` |
+| `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 through P6-T12 provide stable identity, strict source metadata, deterministic cooking/formats/dependencies, typed resource-handle lifecycle, and deterministic missing-content fallback/error policy; runtime file read/cache/upload remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
 | `engine-world` | Scene/world/component/prefab runtime | Skeleton | `engine-core`, `engine-assets` |
@@ -863,3 +863,19 @@ P6-T10 does not mutate an existing cache, perform incremental recooking, add run
 Gameplay receives only the public generic interface. The public surface contains no producer transition method, raw integer/long native ID, LWJGL/OpenGL/OpenAL type, cache entry, or internal controller. Package-private `ResourceHandleCell<T>` owns LOADING -> READY/FAILED completion and synchronizes state/value observation, completion, and release. Null ready completion and any completion after READY, FAILED, or RELEASED fail without mutating accepted state/value.
 
 P6-T11 deliberately stops at the lifecycle boundary. It does not load `manifest.json`, read cooked files, create resource caches, count references, destroy native/GPU/audio resources, provide fallback assets, schedule asynchronous work, upload on a render/audio thread, or connect handles to renderer/world/gameplay submission. Those policies remain later bounded Phase 6 work.
+
+
+## P6-T12 fallback assets and missing-content policy
+
+`engine-assets` now defines a backend-neutral missing-content recovery seam over P6-T11 resource handles. Public `AssetLoadError` carries requested `AssetId`, requested `AssetType`, `AssetLoadErrorCode.MISSING_CONTENT`, and non-blank detail. It does not expose raw paths, native handles, Throwable ownership, renderer/audio types, or speculative future error codes.
+
+Package-private `FallbackAssetResolver` provides typed missing-content resolution for exactly MESH, TEXTURE, MATERIAL, and AUDIO. Each resolution creates a new `ResourceHandleCell<T>` for the requested identity, completes it READY with deterministic engine-owned fallback data, and pairs it with one structured missing-content diagnostic. Missing content itself therefore does not throw into gameplay-facing code once a later runtime loader invokes this seam.
+
+The fallback values are CPU-side only:
+
+- MESH: one closed, centered, one-meter D-041 cube with valid triangle indices;
+- TEXTURE: 2x2 opaque magenta/black RGBA8 checker plus exact 1x1 averaged mip, without assigning sRGB/linear meaning beyond D-074;
+- MATERIAL: one adapter-neutral opaque-magenta RGBA value with no shader/native/render-state identity;
+- AUDIO: deterministic non-silent mono signed PCM16 at 22050 Hz with no stb/OpenAL/native allocation.
+
+P6-T12 does not read `manifest.json` or cooked files, build a resource cache, count references, schedule asynchronous work, upload GPU/audio resources, play sound, submit to renderer/world, alter SMES/STEX/SAUD, or implement P6-T13+. P6-T13 remains responsible for runtime file read/decompression and render-thread GPU upload.

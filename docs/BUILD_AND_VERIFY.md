@@ -2342,3 +2342,27 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T14 verification evidence: candidate run #601 / `35919410976` exposed one stale structured-error enum expectation; run #602 / `35919607952` exposed only three Spotless formatting differences. Those candidates became obsolete after bounded corrections. Final PR #403 head `4b638925a12a683c5a5c0b4bae02ab7cb84ea71b` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #603 / `35919894825`. The passing acceptance covers strict MATERIAL schema/cooker validation, asynchronous initial MATERIAL loading, same-handle valid reload, failed-candidate last-valid preservation and HOT_RELOAD_FAILED diagnostics, release/close behavior, owner-thread-only shader candidate compile/link/swap, failed compile/link preservation, and deterministic native cleanup. PR #403 merged as `240fce2858402134532876cb40cc2904e99c4f04`; exact-merge Lightweight master verification passed in run #604 / `35920655044`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T14 acceptance is complete. The connector environment did not separately execute the focused Gradle command sequence locally; accepted repository CI is the execution evidence.
+
+
+## Phase 6 cooked-runtime exit gate
+
+Issue #405 closes Phase 6 only after the backlog gate is demonstrated through the real cooker/runtime boundary:
+
+> the runtime starts using only a cooked asset directory and manifest.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.Phase6CookedRuntimeIntegrationTest" --rerun-tasks
+```
+
+The integration test creates valid authoring MESH and MATERIAL inputs, runs the production `AssetCooker`, confirms the production manifest/AssetId payloads, deletes the complete authoring tree, then opens only the cooked cache root through public `AssetLoaders.open`. It loads both typed handles to READY, verifies independently expected decoded values and identities, requires an empty runtime error drain, and closes all owned handle/loader state.
+
+Retained evidence:
+- JUnit XML: `engine-assets/build/test-results/test/TEST-com.samo.engine.assets.internal.Phase6CookedRuntimeIntegrationTest.xml`
+- report: `engine-assets/build/reports/p6/p6-exit-cooked-runtime.txt`
+- CI artifact: `p6-exit-cooked-runtime`
+
+The final non-exempt PR candidate requires the normal five-job matrix. Because Issue #405 is a phase-exit gate, after merge the exact merged `master` must additionally receive an explicit full `workflow_dispatch` heavy run; the ordinary Lightweight push verifier still runs and remains required. Do not mark Phase 6 complete from historical isolated P6 task runs alone.
+
+The Phase 7 readiness review is retained in `docs/phase-exit/PHASE_6_EXIT_REVIEW.md`. No P7 executable Issue may be materialized until the Phase 6 gate records PASS.

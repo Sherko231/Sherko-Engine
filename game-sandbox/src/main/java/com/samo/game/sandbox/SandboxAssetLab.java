@@ -42,6 +42,7 @@ final class SandboxAssetLab implements AutoCloseable {
     private ResourceHandleState lastMeshState;
     private ResourceHandleState lastMaterialState;
     private boolean coolPreset;
+    private boolean readySummaryLogged;
 
     private SandboxAssetLab(Consumer<String> logSink, Path cacheRoot, AssetLoader loader) {
 
@@ -77,8 +78,9 @@ final class SandboxAssetLab implements AutoCloseable {
             logSink.accept("Phase 6 MATERIAL " + MATERIAL_ID + " -> " + materialState);
             lastMaterialState = materialState;
         }
-        if (meshState == ResourceHandleState.READY && materialState == ResourceHandleState.READY && (lastMeshState == meshState && lastMaterialState == materialState)) {
-            // State-transition logging above is intentionally the only recurring output.
+        if (!readySummaryLogged && meshState == ResourceHandleState.READY && materialState == ResourceHandleState.READY) {
+            logSink.accept(readySummary());
+            readySummaryLogged = true;
         }
         drainErrors("runtime");
     }
@@ -91,7 +93,9 @@ final class SandboxAssetLab implements AutoCloseable {
 
     void cycleValidMaterial() {
 
-        requireMaterialReady();
+        if (!requireMaterialReady()) {
+            return;
+        }
         coolPreset = !coolPreset;
         writeMaterial(coolPreset ? COOL_MATERIAL : WARM_MATERIAL);
         loader.pollDevelopmentReloads();
@@ -103,7 +107,9 @@ final class SandboxAssetLab implements AutoCloseable {
 
     void demonstrateFailedReload() {
 
-        requireMaterialReady();
+        if (!requireMaterialReady()) {
+            return;
+        }
         MaterialAsset before = materialHandle.requireReady();
         String restore = coolPreset ? COOL_MATERIAL : WARM_MATERIAL;
         writeMaterial(INVALID_MATERIAL);
@@ -164,16 +170,18 @@ final class SandboxAssetLab implements AutoCloseable {
         materialHandle = loader.loadMaterial(MATERIAL_ID);
         lastMeshState = null;
         lastMaterialState = null;
+        readySummaryLogged = false;
         logSink.accept("Phase 6 Asset Lab started from cooked cache only: " + cacheRoot);
 
     }
 
-    private void requireMaterialReady() {
+    private boolean requireMaterialReady() {
 
         if (materialHandle.state() != ResourceHandleState.READY) {
             logSink.accept("Phase 6 MATERIAL is " + materialHandle.state() + "; hot reload control ignored until READY");
-            return;
+            return false;
         }
+        return true;
 
     }
 

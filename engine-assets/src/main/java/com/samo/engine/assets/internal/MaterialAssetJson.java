@@ -36,8 +36,8 @@ final class MaterialAssetJson {
             if (!shaderKey.isTextual()) {
                 throw new IllegalArgumentException("MATERIAL shaderKey must be text");
             }
-            return new MaterialAsset(shaderKey.textValue(), requireFloat(root, "redMultiplier"), requireFloat(root, "greenMultiplier"),
-                requireFloat(root, "blueMultiplier"), requireFloat(root, "alphaMultiplier"));
+            return new MaterialAsset(shaderKey.textValue(), requireFloat(root, "redMultiplier"), requireFloat(root, "greenMultiplier"), requireFloat(root, "blueMultiplier"),
+                requireFloat(root, "alphaMultiplier"));
         } catch (IOException exception) {
             throw new IllegalArgumentException("Invalid MATERIAL JSON", exception);
         }

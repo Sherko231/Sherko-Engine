@@ -36,15 +36,8 @@ final class SandboxControls {
     }
 
     enum SandboxAction {
-        CYCLE_WINDOW_MODE,
-        TOGGLE_CURSOR_CAPTURE,
-        CYCLE_MOUSE_SENSITIVITY,
-        TOGGLE_MOUSE_Y_INVERSION,
-        CYCLE_VALID_MATERIAL,
-        DEMONSTRATE_FAILED_MATERIAL_RELOAD,
-        DEMONSTRATE_MISSING_MESH,
-        RELOAD_ASSET_HANDLES,
-        EXIT
+        CYCLE_WINDOW_MODE, TOGGLE_CURSOR_CAPTURE, CYCLE_MOUSE_SENSITIVITY, TOGGLE_MOUSE_Y_INVERSION, CYCLE_VALID_MATERIAL, DEMONSTRATE_FAILED_MATERIAL_RELOAD,
+        DEMONSTRATE_MISSING_MESH, RELOAD_ASSET_HANDLES, EXIT
     }
 
     record SandboxControlInput(boolean fPressed, boolean rPressed, boolean qPressed, boolean ePressed, boolean rightShiftHeld, boolean leftAltHeld, boolean rightAltHeld,

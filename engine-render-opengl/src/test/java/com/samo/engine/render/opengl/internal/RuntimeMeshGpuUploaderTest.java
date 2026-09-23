@@ -267,8 +267,8 @@ class RuntimeMeshGpuUploaderTest {
 
     private static MeshAsset simpleMesh() {
 
-        return new MeshAsset(List.of(new MeshAsset.Primitive(0, "Triangle", new float[]{-1.0f, 0.0f, -2.0f, 1.0f, 0.0f, -2.0f, 0.0f, 1.0f, -2.0f}, null, null, null,
-            null, new int[]{0, 1, 2})));
+        return new MeshAsset(
+            List.of(new MeshAsset.Primitive(0, "Triangle", new float[]{-1.0f, 0.0f, -2.0f, 1.0f, 0.0f, -2.0f, 0.0f, 1.0f, -2.0f}, null, null, null, null, new int[]{0, 1, 2})));
 
     }
 
@@ -350,53 +350,172 @@ class RuntimeMeshGpuUploaderTest {
         }
 
         @Override
-        public long createFence() { throw unsupported(); }
+        public long createFence() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public FenceStatus fenceStatus(long fenceHandle) { throw unsupported(); }
+        public FenceStatus fenceStatus(long fenceHandle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteFence(long fenceHandle) { throw unsupported(); }
+        public void deleteFence(long fenceHandle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createVertexArray() { throw unsupported(); }
+        public int createVertexArray() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteVertexArray(int handle) { throw unsupported(); }
+        public void deleteVertexArray(int handle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createTexture() { throw unsupported(); }
+        public int createTexture() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteTexture(int handle) { throw unsupported(); }
+        public void deleteTexture(int handle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createSampler() { throw unsupported(); }
+        public int createSampler() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteSampler(int handle) { throw unsupported(); }
+        public void deleteSampler(int handle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createFramebuffer() { throw unsupported(); }
+        public int createFramebuffer() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteFramebuffer(int handle) { throw unsupported(); }
+        public void deleteFramebuffer(int handle) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createShader(int shaderType) { throw unsupported(); }
+        public int createShader(int shaderType) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void shaderSource(int shader, String source) { throw unsupported(); }
+        public void shaderSource(int shader, String source) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void compileShader(int shader) { throw unsupported(); }
+        public void compileShader(int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public boolean shaderCompileSucceeded(int shader) { throw unsupported(); }
+        public boolean shaderCompileSucceeded(int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public String shaderInfoLog(int shader) { throw unsupported(); }
+        public String shaderInfoLog(int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteShader(int shader) { throw unsupported(); }
+        public void deleteShader(int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public int createProgram() { throw unsupported(); }
+        public int createProgram() {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void attachShader(int program, int shader) { throw unsupported(); }
+        public void attachShader(int program, int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void linkProgram(int program) { throw unsupported(); }
+        public void linkProgram(int program) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public boolean programLinkSucceeded(int program) { throw unsupported(); }
+        public boolean programLinkSucceeded(int program) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public String programInfoLog(int program) { throw unsupported(); }
+        public String programInfoLog(int program) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void detachShader(int program, int shader) { throw unsupported(); }
+        public void detachShader(int program, int shader) {
+
+            throw unsupported();
+
+        }
+
         @Override
-        public void deleteProgram(int program) { throw unsupported(); }
+        public void deleteProgram(int program) {
+
+            throw unsupported();
+
+        }
 
         private static UnsupportedOperationException unsupported() {
 

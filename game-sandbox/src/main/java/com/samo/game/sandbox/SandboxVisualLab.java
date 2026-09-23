@@ -50,7 +50,7 @@ final class SandboxVisualLab {
         return switch (Objects.requireNonNull(state, "state")) {
             case READY -> READY;
             case LOADING -> LOADING;
-            case RELEASED -> RELEASED;
+            case FAILED, RELEASED -> RELEASED;
         };
 
     }

@@ -41,13 +41,15 @@ public final class SandboxMain {
 
         boolean started = false;
         OpenGlRenderer renderer = null;
+        SandboxAssetLab assetLab = null;
         Throwable primaryFailure = null;
         try {
             window.initialize();
             window.start();
             started = true;
             renderer = OpenGlRenderer.create(window.openGlThreadGuard(), nativeResources, logger, 4);
-            new SandboxApplicationLoop(window, renderer, framebufferSize, logger, actionEvaluator, commandSampler, responseSettings).run();
+            assetLab = SandboxAssetLab.open(message -> log(logger, EngineLogger.Level.INFO, message));
+            new SandboxApplicationLoop(window, renderer, framebufferSize, logger, actionEvaluator, commandSampler, responseSettings, assetLab).run();
         } catch (InterruptedException failure) {
             primaryFailure = failure;
             Thread.currentThread().interrupt();
@@ -56,7 +58,7 @@ public final class SandboxMain {
             primaryFailure = failure;
             throw failure;
         } finally {
-            cleanup(window, renderer, nativeResources, logger, started, primaryFailure);
+            cleanup(window, renderer, assetLab, nativeResources, logger, started, primaryFailure);
         }
 
     }
@@ -121,11 +123,14 @@ public final class SandboxMain {
 
     }
 
-    private static void cleanup(GlfwWindow window, OpenGlRenderer renderer, NativeResourceRegistry nativeResources, EngineLogger logger, boolean started,
-        Throwable primaryFailure) {
+    private static void cleanup(GlfwWindow window, OpenGlRenderer renderer, SandboxAssetLab assetLab, NativeResourceRegistry nativeResources, EngineLogger logger,
+        boolean started, Throwable primaryFailure) {
 
         Throwable cleanupFailure = null;
 
+        if (assetLab != null) {
+            cleanupFailure = attempt(cleanupFailure, assetLab::close);
+        }
         if (renderer != null) {
             cleanupFailure = attempt(cleanupFailure, renderer::close);
         }
@@ -138,7 +143,7 @@ public final class SandboxMain {
         cleanupFailure = attempt(cleanupFailure, nativeResources::assertNoOpenResources);
 
         if (cleanupFailure == null) {
-            log(logger, EngineLogger.Level.INFO, "Sandbox shutdown completed; native resource registry is empty");
+            log(logger, EngineLogger.Level.INFO, "Sandbox shutdown completed; Asset Lab closed and native resource registry is empty");
             return;
         }
         if (primaryFailure != null) {
@@ -199,11 +204,23 @@ public final class SandboxMain {
 
         System.out.println("Sherko Engine persistent sandbox playground");
         System.out.println("Uses production public APIs only; it stays open until you exit with Ctrl+Q.");
-        System.out.println("The production renderer draws the internal mapped-texture Phase 5 room fixture.");
-        System.out.println("The scene includes one public point light and one public spot light plus the fixed directional light.");
-        System.out.println("P5-T16 adds renderer-neutral line/AABB/sphere/ray debug geometry and bounded text counters.");
+        System.out.println("The production renderer draws the accepted Phase 5 reference room.");
+        System.out.println("Phase 6 Asset Lab opens only a bundled cooked cache + manifest through public AssetLoaders.");
+        System.out.println("READY MaterialAsset RGB values drive the existing public point/spot lights only as a visualization;");
+        System.out.println("this is not arbitrary MaterialAsset submission to the renderer.");
+        System.out.println();
+        System.out.println("Phase 6 runtime demonstrations:");
+        System.out.println("  async cooked MESH + MATERIAL loading, typed handles, stable AssetId, structured diagnostics");
+        System.out.println("  missing-content fallback, handle release/reload, valid/invalid MATERIAL hot reload");
+        System.out.println("Offline Phase 6 capabilities remain represented by accepted tests/docs, not fake runtime visuals:");
+        System.out.println("  source metadata, cooker, glTF conversion/tangents, SMES/STEX/SAUD, mip/audio cooking, dependency graph,");
+        System.out.println("  renderer-internal owner-thread mesh upload and shader reload.");
         System.out.println();
         System.out.println("Owner controls:");
+        System.out.println("  G               switch valid MATERIAL WARM / COOL; room-light palette changes live");
+        System.out.println("  Right Shift + G attempt invalid MATERIAL reload; prior READY value stays active");
+        System.out.println("  M               request missing MESH and show READY fallback + MISSING_CONTENT");
+        System.out.println("  H               release current MESH/MATERIAL handles and start fresh async loads");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");
         System.out.println("  R               toggle cursor capture");
         System.out.println("  Right Shift + F cycle mouse sensitivity 0.5 / 1.0 / 2.0");

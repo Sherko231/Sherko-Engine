@@ -59,7 +59,7 @@ final class SandboxControlsTest {
     void independentControlsCanBeRequestedInTheSameFrame() {
 
         assertEquals(EnumSet.of(SandboxControls.SandboxAction.CYCLE_WINDOW_MODE, SandboxControls.SandboxAction.TOGGLE_CURSOR_CAPTURE, SandboxControls.SandboxAction.EXIT,
-            SandboxControls.SandboxAction.CYCLE_VALID_MATERIAL), SandboxControls.resolve(input(true, true, true, true, false, false, false, true, false)));
+            SandboxControls.SandboxAction.RELOAD_ASSET_HANDLES), SandboxControls.resolve(input(true, true, true, true, false, false, false, true, false)));
 
     }
 

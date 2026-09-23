@@ -4,6 +4,7 @@ import com.samo.engine.assets.api.AssetId;
 import com.samo.engine.assets.api.AssetLoadError;
 import com.samo.engine.assets.api.AssetLoadErrorCode;
 import com.samo.engine.assets.api.AssetType;
+import com.samo.engine.assets.api.MaterialAsset;
 import com.samo.engine.assets.api.MeshAsset;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +60,19 @@ final class FallbackAssetResolver {
 
         AssetId requested = Objects.requireNonNull(assetId, "assetId");
         return resolution(requested, AssetType.MATERIAL, new FallbackMaterial(1.0f, 0.0f, 1.0f, 1.0f));
+
+    }
+
+    static FallbackResolution<MaterialAsset> missingMaterialAsset(AssetId assetId) {
+
+        AssetId requested = Objects.requireNonNull(assetId, "assetId");
+        return resolution(requested, AssetType.MATERIAL, fallbackMaterialAsset());
+
+    }
+
+    static MaterialAsset fallbackMaterialAsset() {
+
+        return new MaterialAsset("opaque-baseline", 1.0f, 0.0f, 1.0f, 1.0f);
 
     }
 

@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T10 accepted; P6-T11 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T01 through P6-T10 accepted; P6-T11 / Issue #393 is active |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T10 / Issue #390 is accepted; freshly materialize/refine P6-T11 against current `master` before implementation |
+| Active executable task | P6-T11 / Issue #393 — typed ResourceHandle lifecycle boundary |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -224,3 +224,6 @@ P6-T10 / Issue #390 was active from baseline `e7012ceaeddb9526c1c8360f512b9d740e
 
 
 P6-T10 / Issue #390 is accepted. Final PR #391 head `f831c9eb548b049ae284b353a9b308679914f1b1` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #586 / `35786375612`. PR #391 merged as `7b5843968b58193f249f54f6d5665e7435f8fd37`, and exact merged `master` passed Lightweight master verification in run #587 / `35786970766`. The accepted contract keeps D-068 source metadata schema v1 unchanged, adds strict optional MATERIAL/PREFAB/SCENE `<source>.deps.json` sidecars, represents material shader dependencies as opaque logical keys rather than a new SHADER AssetType, rejects duplicate/self/missing/type-invalid/cyclic/orphan dependencies before output creation, builds deterministic reverse-transitive invalidation closure, and persists deterministic `dependencies.json` schema v1. No incremental cache mutation, public runtime graph/resource API, AssetType change, manifest schema change, dependency/module edge, renderer/world integration, or P6-T11+ behavior was introduced.
+
+
+P6-T11 / Issue #393 is active from baseline `f3367cdcfb8f1d72ffdbe3d5ce6c7aba05e5f4e2`. The bounded contract adds public generic `ResourceHandle<T>` plus exact LOADING/READY/FAILED/RELEASED `ResourceHandleState` semantics in `engine-assets`, with typed value access only while READY and idempotent local release that clears the retained ready value. Gameplay cannot complete handles or obtain raw numeric/native/LWJGL/OpenGL/OpenAL identifiers. Package-private synchronized completion owns LOADING -> READY/FAILED and rejects null/duplicate/terminal completion without mutation. No runtime manifest/file loader, cache identity, reference counting, fallback asset, structured failure payload, asynchronous loading, GPU/OpenAL upload, renderer/world submission, or P6-T12+ work is authorized.

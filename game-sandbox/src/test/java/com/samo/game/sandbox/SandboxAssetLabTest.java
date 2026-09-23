@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.samo.engine.assets.api.MaterialAsset;
 import com.samo.engine.assets.api.ResourceHandleState;
-import com.samo.engine.render.api.RenderPointLight;
-import com.samo.engine.render.api.RenderSpotLight;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -64,17 +62,14 @@ final class SandboxAssetLabTest {
     void materialPaletteMapsDeterministicallyToPublicLocalLights() {
 
         MaterialAsset material = new MaterialAsset("sandbox-lit", 0.2f, 0.4f, 0.8f, 1.0f);
-        List<com.samo.engine.render.api.RenderLocalLight> lights = SandboxSceneSetup.sandboxLocalLights(material);
+        SandboxLightPalette palette = SandboxLightPalette.from(material);
 
-        RenderPointLight point = (RenderPointLight) lights.get(0);
-        RenderSpotLight spot = (RenderSpotLight) lights.get(1);
-
-        assertEquals(0.2f, point.red());
-        assertEquals(0.4f, point.green());
-        assertEquals(0.8f, point.blue());
-        assertEquals(0.8f, spot.red());
-        assertEquals(0.2f, spot.green());
-        assertEquals(0.4f, spot.blue());
+        assertEquals(0.2f, palette.pointRed());
+        assertEquals(0.4f, palette.pointGreen());
+        assertEquals(0.8f, palette.pointBlue());
+        assertEquals(0.8f, palette.spotRed());
+        assertEquals(0.2f, palette.spotGreen());
+        assertEquals(0.4f, palette.spotBlue());
 
     }
 

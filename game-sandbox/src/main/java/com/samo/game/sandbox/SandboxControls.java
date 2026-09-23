@@ -20,14 +20,32 @@ final class SandboxControls {
         if (input.rPressed()) {
             actions.add(input.rightShiftHeld() ? SandboxAction.TOGGLE_MOUSE_Y_INVERSION : SandboxAction.TOGGLE_CURSOR_CAPTURE);
         }
+        if (input.gPressed()) {
+            actions.add(input.rightShiftHeld() ? SandboxAction.DEMONSTRATE_FAILED_MATERIAL_RELOAD : SandboxAction.CYCLE_VALID_MATERIAL);
+        }
+        if (input.mPressed()) {
+            actions.add(SandboxAction.DEMONSTRATE_MISSING_MESH);
+        }
+        if (input.hPressed()) {
+            actions.add(SandboxAction.RELOAD_ASSET_HANDLES);
+        }
         return actions;
 
     }
 
     enum SandboxAction {
-        CYCLE_WINDOW_MODE, TOGGLE_CURSOR_CAPTURE, CYCLE_MOUSE_SENSITIVITY, TOGGLE_MOUSE_Y_INVERSION, EXIT
+        CYCLE_WINDOW_MODE,
+        TOGGLE_CURSOR_CAPTURE,
+        CYCLE_MOUSE_SENSITIVITY,
+        TOGGLE_MOUSE_Y_INVERSION,
+        CYCLE_VALID_MATERIAL,
+        DEMONSTRATE_FAILED_MATERIAL_RELOAD,
+        DEMONSTRATE_MISSING_MESH,
+        RELOAD_ASSET_HANDLES,
+        EXIT
     }
 
-    record SandboxControlInput(boolean fPressed, boolean rPressed, boolean qPressed, boolean rightShiftHeld, boolean leftControlHeld, boolean rightControlHeld) {
+    record SandboxControlInput(boolean fPressed, boolean rPressed, boolean qPressed, boolean gPressed, boolean mPressed, boolean hPressed, boolean rightShiftHeld,
+        boolean leftControlHeld, boolean rightControlHeld) {
     }
 }

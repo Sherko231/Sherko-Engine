@@ -11,11 +11,7 @@ class ResourceHandleTest {
     @Test
     void publicContractIsTypedAndContainsNoProducerOrNativeSurface() {
 
-        assertThat(ResourceHandleState.values()).containsExactly(
-            ResourceHandleState.LOADING,
-            ResourceHandleState.READY,
-            ResourceHandleState.FAILED,
-            ResourceHandleState.RELEASED);
+        assertThat(ResourceHandleState.values()).containsExactly(ResourceHandleState.LOADING, ResourceHandleState.READY, ResourceHandleState.FAILED, ResourceHandleState.RELEASED);
 
         Set<String> methodNames = Set.of("assetId", "state", "readyValue", "requireReady", "close");
         assertThat(ResourceHandle.class.getDeclaredMethods()).extracting(Method::getName).containsExactlyInAnyOrderElementsOf(methodNames);

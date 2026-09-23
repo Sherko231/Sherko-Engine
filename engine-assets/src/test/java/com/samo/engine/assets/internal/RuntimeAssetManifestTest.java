@@ -93,6 +93,11 @@ class RuntimeAssetManifestTest {
     void rejectsUnknownAndMissingFields() throws Exception {
 
         writeManifest("""
+            {"schemaVersion":1,"schemaVersion":1,"assets":[]}
+            """);
+        assertThatThrownBy(() -> RuntimeAssetManifest.load(tempDir)).isInstanceOf(IllegalArgumentException.class);
+
+        writeManifest("""
             {"schemaVersion":1,"assets":[],"extra":true}
             """);
         assertThatThrownBy(() -> RuntimeAssetManifest.load(tempDir)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("fields");

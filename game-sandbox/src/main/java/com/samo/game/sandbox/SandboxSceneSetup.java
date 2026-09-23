@@ -1,25 +1,16 @@
 package com.samo.game.sandbox;
 
 import com.samo.engine.assets.api.MaterialAsset;
-import com.samo.engine.core.api.Aabb3f;
 import com.samo.engine.core.api.CameraMatrices;
-import com.samo.engine.core.api.DebugAabb;
-import com.samo.engine.core.api.DebugColor;
 import com.samo.engine.core.api.DebugFrame;
-import com.samo.engine.core.api.DebugLine;
 import com.samo.engine.core.api.DebugPrimitive;
-import com.samo.engine.core.api.DebugRay;
-import com.samo.engine.core.api.DebugSphere;
 import com.samo.engine.core.api.DebugTextCounter;
-import com.samo.engine.core.api.Ray3f;
-import com.samo.engine.core.api.Sphere3f;
 import com.samo.engine.render.api.RenderFramePacket;
 import com.samo.engine.render.api.RenderLocalLight;
 import com.samo.engine.render.api.RenderPointLight;
 import com.samo.engine.render.api.RenderSpotLight;
 import java.util.List;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 final class SandboxSceneSetup {
     static final float VERTICAL_FOV_RADIANS = (float) Math.toRadians(70.0);
@@ -28,35 +19,29 @@ final class SandboxSceneSetup {
 
     private final Matrix4f view = new Matrix4f();
     private final Matrix4f projection = new Matrix4f();
-    private final List<DebugPrimitive> debugPrimitives = sandboxDebugPrimitives();
 
-    RenderFramePacket frame(SandboxCamera camera, SandboxFramebufferSize framebufferSize, long cumulativeTicks, long inputFrameId, MaterialAsset material) {
+    RenderFramePacket frame(SandboxCamera camera, SandboxFramebufferSize framebufferSize, long cumulativeTicks, long inputFrameId, MaterialAsset material,
+        SandboxAssetLabVisualState assetState) {
 
         float aspectRatio = (float) framebufferSize.width() / framebufferSize.height();
         camera.view(view);
         CameraMatrices.perspective(VERTICAL_FOV_RADIANS, aspectRatio, NEAR_PLANE_METERS, FAR_PLANE_METERS, projection);
-        DebugFrame debugFrame = new DebugFrame(debugPrimitives,
+        List<DebugPrimitive> visualLab = SandboxVisualLab.primitives(assetState, cumulativeTicks);
+        DebugFrame debugFrame = new DebugFrame(visualLab,
             List.of(new DebugTextCounter("simulation/tick", cumulativeTicks), new DebugTextCounter("input/frame", inputFrameId)));
         return new RenderFramePacket(view, projection, framebufferSize.width(), framebufferSize.height(), sandboxLocalLights(material), debugFrame);
-
-    }
-
-    static List<DebugPrimitive> sandboxDebugPrimitives() {
-
-        return List.of(new DebugLine(-0.9f, 0.75f, 0.4f, 0.9f, 0.75f, 0.4f, new DebugColor(0.0f, 1.0f, 0.0f)),
-            new DebugAabb(new Aabb3f(new Vector3f(-0.90f, -0.80f, 0.20f), new Vector3f(-0.50f, -0.40f, 0.60f)), new DebugColor(1.0f, 0.85f, 0.0f)),
-            new DebugSphere(new Sphere3f(new Vector3f(0.0f, 0.60f, 0.30f), 0.18f), new DebugColor(0.0f, 0.85f, 1.0f)),
-            new DebugRay(new Ray3f(new Vector3f(0.35f, -0.65f, 0.40f), new Vector3f(1.0f, 0.0f, 0.0f)), 0.60f, new DebugColor(1.0f, 0.0f, 1.0f)));
 
     }
 
     static List<RenderLocalLight> sandboxLocalLights(MaterialAsset material) {
 
         SandboxLightPalette palette = SandboxLightPalette.from(material);
-        RenderPointLight point = new RenderPointLight(0.40f, 0.30f, 1.20f, palette.pointRed(), palette.pointGreen(), palette.pointBlue(), 0.40f, 4.0f);
-        RenderSpotLight spot = new RenderSpotLight(-0.40f, 0.20f, 1.50f, 0.40f, -0.20f, -1.50f, palette.spotRed(), palette.spotGreen(), palette.spotBlue(), 0.35f, 5.0f, 0.25f,
-            0.60f);
-        return List.of(point, spot);
+        RenderPointLight materialPoint = new RenderPointLight(-1.05f, 0.55f, -1.35f, palette.pointRed(), palette.pointGreen(), palette.pointBlue(), 0.46f, 3.8f);
+        RenderSpotLight materialSpot = new RenderSpotLight(1.10f, 0.75f, -0.75f, -1.10f, -0.55f, -0.55f, palette.spotRed(), palette.spotGreen(), palette.spotBlue(), 0.40f,
+            4.5f, 0.28f, 0.70f);
+        RenderPointLight cyanAccent = new RenderPointLight(0.0f, -0.65f, -1.25f, 0.10f, 0.70f, 1.00f, 0.24f, 2.6f);
+        RenderPointLight magentaAccent = new RenderPointLight(0.0f, 1.10f, -2.35f, 1.00f, 0.08f, 0.55f, 0.18f, 2.8f);
+        return List.of(materialPoint, materialSpot, cyanAccent, magentaAccent);
 
     }
 }

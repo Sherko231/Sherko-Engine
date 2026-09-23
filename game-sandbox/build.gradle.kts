@@ -9,6 +9,7 @@ val sandboxRuntime by configurations.creating {
 
 dependencies {
     implementation(project(":engine-core"))
+    implementation(project(":engine-assets"))
     compileOnly(project(":engine-platform-lwjgl"))
     compileOnly(project(path = ":engine-render-opengl", configuration = "runtimeElements")) {
         isTransitive = false

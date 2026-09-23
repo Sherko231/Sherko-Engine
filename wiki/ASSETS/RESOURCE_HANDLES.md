@@ -52,19 +52,16 @@ This lets gameplay retain compile-time resource typing without depending on one 
 
 ## Current limits
 
-P6-T11 defines the handle lifecycle boundary, and P6-T12 adds an internal missing-content fallback resolver plus public structured `AssetLoadError` diagnostics. The public asset surface still does not yet provide:
+P6-T11 defines the handle lifecycle boundary, P6-T12 adds deterministic fallback/error policy, and P6-T13 adds the first public asynchronous MESH loader. The public asset surface still does not yet provide:
 
-- a public loader or factory that creates real asset handles;
-- runtime `manifest.json` / cooked-file loading;
 - resource caches or cache-key policy;
 - reference counting;
-- a public loader/factory that resolves real content;
-- asynchronous loading/decompression;
-- render-thread GPU upload;
+- runtime loaders for texture/audio/material/scene/prefab/skeleton/animation;
+- a public renderer mesh submission/GPU-resource API;
 - OpenAL decode/upload/playback;
 - renderer/world asset submission;
 - hot reload.
 
 In particular, `close()` means this handle view is released. It does not yet mean that a last reference destroyed a GPU/audio/native resource; later bounded tasks define cache/reference/native lifetime policy.
 
-When P6-T12's internal resolver handles missing mesh/texture/material/sound content, it returns a READY typed handle for the requested AssetId plus a structured MISSING_CONTENT error. Because there is still no public runtime loader/factory, the persistent sandbox cannot meaningfully demonstrate this path without importing internals or implementing later Phase 6 work.
+P6-T13 `AssetLoader.loadMesh(...)` returns a LOADING `ResourceHandle<MeshAsset>` for manifest-backed meshes and completes it from worker-side read/SMES decode. Missing identities/files reuse the P6-T12 fallback and become READY with MISSING_CONTENT. Renderer GPU upload is internal and owner-thread-only; there is still no public arbitrary mesh submission path for the sandbox.

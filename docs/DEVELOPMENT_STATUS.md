@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 complete, including the accepted owner-facing Phase 6 Asset Lab; Phase 7 is ready to activate |
+| Active phase | Phase 6 complete; bounded pre-Phase-7 sandbox visual polish is active under Issue #411 |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-SANDBOX / Issue #408 is accepted; freshly materialize P7-T01 from current master before implementation |
+| Active executable task | P6-SANDBOX-VISUAL / Issue #411 — strengthen the persistent sandbox scene using accepted public APIs only; P7-T01 remains unmaterialized |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -260,3 +260,12 @@ The owner controls use only the existing public input vocabulary: `E`, `Right Sh
 The demo does not expose asset or renderer internals, add native calls, add arbitrary MESH/MATERIAL renderer submission, add a SHADER AssetType, or implement any Phase 7 world/ECS behavior. Offline cooker/import/texture/audio/dependency-graph and renderer-internal upload/shader-reload capabilities remain documented/tested rather than falsely visualized.
 
 Phase 7 implementation has not started. The next bounded executable candidate remains P7-T01 and must be freshly materialized against current master.
+
+
+## Pre-Phase 7 sandbox visual polish
+
+P6-SANDBOX-VISUAL / Issue #411 is active from baseline `e3626e663705aca8dfb7a41062e74283caa43f5b`. It is a sandbox-only owner-observation task after accepted Phase 6 and before P7-T01 materialization.
+
+The candidate keeps all existing sandbox controls/capabilities and builds a stronger neon diagnostics lab from public `DebugFrame` geometry and the existing public local-light submission path. It adds a floor grid, wireframe structural forms, a central hologram-style focal object, deterministic tick-driven scanner/orbit motion, four bounded lights, and three world-space color beacons for MESH lifecycle, MATERIAL lifecycle, and the last Phase 6 Asset Lab action/result.
+
+No font/glyph renderer or runtime HUD exists yet. `DebugTextCounter` remains a published diagnostic-counter snapshot rather than screen-space text. General runtime UI draw data and font/text work remain planned for P9-T11/P9-T12 and are not pulled forward by Issue #411. No engine public API, renderer/assets internal access, native call, arbitrary asset submission, persisted schema, or Phase 7 world/ECS behavior changes.

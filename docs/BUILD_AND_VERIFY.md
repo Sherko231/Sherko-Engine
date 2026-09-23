@@ -2372,3 +2372,30 @@ For PR workflows, Actions checked out synthetic merge commit `97ae0cad824ae3da86
 The connected GitHub surface did not expose a direct `workflow_dispatch` action. A rerun request against a heavy job that was skipped on the push run re-evaluated the push-only job condition and remained skipped. No separate workflow-dispatch pass is claimed. Phase-exit acceptance therefore rests on the five-job test of the byte-identical final merge tree plus exact-SHA Lightweight verification, which preserves the intended no-stale-base/no-tree-drift guarantee.
 
 The Phase 7 readiness review is retained in `docs/phase-exit/PHASE_6_EXIT_REVIEW.md`. P7-T01 is the next bounded executable candidate and must be freshly materialized from current master.
+
+
+## P6-SANDBOX Phase 6 Asset Lab verification
+
+Issue #408 integrates already-accepted Phase 6 public runtime asset behavior into the persistent owner-facing sandbox without changing engine public API.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :game-sandbox:test --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance verifies that the bundled sandbox fixture is materialized into a temporary cooked cache and opened through public `AssetLoaders.open`; valid MESH/MATERIAL handles reach READY; decoded mesh identity/counts are correct; valid MATERIAL reload replaces the same READY handle value; invalid reload emits `HOT_RELOAD_FAILED` and preserves the previous value; a missing MESH request yields READY fallback plus `MISSING_CONTENT`; handle release/reload is observable; existing sandbox controls remain intact; E/Shift+E/Alt+E/Ctrl+E map deterministically to Asset Lab actions; and READY material RGB maps deterministically to public local-light colors.
+
+The sandbox may depend on public `:engine-assets` but must not import `com.samo.engine.assets.internal`, renderer internals, or native APIs. No engine public API, persisted schema, AssetType, arbitrary renderer asset submission, world/ECS behavior, or Phase 7 implementation is authorized.
+
+The final non-exempt candidate requires Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke. Exact merged master then requires Lightweight verification before Issue #408 closes.
+
+Wiki impact: none — the engine API/consumer contract is unchanged; this task consumes already-documented public APIs.
+
+Sandbox impact: required — the task exists specifically to make Phase 6 public runtime asset behavior owner-observable in the canonical persistent playground.
+
+Connector execution note: the connected GitHub environment cannot execute the Gradle wrapper locally. Focused commands are not claimed as passing before repository CI evidence exists.

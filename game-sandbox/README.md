@@ -28,7 +28,7 @@ The sandbox stays open until you explicitly exit with `Ctrl+Q`.
 - `Right Shift + R`: toggle mouse Y inversion.
 - `Ctrl + Q`: exit the sandbox cleanly.
 
-Normal input bindings remain active at the same time: W/A/S/D, mouse movement, Space, mouse buttons, Q push-to-talk, and the rest of the committed Phase 3 action bindings. The sandbox now reserves `E` and its Shift/Alt/Control variants for the Phase 6 Asset Lab owner controls. `Ctrl+Q` remains reserved for explicit exit; plain `Q` remains the normal action binding.
+Normal input bindings remain active at the same time: W/A/S/D, mouse movement, Space, mouse buttons, Q push-to-talk, and the rest of the committed Phase 3 action bindings. `E` and its Shift/Alt/Control variants additionally drive the Phase 6 Asset Lab owner controls. The existing E/INTERACT action binding still evaluates in diagnostics; the current sandbox has no gameplay interaction side effect, so the two observations can coexist. `Ctrl+Q` remains reserved for explicit exit; plain `Q` remains the normal action binding.
 
 ## What the current sandbox exposes
 

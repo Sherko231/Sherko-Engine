@@ -14,9 +14,5 @@ record SandboxAssetLabVisualState(ResourceHandleState meshState, ResourceHandleS
 }
 
 enum SandboxAssetLabSignal {
-    NONE,
-    VALID_RELOAD,
-    FAILED_RELOAD,
-    MISSING_FALLBACK,
-    HANDLE_RELOAD
+    NONE, VALID_RELOAD, FAILED_RELOAD, MISSING_FALLBACK, HANDLE_RELOAD
 }

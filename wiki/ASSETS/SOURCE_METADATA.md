@@ -100,10 +100,10 @@ The current metadata/cooker foundation still does not define:
 - schema migration tooling;
 - broader type-specific importer/cooker settings;
 - incremental cache mutation/recooking;
-- a public runtime manifest/file loader or resource cache;
-- reference counting, asynchronous loading/upload, or hot reload;
+- resource caches/reference counting;
+- runtime loading for non-MESH asset types or hot reload;
 - renderer/world/editor integration.
 
-P6-T11 defines public typed `ResourceHandle<T>` lifecycle semantics, and P6-T12 adds deterministic missing-content fallback/error policy. There is still no public loader/factory or cache.
+P6-T13 adds a public asynchronous runtime MESH loader over the cooker manifest/SMES output. Source metadata remains an authoring-time contract; runtime loading does not consult source sidecars, and no resource cache exists yet.
 
 See [Asset identity](ASSET_ID.md) for the P6-T01 identity contract and [Current limitations](../LIMITATIONS.md) for broader status.

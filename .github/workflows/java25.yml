@@ -132,6 +132,19 @@ jobs:
       - name: Run root and subproject tests
         run: .\gradlew.bat test
 
+      - name: Verify Phase 6 cooked-runtime exit gate
+        run: .\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.Phase6CookedRuntimeIntegrationTest" --rerun-tasks
+
+      - name: Upload Phase 6 cooked-runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p6-exit-cooked-runtime
+          path: |
+            engine-assets/build/test-results/test/TEST-com.samo.engine.assets.internal.Phase6CookedRuntimeIntegrationTest.xml
+            engine-assets/build/reports/p6/p6-exit-cooked-runtime.txt
+          if-no-files-found: error
+
       - name: Verify core lifecycle, timing, config, native ownership, allocation, logging, fatal shutdown, and Phase 2 exit evidence
         env:
           SHERKO_P2_EXIT_GATE: "true"

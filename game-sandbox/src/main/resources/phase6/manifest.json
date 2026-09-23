@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "assetId": "01234567-89ab-cdef-fedc-ba9876543210",
+      "assetType": "MESH",
+      "sourcePath": "sandbox/reference-triangle.gltf",
+      "cookedPath": "assets/01234567-89ab-cdef-fedc-ba9876543210.bin",
+      "byteSize": 196
+    },
+    {
+      "assetId": "11234567-89ab-cdef-fedc-ba9876543210",
+      "assetType": "MATERIAL",
+      "sourcePath": "sandbox/lab.material.json",
+      "cookedPath": "assets/11234567-89ab-cdef-fedc-ba9876543210.bin",
+      "byteSize": 132
+    }
+  ]
+}

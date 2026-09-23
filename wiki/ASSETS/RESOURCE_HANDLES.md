@@ -52,14 +52,13 @@ This lets gameplay retain compile-time resource typing without depending on one 
 
 ## Current limits
 
-P6-T11 is only the handle lifecycle boundary. It does not yet provide:
+P6-T11 defines the handle lifecycle boundary, and P6-T12 adds an internal missing-content fallback resolver plus public structured `AssetLoadError` diagnostics. The public asset surface still does not yet provide:
 
 - a public loader or factory that creates real asset handles;
 - runtime `manifest.json` / cooked-file loading;
 - resource caches or cache-key policy;
 - reference counting;
-- fallback assets;
-- structured failure payloads;
+- a public loader/factory that resolves real content;
 - asynchronous loading/decompression;
 - render-thread GPU upload;
 - OpenAL decode/upload/playback;
@@ -68,4 +67,4 @@ P6-T11 is only the handle lifecycle boundary. It does not yet provide:
 
 In particular, `close()` means this handle view is released. It does not yet mean that a last reference destroyed a GPU/audio/native resource; later bounded tasks define cache/reference/native lifetime policy.
 
-Because there is no public runtime loader yet, the persistent sandbox cannot meaningfully demonstrate P6-T11 without importing internals or implementing later Phase 6 work.
+When P6-T12's internal resolver handles missing mesh/texture/material/sound content, it returns a READY typed handle for the requested AssetId plus a structured MISSING_CONTENT error. Because there is still no public runtime loader/factory, the persistent sandbox cannot meaningfully demonstrate this path without importing internals or implementing later Phase 6 work.

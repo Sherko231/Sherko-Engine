@@ -101,9 +101,9 @@ The current metadata/cooker foundation still does not define:
 - broader type-specific importer/cooker settings;
 - incremental cache mutation/recooking;
 - a public runtime manifest/file loader or resource cache;
-- reference counting, fallback resources, asynchronous loading/upload, or hot reload;
+- reference counting, asynchronous loading/upload, or hot reload;
 - renderer/world/editor integration.
 
-P6-T11 now defines public typed `ResourceHandle<T>` lifecycle semantics, but it does not provide a public loader/factory or cache.
+P6-T11 defines public typed `ResourceHandle<T>` lifecycle semantics, and P6-T12 adds deterministic missing-content fallback/error policy. There is still no public loader/factory or cache.
 
 See [Asset identity](ASSET_ID.md) for the P6-T01 identity contract and [Current limitations](../LIMITATIONS.md) for broader status.

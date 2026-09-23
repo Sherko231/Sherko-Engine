@@ -12,6 +12,9 @@ public record MeshAsset(List<Primitive> primitives) {
         if (primitives.isEmpty()) {
             throw new IllegalArgumentException("primitives must not be empty");
         }
+        for (Primitive primitive : primitives) {
+            Objects.requireNonNull(primitive, "primitive");
+        }
         primitives = List.copyOf(primitives);
 
     }
@@ -35,14 +38,49 @@ public record MeshAsset(List<Primitive> primitives) {
             if ((tangents == null) != (tangentSigns == null)) {
                 throw new IllegalArgumentException("tangents and tangentSigns must both be present or absent");
             }
+            Objects.requireNonNull(name, "name");
+            Objects.requireNonNull(positions, "positions");
+            Objects.requireNonNull(indices, "indices");
+            if (positions.length == 0 || positions.length % 3 != 0) {
+                throw new IllegalArgumentException("positions length must be a positive multiple of three");
+            }
+            int vertexCount = positions.length / 3;
+            requireFinite(positions, "positions");
+            if (normals != null) {
+                requireLength(normals, positions.length, "normals");
+                requireFinite(normals, "normals");
+            }
+            if (tangents != null) {
+                requireLength(tangents, positions.length, "tangents");
+                requireFinite(tangents, "tangents");
+                requireLength(tangentSigns, vertexCount, "tangentSigns");
+                for (float sign : tangentSigns) {
+                    if (sign != 1.0f && sign != -1.0f) {
+                        throw new IllegalArgumentException("tangentSigns values must be exactly +1 or -1");
+                    }
+                }
+            }
+            if (uv0 != null) {
+                requireLength(uv0, Math.multiplyExact(vertexCount, 2), "uv0");
+                requireFinite(uv0, "uv0");
+            }
+            if (indices.length == 0 || indices.length % 3 != 0) {
+                throw new IllegalArgumentException("indices length must be positive and divisible by three");
+            }
+            for (int index : indices) {
+                if (index < 0 || index >= vertexCount) {
+                    throw new IllegalArgumentException("index is outside vertex range");
+                }
+            }
+
             this.meshIndex = meshIndex;
-            this.name = Objects.requireNonNull(name, "name");
-            this.positions = Objects.requireNonNull(positions, "positions").clone();
+            this.name = name;
+            this.positions = positions.clone();
             this.normals = normals == null ? null : normals.clone();
             this.tangents = tangents == null ? null : tangents.clone();
             this.tangentSigns = tangentSigns == null ? null : tangentSigns.clone();
             this.uv0 = uv0 == null ? null : uv0.clone();
-            this.indices = Objects.requireNonNull(indices, "indices").clone();
+            this.indices = indices.clone();
 
         }
 
@@ -91,6 +129,24 @@ public record MeshAsset(List<Primitive> primitives) {
         public int[] indices() {
 
             return indices.clone();
+
+        }
+
+        private static void requireLength(float[] values, int expected, String label) {
+
+            if (values.length != expected) {
+                throw new IllegalArgumentException(label + " length must equal " + expected);
+            }
+
+        }
+
+        private static void requireFinite(float[] values, String label) {
+
+            for (int index = 0; index < values.length; index++) {
+                if (!Float.isFinite(values[index])) {
+                    throw new IllegalArgumentException(label + "[" + index + "] must be finite");
+                }
+            }
 
         }
 

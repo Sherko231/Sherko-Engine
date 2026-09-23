@@ -854,3 +854,12 @@ Asset dependency edges use canonical existing `AssetId` values. MATERIAL asset e
 The immutable internal graph stores forward AssetId/shader edges and deterministic reverse edges. `dependentsOfAsset` computes the canonical AssetId-sorted transitive dependent closure without returning the changed asset itself; `dependentsOfShader` starts at directly dependent MATERIAL assets and follows the same transitive AssetId reverse graph. A successful fresh cook writes deterministic UTF-8 `dependencies.json` schema v1 next to unchanged `manifest.json`: MATERIAL/PREFAB/SCENE owner entries are sorted by AssetId and contain exactly owner `assetId`, sorted `assetDependencies`, and lexicographically sorted `shaderDependencies`. Persisted decode validates against the caller-supplied known AssetId/type context so TEXTURE and other non-owner referenced assets do not need duplicate manifest records inside the graph file.
 
 P6-T10 does not mutate an existing cache, perform incremental recooking, add runtime graph/resource loading, or expose a public graph API. The backlog invalidation acceptance is represented by the exact reverse-dependent closure that later recooking work can consume.
+
+
+## P6-T11 typed runtime resource-handle boundary
+
+`engine-assets` now exposes public `ResourceHandle<T>` and `ResourceHandleState`. The handle is a backend-neutral typed Java view identified by an `AssetId`; its observable states are exactly `LOADING`, `READY`, `FAILED`, and `RELEASED`. `readyValue()` exposes a value only while READY and `requireReady()` rejects every other state with an AssetId/state diagnostic. `close()` is idempotent, makes RELEASED terminal, and clears any retained ready value.
+
+Gameplay receives only the public generic interface. The public surface contains no producer transition method, raw integer/long native ID, LWJGL/OpenGL/OpenAL type, cache entry, or internal controller. Package-private `ResourceHandleCell<T>` owns LOADING -> READY/FAILED completion and synchronizes state/value observation, completion, and release. Null ready completion and any completion after READY, FAILED, or RELEASED fail without mutating accepted state/value.
+
+P6-T11 deliberately stops at the lifecycle boundary. It does not load `manifest.json`, read cooked files, create resource caches, count references, destroy native/GPU/audio resources, provide fallback assets, schedule asynchronous work, upload on a render/audio thread, or connect handles to renderer/world/gameplay submission. Those policies remain later bounded Phase 6 work.

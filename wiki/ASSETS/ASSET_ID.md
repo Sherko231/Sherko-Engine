@@ -38,13 +38,12 @@ P6-T02 now defines strict schema-v1 source metadata containing `schemaVersion`, 
 The current asset foundation still does not provide:
 
 - a metadata writer or schema migration tooling;
-- a public runtime manifest/file loader or resource cache;
-- reference counting or native/GPU/audio destruction policy;
-- a public runtime loader/factory that resolves real content;
-- asynchronous loading/upload;
+- resource caches or reference counting/native/GPU/audio destruction policy;
+- runtime loaders for asset types other than MESH;
+- a public renderer GPU-resource/submission API;
 - renderer/world asset submission;
 - file watching or hot reload.
 
-P6-T11 provides the public typed `ResourceHandle<T>` lifecycle boundary, and P6-T12 adds deterministic internal missing-content fallbacks plus structured errors. No public loader/factory resolves real runtime assets yet.
+P6-T13 now provides public asynchronous manifest-backed MESH loading through `AssetLoaders` / `AssetLoader`, while preserving AssetId identity across READY/fallback results. Other runtime asset types and resource-cache/native lifetime policy remain later work.
 
 Use [Current limitations](../LIMITATIONS.md) for the wider implementation status.

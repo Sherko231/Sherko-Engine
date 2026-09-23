@@ -2290,3 +2290,27 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T12 verification evidence: candidate runs #592 / `35905334367` and #593 / `35905599395` exposed only repository Spotless formatter differences and were obsolete after formatter-only corrections. Final PR #397 head `1ceecab7225b863302231bb9243631d7dcaac971` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #594 / `35905886197`. The passing tests independently verify the closed one-meter D-041 fallback cube topology/bounds, exact magenta/black RGBA8 checker plus 1x1 mip, opaque-magenta material components, deterministic non-silent mono PCM16 fallback with repeated sign crossings, READY handle/error pairing, deterministic repeated resolution, independent handle lifetime, public error validation, and absence of native/backend public diagnostic types. PR #397 merged as `f2919bb93c34b410e9a3dbf7707e5ecce850766f`; exact-merge Lightweight master verification passed in run #595 / `35906606650`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T12 acceptance is complete. The connector environment did not separately execute the focused Gradle command sequence locally; accepted repository CI is the execution evidence.
+
+
+## P6-T13 asynchronous mesh loading verification
+
+Issue #399 adds strict manifest-backed asynchronous runtime MESH loading plus owner-thread-only OpenGL buffer upload.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.RuntimeAssetManifestTest" --tests "com.samo.engine.assets.internal.AsyncAssetLoaderTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.RuntimeMeshGpuUploaderTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Focused acceptance verifies strict manifest v1 parsing/path containment, LOADING-before-controlled-worker execution, off-caller-thread file read/SMES decode, exact decoded mesh values, P6-T12 fallback reuse for missing identity/file, READ_FAILED versus INVALID_CONTENT diagnostics, wrong-type synchronous rejection, release-during-load non-resurrection, ordered error draining, and loader-close submission rejection. Renderer acceptance constructs an independent valid >1 MiB SMES fixture, loads it through the public production `AssetLoaders.open` virtual-thread path, proves no resource backend call occurs before explicit owner-thread upload, checks exact buffer sizes and representative values, rejects non-owner upload before backend mutation, verifies partial-upload rollback, and verifies idempotent owner-thread close.
+
+Dependency-lock diff must remain empty. No new module edge, dependency, workflow, persisted schema, shader, texture/audio/material loader, cache/reference counting, arbitrary draw submission, world/game/sandbox source, or P6-T14 behavior is permitted. `engine-assets` must not import renderer or OpenGL packages. D-041 positions remain already-converted engine-space meters and are not converted again.
+
+Because P6-T13 adds public asset API, asynchronous lifecycle behavior, and explicit GPU ownership behavior, the final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #399 closes.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; exact final-candidate repository CI remains mandatory.

@@ -155,7 +155,10 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 | `ResourceHandle<T>` | Typed runtime resource view exposing AssetId, lifecycle state, READY-only value access, and idempotent local release without native/backend handles. |
 | `ResourceHandleState` | Exact resource-handle states: LOADING, READY, FAILED, RELEASED. |
 | `AssetLoadError` | Immutable structured diagnostic for a runtime asset fallback: requested AssetId/type, stable code, and non-blank detail. |
-| `AssetLoadErrorCode` | Stable fallback diagnostic code set; P6-T12 currently defines only MISSING_CONTENT. |
+| `AssetLoadErrorCode` | Structured runtime asset diagnostic codes: MISSING_CONTENT, READ_FAILED, INVALID_CONTENT. |
+| `MeshAsset` | Immutable Java-owned decoded SMES mesh containing one or more defensive-copy primitives in D-041 engine space. |
+| `AssetLoader` | Public asynchronous runtime MESH loader returning `ResourceHandle<MeshAsset>` and draining structured load errors. |
+| `AssetLoaders` | Factory that validates a cooked cache manifest and opens the production virtual-thread asset loader. |
 
 `AssetId` contains only identity bits. Construct it directly from two 64-bit halves when restoring an already-known identity, use `AssetId.generate()` when authoring a new identity, and use `AssetId.parse(text)` / `toString()` for the canonical 36-character lowercase textual form. Moving a source file does not change an existing reference as long as metadata retains the same `AssetId`.
 
@@ -163,9 +166,9 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 
 The public asset API now includes identity, strict source metadata, and the P6-T11 typed resource-handle lifecycle boundary. `ResourceHandle<T>` is intentionally not a loader or cache: callers cannot create READY values through the public surface, cannot obtain backend/native IDs, and cannot infer native destruction from `close()`.
 
-Runtime manifest/file loading, caches, reference counting, async loading/GPU upload, and renderer/world consumption remain unimplemented. P6-T12 now defines deterministic CPU-side missing-content fallbacks for mesh/texture/material/sound plus structured errors, but no public loader/factory invokes them yet.
+P6-T13 now provides strict manifest-backed asynchronous runtime MESH loading into `MeshAsset` values and an internal renderer-thread GPU buffer uploader. Resource caches/reference counting, texture/audio/material runtime loaders, arbitrary mesh renderer submission, and world consumption remain unimplemented.
 
-Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), [Asset cooker](ASSETS/COOKER.md), [Resource handles](ASSETS/RESOURCE_HANDLES.md), and [Fallback assets](ASSETS/FALLBACKS.md).
+Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), [Asset cooker](ASSETS/COOKER.md), [Resource handles](ASSETS/RESOURCE_HANDLES.md), and [Fallback assets](ASSETS/FALLBACKS.md), and [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 

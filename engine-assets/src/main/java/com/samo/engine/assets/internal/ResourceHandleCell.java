@@ -26,10 +26,32 @@ final class ResourceHandleCell<T> implements ResourceHandle<T> {
 
     }
 
+    synchronized boolean tryCompleteReady(T value) {
+
+        Objects.requireNonNull(value, "value");
+        if (state != ResourceHandleState.LOADING) {
+            return false;
+        }
+        readyValue = value;
+        state = ResourceHandleState.READY;
+        return true;
+
+    }
+
     synchronized void completeFailed() {
 
         requireLoadingCompletionState();
         state = ResourceHandleState.FAILED;
+
+    }
+
+    synchronized boolean tryCompleteFailed() {
+
+        if (state != ResourceHandleState.LOADING) {
+            return false;
+        }
+        state = ResourceHandleState.FAILED;
+        return true;
 
     }
 

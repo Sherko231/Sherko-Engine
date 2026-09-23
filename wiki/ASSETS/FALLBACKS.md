@@ -92,17 +92,15 @@ It requires no stb or OpenAL call and is not a new persisted audio format. P6-T0
 
 ## Current integration limits
 
-P6-T12 does not yet provide:
+P6-T13 now invokes the P6-T12 MESH fallback from the public asynchronous loader when a requested identity or manifest-backed cooked file is missing. P6-T12/P6-T13 still do not provide:
 
-- a public runtime manifest/file loader;
-- a public factory that resolves arbitrary real asset handles;
 - resource caching/reference counting;
-- asynchronous file read/decompression;
-- render-thread GPU upload;
+- runtime texture/audio/material loading;
+- a public renderer mesh submission/GPU-resource API;
 - OpenAL decode/upload/playback;
 - renderer/world asset submission;
 - hot reload.
 
-P6-T13 is responsible for asynchronous runtime read/decompression and render-thread GPU upload. Later renderer/audio adapters are responsible for actually presenting the fallback mesh/texture/material or playing the fallback PCM data.
+P6-T13 performs asynchronous runtime MESH read/SMES decode and provides an internal render-thread-only vertex/index buffer uploader. Later renderer/audio adapters remain responsible for actual arbitrary mesh presentation and sound playback.
 
 Because those public integration paths do not exist yet, the persistent sandbox does not demonstrate P6-T12 without importing internal APIs.

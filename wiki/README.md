@@ -37,8 +37,9 @@ Use it when you want to answer questions such as:
 17. [Asset cooker](ASSETS/COOKER.md)
 18. [Resource handles](ASSETS/RESOURCE_HANDLES.md)
 19. [Fallback assets](ASSETS/FALLBACKS.md)
-20. [Current limitations](LIMITATIONS.md)
-21. [How this wiki must be maintained](MAINTENANCE.md)
+20. [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md)
+21. [Current limitations](LIMITATIONS.md)
+22. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

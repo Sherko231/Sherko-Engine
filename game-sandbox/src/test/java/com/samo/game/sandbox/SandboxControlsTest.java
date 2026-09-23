@@ -65,11 +65,10 @@ final class SandboxControlsTest {
 
     }
 
-    private static SandboxControls.SandboxControlInput input(boolean fPressed, boolean rPressed, boolean qPressed, boolean ePressed, boolean rightShiftHeld,
-        boolean leftAltHeld, boolean rightAltHeld, boolean leftControlHeld, boolean rightControlHeld) {
+    private static SandboxControls.SandboxControlInput input(boolean fPressed, boolean rPressed, boolean qPressed, boolean ePressed, boolean rightShiftHeld, boolean leftAltHeld,
+        boolean rightAltHeld, boolean leftControlHeld, boolean rightControlHeld) {
 
-        return new SandboxControls.SandboxControlInput(fPressed, rPressed, qPressed, ePressed, rightShiftHeld, leftAltHeld, rightAltHeld, leftControlHeld,
-            rightControlHeld);
+        return new SandboxControls.SandboxControlInput(fPressed, rPressed, qPressed, ePressed, rightShiftHeld, leftAltHeld, rightAltHeld, leftControlHeld, rightControlHeld);
 
     }
 }

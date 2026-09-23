@@ -40,7 +40,9 @@ class FallbackAssetResolverTest {
         int[] indices = mesh.indices();
         assertThat(positions).hasSize(24);
         assertThat(indices).hasSize(36);
-        assertThat(indices).allSatisfy(index -> assertThat(index).isBetween(0, 7));
+        for (int index : indices) {
+            assertThat(index).isBetween(0, 7);
+        }
 
         assertAxisBounds(positions, 0);
         assertAxisBounds(positions, 1);
@@ -114,9 +116,17 @@ class FallbackAssetResolverTest {
         assertThat(sound.channels()).isEqualTo(1);
         assertThat(sound.sampleRate()).isEqualTo(22050);
         assertThat(samples.length).isEqualTo(220);
-        assertThat(samples).anyMatch(sample -> sample > 0).anyMatch(sample -> sample < 0);
-        assertThat(samples).allMatch(sample -> Math.abs((int) sample) <= 12000);
-        assertThat(samples.length / (double) sound.sampleRate()).isBetween(0.009, 0.011);
+        boolean hasPositive = false;
+        boolean hasNegative = false;
+        for (short sample : samples) {
+            hasPositive |= sample > 0;
+            hasNegative |= sample < 0;
+            assertThat(Math.abs((int) sample)).isLessThanOrEqualTo(12000);
+        }
+        assertThat(hasPositive).isTrue();
+        assertThat(hasNegative).isTrue();
+        double durationSeconds = samples.length / (double) sound.sampleRate();
+        assertThat(durationSeconds).isGreaterThanOrEqualTo(0.009).isLessThanOrEqualTo(0.011);
         assertThat(nonZeroSignCrossings(samples)).isGreaterThan(20);
 
     }

@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 implementation complete — P6-T01 through P6-T14 accepted; Phase 6 exit gate/readiness review is next |
+| Active phase | Phase 6 implementation complete — P6-T01 through P6-T14 accepted; P6 exit gate/readiness review active in Issue #405 |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T14 / Issue #402 is accepted; freshly materialize the Phase 6 exit-gate/readiness review before Phase 7 |
+| Active executable task | P6-EXIT / Issue #405 — prove cooked-runtime-only startup and review Phase 7 readiness |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -236,3 +236,10 @@ P6-T13 / Issue #399 is accepted. Initial PR #400 candidate run #596 / `359148680
 
 
 P6-T14 / Issue #402 is accepted. The first candidate run #601 / `35919410976` exposed one stale AssetLoadErrorCode enum expectation; run #602 / `35919607952` then exposed only three Spotless formatting differences, and both candidates became obsolete after bounded corrections. Final PR #403 head `4b638925a12a683c5a5c0b4bae02ab7cb84ea71b` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #603 / `35919894825`. PR #403 merged as `240fce2858402134532876cb40cc2904e99c4f04`, and exact merged `master` passed Lightweight master verification in run #604 / `35920655044`. The accepted contract adds strict MATERIAL schema v1, asynchronous public MATERIAL loading, same-READY-handle polling reload, HOT_RELOAD_FAILED last-valid-value preservation, and a renderer-internal D-049-guarded shader/material candidate swap. No SHADER AssetType/public shader API, dependency/module edge, background watcher, general cache/reference counting, MESH/TEXTURE/AUDIO hot reload, arbitrary renderer submission, world/game integration, or sandbox source change was introduced. Phase 6 implementation tasks are complete; the Phase 6 exit gate/readiness review is the next action.
+
+
+## Phase 6 exit/readiness review
+
+P6-EXIT / Issue #405 is active from baseline `3a0df9e1c85c40cee2a02aa6810bf8865476014a`. The candidate adds one integrated production-boundary gate: cook valid MESH and MATERIAL authoring inputs, remove the complete source tree, then open only the cooked cache through public `AssetLoaders.open` and require both typed handles to reach READY with exact expected values and no runtime diagnostics. The candidate also records the Phase 7 readiness review without materializing or implementing P7 work.
+
+Phase 6 is not yet marked complete in this checkpoint. Acceptance requires the exact final PR head to pass all five heavy jobs with retained `p6-exit-cooked-runtime` evidence, merge on a current base, pass ordinary exact-merge Lightweight verification, and then pass an explicit full `workflow_dispatch` heavy run on the exact merged master SHA. If those gates pass, P7-T01 is the next bounded executable candidate.

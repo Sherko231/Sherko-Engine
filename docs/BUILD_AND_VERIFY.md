@@ -2237,3 +2237,6 @@ Focused acceptance covers strict sidecar fields/version/canonical AssetIds, cano
 Dependency-lock diff must remain empty. No `AssetType`/source metadata v1/manifest schema/public API/module-edge/dependency change is permitted. The final candidate requires the normal exact-head five-job PR matrix. After merge, exact merged `master` requires Lightweight master verification before Issue #390 closes.
 
 Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; exact final-candidate repository CI remains mandatory.
+
+
+Accepted P6-T10 verification evidence: final PR #391 head `f831c9eb548b049ae284b353a9b308679914f1b1` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #586 / `35786375612`. Earlier candidates exposed only test-fixture ordering/context mistakes and repository Spotless shape differences; production dependency semantics remained within Issue #390. PR #391 merged as `7b5843968b58193f249f54f6d5665e7435f8fd37`; exact-merge Lightweight master verification passed in run #587 / `35786970766`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-T10 acceptance is complete.

@@ -2399,3 +2399,6 @@ Wiki impact: none — the engine API/consumer contract is unchanged; this task c
 Sandbox impact: required — the task exists specifically to make Phase 6 public runtime asset behavior owner-observable in the canonical persistent playground.
 
 Connector execution note: the connected GitHub environment cannot execute the Gradle wrapper locally. Focused commands are not claimed as passing before repository CI evidence exists.
+
+
+Accepted P6-SANDBOX verification evidence: the implementation evolved through obsolete candidates that exposed a test compile-classpath issue and repository Spotless differences. Final PR #409 head `2d7ae7848f94b130c6d277974a753a2fe6c6952c` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #618 / `35927241117`. The passing root/subproject tests include the real public Asset Lab fixture workflow, valid/invalid MATERIAL reload behavior, missing-content fallback, release/reload lifecycle, owner-control mapping, and deterministic material-to-light palette mapping. PR #409 merged as `c36d49f5abdb54e841a0a560724fc366b5d7bcdd`; exact-merge Lightweight verification passed in run #619 / `35927887172`, including committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. Issue #408 acceptance is complete.

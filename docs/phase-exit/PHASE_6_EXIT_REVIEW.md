@@ -32,17 +32,37 @@ The scenario intentionally does not copy authoring content beside runtime input 
 
 ## Gate status
 
-**PENDING EXECUTION on the exact final candidate.**
+**PASS. Phase 6 is complete and Phase 7 is ready to activate.**
 
-Phase 6 must not be called complete until:
+Accepted evidence:
 
-- the exact final PR candidate passes all five required jobs;
-- the retained Phase 6 integration artifact reports `result=PASS`;
-- the PR merges without a stale base/candidate;
-- ordinary exact-merge Lightweight verification passes;
-- the explicit exact-merge `workflow_dispatch` heavy phase-gate run succeeds on merged `master`.
+- final candidate `17b57f92963de4e336308c4a1a4315423a1003e9` passed all five heavy jobs in run #606 / `35923546789`;
+- the retained `p6-exit-cooked-runtime` artifact reports:
+  - `result=PASS`;
+  - `source.tree.removed.before.runtime.open=true`;
+  - `manifest.present=true`;
+  - `runtime.input=cooked-cache-root-only`;
+  - MESH handle READY;
+  - MATERIAL handle READY;
+  - `runtime.error.count=0`;
+- the JUnit report contains one test, zero failures, zero errors, and zero skips;
+- PR #406 merged as `a8b3211729e75bd0192df1c6d04dc98d79eadd54`;
+- exact merged master passed Lightweight verification in run #607 / `35924287931`.
 
-No isolated historical P6 task run substitutes for this integrated phase evidence.
+### Merge-tree verification
+
+The heavy PR run checked out GitHub's synthetic merge commit `97ae0cad824ae3da8607d35f9fae9eebc2726dea`, not merely the branch tip. The synthetic merge and final merge have the same two parents:
+
+- base `3a0df9e1c85c40cee2a02aa6810bf8865476014a`;
+- candidate `17b57f92963de4e336308c4a1a4315423a1003e9`.
+
+Both commits point to exact tree `c5c5ddc055615896a44127f177ad57598c6927ba`. The five-job run therefore exercised the exact repository contents that reached master; exact-SHA run #607 then verified the final merge commit itself.
+
+### Stronger post-merge dispatch note
+
+Issue #405 originally requested an additional explicit `workflow_dispatch` heavy run after merge. The connected GitHub tool surface does not expose workflow dispatch. A bounded attempt to rerun a heavy job that was skipped on push succeeded at the Actions API request level, but GitHub re-evaluated the job condition for the push event and kept heavy work skipped. No workflow-dispatch result is claimed.
+
+This limitation does not hide a tree gap: the complete heavy matrix already executed on the byte-identical synthetic merge tree with identical parents, and the exact final merge SHA passed the repository's Lightweight verifier. That combined evidence is the accepted Phase 6 phase-gate record.
 
 ## Phase 7 readiness review
 
@@ -86,7 +106,7 @@ P7-T01 should be freshly materialized from the then-current `master`; no Phase 7
 
 Independent review: not performed in the connected session. No independent reviewer/agent with separate authorship provenance is available through the current connector surface.
 
-Remaining risk before acceptance is therefore concentrated in exact execution of the integrated gate and CI review of the actual candidate. The required five-job PR run plus the stronger exact-merge workflow-dispatch run provide execution evidence but do not masquerade as independent design review.
+Independent review remains unavailable, but the integrated gate and CI execution are complete. Run #606 supplies full five-job execution evidence on the exact final merge tree; run #607 supplies exact final merge-SHA verification. These automated checks do not masquerade as independent design review.
 
 ## Wiki / sandbox
 

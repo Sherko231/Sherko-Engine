@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 active — P6-T01 through P6-T11 accepted; P6-T12 is the next task to freshly materialize/refine |
+| Active phase | Phase 6 active — P6-T01 through P6-T11 accepted; P6-T12 / Issue #396 is active |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-T11 / Issue #393 is accepted; freshly materialize/refine P6-T12 against current `master` before implementation |
+| Active executable task | P6-T12 / Issue #396 — deterministic fallback assets and structured missing-content errors |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -227,3 +227,6 @@ P6-T10 / Issue #390 is accepted. Final PR #391 head `f831c9eb548b049ae284b353a9b
 
 
 P6-T11 / Issue #393 is accepted. Initial candidate run #588 / `35849147685` exposed only repository Spotless formatting and one Checkstyle empty-catch violation in the concurrency test; the candidate was corrected without changing the public contract. Final PR #394 head `b22258a8e9b7102de4c5ec14af987b751ca009ce` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #590 / `35849372952`. PR #394 merged as `b761d15f07eaeeb2d082fc8e8dea53bfb641cefd`, and exact merged `master` passed Lightweight master verification in run #591 / `35849980110`. The accepted contract adds public generic `ResourceHandle<T>` plus exact LOADING/READY/FAILED/RELEASED `ResourceHandleState` semantics in `engine-assets`, with READY-only typed Java value access, idempotent local release that clears any retained ready value, and no public producer transition or raw numeric/native/LWJGL/OpenGL/OpenAL handle surface. Package-private synchronized completion owns LOADING -> READY/FAILED and rejects null/duplicate/terminal completion without accepted-state mutation. No runtime manifest/file loader, cache identity, reference counting/native destruction, fallback asset, structured failure payload, asynchronous loading, GPU/OpenAL upload, renderer/world submission, or P6-T12+ behavior was introduced.
+
+
+P6-T12 / Issue #396 is active from baseline `53f094ccf7aaf6956deec87ec4c2ccbb8fe91bce`. The bounded contract adds deterministic CPU-side fallback MESH/TEXTURE/MATERIAL/AUDIO values plus public structured `AssetLoadError` / `AssetLoadErrorCode.MISSING_CONTENT`. Missing-content resolution preserves the requested AssetId, completes a new P6-T11 typed handle READY with the fallback value, and pairs it with the structured error rather than throwing for absence. The mesh fallback is a closed centered one-meter D-041 cube; texture is a 2x2 opaque magenta/black checker with exact 1x1 mip and no new color-space semantics; material is adapter-neutral opaque magenta; sound is non-silent mono PCM16 at 22050 Hz without stb/OpenAL/native allocation. No runtime manifest/file read path, cache/reference counting, persisted format change, async execution, GPU/OpenAL upload/playback, renderer/world integration, sandbox source change, or P6-T13+ work is authorized.

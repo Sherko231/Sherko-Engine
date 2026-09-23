@@ -152,16 +152,18 @@ Usage: [GLFW/OpenGL window](PLATFORM/GLFW_WINDOW.md), [Platform input and tick c
 | `AssetType` | Source metadata category: MESH, TEXTURE, MATERIAL, SKELETON, ANIMATION, AUDIO, PREFAB, or SCENE. |
 | `SourceAssetMetadata` | Immutable strict schema-v1 source metadata carrying schema version, `AssetId`, and `AssetType`; `load(Path)` reads UTF-8 JSON atomically. |
 | `SourceAssetMetadataLoadException` | Public catch type for source metadata file/JSON/schema/value failures without exposing Jackson. |
+| `ResourceHandle<T>` | Typed runtime resource view exposing AssetId, lifecycle state, READY-only value access, and idempotent local release without native/backend handles. |
+| `ResourceHandleState` | Exact resource-handle states: LOADING, READY, FAILED, RELEASED. |
 
 `AssetId` contains only identity bits. Construct it directly from two 64-bit halves when restoring an already-known identity, use `AssetId.generate()` when authoring a new identity, and use `AssetId.parse(text)` / `toString()` for the canonical 36-character lowercase textual form. Moving a source file does not change an existing reference as long as metadata retains the same `AssetId`.
 
 `SourceAssetMetadata.load(Path)` loads strict UTF-8 JSON schema version 1 with exactly `schemaVersion`, `assetId`, and `assetType`. Unknown/duplicate fields, malformed or wrong-type values, noncanonical IDs, unknown asset types, missing/unreadable files, and missing fields fail without returning partial metadata. Any schema version other than 1 fails with an `upgrade required` diagnostic. Jackson remains an implementation detail.
 
-The public asset API remains limited to identity and source metadata. P6-T03 adds an internal offline cooker with adjacent `<source>.asset.json` discovery, deterministic manifest v1, and AssetId-based cache paths. P6-T04 adds internal Assimp validation/import for MESH `.gltf` / `.glb` sources only. Neither task adds a public mesh/runtime-resource API; imported values remain pre-engine-conversion Assimp import-basis implementation state after intrinsic glTF vertex remapping/UV-origin normalization and persisted mesh payloads remain temporary source-byte copies.
+The public asset API now includes identity, strict source metadata, and the P6-T11 typed resource-handle lifecycle boundary. `ResourceHandle<T>` is intentionally not a loader or cache: callers cannot create READY values through the public surface, cannot obtain backend/native IDs, and cannot infer native destruction from `close()`.
 
-Metadata writing/saving, migration, runtime resource handles/caches, source-to-engine mesh conversion, final cooked mesh schemas, reference counting, and renderer/world consumption remain unimplemented.
+Runtime manifest/file loading, caches, reference counting, fallback resources, async loading/GPU upload, and renderer/world consumption remain unimplemented.
 
-Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), and [Asset cooker](ASSETS/COOKER.md).
+Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), [Asset cooker](ASSETS/COOKER.md), and [Resource handles](ASSETS/RESOURCE_HANDLES.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 
@@ -202,4 +204,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Platform input and tick commands](PLATFORM/INPUT.md)
 - [Asset identity](ASSETS/ASSET_ID.md)
 - [Source metadata](ASSETS/SOURCE_METADATA.md)
+- [Resource handles](ASSETS/RESOURCE_HANDLES.md)
 - [Current limitations](LIMITATIONS.md)

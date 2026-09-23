@@ -37,12 +37,14 @@ P6-T02 now defines strict schema-v1 source metadata containing `schemaVersion`, 
 
 The current asset foundation still does not provide:
 
-- metadata discovery/sidecar naming, writing, or migration;
-- an asset cooker or manifest;
-- glTF/texture/audio import;
-- runtime asset handles or caches;
-- reference counting or resource lifetime;
+- a metadata writer or schema migration tooling;
+- a public runtime manifest/file loader or resource cache;
+- reference counting or native/GPU/audio destruction policy;
+- fallback resources;
+- asynchronous loading/upload;
 - renderer/world asset submission;
 - file watching or hot reload.
+
+P6-T11 now provides the public typed `ResourceHandle<T>` lifecycle boundary, but no public loader/factory creates real runtime asset handles yet.
 
 Use [Current limitations](../LIMITATIONS.md) for the wider implementation status.

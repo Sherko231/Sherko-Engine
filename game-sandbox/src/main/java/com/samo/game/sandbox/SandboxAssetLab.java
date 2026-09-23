@@ -27,10 +27,8 @@ final class SandboxAssetLab implements AutoCloseable {
     static final AssetId MATERIAL_ID = AssetId.parse("11234567-89ab-cdef-fedc-ba9876543210");
     static final AssetId MISSING_MESH_ID = AssetId.parse("99999999-9999-4999-8999-999999999999");
 
-    private static final String WARM_MATERIAL =
-        "{\"schemaVersion\":1,\"shaderKey\":\"sandbox-lit\",\"redMultiplier\":1.0,\"greenMultiplier\":0.35,\"blueMultiplier\":0.15,\"alphaMultiplier\":1.0}";
-    private static final String COOL_MATERIAL =
-        "{\"schemaVersion\":1,\"shaderKey\":\"sandbox-lit\",\"redMultiplier\":0.15,\"greenMultiplier\":0.45,\"blueMultiplier\":1.0,\"alphaMultiplier\":1.0}";
+    private static final String WARM_MATERIAL = "{\"schemaVersion\":1,\"shaderKey\":\"sandbox-lit\",\"redMultiplier\":1.0,\"greenMultiplier\":0.35,\"blueMultiplier\":0.15,\"alphaMultiplier\":1.0}";
+    private static final String COOL_MATERIAL = "{\"schemaVersion\":1,\"shaderKey\":\"sandbox-lit\",\"redMultiplier\":0.15,\"greenMultiplier\":0.45,\"blueMultiplier\":1.0,\"alphaMultiplier\":1.0}";
     private static final String INVALID_MATERIAL = "{\"schemaVersion\":1,\"shaderKey\":\"BROKEN\",\"redMultiplier\":2.0}";
 
     private final Consumer<String> logSink;
@@ -83,6 +81,7 @@ final class SandboxAssetLab implements AutoCloseable {
             readySummaryLogged = true;
         }
         drainErrors("runtime");
+
     }
 
     MaterialAsset currentMaterial() {
@@ -119,8 +118,8 @@ final class SandboxAssetLab implements AutoCloseable {
         writeMaterial(restore);
         loader.pollDevelopmentReloads();
         MaterialAsset after = materialHandle.requireReady();
-        logSink.accept("Phase 6 invalid MATERIAL reload -> " + (sawHotReloadFailure ? "HOT_RELOAD_FAILED" : "unexpected diagnostic")
-            + "; previous READY value preserved=" + before.equals(after));
+        logSink.accept("Phase 6 invalid MATERIAL reload -> " + (sawHotReloadFailure ? "HOT_RELOAD_FAILED" : "unexpected diagnostic") + "; previous READY value preserved="
+            + before.equals(after));
         for (AssetLoadError error : errors) {
             logSink.accept(formatError(error));
         }
@@ -219,8 +218,8 @@ final class SandboxAssetLab implements AutoCloseable {
 
     private static String summarize(MaterialAsset material) {
 
-        return "shader=" + material.shaderKey() + " rgba=[%.2f,%.2f,%.2f,%.2f]".formatted(material.redMultiplier(), material.greenMultiplier(), material.blueMultiplier(),
-            material.alphaMultiplier());
+        return "shader=" + material.shaderKey()
+            + " rgba=[%.2f,%.2f,%.2f,%.2f]".formatted(material.redMultiplier(), material.greenMultiplier(), material.blueMultiplier(), material.alphaMultiplier());
 
     }
 

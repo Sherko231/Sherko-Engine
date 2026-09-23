@@ -76,11 +76,8 @@ class FallbackAssetResolverTest {
         assertThat(texture.width()).isEqualTo(2);
         assertThat(texture.height()).isEqualTo(2);
         assertThat(texture.mipLevels()).hasSize(2);
-        assertThat(texture.mipLevels().get(0).rgba8()).containsExactly(
-            (byte) 255, (byte) 0, (byte) 255, (byte) 255,
-            (byte) 0, (byte) 0, (byte) 0, (byte) 255,
-            (byte) 0, (byte) 0, (byte) 0, (byte) 255,
-            (byte) 255, (byte) 0, (byte) 255, (byte) 255);
+        assertThat(texture.mipLevels().get(0).rgba8()).containsExactly((byte) 255, (byte) 0, (byte) 255, (byte) 255, (byte) 0, (byte) 0, (byte) 0, (byte) 255, (byte) 0, (byte) 0,
+            (byte) 0, (byte) 255, (byte) 255, (byte) 0, (byte) 255, (byte) 255);
         assertThat(texture.mipLevels().get(1).width()).isEqualTo(1);
         assertThat(texture.mipLevels().get(1).height()).isEqualTo(1);
         assertThat(texture.mipLevels().get(1).rgba8()).containsExactly((byte) 127, (byte) 0, (byte) 127, (byte) 255);

@@ -9,6 +9,7 @@ val sandboxRuntime by configurations.creating {
 
 dependencies {
     implementation(project(":engine-core"))
+    implementation(project(":engine-assets"))
     compileOnly(project(":engine-platform-lwjgl"))
     compileOnly(project(path = ":engine-render-opengl", configuration = "runtimeElements")) {
         isTransitive = false
@@ -20,6 +21,7 @@ dependencies {
     implementation(project(":engine-network-api"))
     implementation(project(":engine-ui"))
     testImplementation(project(":test-support"))
+    testCompileOnly(project(":engine-render-opengl"))
 }
 
 fun JavaExec.configureSandboxRun(mainClassName: String) {

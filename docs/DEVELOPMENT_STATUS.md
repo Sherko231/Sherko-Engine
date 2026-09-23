@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 complete — P6-T01 through P6-T14 plus the cooked-runtime exit gate are accepted; Phase 7 is ready to activate |
+| Active phase | Phase 6 complete; P6-SANDBOX / Issue #408 is the bounded owner-demo task before Phase 7 activation |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-EXIT / Issue #405 is accepted; freshly materialize P7-T01 from current master before implementation |
+| Active executable task | P6-SANDBOX / Issue #408 — integrate accepted Phase 6 public asset/runtime behavior into the persistent sandbox without Phase 7 scope |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -247,3 +247,14 @@ GitHub's PR workflow checked out synthetic merge commit `97ae0cad824ae3da8607d35
 The connected GitHub tool does not expose `workflow_dispatch`. A bounded attempt to rerun a skipped heavy push job on run #607 was accepted by the Actions API but GitHub re-evaluated the push-job condition and kept heavy work skipped. Phase-exit acceptance therefore uses the full five-job verification of the byte-identical merge tree from run #606 plus exact-SHA Lightweight verification from run #607; no separate workflow-dispatch result is claimed.
 
 The Phase 7 readiness review found no prerequisite conflict. Phase 7 is ready to activate, but no P7 executable Issue is materialized in this handoff. The next bounded candidate is P7-T01, which must be freshly refined against current master before implementation.
+
+
+## Pre-Phase 7 sandbox integration
+
+P6-SANDBOX / Issue #408 is active from baseline `a92259881a5dc99c96bececa234cab6af9651d27`. The task preserves the existing Phase 5 room/camera/input/debug playground and adds a Phase 6 Asset Lab through public production APIs only.
+
+The candidate materializes a committed manifest-v1 + SMES-v1 + MATERIAL-v1 fixture into a temporary writable cooked cache, opens it through `AssetLoaders.open`, asynchronously loads typed MESH/MATERIAL handles, maps READY material RGB values onto existing public local-light colors for visible feedback, and adds owner controls for valid reload, invalid last-valid preservation, missing-MESH fallback, and handle release/reload. It does not expose renderer/assets internals, add public input vocabulary, add arbitrary mesh/material renderer submission, or implement Phase 7.
+
+The originally proposed G/M/H controls were refined because those keys are not in the accepted public `InputKey` vocabulary. The bounded design instead uses existing `E` modifiers: plain E, Right Shift+E, Alt+E, and Ctrl+E. This avoids changing engine public API solely for the demo.
+
+Final acceptance requires focused `:game-sandbox:test`, normal repository checks/dependency locks, the five-job final-candidate PR matrix, and exact-merge Lightweight verification. P7-T01 remains unmaterialized until Issue #408 is accepted.

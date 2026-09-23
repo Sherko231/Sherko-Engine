@@ -24,6 +24,7 @@ final class SandboxApplicationLoop {
     private final EngineLogger logger;
     private final InputActionEvaluator actionEvaluator;
     private final PlayerInputCommandSampler commandSampler;
+    private final SandboxAssetLab assetLab;
     private final EngineClock clock = new EngineClock();
     private final FixedStepAccumulator accumulator = new FixedStepAccumulator();
     private final FixedStepCatchUpPolicy catchUpPolicy = new FixedStepCatchUpPolicy();
@@ -37,7 +38,7 @@ final class SandboxApplicationLoop {
     private PlayerInputCommand latestCommand;
 
     SandboxApplicationLoop(GlfwWindow window, OpenGlRenderer renderer, SandboxFramebufferSize framebufferSize, EngineLogger logger, InputActionEvaluator actionEvaluator,
-        PlayerInputCommandSampler commandSampler, InputResponseSettings initialResponseSettings) {
+        PlayerInputCommandSampler commandSampler, InputResponseSettings initialResponseSettings, SandboxAssetLab assetLab) {
 
         this.window = Objects.requireNonNull(window, "window");
         this.renderer = Objects.requireNonNull(renderer, "renderer");
@@ -45,6 +46,7 @@ final class SandboxApplicationLoop {
         this.logger = Objects.requireNonNull(logger, "logger");
         this.actionEvaluator = Objects.requireNonNull(actionEvaluator, "actionEvaluator");
         this.commandSampler = Objects.requireNonNull(commandSampler, "commandSampler");
+        this.assetLab = Objects.requireNonNull(assetLab, "assetLab");
         controlState = new SandboxControlState(initialResponseSettings);
 
     }
@@ -63,9 +65,12 @@ final class SandboxApplicationLoop {
             InputSnapshot latestInput = window.captureInputSnapshot(inputFrameId++);
 
             SandboxControls.SandboxControlInput ownerInput = new SandboxControls.SandboxControlInput(latestInput.keyPressed(InputKey.F), latestInput.keyPressed(InputKey.R),
-                latestInput.keyPressed(InputKey.Q), latestInput.keyHeld(InputKey.RIGHT_SHIFT), latestInput.keyHeld(InputKey.LEFT_CONTROL),
-                latestInput.keyHeld(InputKey.RIGHT_CONTROL));
+                latestInput.keyPressed(InputKey.Q), latestInput.keyPressed(InputKey.E), latestInput.keyHeld(InputKey.RIGHT_SHIFT), latestInput.keyHeld(InputKey.LEFT_ALT),
+                latestInput.keyHeld(InputKey.RIGHT_ALT), latestInput.keyHeld(InputKey.LEFT_CONTROL), latestInput.keyHeld(InputKey.RIGHT_CONTROL));
             EnumSet<SandboxControls.SandboxAction> ownerActions = SandboxControls.resolve(ownerInput);
+
+            applyAssetActions(ownerActions);
+            assetLab.update();
 
             exitRequested = controlState.apply(ownerActions, latestInput.cursorCaptured(), actionEvaluator, window::setWindowMode, window::setCursorCaptured,
                 message -> SandboxMain.log(logger, EngineLogger.Level.INFO, message, cumulativeTicks));
@@ -81,7 +86,7 @@ final class SandboxApplicationLoop {
             cumulativeTicks += dueTicks;
 
             if (!exitRequested && framebufferSize.width() > 0 && framebufferSize.height() > 0) {
-                RenderFramePacket renderFrame = sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId());
+                RenderFramePacket renderFrame = sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId(), assetLab.currentMaterial());
                 renderer.render(renderFrame);
                 window.present();
             }
@@ -94,6 +99,23 @@ final class SandboxApplicationLoop {
         }
 
         SandboxMain.log(logger, EngineLogger.Level.INFO, "Sandbox exit requested by Ctrl+Q", cumulativeTicks);
+
+    }
+
+    private void applyAssetActions(EnumSet<SandboxControls.SandboxAction> actions) {
+
+        if (actions.contains(SandboxControls.SandboxAction.CYCLE_VALID_MATERIAL)) {
+            assetLab.cycleValidMaterial();
+        }
+        if (actions.contains(SandboxControls.SandboxAction.DEMONSTRATE_FAILED_MATERIAL_RELOAD)) {
+            assetLab.demonstrateFailedReload();
+        }
+        if (actions.contains(SandboxControls.SandboxAction.DEMONSTRATE_MISSING_MESH)) {
+            assetLab.demonstrateMissingMeshFallback();
+        }
+        if (actions.contains(SandboxControls.SandboxAction.RELOAD_ASSET_HANDLES)) {
+            assetLab.reloadHandles();
+        }
 
     }
 }

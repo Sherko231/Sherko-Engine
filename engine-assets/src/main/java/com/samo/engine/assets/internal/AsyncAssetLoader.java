@@ -191,8 +191,8 @@ public final class AsyncAssetLoader implements AssetLoader {
             return;
         } catch (IOException exception) {
             if (handle.tryCompleteFailed()) {
-                errors.add(new AssetLoadError(entry.assetId(), AssetType.MATERIAL, AssetLoadErrorCode.READ_FAILED,
-                    "Failed to read cooked MATERIAL content for asset " + entry.assetId()));
+                errors.add(
+                    new AssetLoadError(entry.assetId(), AssetType.MATERIAL, AssetLoadErrorCode.READ_FAILED, "Failed to read cooked MATERIAL content for asset " + entry.assetId()));
             }
             return;
         }

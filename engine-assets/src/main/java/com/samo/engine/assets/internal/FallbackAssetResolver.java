@@ -44,8 +44,7 @@ final class FallbackAssetResolver {
 
         AssetId requested = Objects.requireNonNull(assetId, "assetId");
         AssetType type = Objects.requireNonNull(assetType, "assetType");
-        return new AssetLoadError(requested, type, AssetLoadErrorCode.MISSING_CONTENT,
-            "Missing " + type + " content for asset " + requested + "; using built-in fallback");
+        return new AssetLoadError(requested, type, AssetLoadErrorCode.MISSING_CONTENT, "Missing " + type + " content for asset " + requested + "; using built-in fallback");
 
     }
 

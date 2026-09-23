@@ -117,12 +117,14 @@ final class SandboxAssetLab implements AutoCloseable {
         List<AssetLoadError> errors = loader.drainErrors();
         boolean sawHotReloadFailure = errors.stream().anyMatch(error -> error.code() == AssetLoadErrorCode.HOT_RELOAD_FAILED);
         writeMaterial(restore);
+        loader.pollDevelopmentReloads();
         MaterialAsset after = materialHandle.requireReady();
         logSink.accept("Phase 6 invalid MATERIAL reload -> " + (sawHotReloadFailure ? "HOT_RELOAD_FAILED" : "unexpected diagnostic")
             + "; previous READY value preserved=" + before.equals(after));
         for (AssetLoadError error : errors) {
             logSink.accept(formatError(error));
         }
+        drainErrors("restore");
 
     }
 

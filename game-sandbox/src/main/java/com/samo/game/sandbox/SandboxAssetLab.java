@@ -41,6 +41,7 @@ final class SandboxAssetLab implements AutoCloseable {
     private ResourceHandleState lastMaterialState;
     private boolean coolPreset;
     private boolean readySummaryLogged;
+    private SandboxAssetLabSignal lastSignal = SandboxAssetLabSignal.NONE;
 
     private SandboxAssetLab(Consumer<String> logSink, Path cacheRoot, AssetLoader loader) {
 
@@ -99,6 +100,7 @@ final class SandboxAssetLab implements AutoCloseable {
         writeMaterial(coolPreset ? COOL_MATERIAL : WARM_MATERIAL);
         loader.pollDevelopmentReloads();
         MaterialAsset material = materialHandle.requireReady();
+        lastSignal = SandboxAssetLabSignal.VALID_RELOAD;
         logSink.accept("Phase 6 valid MATERIAL hot reload -> " + (coolPreset ? "COOL" : "WARM") + " " + summarize(material));
         drainErrors("hot-reload");
 
@@ -120,6 +122,7 @@ final class SandboxAssetLab implements AutoCloseable {
         MaterialAsset after = materialHandle.requireReady();
         logSink.accept("Phase 6 invalid MATERIAL reload -> " + (sawHotReloadFailure ? "HOT_RELOAD_FAILED" : "unexpected diagnostic") + "; previous READY value preserved="
             + before.equals(after));
+        lastSignal = SandboxAssetLabSignal.FAILED_RELOAD;
         for (AssetLoadError error : errors) {
             logSink.accept(formatError(error));
         }
@@ -132,6 +135,7 @@ final class SandboxAssetLab implements AutoCloseable {
         try (ResourceHandle<MeshAsset> missing = loader.loadMesh(MISSING_MESH_ID)) {
             MeshAsset fallback = missing.requireReady();
             MeshAsset.Primitive primitive = fallback.primitives().getFirst();
+            lastSignal = SandboxAssetLabSignal.MISSING_FALLBACK;
             logSink.accept("Phase 6 missing MESH -> " + missing.state() + " fallback primitive=" + primitive.name() + " vertices=" + primitive.positions().length / 3);
             drainErrors("fallback");
         }
@@ -144,6 +148,7 @@ final class SandboxAssetLab implements AutoCloseable {
         ResourceHandle<MaterialAsset> oldMaterial = materialHandle;
         oldMesh.close();
         oldMaterial.close();
+        lastSignal = SandboxAssetLabSignal.HANDLE_RELOAD;
         logSink.accept("Phase 6 handles released -> mesh=" + oldMesh.state() + ", material=" + oldMaterial.state());
         startLoads();
 
@@ -174,6 +179,12 @@ final class SandboxAssetLab implements AutoCloseable {
     ResourceHandleState materialState() {
 
         return materialHandle.state();
+
+    }
+
+    SandboxAssetLabVisualState visualState() {
+
+        return new SandboxAssetLabVisualState(meshHandle.state(), materialHandle.state(), lastSignal);
 
     }
 

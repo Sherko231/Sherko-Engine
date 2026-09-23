@@ -4,6 +4,7 @@ import com.samo.engine.assets.api.AssetId;
 import com.samo.engine.assets.api.AssetLoadError;
 import com.samo.engine.assets.api.AssetLoadErrorCode;
 import com.samo.engine.assets.api.AssetType;
+import com.samo.engine.assets.api.MeshAsset;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,6 +24,28 @@ final class FallbackAssetResolver {
 
         AssetId requested = Objects.requireNonNull(assetId, "assetId");
         return resolution(requested, AssetType.MESH, List.of(fallbackMesh()));
+
+    }
+
+    static FallbackResolution<MeshAsset> missingMeshAsset(AssetId assetId) {
+
+        AssetId requested = Objects.requireNonNull(assetId, "assetId");
+        return resolution(requested, AssetType.MESH, fallbackMeshAsset());
+
+    }
+
+    static MeshAsset fallbackMeshAsset() {
+
+        return RuntimeMeshAdapter.toPublic(List.of(fallbackMesh()));
+
+    }
+
+    static AssetLoadError missingError(AssetId assetId, AssetType assetType) {
+
+        AssetId requested = Objects.requireNonNull(assetId, "assetId");
+        AssetType type = Objects.requireNonNull(assetType, "assetType");
+        return new AssetLoadError(requested, type, AssetLoadErrorCode.MISSING_CONTENT,
+            "Missing " + type + " content for asset " + requested + "; using built-in fallback");
 
     }
 
@@ -79,8 +102,7 @@ final class FallbackAssetResolver {
 
         ResourceHandleCell<T> handle = new ResourceHandleCell<>(assetId);
         handle.completeReady(value);
-        AssetLoadError error = new AssetLoadError(assetId, assetType, AssetLoadErrorCode.MISSING_CONTENT,
-            "Missing " + assetType + " content for asset " + assetId + "; using built-in fallback");
+        AssetLoadError error = missingError(assetId, assetType);
         return new FallbackResolution<>(handle, error);
 
     }

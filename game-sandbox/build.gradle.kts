@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":engine-ui"))
     testImplementation(project(":test-support"))
     testCompileOnly(project(":engine-render-opengl"))
+    testRuntimeOnly(project(":engine-render-opengl"))
 }
 
 fun JavaExec.configureSandboxRun(mainClassName: String) {

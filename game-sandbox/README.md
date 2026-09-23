@@ -78,6 +78,22 @@ The current playground keeps these capabilities active together rather than show
 
 The once-per-second line is deliberately an owner diagnostic. P5-T11 appends `renderCull[tested=...,visible=...,culled=...,draws=...]`; with the current fixed visible room candidate the expected steady state is one tested candidate, one visible candidate, zero culled candidates, and one submitted draw. P5-T16 also appends the renderer-published `debugCounters=[simulation/tick=...,input/frame=...]` snapshot. These diagnostics are not FPS, a benchmark, a soak test, replay acceptance evidence, or leak proof.
 
+## Visual diagnostics lab
+
+The persistent room now doubles as a stronger neon diagnostics lab using only already-accepted public rendering/debug APIs. It adds a floor grid, symmetric wireframe portal/pillar forms, a central hologram-style focal object, deterministic scanner/orbit motion driven by the simulation tick, and four bounded public local lights.
+
+Three world-space beacons near the back of the room reduce dependence on the console for Phase 6 observation:
+
+- left beacon: MESH handle lifecycle;
+- center beacon: MATERIAL handle lifecycle;
+- right beacon: the most recent Asset Lab action/result.
+
+Beacon colors are intentionally simple: READY uses green/cyan, LOADING uses yellow, FAILED/RELEASED uses red, valid material reload uses blue, failed reload preservation uses magenta, missing-content fallback uses orange, and handle reload uses white/cyan. The last action/result beacon remains latched until another Asset Lab action replaces it.
+
+The READY material RGB values still drive the primary point/spot light pair, while two additional cyan/magenta accent lights make the room easier to read visually. All debug geometry remains bounded below the public 64-primitive frame limit.
+
+There is still **no on-screen text/HUD renderer**. `DebugTextCounter` is a bounded diagnostic counter contract, not general font/glyph text. Runtime UI draw commands are planned for P9-T11 and font-atlas/text rendering for P9-T12, so this sandbox deliberately uses geometry/color beacons instead of pulling those systems forward.
+
 ## Current limitations
 
 The sandbox submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T18 updates the packet's view matrix from owner-controlled camera state, while P5-T11 derives the active view frustum and tests the fixed renderer-owned room AABB before the current full-frame draw candidate. P5-T12 orders visible scene submissions deterministically. P5-T13/P5-T14 provide the fixed directional plus bounded local-light path. P5-T16 adds a `DebugFrame` containing one line, AABB, sphere, ray, and two counters. P5-T17 then automatically renders the internal camera-relative validation rectangle after those world/debug stages using its own projection and depth reset. The sandbox still performs no direct OpenGL/LWJGL calls and imports no renderer implementation packages.

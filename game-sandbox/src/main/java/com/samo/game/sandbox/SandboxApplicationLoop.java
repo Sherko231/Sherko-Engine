@@ -86,7 +86,8 @@ final class SandboxApplicationLoop {
             cumulativeTicks += dueTicks;
 
             if (!exitRequested && framebufferSize.width() > 0 && framebufferSize.height() > 0) {
-                RenderFramePacket renderFrame = sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId(), assetLab.currentMaterial());
+                RenderFramePacket renderFrame = sceneSetup.frame(camera, framebufferSize, cumulativeTicks, latestInput.frameId(), assetLab.currentMaterial(),
+                    assetLab.visualState());
                 renderer.render(renderFrame);
                 window.present();
             }

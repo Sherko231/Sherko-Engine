@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.samo.engine.assets.api.AssetId;
 import com.samo.engine.assets.api.ResourceHandleState;
-import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -96,18 +96,18 @@ class ResourceHandleCellTest {
     }
 
     @Test
-    void releasingReadyHandleClearsRetainedValue() {
+    void releasingReadyHandleClearsRetainedValue() throws Exception {
 
         Object value = new Object();
-        WeakReference<Object> weakValue = new WeakReference<>(value);
         ResourceHandleCell<Object> handle = new ResourceHandleCell<>(ASSET_ID);
         handle.completeReady(value);
 
         handle.close();
-        value = null;
 
         assertReleased(handle);
-        assertThat(weakValue).isNotNull();
+        Field readyValue = ResourceHandleCell.class.getDeclaredField("readyValue");
+        readyValue.setAccessible(true);
+        assertThat(readyValue.get(handle)).isNull();
 
     }
 
@@ -146,13 +146,17 @@ class ResourceHandleCellTest {
                 await(start);
                 try {
                     for (int sample = 0; sample < 200; sample++) {
-                        ResourceHandleState state = handle.state();
+                        ResourceHandleState before = handle.state();
                         boolean present = handle.readyValue().isPresent();
-                        if (state == ResourceHandleState.READY && !present) {
-                            throw new AssertionError("READY observed without value");
+                        ResourceHandleState after = handle.state();
+                        if (before != after) {
+                            continue;
                         }
-                        if (state != ResourceHandleState.READY && present) {
-                            throw new AssertionError("Non-READY observed with value");
+                        if (before == ResourceHandleState.READY && !present) {
+                            throw new AssertionError("Stable READY observation had no value");
+                        }
+                        if (before != ResourceHandleState.READY && present) {
+                            throw new AssertionError("Stable non-READY observation exposed a value");
                         }
                     }
                 } catch (Throwable throwable) {

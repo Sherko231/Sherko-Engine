@@ -39,7 +39,13 @@ final class SandboxAssetLabTest {
 
             lab.demonstrateFailedReload();
             assertEquals(cool, lab.currentMaterial());
-            assertTrue(logs.stream().anyMatch(line -> line.contains("HOT_RELOAD_FAILED") && line.contains("preserved=true")));
+            long firstFailureCount = logs.stream().filter(line -> line.contains("HOT_RELOAD_FAILED") && line.contains("preserved=true")).count();
+            assertEquals(1L, firstFailureCount);
+
+            lab.demonstrateFailedReload();
+            assertEquals(cool, lab.currentMaterial());
+            long repeatedFailureCount = logs.stream().filter(line -> line.contains("HOT_RELOAD_FAILED") && line.contains("preserved=true")).count();
+            assertEquals(2L, repeatedFailureCount);
 
             lab.demonstrateMissingMeshFallback();
             assertTrue(logs.stream().anyMatch(line -> line.contains("missing MESH") && line.contains("READY")));

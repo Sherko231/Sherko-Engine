@@ -217,10 +217,10 @@ public final class SandboxMain {
         System.out.println("  renderer-internal owner-thread mesh upload and shader reload.");
         System.out.println();
         System.out.println("Owner controls:");
-        System.out.println("  G               switch valid MATERIAL WARM / COOL; room-light palette changes live");
-        System.out.println("  Right Shift + G attempt invalid MATERIAL reload; prior READY value stays active");
-        System.out.println("  M               request missing MESH and show READY fallback + MISSING_CONTENT");
-        System.out.println("  H               release current MESH/MATERIAL handles and start fresh async loads");
+        System.out.println("  E               switch valid MATERIAL WARM / COOL; room-light palette changes live");
+        System.out.println("  Right Shift + E attempt invalid MATERIAL reload; prior READY value stays active");
+        System.out.println("  Alt + E         request missing MESH and show READY fallback + MISSING_CONTENT");
+        System.out.println("  Ctrl + E        release current MESH/MATERIAL handles and start fresh async loads");
         System.out.println("  F               cycle WINDOWED / BORDERLESS_FULLSCREEN / EXCLUSIVE_FULLSCREEN");
         System.out.println("  R               toggle cursor capture");
         System.out.println("  Right Shift + F cycle mouse sensitivity 0.5 / 1.0 / 2.0");

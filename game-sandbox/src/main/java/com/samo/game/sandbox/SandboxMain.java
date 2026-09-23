@@ -129,8 +129,8 @@ public final class SandboxMain {
 
     }
 
-    private static void cleanup(GlfwWindow window, OpenGlRenderer renderer, SandboxAssetLab assetLab, NativeResourceRegistry nativeResources, EngineLogger logger,
-        boolean started, Throwable primaryFailure) {
+    private static void cleanup(GlfwWindow window, OpenGlRenderer renderer, SandboxAssetLab assetLab, NativeResourceRegistry nativeResources, EngineLogger logger, boolean started,
+        Throwable primaryFailure) {
 
         Throwable cleanupFailure = null;
 

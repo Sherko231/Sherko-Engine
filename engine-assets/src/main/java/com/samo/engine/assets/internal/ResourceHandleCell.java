@@ -38,6 +38,17 @@ final class ResourceHandleCell<T> implements ResourceHandle<T> {
 
     }
 
+    synchronized boolean tryReplaceReady(T value) {
+
+        Objects.requireNonNull(value, "value");
+        if (state != ResourceHandleState.READY) {
+            return false;
+        }
+        readyValue = value;
+        return true;
+
+    }
+
     synchronized void completeFailed() {
 
         requireLoadingCompletionState();

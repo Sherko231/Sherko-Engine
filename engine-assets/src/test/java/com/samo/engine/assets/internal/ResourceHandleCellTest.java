@@ -124,8 +124,10 @@ class ResourceHandleCellTest {
                 await(start);
                 try {
                     handle.completeReady("value");
-                } catch (IllegalStateException ignored) {
-                    // Concurrent release is an accepted terminal winner.
+                } catch (IllegalStateException exception) {
+                    if (handle.state() != ResourceHandleState.RELEASED) {
+                        failure.compareAndSet(null, exception);
+                    }
                 } catch (Throwable throwable) {
                     failure.compareAndSet(null, throwable);
                 }

@@ -88,7 +88,7 @@ public final class AsyncAssetLoader implements AssetLoader {
             return;
         }
         closed = true;
-        executor.close();
+        executor.shutdown();
 
     }
 

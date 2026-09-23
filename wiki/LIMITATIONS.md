@@ -126,3 +126,10 @@ Current production window acceptance covers the bounded GLFW/OpenGL window lifec
 The engine is pre-v1 and the public API is still being built phase by phase. Treat current documented contracts as real for the corresponding completed/active bounded tasks, but do not assume a broad API freeze.
 
 For exact status, use [`../docs/DEVELOPMENT_STATUS.md`](../docs/DEVELOPMENT_STATUS.md) and live GitHub Issues/PRs rather than this page.
+
+
+### Phase 6 development hot reload limits
+
+P6-T14 adds a strict public MaterialAsset value, asynchronous manifest-backed MATERIAL loading, and explicit caller-driven development polling. Valid changed MATERIAL bytes replace the value on the same READY handle; failed candidates preserve the previous value and report HOT_RELOAD_FAILED. Renderer-internal shader reload uses opaque logical shader keys and swaps a complete OpenGL candidate only after successful compile/link.
+
+This is not a general resource cache, file-watch service, public shader API, SHADER AssetType, or arbitrary material submission system. It does not hot-reload MESH, TEXTURE, AUDIO, scenes, prefabs, skeletons, or animations, and it does not change the persistent sandbox because no supported public arbitrary material/shader submission boundary exists yet.

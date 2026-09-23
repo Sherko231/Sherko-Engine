@@ -1,6 +1,6 @@
-# Runtime mesh loading
+# Runtime asset loading
 
-P6-T13 introduces the first supported runtime cooked-asset loader path: asynchronous MESH loading from an existing cooker cache.
+P6-T13 introduces asynchronous MESH loading from an existing cooker cache. P6-T14 adds asynchronous MATERIAL loading plus explicit development MATERIAL polling.
 
 ## Open a loader
 
@@ -38,7 +38,7 @@ Structured load errors are drained separately:
 List<AssetLoadError> errors = loader.drainErrors();
 ```
 
-P6-T13 uses:
+Runtime loading uses:
 
 - `MISSING_CONTENT` — unknown AssetId or manifest-backed cooked file missing; the handle becomes READY with the P6-T12 fallback cube;
 - `READ_FAILED` — the manifest entry exists but a non-missing I/O failure prevents reading; the handle becomes FAILED;
@@ -47,6 +47,22 @@ P6-T13 uses:
 `drainErrors()` removes the returned errors and preserves occurrence order.
 
 Requesting `loadMesh` for an identity whose manifest type is not MESH is a synchronous `IllegalArgumentException`; it is not converted into a fallback.
+
+## Material loading and development reload
+
+`loadMaterial(assetId)` returns `ResourceHandle<MaterialAsset>` for manifest-backed MATERIAL content. MATERIAL bytes use strict UTF-8 JSON schema v1 with exactly `schemaVersion`, `shaderKey`, and four RGBA multipliers in `[0,1]`. The shader key is the existing D-076 lowercase logical key; it is not a path, AssetId, or SHADER asset type.
+
+Initial MATERIAL loading follows the same worker boundary as MESH. Missing identities/files yield the deterministic opaque-magenta fallback, non-missing read failures fail the handle, and invalid schema/content fails the handle.
+
+Development reload is opt-in and caller-driven:
+
+```java
+loader.pollDevelopmentReloads();
+```
+
+The loader compares actual cooked bytes for tracked READY MATERIAL handles. A valid change replaces the value on the same READY handle while preserving its AssetId. An invalid, missing, or unreadable changed candidate preserves the previous READY MaterialAsset and emits one `HOT_RELOAD_FAILED` diagnostic for that candidate. RELEASED handles remain terminal and are removed from reload tracking. No background file-watcher thread is created.
+
+The OpenGL adapter has a package-private development shader/material reloader. It maps `shaderKey` to `<shaderKey>.vert` and `<shaderKey>.frag` under a caller-selected development shader root, compiles/links a complete candidate on the D-049 owner thread, and swaps only after success. Failed reads, compilation, or linking keep the previous valid program/material descriptor.
 
 ## Release and loader close
 
@@ -67,11 +83,11 @@ Worker-side file read and SMES decode never call OpenGL. P6-T13 does not add a p
 P6-T13 does not implement:
 
 - resource caches or reference counting;
-- runtime texture, audio, material, scene, prefab, skeleton, or animation loading;
+- runtime texture, audio, scene, prefab, skeleton, or animation loading;
 - a public GPU mesh/resource API;
 - arbitrary mesh rendering/submission;
 - world/ECS integration;
 - OpenAL runtime loading/playback;
-- hot reload.
+- hot reload for MESH, TEXTURE, AUDIO, SCENE, PREFAB, SKELETON, or ANIMATION; MATERIAL/shader reload is development-only polling.
 
 Because no public arbitrary mesh submission path exists yet, the persistent sandbox does not demonstrate this capability without importing renderer internals.

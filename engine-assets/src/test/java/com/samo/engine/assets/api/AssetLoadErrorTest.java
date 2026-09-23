@@ -20,7 +20,8 @@ class AssetLoadErrorTest {
         assertThat(error.assetType()).isEqualTo(AssetType.MESH);
         assertThat(error.code()).isEqualTo(AssetLoadErrorCode.MISSING_CONTENT);
         assertThat(error.detail()).isEqualTo("missing mesh");
-        assertThat(AssetLoadErrorCode.values()).containsExactly(AssetLoadErrorCode.MISSING_CONTENT, AssetLoadErrorCode.READ_FAILED, AssetLoadErrorCode.INVALID_CONTENT);
+        assertThat(AssetLoadErrorCode.values()).containsExactly(AssetLoadErrorCode.MISSING_CONTENT, AssetLoadErrorCode.READ_FAILED, AssetLoadErrorCode.INVALID_CONTENT,
+            AssetLoadErrorCode.HOT_RELOAD_FAILED);
 
     }
 

@@ -2317,3 +2317,25 @@ Connector execution note: this GitHub-only environment cannot execute the Gradle
 
 
 Accepted P6-T13 verification evidence: initial PR #400 candidate run #596 / `35914868005` exposed only repository Spotless formatting differences and was obsolete after formatter-only corrections. Final PR #400 head `d8f3fa6d7f7726a54edd4db16a8c9998af209813` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #599 / `35915145529`. The passing acceptance covers strict manifest-v1 validation, asynchronous worker-side MESH read/SMES decode, missing-content fallback/error behavior, read/invalid-content diagnostics, release-during-load non-resurrection, public MeshAsset defensive ownership, an independent >1 MiB valid SMES fixture, zero renderer-backend calls before explicit upload, D-049 owner-thread-only buffer allocation/upload, wrong-thread rejection before mutation, partial-upload rollback, and idempotent owner-thread cleanup. PR #400 merged as `dd93d99803f3fba5c6cfe091ce35bd7937a77422`; exact-merge Lightweight master verification passed in run #600 / `35915817236`. P6-T13 acceptance is complete. The connector environment did not separately execute the focused Gradle command sequence locally; accepted repository CI is the execution evidence.
+
+
+## P6-T14 development material/shader hot reload verification
+
+Issue #402 adds strict MATERIAL schema/load/reload behavior plus renderer-internal development shader hot reload with last-valid-resource preservation.
+
+Focused Windows verification:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-assets:test --tests "com.samo.engine.assets.internal.MaterialAssetJsonTest" --tests "com.samo.engine.assets.internal.AsyncAssetLoaderMaterialTest" --tests "com.samo.engine.assets.internal.AssetCookerTest" --rerun-tasks
+.\gradlew.bat :engine-render-opengl:test --tests "com.samo.engine.render.opengl.internal.DevelopmentMaterialHotReloaderTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+Acceptance requires strict MATERIAL schema validation before cooking, asynchronous initial MATERIAL loading, missing-content fallback, read/invalid diagnostics, same-handle READY replacement for valid changed bytes, HOT_RELOAD_FAILED with last-valid preservation for failed candidates, RELEASED non-resurrection, owner-thread-only shader compile/link/swap/close, candidate rollback, and no replacement on failed shader compile/link.
+
+Dependency-lock diff must remain empty. No new dependency/module edge/workflow, SHADER AssetType/public shader API, background watcher, cache/reference counting, MESH/TEXTURE/AUDIO hot reload, arbitrary renderer submission, world/game integration, or sandbox source change is permitted.
+
+Connector execution note: this GitHub-only environment cannot execute the Gradle wrapper directly. Focused commands are not locally claimed as passing; the exact final-candidate five-job repository CI is mandatory.

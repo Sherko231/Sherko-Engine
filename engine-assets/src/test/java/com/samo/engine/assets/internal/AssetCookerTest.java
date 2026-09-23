@@ -32,12 +32,13 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         createAsset(input.resolve("z/second.bin"), SECOND_ID, "SCENE", new byte[]{9, 8, 7});
-        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MATERIAL", new byte[]{1, 2, 3, 4});
+        byte[] materialBytes = validMaterialBytes();
+        createAsset(input.resolve("a/first.bin"), FIRST_ID, "MATERIAL", materialBytes);
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
 
-        assertThat(Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"))).containsExactly(1, 2, 3, 4);
+        assertThat(Files.readAllBytes(output.resolve("assets/" + FIRST_ID + ".bin"))).isEqualTo(materialBytes);
         assertThat(Files.readAllBytes(output.resolve("assets/" + SECOND_ID + ".bin"))).containsExactly(9, 8, 7);
 
         JsonNode manifest = MAPPER.readTree(output.resolve("manifest.json").toFile());
@@ -51,7 +52,7 @@ class AssetCookerTest {
         assertThat(first.get("assetType").textValue()).isEqualTo("MATERIAL");
         assertThat(first.get("sourcePath").textValue()).isEqualTo("a/first.bin");
         assertThat(first.get("cookedPath").textValue()).isEqualTo("assets/" + FIRST_ID + ".bin");
-        assertThat(first.get("byteSize").longValue()).isEqualTo(4);
+        assertThat(first.get("byteSize").longValue()).isEqualTo(materialBytes.length);
 
         JsonNode second = manifest.get("assets").get(1);
         assertThat(second.get("assetId").textValue()).isEqualTo(SECOND_ID);
@@ -70,7 +71,7 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
         Files.writeString(input.resolve("ignored.txt"), "ignored", StandardCharsets.UTF_8);
-        createAsset(input.resolve("kept.bin"), FIRST_ID, "MATERIAL", new byte[]{5});
+        createAsset(input.resolve("kept.bin"), FIRST_ID, "MATERIAL", validMaterialBytes());
 
         Path output = tempDir.resolve("output");
         AssetCooker.cook(input, output);
@@ -138,7 +139,7 @@ class AssetCookerTest {
         assertThat(unsupportedOutput).doesNotExist();
 
         Path duplicateInput = Files.createDirectory(tempDir.resolve("duplicate"));
-        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
+        createAsset(duplicateInput.resolve("one.bin"), FIRST_ID, "MATERIAL", validMaterialBytes());
         createAsset(duplicateInput.resolve("two.bin"), FIRST_ID, "PREFAB", new byte[]{2});
         Path duplicateOutput = tempDir.resolve("duplicate-output");
         assertThatThrownBy(() -> AssetCooker.cook(duplicateInput, duplicateOutput)).isInstanceOf(AssetCookerException.class).hasMessageContaining("duplicate assetId");
@@ -375,7 +376,7 @@ class AssetCookerTest {
     void cleansNewOutputTreeWhenWriteStageFails() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("input"));
-        createAsset(input.resolve("source.bin"), FIRST_ID, "MATERIAL", new byte[]{1, 2});
+        createAsset(input.resolve("source.bin"), FIRST_ID, "MATERIAL", validMaterialBytes());
         Path output = tempDir.resolve("output");
 
         AssetCookerFileSystem failing = new DelegatingFileSystem() {
@@ -397,7 +398,7 @@ class AssetCookerTest {
 
         Path input = Files.createDirectory(tempDir.resolve("dependency-input"));
         Path material = input.resolve("material.bin");
-        createAsset(material, FIRST_ID, "MATERIAL", new byte[]{1});
+        createAsset(material, FIRST_ID, "MATERIAL", validMaterialBytes());
         writeDependencies(material.resolveSibling(material.getFileName() + AssetCooker.DEPENDENCIES_SUFFIX), List.of(), List.of("opaque-baseline"));
 
         Path prefab = input.resolve("prefab.bin");
@@ -416,7 +417,7 @@ class AssetCookerTest {
         assertThat(dependencies.get("assets").get(1).get("assetDependencies").get(0).textValue()).isEqualTo(FIRST_ID);
 
         Path orphanInput = Files.createDirectory(tempDir.resolve("orphan-input"));
-        createAsset(orphanInput.resolve("valid.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
+        createAsset(orphanInput.resolve("valid.bin"), FIRST_ID, "MATERIAL", validMaterialBytes());
         Files.writeString(orphanInput.resolve("ghost.bin" + AssetCooker.DEPENDENCIES_SUFFIX), """
             {"schemaVersion":1,"assetDependencies":[],"shaderDependencies":[]}
             """);
@@ -444,7 +445,7 @@ class AssetCookerTest {
     void cleansNewOutputTreeWhenDependencyGraphWriteFails() throws Exception {
 
         Path input = Files.createDirectory(tempDir.resolve("dependency-write-failure-input"));
-        createAsset(input.resolve("material.bin"), FIRST_ID, "MATERIAL", new byte[]{1});
+        createAsset(input.resolve("material.bin"), FIRST_ID, "MATERIAL", validMaterialBytes());
         Path output = tempDir.resolve("dependency-write-failure-output");
 
         AssetCookerFileSystem failing = new DelegatingFileSystem() {
@@ -460,6 +461,18 @@ class AssetCookerTest {
         };
 
         assertThatThrownBy(() -> AssetCooker.cook(input, output, failing)).isInstanceOf(AssetCookerException.class).hasMessageContaining("intentional dependency graph failure");
+        assertThat(output).doesNotExist();
+
+    }
+
+    @Test
+    void rejectsInvalidMaterialBeforeOutputCreation() throws Exception {
+
+        Path input = Files.createDirectory(tempDir.resolve("invalid-material-input"));
+        createAsset(input.resolve("bad.material"), FIRST_ID, "MATERIAL", "{broken".getBytes(StandardCharsets.UTF_8));
+        Path output = tempDir.resolve("invalid-material-output");
+
+        assertThatThrownBy(() -> AssetCooker.cook(input, output)).isInstanceOf(AssetCookerException.class).hasMessageContaining("invalid MATERIAL source");
         assertThat(output).doesNotExist();
 
     }
@@ -516,6 +529,21 @@ class AssetCookerTest {
               "shaderDependencies": [%s]
             }
             """.formatted(assets, shaders), StandardCharsets.UTF_8);
+
+    }
+
+    private static byte[] validMaterialBytes() {
+
+        return """
+            {
+              "schemaVersion": 1,
+              "shaderKey": "opaque-baseline",
+              "redMultiplier": 1.0,
+              "greenMultiplier": 1.0,
+              "blueMultiplier": 1.0,
+              "alphaMultiplier": 1.0
+            }
+            """.getBytes(StandardCharsets.UTF_8);
 
     }
 

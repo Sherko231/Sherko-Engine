@@ -200,6 +200,9 @@ final class AssetCooker {
         }
 
         SourceAssetMetadata metadata = SourceAssetMetadata.load(metadataPath);
+        if (metadata.assetType() == AssetType.MATERIAL) {
+            validateMaterialSource(sourcePath);
+        }
         List<EngineMesh> engineMeshes = metadata.assetType() == AssetType.MESH
             ? AssimpGltfMeshImporter.importFile(sourcePath).stream().map(MeshCoordinateConverter::toEngineSpace).toList()
             : List.of();
@@ -220,6 +223,18 @@ final class AssetCooker {
             throw new AssetCookerException(dependenciesPath + ": dependency sidecars are supported only for MATERIAL, PREFAB, or SCENE assets");
         }
         return new SourceAsset(sourcePath, metadata, normalizedRelativePath(input, sourcePath), engineMeshes, textureMipLevels, cookedAudio, dependencies);
+
+    }
+
+    private static void validateMaterialSource(Path sourcePath) {
+
+        try {
+            MaterialAssetJson.decode(Files.readAllBytes(sourcePath));
+        } catch (IOException exception) {
+            throw new AssetCookerException(sourcePath + ": failed to read MATERIAL source", exception);
+        } catch (IllegalArgumentException exception) {
+            throw new AssetCookerException(sourcePath + ": invalid MATERIAL source", exception);
+        }
 
     }
 

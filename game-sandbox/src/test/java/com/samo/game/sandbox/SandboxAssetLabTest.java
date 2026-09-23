@@ -29,6 +29,7 @@ final class SandboxAssetLabTest {
 
             MaterialAsset warm = lab.currentMaterial();
             lab.cycleValidMaterial();
+            assertEquals(SandboxAssetLabSignal.VALID_RELOAD, lab.visualState().lastSignal());
             MaterialAsset cool = lab.currentMaterial();
             assertNotEquals(warm, cool);
             assertEquals(0.15f, cool.redMultiplier());
@@ -36,6 +37,7 @@ final class SandboxAssetLabTest {
             assertEquals(1.0f, cool.blueMultiplier());
 
             lab.demonstrateFailedReload();
+            assertEquals(SandboxAssetLabSignal.FAILED_RELOAD, lab.visualState().lastSignal());
             assertEquals(cool, lab.currentMaterial());
             long firstFailureCount = logs.stream().filter(line -> line.contains("HOT_RELOAD_FAILED") && line.contains("preserved=true")).count();
             assertEquals(1L, firstFailureCount);
@@ -46,10 +48,12 @@ final class SandboxAssetLabTest {
             assertEquals(2L, repeatedFailureCount);
 
             lab.demonstrateMissingMeshFallback();
+            assertEquals(SandboxAssetLabSignal.MISSING_FALLBACK, lab.visualState().lastSignal());
             assertTrue(logs.stream().anyMatch(line -> line.contains("missing MESH") && line.contains("READY")));
             assertTrue(logs.stream().anyMatch(line -> line.contains("MISSING_CONTENT")));
 
             lab.reloadHandles();
+            assertEquals(SandboxAssetLabSignal.HANDLE_RELOAD, lab.visualState().lastSignal());
             assertTrue(logs.stream().anyMatch(line -> line.contains("handles released") && line.contains("RELEASED")));
             awaitReady(lab);
             assertEquals(ResourceHandleState.READY, lab.meshState());

@@ -59,8 +59,8 @@ class Phase6CookedRuntimeIntegrationTest {
         deleteTree(sourceRoot);
         assertThat(sourceRoot).doesNotExist();
 
-        ResourceHandle<MeshAsset> meshHandle;
-        ResourceHandle<MaterialAsset> materialHandle;
+        ResourceHandle<MeshAsset> meshHandle = null;
+        ResourceHandle<MaterialAsset> materialHandle = null;
         try (AssetLoader loader = AssetLoaders.open(cookedRoot)) {
             meshHandle = loader.loadMesh(MESH_ID);
             materialHandle = loader.loadMaterial(MATERIAL_ID);

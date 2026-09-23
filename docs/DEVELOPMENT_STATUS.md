@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 complete; P6-SANDBOX / Issue #408 is the bounded owner-demo task before Phase 7 activation |
+| Active phase | Phase 6 complete, including the accepted owner-facing Phase 6 Asset Lab; Phase 7 is ready to activate |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-SANDBOX / Issue #408 — integrate accepted Phase 6 public asset/runtime behavior into the persistent sandbox without Phase 7 scope |
+| Active executable task | None — P6-SANDBOX / Issue #408 is accepted; freshly materialize P7-T01 from current master before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -251,10 +251,12 @@ The Phase 7 readiness review found no prerequisite conflict. Phase 7 is ready to
 
 ## Pre-Phase 7 sandbox integration
 
-P6-SANDBOX / Issue #408 is active from baseline `a92259881a5dc99c96bececa234cab6af9651d27`. The task preserves the existing Phase 5 room/camera/input/debug playground and adds a Phase 6 Asset Lab through public production APIs only.
+P6-SANDBOX / Issue #408 is accepted. Final candidate `2d7ae7848f94b130c6d277974a753a2fe6c6952c` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #618 / `35927241117`. PR #409 merged as `c36d49f5abdb54e841a0a560724fc366b5d7bcdd`, and exact merged master passed Lightweight verification in run #619 / `35927887172`.
 
-The candidate materializes a committed manifest-v1 + SMES-v1 + MATERIAL-v1 fixture into a temporary writable cooked cache, opens it through `AssetLoaders.open`, asynchronously loads typed MESH/MATERIAL handles, maps READY material RGB values onto existing public local-light colors for visible feedback, and adds owner controls for valid reload, invalid last-valid preservation, missing-MESH fallback, and handle release/reload. It does not expose renderer/assets internals, add public input vocabulary, add arbitrary mesh/material renderer submission, or implement Phase 7.
+The persistent sandbox now preserves the accepted Phase 5 room/camera/input/debug playground and adds a Phase 6 Asset Lab entirely through public production APIs. It materializes a committed manifest-v1 + SMES-v1 + MATERIAL-v1 fixture into a temporary writable cooked cache, opens it through `AssetLoaders.open`, asynchronously loads typed MESH/MATERIAL handles, maps READY material RGB values onto existing public local-light colors for visible feedback, and exposes owner demonstrations for valid reload, invalid last-valid preservation, missing-MESH fallback, and handle release/reload.
 
-The originally proposed G/M/H controls were refined because those keys are not in the accepted public `InputKey` vocabulary. The bounded design instead uses existing `E` modifiers: plain E, Right Shift+E, Alt+E, and Ctrl+E. This avoids changing engine public API solely for the demo.
+The owner controls use only the existing public input vocabulary: `E`, `Right Shift+E`, `Alt+E`, and `Ctrl+E`. No public input key was added solely for the sandbox. The E/INTERACT action still evaluates in diagnostics; the current sandbox has no gameplay interaction side effect.
 
-Final acceptance requires focused `:game-sandbox:test`, normal repository checks/dependency locks, the five-job final-candidate PR matrix, and exact-merge Lightweight verification. P7-T01 remains unmaterialized until Issue #408 is accepted.
+The demo does not expose asset or renderer internals, add native calls, add arbitrary MESH/MATERIAL renderer submission, add a SHADER AssetType, or implement any Phase 7 world/ECS behavior. Offline cooker/import/texture/audio/dependency-graph and renderer-internal upload/shader-reload capabilities remain documented/tested rather than falsely visualized.
+
+Phase 7 implementation has not started. The next bounded executable candidate remains P7-T01 and must be freshly materialized against current master.

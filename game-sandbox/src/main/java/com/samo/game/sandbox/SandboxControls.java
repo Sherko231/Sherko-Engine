@@ -20,14 +20,16 @@ final class SandboxControls {
         if (input.rPressed()) {
             actions.add(input.rightShiftHeld() ? SandboxAction.TOGGLE_MOUSE_Y_INVERSION : SandboxAction.TOGGLE_CURSOR_CAPTURE);
         }
-        if (input.gPressed()) {
-            actions.add(input.rightShiftHeld() ? SandboxAction.DEMONSTRATE_FAILED_MATERIAL_RELOAD : SandboxAction.CYCLE_VALID_MATERIAL);
-        }
-        if (input.mPressed()) {
-            actions.add(SandboxAction.DEMONSTRATE_MISSING_MESH);
-        }
-        if (input.hPressed()) {
-            actions.add(SandboxAction.RELOAD_ASSET_HANDLES);
+        if (input.ePressed()) {
+            if (input.leftControlHeld() || input.rightControlHeld()) {
+                actions.add(SandboxAction.RELOAD_ASSET_HANDLES);
+            } else if (input.leftAltHeld() || input.rightAltHeld()) {
+                actions.add(SandboxAction.DEMONSTRATE_MISSING_MESH);
+            } else if (input.rightShiftHeld()) {
+                actions.add(SandboxAction.DEMONSTRATE_FAILED_MATERIAL_RELOAD);
+            } else {
+                actions.add(SandboxAction.CYCLE_VALID_MATERIAL);
+            }
         }
         return actions;
 
@@ -45,7 +47,7 @@ final class SandboxControls {
         EXIT
     }
 
-    record SandboxControlInput(boolean fPressed, boolean rPressed, boolean qPressed, boolean gPressed, boolean mPressed, boolean hPressed, boolean rightShiftHeld,
+    record SandboxControlInput(boolean fPressed, boolean rPressed, boolean qPressed, boolean ePressed, boolean rightShiftHeld, boolean leftAltHeld, boolean rightAltHeld,
         boolean leftControlHeld, boolean rightControlHeld) {
     }
 }

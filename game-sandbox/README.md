@@ -18,15 +18,38 @@ The sandbox stays open until you explicitly exit with `Ctrl+Q`.
 
 ## Owner controls
 
+- `E`: switch the Phase 6 MATERIAL demo between valid warm and cool presets. The same READY handle is hot-reloaded and the room's public point/spot light palette changes immediately.
+- `Right Shift + E`: attempt an invalid MATERIAL hot reload. The loader reports `HOT_RELOAD_FAILED` while the prior valid READY value and visible light palette remain active.
+- `Alt + E`: request an intentionally missing MESH AssetId. The public loader returns the deterministic READY fallback and emits structured `MISSING_CONTENT`.
+- `Ctrl + E`: release the current valid MESH/MATERIAL handles and start fresh asynchronous loads, demonstrating terminal RELEASED state plus new LOADING/READY handles.
 - `F`: cycle `WINDOWED -> BORDERLESS_FULLSCREEN -> EXCLUSIVE_FULLSCREEN -> WINDOWED`.
 - `R`: toggle cursor capture.
 - `Right Shift + F`: cycle mouse sensitivity through `0.5`, `1.0`, and `2.0` using public `InputResponseSettings`.
 - `Right Shift + R`: toggle mouse Y inversion.
 - `Ctrl + Q`: exit the sandbox cleanly.
 
-Normal input bindings remain active at the same time: W/A/S/D, mouse movement, Space, E, mouse buttons, Q push-to-talk, and the rest of the committed Phase 3 action bindings. `Ctrl+Q` is reserved by the sandbox for explicit exit; plain `Q` remains the normal action binding.
+Normal input bindings remain active at the same time: W/A/S/D, mouse movement, Space, mouse buttons, Q push-to-talk, and the rest of the committed Phase 3 action bindings. The sandbox now reserves `E` and its Shift/Alt/Control variants for the Phase 6 Asset Lab owner controls. `Ctrl+Q` remains reserved for explicit exit; plain `Q` remains the normal action binding.
 
 ## What the current sandbox exposes
+
+### Phase 6 Asset Lab
+
+On startup the sandbox materializes a bundled demo cache into a temporary writable directory, then opens that directory only through public `AssetLoaders.open(Path)`. The fixture contains one manifest-v1 entry for a small valid SMES MESH and one strict MATERIAL payload. Runtime code never reads the authoring glTF/material source tree and never imports `engine-assets.internal`.
+
+The Asset Lab demonstrates, in the same persistent sandbox session:
+
+- stable path-independent `AssetId` values;
+- manifest-backed asynchronous `loadMesh(...)` and `loadMaterial(...)`;
+- observable `LOADING -> READY` typed `ResourceHandle<T>` lifecycle;
+- backend-neutral decoded `MeshAsset` primitive data and `MaterialAsset` shader/RGBA values;
+- explicit handle release followed by fresh asynchronous handles;
+- deterministic missing-MESH fallback plus structured `MISSING_CONTENT`;
+- caller-driven valid MATERIAL hot reload on the same READY handle;
+- invalid MATERIAL reload producing `HOT_RELOAD_FAILED` while preserving the previous valid value.
+
+For visual feedback, the READY `MaterialAsset` RGB multipliers are mapped to the existing public `RenderPointLight` / `RenderSpotLight` colors. Pressing `E` therefore changes the room-light palette without restarting. This is only an owner-facing visualization of backend-neutral material data; it does **not** mean that `OpenGlRenderer` accepts arbitrary `MaterialAsset` or `MeshAsset` submission yet.
+
+The following accepted Phase 6 capabilities remain intentionally offline/internal and are not faked in the sandbox: source-metadata validation, the command-line cooker, glTF import and coordinate/tangent processing, STEX/SAUD cooking, texture mip generation, Vorbis validation, dependency/invalidation analysis, renderer-internal owner-thread mesh upload, and renderer-internal shader hot reload. Their authoritative evidence remains automated tests/CI and the Phase 6 documentation.
 
 The current playground keeps these capabilities active together rather than showing them one by one:
 
@@ -59,7 +82,7 @@ The once-per-second line is deliberately an owner diagnostic. P5-T11 appends `re
 
 The sandbox submits each visible frame through the public immutable `RenderFramePacket` boundary. P5-T18 updates the packet's view matrix from owner-controlled camera state, while P5-T11 derives the active view frustum and tests the fixed renderer-owned room AABB before the current full-frame draw candidate. P5-T12 orders visible scene submissions deterministically. P5-T13/P5-T14 provide the fixed directional plus bounded local-light path. P5-T16 adds a `DebugFrame` containing one line, AABB, sphere, ray, and two counters. P5-T17 then automatically renders the internal camera-relative validation rectangle after those world/debug stages using its own projection and depth reset. The sandbox still performs no direct OpenGL/LWJGL calls and imports no renderer implementation packages.
 
-This remains bounded renderer-foundation content. It does not provide arbitrary/public textures or materials, public view-model mesh/material submission, gameplay hands/weapons/tools, skeletal animation/IK, third-person presentation, more than eight local lights per frame, world/ECS light ownership, directional-light replacement, shadows, arbitrary mesh loading, HDR, tonemapping, fog, bloom, exposure, color grading, general post-processing, offscreen framebuffer pipelines, PBR/IBL, clustered/Forward+ lighting, retained debug scenes or multi-frame debug lifetimes, font/glyph debug text, editor/ImGui runtime HUD, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
+This remains bounded renderer/asset-foundation content. The sandbox can load public cooked MESH/MATERIAL values, but it still does not provide arbitrary mesh/material renderer submission, public runtime texture/audio loading, public view-model mesh/material submission, gameplay hands/weapons/tools, skeletal animation/IK, third-person presentation, more than eight local lights per frame, world/ECS light ownership, directional-light replacement, shadows, HDR, tonemapping, fog, bloom, exposure, color grading, general post-processing, offscreen framebuffer pipelines, PBR/IBL, clustered/Forward+ lighting, retained debug scenes or multi-frame debug lifetimes, font/glyph debug text, editor/ImGui runtime HUD, world/ECS rendering, gameplay camera/light ownership, physics gameplay, networking integration, or runtime UI. Those capabilities are added here when their real public production boundaries exist.
 
 ## Persistent maintenance rule
 

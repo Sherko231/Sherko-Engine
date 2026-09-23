@@ -2423,3 +2423,6 @@ Focused acceptance requires the visual lab to remain below `DebugFrame.MAX_PRIMI
 There is intentionally no on-screen font/glyph text in this task. `DebugTextCounter` remains a diagnostic-counter publication contract; P9-T11/P9-T12 retain runtime UI and font/text ownership.
 
 The final non-exempt candidate requires the normal five-job PR matrix followed by exact-merge Lightweight master verification.
+
+
+Accepted P6-SANDBOX-VISUAL verification evidence: final PR #412 head `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. The accepted candidate includes deterministic/bounded visual-scene tests, lifecycle/action beacon mapping, the four-light limit, MATERIAL-driven primary light colors, and committed dependency-lock coverage for sandbox visual tests. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`; exact merged master passed Lightweight verification in run #626 / `35931594902`, including dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-SANDBOX-VISUAL acceptance is complete. No engine public API, persisted schema, renderer internal exposure, runtime UI/font system, or Phase 7 implementation changed.

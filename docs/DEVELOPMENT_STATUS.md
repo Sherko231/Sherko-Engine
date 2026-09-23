@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 complete; bounded pre-Phase-7 sandbox visual polish is active under Issue #411 |
+| Active phase | Phase 6 complete, including accepted sandbox Asset Lab and visual diagnostics polish; Phase 7 is ready to activate |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P6-SANDBOX-VISUAL / Issue #411 — strengthen the persistent sandbox scene using accepted public APIs only; P7-T01 remains unmaterialized |
+| Active executable task | None — P6-SANDBOX-VISUAL / Issue #411 is accepted; freshly materialize P7-T01 from current master before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -264,8 +264,10 @@ Phase 7 implementation has not started. The next bounded executable candidate re
 
 ## Pre-Phase 7 sandbox visual polish
 
-P6-SANDBOX-VISUAL / Issue #411 is active from baseline `e3626e663705aca8dfb7a41062e74283caa43f5b`. It is a sandbox-only owner-observation task after accepted Phase 6 and before P7-T01 materialization.
+P6-SANDBOX-VISUAL / Issue #411 is accepted from baseline `e3626e663705aca8dfb7a41062e74283caa43f5b`. PR #412 keeps all existing sandbox controls/capabilities and builds a stronger neon diagnostics lab from public `DebugFrame` geometry and the existing public local-light submission path.
 
-The candidate keeps all existing sandbox controls/capabilities and builds a stronger neon diagnostics lab from public `DebugFrame` geometry and the existing public local-light submission path. It adds a floor grid, wireframe structural forms, a central hologram-style focal object, deterministic tick-driven scanner/orbit motion, four bounded lights, and three world-space color beacons for MESH lifecycle, MATERIAL lifecycle, and the last Phase 6 Asset Lab action/result.
+The accepted scene adds a floor grid, wireframe structural forms, a central hologram-style focal object, deterministic tick-driven scanner/orbit motion, four bounded lights, and three world-space color beacons for MESH lifecycle, MATERIAL lifecycle, and the last Phase 6 Asset Lab action/result. The final scene remains below the public 64-primitive debug-frame bound and keeps MATERIAL RGB values driving the primary public light pair.
 
-No font/glyph renderer or runtime HUD exists yet. `DebugTextCounter` remains a published diagnostic-counter snapshot rather than screen-space text. General runtime UI draw data and font/text work remain planned for P9-T11/P9-T12 and are not pulled forward by Issue #411. No engine public API, renderer/assets internal access, native call, arbitrary asset submission, persisted schema, or Phase 7 world/ECS behavior changes.
+No font/glyph renderer or runtime HUD exists yet. `DebugTextCounter` remains a published diagnostic-counter snapshot rather than screen-space text. General runtime UI draw data and font/text work remain planned for P9-T11/P9-T12 and were not pulled forward. No engine public API, renderer/assets internal access, native call, arbitrary asset submission, persisted schema, or Phase 7 world/ECS behavior changed.
+
+Final candidate `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`, and exact merged master passed Lightweight verification in run #626 / `35931594902`. P7-T01 remains unmaterialized and is the next bounded executable candidate.

@@ -142,24 +142,17 @@ class Phase6CookedRuntimeIntegrationTest {
 
     }
 
-    private static void writeEvidence(Path cookedRoot, ResourceHandle<MeshAsset> meshHandle, ResourceHandle<MaterialAsset> materialHandle, int runtimeErrorCount) throws IOException {
+    private static void writeEvidence(Path cookedRoot, ResourceHandle<MeshAsset> meshHandle, ResourceHandle<MaterialAsset> materialHandle, int runtimeErrorCount)
+        throws IOException {
 
         Path report = Path.of("build", "reports", "p6", "p6-exit-cooked-runtime.txt");
         Files.createDirectories(report.getParent());
-        Files.write(report, java.util.List.of(
-            "gate=phase6-cooked-runtime",
-            "result=PASS",
-            "engine.commit=" + environmentOr("GITHUB_SHA", "local"),
-            "java.version=" + System.getProperty("java.version"),
-            "os.name=" + System.getProperty("os.name"),
-            "source.tree.removed.before.runtime.open=true",
-            "manifest.present=" + Files.isRegularFile(cookedRoot.resolve("manifest.json")),
-            "runtime.input=cooked-cache-root-only",
-            "mesh.asset.id=" + MESH_ID,
-            "mesh.handle.state=" + meshHandle.state(),
-            "material.asset.id=" + MATERIAL_ID,
-            "material.handle.state=" + materialHandle.state(),
-            "runtime.error.count=" + runtimeErrorCount),
+        Files.write(report,
+            java.util.List.of("gate=phase6-cooked-runtime", "result=PASS", "engine.commit=" + environmentOr("GITHUB_SHA", "local"),
+                "java.version=" + System.getProperty("java.version"), "os.name=" + System.getProperty("os.name"), "source.tree.removed.before.runtime.open=true",
+                "manifest.present=" + Files.isRegularFile(cookedRoot.resolve("manifest.json")), "runtime.input=cooked-cache-root-only", "mesh.asset.id=" + MESH_ID,
+                "mesh.handle.state=" + meshHandle.state(), "material.asset.id=" + MATERIAL_ID, "material.handle.state=" + materialHandle.state(),
+                "runtime.error.count=" + runtimeErrorCount),
             StandardCharsets.UTF_8);
 
     }

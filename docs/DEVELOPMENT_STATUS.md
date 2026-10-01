@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 6 complete, including accepted sandbox Asset Lab and visual diagnostics polish; Phase 7 is ready to activate |
+| Active phase | Phase 7 active — P7-T01 / Issue #414 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P6-SANDBOX-VISUAL / Issue #411 is accepted; freshly materialize P7-T01 from current master before implementation |
+| Active executable task | P7-T01 / Issue #414 — generational `EntityId` identity and stale-handle safety; implementation is on `p7-t01-generational-entity-id` with draft PR #415 pending final-candidate verification |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -58,13 +58,13 @@ P5-T01 / #183 is accepted. PR #204 final head `8848b7fe7a9d2f55b14a294e4bdc4c6a3
 
 P5-T02 / #184 is accepted. PR #205 final head `7222a9a40279e65b40d70a36adf86d39165f7409` passed all five heavy CI jobs in run #354 / `35331271228`, merged as `be8263f728ddddcab609b3ad32111f71c3a9db75`, and exact-merge Lightweight verification passed in run #355 / `35331779335`.
 
-P5-T03 / #185 is accepted. PR #206 final head `b00196ed0ac2fed6d831c3b44024d776819499a8` passed all five heavy CI jobs in run #356 / `35333540082`, merged as `0d8c2a623cf8ad53539af827e3d0d897f6d79ca6`, and exact-merge Lightweight verification passed in run #357 / `35333968825`.
+P5-T03 / #185 is accepted. PR #206 final head `b00196ed0ac2fed6d831c3b44024d776819499a8` passed all five heavy CI jobs in run #356 / `35333540082`, merged as `0d8c2a623cf8ad53539af827e3d0d897f6d79ca6`, and exact merged `master` passed Lightweight verification in run #357 / `35333968825`.
 
-P5-T04 / #186 is accepted. PR #207 final head `842c644ac72cb4819c6e0ff6b3172835738c7aba` passed all five heavy CI jobs in run #358 / `35335280661`, merged as `c11131c5d4c5a2be820a6d3f493bc0f09e2eb131`, and exact-merge Lightweight verification passed in run #359 / `35336687979`.
+P5-T04 / #186 is accepted. PR #207 final head `842c644ac72cb4819c6e0ff6b3172835738c7aba` passed all five heavy CI jobs in run #358 / `35335280661`, merged as `c11131c5d4c5a2be820a6d3f493bc0f09e2eb131`, and exact merged `master` passed Lightweight verification in run #359 / `35336687979`.
 
-P5-T05 / #187 is accepted. PR #208 final head `a1fa179bc5daab0345ebfb32f3d62ed66d548d4c` passed all five heavy CI jobs in run #360 / `35337827503`, merged as `5dc3ac09a7ffc98ad249d60ad5d165c234fa4198`, and exact-merge Lightweight verification passed in run #361 / `35338981955`.
+P5-T05 / #187 is accepted. PR #208 final head `a1fa179bc5daab0345ebfb32f3d62ed66d548d4c` passed all five heavy CI jobs in run #360 / `35337827503`, merged as `5dc3ac09a7ffc98ad249d60ad5d165c234fa4198`, and exact merged `master` passed Lightweight verification in run #361 / `35338981955`.
 
-P5-T06 / #188 is accepted. PR #209 final head `a28d76fbb83df3ec7a80c9b345c67c0f1bce6d8e` passed all five heavy CI jobs in run #362 / `35339837097`, merged as `cd49273608344e1bdf0d23698591ab516d049fc8`, and exact-merge Lightweight verification passed in run #363 / `35340897864`.
+P5-T06 / #188 is accepted. PR #209 final head `a28d76fbb83df3ec7a80c9b345c67c0f1bce6d8e` passed all five heavy CI jobs in run #362 / `35339837097`, merged as `cd49273608344e1bdf0d23698591ab516d049fc8`, and exact merged `master` passed Lightweight verification in run #363 / `35340897864`.
 
 P5-T07 / #189 is accepted. PR #210 final head `18e364f1bdf39d2808f7bdef15fe5b866fff2ebc` passed the required five-job final-candidate CI in run #366 / `35349866530`, including the retained Windows indexed-draw primitive-count/PNG evidence. It merged as `617d0b961d9eb84dcc118a49e8a84cf83092927d`, and exact merged `master` passed Lightweight master verification in run #367 / `35350927079`. The accepted task provides public `OpenGlRenderer`, window-owned `GlfwWindow.present()`, one internal indexed triangle with explicit depth/cull state and P5-T06 uniform blocks, deterministic backend tests, retained Windows primitive-count/PNG evidence, and visible integration into the persistent sandbox through public APIs only. It adds no arbitrary mesh/assets/materials/lighting/sRGB/world/ECS/physics behavior.
 
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Complete **P6-T05 / Issue #374** only: implement/verify the `(-X,+Y,-Z)` meter-to-meter ImportedMesh→EngineMesh boundary, one-meter cube AABB, malformed/non-finite validation, spatial docs, and unchanged P6-T03 persisted output. Do not implement P6-T06 tangent/UV policy or later Phase 6 work.
+Complete **P7-T01 / Issue #414** only. Finish the bounded generational `EntityId(index,generation)` candidate in PR #415: keep allocator/reuse bookkeeping package-private, preserve stale-handle safety and generation retirement, reconcile documentation/wiki, complete the final diff/consistency audit, then require exact-head five-job PR CI before merge. Do not materialize or implement P7-T02 until P7-T01 is accepted.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -197,7 +197,6 @@ P6-T02 / Issue #365 is accepted. After the initial candidate failed only Spotles
 
 
 P6-T03 / Issue #368 is accepted. After two obsolete candidates failed only Spotless formatting, final PR #369 head `1843321e380302c9748fd55a61db5353076c6e3e` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #511 / `35705042938`. PR #369 merged as `3d73c0de0cc534a95021b38560f8690e24a18065`, and exact-merge Lightweight master verification passed in run #512 / `35705539253`. The accepted contract adds canonical `:engine-assets:runAssetCooker`, recursive `<source>.asset.json` discovery without symbolic-link traversal, deterministic `manifest.json` schema v1, AssetId-based `assets/<AssetId>.bin` output, opaque nonzero byte-for-byte pass-through payloads, pre-write validation, output-overlap/existing-path protection, duplicate/zero-byte rejection, best-effort cleanup of owned partial output, D-069, and synchronized tooling guidance. No Assimp/glTF import, coordinate conversion, tangent generation, final binary schema/checksum, image/audio decoding, dependency graph, runtime manifest/resource loading, renderer/world/editor integration, new dependency, module edge, or P6-T04+ behavior was introduced. Sandbox impact: none — offline cooker tooling is not a runtime playground capability.
-
 
 P6-T04 / Issue #371 is accepted. Final PR #372 head `1d3ac786664f8e4ea1f892f600e4ed42326febb3` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #531 / `35712370651`. PR #372 merged as `cf034184495f0e914032d330eca85dd869694d71`, and exact-merge Lightweight master verification passed in run #532 / `35713724011`. The accepted contract activates LWJGL 3.4.3 Assimp in `engine-assets`, validates/imports MESH `.gltf` / `.glb` before output creation, copies Assimp results into Java-owned internal values, releases native scenes before return, and preserves the documented pre-engine-conversion import basis. Assimp's intrinsic glTF first-use vertex remapping and UV-origin normalization are explicitly recorded; no P6-T05 engine coordinate/unit conversion, tangent generation, final mesh binary schema, runtime loader/resource API, renderer/world/editor integration, or new module edge was introduced. Sandbox impact: none — offline importer infrastructure is not a runtime playground capability.
 
@@ -237,7 +236,6 @@ P6-T13 / Issue #399 is accepted. Initial PR #400 candidate run #596 / `359148680
 
 P6-T14 / Issue #402 is accepted. The first candidate run #601 / `35919410976` exposed one stale AssetLoadErrorCode enum expectation; run #602 / `35919607952` then exposed only three Spotless formatting differences, and both candidates became obsolete after bounded corrections. Final PR #403 head `4b638925a12a683c5a5c0b4bae02ab7cb84ea71b` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #603 / `35919894825`. PR #403 merged as `240fce2858402134532876cb40cc2904e99c4f04`, and exact merged `master` passed Lightweight master verification in run #604 / `35920655044`. The accepted contract adds strict MATERIAL schema v1, asynchronous public MATERIAL loading, same-READY-handle polling reload, HOT_RELOAD_FAILED last-valid-value preservation, and a renderer-internal D-049-guarded shader/material candidate swap. No SHADER AssetType/public shader API, dependency/module edge, background watcher, general cache/reference counting, MESH/TEXTURE/AUDIO hot reload, arbitrary renderer submission, world/game integration, or sandbox source change was introduced. Phase 6 implementation tasks are complete; the Phase 6 exit gate/readiness review is the next action.
 
-
 ## Phase 6 exit/readiness review
 
 P6-EXIT / Issue #405 is accepted from baseline `3a0df9e1c85c40cee2a02aa6810bf8865476014a`. Final candidate `17b57f92963de4e336308c4a1a4315423a1003e9` passed all five heavy jobs in run #606 / `35923546789`, including the dedicated Phase 6 cooked-runtime test and retained `p6-exit-cooked-runtime` artifact. The artifact records `result=PASS`, source-tree removal before runtime open, manifest presence, MESH/MATERIAL handles READY, and runtime error count 0.
@@ -246,7 +244,7 @@ GitHub's PR workflow checked out synthetic merge commit `97ae0cad824ae3da8607d35
 
 The connected GitHub tool does not expose `workflow_dispatch`. A bounded attempt to rerun a skipped heavy push job on run #607 was accepted by the Actions API but GitHub re-evaluated the push-job condition and kept heavy work skipped. Phase-exit acceptance therefore uses the full five-job verification of the byte-identical merge tree from run #606 plus exact-SHA Lightweight verification from run #607; no separate workflow-dispatch result is claimed.
 
-The Phase 7 readiness review found no prerequisite conflict. Phase 7 is ready to activate, but no P7 executable Issue is materialized in this handoff. The next bounded candidate is P7-T01, which must be freshly refined against current master before implementation.
+The Phase 7 readiness review found no prerequisite conflict. Phase 7 is now active through P7-T01 / Issue #414 on branch `p7-t01-generational-entity-id` with draft PR #415; later P7 tasks remain unmaterialized.
 
 
 ## Pre-Phase 7 sandbox integration
@@ -259,7 +257,7 @@ The owner controls use only the existing public input vocabulary: `E`, `Right Sh
 
 The demo does not expose asset or renderer internals, add native calls, add arbitrary MESH/MATERIAL renderer submission, add a SHADER AssetType, or implement any Phase 7 world/ECS behavior. Offline cooker/import/texture/audio/dependency-graph and renderer-internal upload/shader-reload capabilities remain documented/tested rather than falsely visualized.
 
-Phase 7 implementation has not started. The next bounded executable candidate remains P7-T01 and must be freshly materialized against current master.
+Phase 7 is active through P7-T01 only. The sandbox remains intentionally unchanged because P7-T01 exposes no public entity lifecycle/allocator that can be exercised honestly without pulling later world/ECS work forward.
 
 
 ## Pre-Phase 7 sandbox visual polish
@@ -270,4 +268,14 @@ The accepted scene adds a floor grid, wireframe structural forms, a central holo
 
 No font/glyph renderer or runtime HUD exists yet. `DebugTextCounter` remains a published diagnostic-counter snapshot rather than screen-space text. General runtime UI draw data and font/text work remain planned for P9-T11/P9-T12 and were not pulled forward. No engine public API, renderer/assets internal access, native call, arbitrary asset submission, persisted schema, or Phase 7 world/ECS behavior changed.
 
-Final candidate `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`, and exact merged master passed Lightweight verification in run #626 / `35931594902`. P7-T01 remains unmaterialized and is the next bounded executable candidate.
+Final candidate `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`, and exact merged master passed Lightweight verification in run #626 / `35931594902`.
+
+## Phase 7 activation — P7-T01 / Issue #414
+
+P7-T01 is active from `master` baseline `eb76993758edd567778b59daa3e63a537cf52719`. The implementation is isolated on `p7-t01-generational-entity-id` and draft PR #415. It adds public immutable `com.samo.engine.world.api.EntityId(index,generation)` plus only the package-private allocation/liveness/reuse bookkeeping required to execute the stale-handle contract. Fresh slots start at generation 0, successful destruction invalidates the exact identity, reuse increments generation, stale/mismatched/unknown destruction cannot affect a different live entity, and destroying generation `Integer.MAX_VALUE` retires the index rather than wrapping.
+
+The candidate adds focused public-value and allocator tests, D-081, architecture guidance, and public wiki semantics. It adds no component storage, public `World` lifecycle, deferred structural commands, update phases, prefab/scene format, serialization/protocol/network identity, renderer/assets/physics/audio/game behavior, production dependency, or module edge. Wiki impact is required and included. Sandbox impact is none because no public entity lifecycle exists yet.
+
+Verification state for this checkpoint: the connected GitHub-only environment cannot execute the Gradle wrapper locally, so the Issue-specific focused commands are not claimed as run here. The complete candidate must show no dependency-lock change, pass the final diff/consistency audit, and then pass the exact-head five-job PR matrix before merge. Independent review has not been performed in this connected session; no approval is inferred. After merge, the exact merge SHA must pass Lightweight master verification before Issue #414 closes.
+
+Exact next action: finish the P7-T01 final candidate in PR #415, mark it ready only after the diff is clean and documentation is consistent, require the five-job exact-head CI, merge only while the tested head/base remain current, then require exact-merge Lightweight verification. Do not materialize P7-T02 before P7-T01 is accepted.

@@ -38,8 +38,9 @@ Use it when you want to answer questions such as:
 18. [Resource handles](ASSETS/RESOURCE_HANDLES.md)
 19. [Fallback assets](ASSETS/FALLBACKS.md)
 20. [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md)
-21. [Current limitations](LIMITATIONS.md)
-22. [How this wiki must be maintained](MAINTENANCE.md)
+21. [Entity identities](WORLD/ENTITY_IDS.md)
+22. [Current limitations](LIMITATIONS.md)
+23. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

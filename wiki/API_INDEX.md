@@ -170,6 +170,18 @@ P6-T13 provides strict manifest-backed asynchronous runtime MESH loading into `M
 
 Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_METADATA.md), [Asset cooker](ASSETS/COOKER.md), [Resource handles](ASSETS/RESOURCE_HANDLES.md), and [Fallback assets](ASSETS/FALLBACKS.md), and [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md).
 
+## `engine-world` — `com.samo.engine.world.api`
+
+| Type | Purpose |
+| --- | --- |
+| `EntityId` | Immutable generational world-entity identity containing a non-negative reusable index plus non-negative generation. |
+
+`EntityId` is the complete identity pair; callers must not compare or retain only the index. P7-T01 keeps allocation, destruction, liveness tracking, index reuse, and generation retirement inside `engine-world` rather than freezing a public world-management API early. Any later reuse of an internal slot returns its index with the previous generation plus one, and generation wraparound is forbidden: a slot destroyed at `Integer.MAX_VALUE` generation is retired rather than returning to generation zero.
+
+P7-T01 does not define a public `World`, component store, structural-command API, prefab/scene lifecycle, persistence format, packet/network identity, or concurrency policy.
+
+Usage: [Entity identities](WORLD/ENTITY_IDS.md).
+
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 
 | Type | Purpose |
@@ -210,4 +222,5 @@ The repository also contains game composition entry points, build/test utilities
 - [Asset identity](ASSETS/ASSET_ID.md)
 - [Source metadata](ASSETS/SOURCE_METADATA.md)
 - [Resource handles](ASSETS/RESOURCE_HANDLES.md)
+- [Entity identities](WORLD/ENTITY_IDS.md)
 - [Current limitations](LIMITATIONS.md)

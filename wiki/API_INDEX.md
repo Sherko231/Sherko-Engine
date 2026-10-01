@@ -176,7 +176,7 @@ Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_MET
 | --- | --- |
 | `EntityId` | Immutable generational world-entity identity containing a non-negative reusable index plus non-negative generation. |
 
-`EntityId` is the complete identity pair; callers must not compare or retain only the index. P7-T01 keeps allocation, destruction, liveness tracking, index reuse, and generation retirement inside `engine-world` rather than freezing a public world-management API early. Reusing an internal slot increments its generation, and generation wraparound is forbidden: a slot destroyed at `Integer.MAX_VALUE` generation is retired rather than returning to generation zero.
+`EntityId` is the complete identity pair; callers must not compare or retain only the index. P7-T01 keeps allocation, destruction, liveness tracking, index reuse, and generation retirement inside `engine-world` rather than freezing a public world-management API early. Any later reuse of an internal slot returns its index with the previous generation plus one, and generation wraparound is forbidden: a slot destroyed at `Integer.MAX_VALUE` generation is retired rather than returning to generation zero.
 
 P7-T01 does not define a public `World`, component store, structural-command API, prefab/scene lifecycle, persistence format, packet/network identity, or concurrency policy.
 

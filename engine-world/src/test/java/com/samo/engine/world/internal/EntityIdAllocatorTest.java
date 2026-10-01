@@ -42,6 +42,26 @@ class EntityIdAllocatorTest {
     }
 
     @Test
+    void repeatedDestroyBeforeReuseDoesNotDuplicateFreeIndex() {
+
+        EntityIdAllocator allocator = new EntityIdAllocator();
+        EntityId original = allocator.create();
+
+        assertThat(allocator.destroy(original)).isTrue();
+        assertThat(allocator.destroy(original)).isFalse();
+
+        EntityId replacement = allocator.create();
+        EntityId nextFresh = allocator.create();
+
+        assertThat(replacement.index()).isEqualTo(original.index());
+        assertThat(replacement.generation()).isEqualTo(original.generation() + 1);
+        assertThat(nextFresh).isEqualTo(new EntityId(1, 0));
+        assertThat(allocator.isAlive(replacement)).isTrue();
+        assertThat(allocator.isAlive(nextFresh)).isTrue();
+
+    }
+
+    @Test
     void staleDestroyCannotAffectCurrentOccupant() {
 
         EntityIdAllocator allocator = new EntityIdAllocator();

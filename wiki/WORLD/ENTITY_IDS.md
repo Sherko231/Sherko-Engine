@@ -21,7 +21,7 @@ Constructing an ID with a negative index or generation fails with `IllegalArgume
 
 ## Stale-ID rule
 
-The engine-world allocator may reuse an index after its current entity is destroyed, but reuse increments that slot's generation first. Therefore an old `(index, generation)` pair does not become valid merely because the same index is occupied again.
+The engine-world allocator may reuse an index after its current entity is destroyed. Any later reuse returns that index with the previous generation plus one. Therefore an old `(index, generation)` pair does not become valid merely because the same index is occupied again.
 
 The generation never wraps. When an internal slot reaches `Integer.MAX_VALUE` and is destroyed, that index is retired permanently rather than returning to generation zero and risking stale-ID resurrection.
 

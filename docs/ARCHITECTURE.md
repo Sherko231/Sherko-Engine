@@ -99,7 +99,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 through P6-T14 provide stable identity, strict source metadata, deterministic cooking/formats/dependencies, typed resource handles/fallbacks, asynchronous manifest-backed MESH/MATERIAL loading, and opt-in development MATERIAL hot reload; caches/reference counting and other runtime asset types remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
-| `engine-world` | Scene/world/component/prefab runtime | Skeleton | `engine-core`, `engine-assets` |
+| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; component storage, public world lifecycle, update phases, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
 | `engine-physics-jolt` | Jolt-backed physics adapter and ownership | Skeleton | `engine-core` |
 | `engine-audio-openal` | OpenAL-backed positional audio | Skeleton | `engine-core` |
 | `engine-network-api` | Transport-neutral session/message contracts | Skeleton | `engine-core` |
@@ -901,3 +901,17 @@ P6-T14 keeps runtime asset ownership in `engine-assets` and OpenGL ownership in 
 `AssetLoader.loadMaterial` mirrors the existing asynchronous worker model. Development `pollDevelopmentReloads()` is explicit caller-driven polling, not a background watcher: it compares actual bytes for tracked READY MATERIAL handles, replaces only valid candidates through the package-private handle cell, and leaves RELEASED handles terminal. Failed reload candidates keep the prior READY value and report HOT_RELOAD_FAILED.
 
 `DevelopmentMaterialHotReloader` remains package-private in the OpenGL adapter. It consumes only public MaterialAsset/ResourceHandle values, asserts D-049 before backend mutation, compiles/links complete shader candidates selected by the logical key, then atomically swaps its internal program/material descriptor and closes superseded owned resources. Failed shader reads/compiles/links do not replace current state. No public renderer API, SHADER AssetType, reverse module edge, cache/reference counting, or arbitrary material submission is introduced.
+
+
+## Phase 7 generational entity identity — P7-T01 / Issue #414
+
+`engine-world` now begins its public Phase 7 surface with immutable `com.samo.engine.world.api.EntityId`. The complete identity is a non-negative integer index plus a non-negative generation; public construction rejects negative components. The value owns no native resource and introduces no persistence, packet, or spatial meaning.
+
+Package-private `EntityIdAllocator` owns the minimum live-slot bookkeeping required by this task. Fresh indices start at generation 0. Destroying a matching live identity invalidates that exact pair immediately. Destroyed indices are reused before the index space grows, and any later reuse carries the previous generation plus one, so an old ID cannot become live merely because its index is occupied again. Liveness requires both current occupancy and exact generation match. Stale, already-destroyed, generation-mismatched, and unknown IDs cannot invalidate another live entity or mutate free-list state.
+
+Generation wraparound is forbidden. Destroying a live slot at `Integer.MAX_VALUE` generation permanently retires that index, and fresh-index exhaustion fails explicitly rather than allowing signed wraparound. Allocator access is externally serialized; P7-T01 adds no concurrency guarantee.
+
+The allocator remains internal: P7-T01 does not define public entity creation/destruction, a public `World`, component storage, deferred structural commands, update phases, prefab/scene lifecycle, replication/network IDs, serialization, renderer integration, physics/audio integration, or gameplay behavior. No project dependency or production dependency is added.
+
+Wiki impact: yes — `EntityId` and its stale/reuse semantics are documented in `wiki/WORLD/ENTITY_IDS.md` and indexed from the public API guide.
+Sandbox impact: none — there is no public entity lifecycle/allocator to exercise without pulling P7-T02+ work forward.

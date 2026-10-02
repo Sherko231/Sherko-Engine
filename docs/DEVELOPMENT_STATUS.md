@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / Issue #414 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
+| Active phase | Phase 7 active — P7-T01 / Issue #414 is accepted; P7-T02 / Issue #416 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T01 / Issue #414 — generational `EntityId` identity and stale-handle safety; implementation is on `p7-t01-generational-entity-id` with draft PR #415 pending final-candidate verification |
+| Active executable task | P7-T02 / Issue #416 — package-private packed component store keyed sparsely by entity index; implementation is on `p7-t02-packed-component-store`; final PR/CI is not yet accepted |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Complete **P7-T01 / Issue #414** only. Finish the bounded generational `EntityId(index,generation)` candidate in PR #415: keep allocator/reuse bookkeeping package-private, preserve stale-handle safety and generation retirement, reconcile documentation/wiki, complete the final diff/consistency audit, then require exact-head five-job PR CI before merge. Do not materialize or implement P7-T02 until P7-T01 is accepted.
+Complete **P7-T02 / Issue #416** only. Finish the bounded package-private packed component store and its stale-ID/add/get/remove/iteration tests, reconcile architecture/status/orientation documentation, complete the final diff/consistency audit, then require exact-head five-job PR CI before merge. Do not materialize or implement P7-T03 until P7-T02 is accepted.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -246,7 +246,7 @@ GitHub's PR workflow checked out synthetic merge commit `97ae0cad824ae3da8607d35
 
 The connected GitHub tool does not expose `workflow_dispatch`. A bounded attempt to rerun a skipped heavy push job on run #607 was accepted by the Actions API but GitHub re-evaluated the push-job condition and kept heavy work skipped. Phase-exit acceptance therefore uses the full five-job verification of the byte-identical merge tree from run #606 plus exact-SHA Lightweight verification from run #607; no separate workflow-dispatch result is claimed.
 
-The Phase 7 readiness review found no prerequisite conflict. Phase 7 is now active through P7-T01 / Issue #414 on branch `p7-t01-generational-entity-id` with draft PR #415; later P7 tasks remain unmaterialized.
+The Phase 7 readiness review found no prerequisite conflict. P7-T01 / Issue #414 is accepted: final candidate `182ff9ca4ed8ef915fac94e05427d6328f41c78f` passed the required five-job matrix in run #641 / `36872723180`, PR #415 merged as `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359`, and exact merged master passed Lightweight verification in run #642 / `36878894604`. P7-T02 / Issue #416 is now the only materialized Phase 7 implementation task; later P7 tasks remain unmaterialized.
 
 
 ## Pre-Phase 7 sandbox integration
@@ -259,7 +259,7 @@ The owner controls use only the existing public input vocabulary: `E`, `Right Sh
 
 The demo does not expose asset or renderer internals, add native calls, add arbitrary MESH/MATERIAL renderer submission, add a SHADER AssetType, or implement any Phase 7 world/ECS behavior. Offline cooker/import/texture/audio/dependency-graph and renderer-internal upload/shader-reload capabilities remain documented/tested rather than falsely visualized.
 
-Phase 7 is active through P7-T01 only. The sandbox remains intentionally unchanged because P7-T01 exposes no public entity lifecycle/allocator that can be exercised honestly without pulling later world/ECS work forward.
+Phase 7 has accepted P7-T01 and is active on P7-T02. The sandbox remains intentionally unchanged because P7-T02 adds only package-private component storage and there is still no public world/entity/component lifecycle that can be exercised honestly without pulling later world/ECS work forward.
 
 
 ## Pre-Phase 7 sandbox visual polish
@@ -272,12 +272,22 @@ No font/glyph renderer or runtime HUD exists yet. `DebugTextCounter` remains a p
 
 Final candidate `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`, and exact merged master passed Lightweight verification in run #626 / `35931594902`.
 
-## Phase 7 activation — P7-T01 / Issue #414
 
-P7-T01 is active from `master` baseline `eb76993758edd567778b59daa3e63a537cf52719`. The implementation is isolated on `p7-t01-generational-entity-id` and draft PR #415. It adds public immutable `com.samo.engine.world.api.EntityId(index,generation)` plus only the package-private allocation/liveness/reuse bookkeeping required to execute the stale-handle contract. Fresh slots start at generation 0, successful destruction invalidates the exact identity, reuse increments generation, stale/mismatched/unknown destruction cannot affect a different live entity, and destroying generation `Integer.MAX_VALUE` retires the index rather than wrapping.
+## Phase 7 accepted identity foundation — P7-T01 / Issue #414
 
-The candidate adds focused public-value and allocator tests, D-081, architecture guidance, and public wiki semantics. It adds no component storage, public `World` lifecycle, deferred structural commands, update phases, prefab/scene format, serialization/protocol/network identity, renderer/assets/physics/audio/game behavior, production dependency, or module edge. Wiki impact is required and included. Sandbox impact is none because no public entity lifecycle exists yet.
+P7-T01 is accepted from `master` baseline `eb76993758edd567778b59daa3e63a537cf52719`. Final candidate `182ff9ca4ed8ef915fac94e05427d6328f41c78f` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #641 / `36872723180`. PR #415 merged as `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359`, and exact merged master passed Lightweight verification in run #642 / `36878894604`.
 
-Verification state for this checkpoint: the connected GitHub-only environment cannot execute the Gradle wrapper locally, so the Issue-specific focused commands are not claimed as run here. The complete candidate must show no dependency-lock change, pass the final diff/consistency audit, and then pass the exact-head five-job PR matrix before merge. Independent review has not been performed in this connected session; no approval is inferred. After merge, the exact merge SHA must pass Lightweight master verification before Issue #414 closes.
+The accepted implementation adds public immutable `com.samo.engine.world.api.EntityId(index,generation)` plus only package-private allocation/liveness/reuse bookkeeping. Fresh slots start at generation 0, successful destruction invalidates the exact identity, reuse increments generation, stale/mismatched/unknown destruction cannot affect a different live entity, and destroying generation `Integer.MAX_VALUE` retires the index rather than wrapping. D-081 and the public wiki record the identity semantics. No component storage, public `World`, deferred structural commands, update phases, prefab/scene format, serialization/protocol/network identity, renderer/assets/physics/audio/game behavior, production dependency, or module edge was introduced.
 
-Exact next action: finish the P7-T01 final candidate in PR #415, mark it ready only after the diff is clean and documentation is consistent, require the five-job exact-head CI, merge only while the tested head/base remain current, then require exact-merge Lightweight verification. Do not materialize P7-T02 before P7-T01 is accepted.
+
+## Phase 7 packed component storage — P7-T02 / Issue #416
+
+P7-T02 is active from accepted P7-T01 merge baseline `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359` on branch `p7-t02-packed-component-store`. The bounded candidate adds package-private `PackedComponentStore<T>` plus focused internal tests only in `engine-world`. The store uses sparse entity-index lookup into dense exact-`EntityId`/component storage, delegates liveness and generation validity to the accepted P7-T01 allocator, swap-compacts removals, excludes stale entries from size/iteration, and rejects structural add/remove through the same store during iteration so P7-T03 retains deferred-command ownership.
+
+Current authoring verification state: the connected environment cannot execute the Gradle wrapper locally because direct GitHub network access is unavailable, so no focused/local Gradle command is claimed as passing here. No Gradle/dependency/lockfile change is intended. Before final acceptance, the candidate still requires complete diff/self-review/consistency audit and the exact-head five-job PR matrix; after merge, exact merged master must pass Lightweight verification before Issue #416 closes.
+
+Wiki impact: none — P7-T02 adds no supported public engine API or consumer-visible behavior.
+Sandbox impact: none — the store is package-private and there is still no public world/entity/component lifecycle to exercise without pulling P7-T03+ work forward.
+Independent review: not performed in this connected session; no approval is inferred.
+
+Exact next action: finish P7-T02 / Issue #416 only, open the final non-draft PR only after the diff/docs are complete, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification. Do not materialize P7-T03 before P7-T02 is accepted.

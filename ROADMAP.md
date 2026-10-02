@@ -79,9 +79,9 @@ P4-T09 / Issue #102 / PR #179 completed on merged `master` `66a81a418e0c953b8f00
 
 The Phase 4 exit gate also passes. The accepted candidate and merged master share tree `c2e290e844cbd4ae0f08f40796b19967cc254b84`; root/subproject tests passed on that tree, while `engine-core` depends only on JOML and has no OpenGL/LWJGL or Jolt test dependency/import. The spatial test surface is therefore independently executable from OpenGL and Jolt. Issue #180 records the exit and Phase 5 readiness review.
 
-## Current focus — M2 / Phase 6 asset pipeline and resource lifetime
+## Current focus — M2 / Phase 7 world, entities, components, prefabs, and scenes
 
-Phase 5 and the mandatory Phase 5R hardening gate are complete. Phase 6 is now active through **P6-T01 / Issue #362**, which introduces only the stable path-independent 128-bit asset identity contract before metadata, cooking, manifests, runtime resource lifetime, or import work.
+Phase 5, mandatory Phase 5R hardening, and Phase 6 asset-pipeline/resource-lifetime work are complete. Phase 7 is active. P7-T01 / Issue #414 established and accepted generational `EntityId(index,generation)` identity with stale-handle safety. P7-T02 / Issue #416 is the current bounded task and adds only one package-private packed component-store foundation keyed sparsely by entity index; public world lifecycle, deferred structural commands, concrete components, prefabs/scenes, and later Phase 7 work remain separately materialized tasks.
 
 **Phase 5 outcome:** a stable, inspectable 3D room now renders without gameplay or physics dependencies.
 

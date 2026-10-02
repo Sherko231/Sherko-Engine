@@ -99,7 +99,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 through P6-T14 provide stable identity, strict source metadata, deterministic cooking/formats/dependencies, typed resource handles/fallbacks, asynchronous manifest-backed MESH/MATERIAL loading, and opt-in development MATERIAL hot reload; caches/reference counting and other runtime asset types remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
-| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; component storage, public world lifecycle, update phases, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
+| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; P7-T02 adds package-private packed one-type component storage keyed sparsely by entity index with exact-ID stale safety; public world lifecycle, deferred structural commands, update phases, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
 | `engine-physics-jolt` | Jolt-backed physics adapter and ownership | Skeleton | `engine-core` |
 | `engine-audio-openal` | OpenAL-backed positional audio | Skeleton | `engine-core` |
 | `engine-network-api` | Transport-neutral session/message contracts | Skeleton | `engine-core` |
@@ -915,3 +915,18 @@ The allocator remains internal: P7-T01 does not define public entity creation/de
 
 Wiki impact: yes — `EntityId` and its stale/reuse semantics are documented in `wiki/WORLD/ENTITY_IDS.md` and indexed from the public API guide.
 Sandbox impact: none — there is no public entity lifecycle/allocator to exercise without pulling P7-T02+ work forward.
+
+
+## Phase 7 packed component storage — P7-T02 / Issue #416
+
+`engine-world` now adds package-private `PackedComponentStore<T>` as a one-component-type-per-instance storage foundation. A sparse integer lookup maps entity indices to dense positions while dense storage retains the exact `EntityId` beside each component value. `EntityIdAllocator` remains the sole liveness/generation authority, so the store does not duplicate P7-T01 generation bookkeeping.
+
+Add/get/remove accept only the exact currently live identity. Stale, destroyed, generation-mismatched, and unknown IDs cannot observe or remove another generation's value. When an allocator index is reused, a stale dense entry for the previous generation may be discarded before the replacement generation is inserted, without reviving the old identity. Duplicate add for the same live entity fails without replacing the existing component.
+
+Removal uses swap-compaction and repairs the moved entity's sparse position so packed iteration does not scan the full allocated entity-index space. `size()` and iteration exclude stale entries. Iteration order is intentionally not a contract. Structural `add`/`remove` through the same store while its iteration callback is active is rejected deterministically; P7-T03 remains responsible for deferred structural commands rather than P7-T02 inventing mutation-during-iteration semantics.
+
+The store remains internal and externally serialized. P7-T02 introduces no public `World` or component-store API, concrete gameplay component types, query/event/deferred-command system, persistence/serialization/network identity, renderer/physics/audio/game behavior, dependency, or module edge.
+
+Durable decision impact: none — this is the bounded internal implementation of the already planned P7-T02 packed-store contract and consumes P7-T01 identity validity without adding a new cross-task architecture policy.
+Wiki impact: none — no supported public engine API or consumer-visible behavior changes.
+Sandbox impact: none — there is still no public world/entity/component lifecycle that can be exercised honestly without pulling P7-T03+ work forward.

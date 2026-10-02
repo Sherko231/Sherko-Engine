@@ -1,0 +1,251 @@
+from pathlib import Path
+
+
+def read(path: str) -> str:
+    return Path(path).read_text(encoding="utf-8")
+
+
+def write(path: str, text: str) -> None:
+    Path(path).write_text(text, encoding="utf-8", newline="\n")
+
+
+def replace_once(path: str, old: str, new: str) -> None:
+    text = read(path)
+    count = text.count(old)
+    if count != 1:
+        raise RuntimeError(f"Expected exactly one marker in {path}, found {count}: {old[:120]!r}")
+    write(path, text.replace(old, new, 1))
+
+
+p7t06_accepted = (
+    "P7-T06 / Issue #424 is accepted through PR #425: final candidate "
+    "`9c73700f5d5a2cfe87b1ba5606c8c900851202e7` passed the required five-job matrix "
+    "in run #653 / `37009404880`, merged as `82827a7367fca11ec8e3beba6e92fac8ae5457ca`, "
+    "and exact merged master passed Lightweight verification in run #654 / `37010058098`. "
+    "P7-T07 / Issue #426 is the current bounded task defining the first strict versioned scene JSON document and semantic load-save-load round trip; P7-T08+ remain separate."
+)
+
+replace_once(
+    "README.md",
+    "P7-T06 / Issue #424 is the current bounded task for stable `EntityGuid` authoring identity plus internal GUID-to-runtime resolution; P7-T07 scene JSON/schema work and later Phase 7 tasks remain separate.",
+    p7t06_accepted,
+)
+
+replace_once(
+    "ROADMAP.md",
+    "P7-T06 / Issue #424 is the current bounded task separating stable authoring `EntityGuid` values from transient runtime `EntityId` handles; P7-T07 still owns scene JSON/schema/parser behavior, and later Phase 7 work remains separately materialized.",
+    p7t06_accepted,
+)
+
+replace_once(
+    "docs/DEVELOPMENT_STATUS.md",
+    "| Active phase | Phase 7 active — P7-T01 / #414 through P7-T05 / #422 are accepted; P7-T06 / Issue #424 is the current bounded task; Phase 6 remains complete |",
+    "| Active phase | Phase 7 active — P7-T01 / #414 through P7-T06 / #424 are accepted; P7-T07 / Issue #426 is the current bounded task; Phase 6 remains complete |",
+)
+replace_once(
+    "docs/DEVELOPMENT_STATUS.md",
+    "| Active executable task | P7-T06 / Issue #424 — stable public authoring `EntityGuid` plus package-private live GUID-to-`EntityId` resolution; implementation is on `p7-t06-authoring-entity-guids`; final PR/CI is not yet accepted |",
+    "| Active executable task | P7-T07 / Issue #426 — package-private strict scene JSON schema-v1 document/codec plus semantic load-save-load round trip; implementation is on `p7-t07-scene-json`; final PR/CI is not yet accepted |",
+)
+
+status_path = "docs/DEVELOPMENT_STATUS.md"
+status = read(status_path)
+marker = "## Phase 7 stable authoring entity GUIDs — P7-T06 / Issue #424\n"
+if status.count(marker) != 1:
+    raise RuntimeError("Unexpected P7-T06 status marker count")
+prefix = status.split(marker, 1)[0]
+status_tail = """## Phase 7 stable authoring entity GUIDs — P7-T06 / Issue #424 — accepted
+
+P7-T06 is accepted. Final candidate `9c73700f5d5a2cfe87b1ba5606c8c900851202e7` passed all five required PR jobs in run #653 / `37009404880`; PR #425 merged as `82827a7367fca11ec8e3beba6e92fac8ae5457ca`, and exact merged `master` passed Lightweight verification in run #654 / `37010058098`. Issue #424 is closed completed.
+
+The accepted public identity surface adds immutable `EntityGuid(highBits,lowBits)` with canonical lowercase UUID text plus generation, while `EntityId(index,generation)` remains transient runtime identity. Package-private `EntityGuidIndex` binds stable GUIDs to currently live exact runtime IDs without transferring authored identity across allocator slot reuse. D-084 records the identity-domain boundary.
+
+P7-T06 deliberately defines no scene JSON fields/schema/version, parent representation, public `World`, prefab behavior, renderer/audio/physics/network integration, replication identity, new dependency/module edge, or lockfile change.
+
+Wiki impact: yes — public identity guidance distinguishes stable authored `EntityGuid` from transient runtime `EntityId`.
+Sandbox impact: none — there is no public entity lifecycle or public GUID binding/resolution boundary to exercise honestly.
+Independent review: not performed in the connected authoring session; acceptance relied on the bounded Issue contract, self-review, exact-head five-job CI, and exact-merge Lightweight verification.
+
+## Phase 7 versioned scene JSON document — P7-T07 / Issue #426
+
+P7-T07 is active from accepted baseline `82827a7367fca11ec8e3beba6e92fac8ae5457ca` on branch `p7-t07-scene-json`.
+
+The bounded candidate adds package-private immutable scene document values plus a strict Jackson-backed schema-v1 codec under `engine-world`. Persisted entity identity and parent references use canonical `EntityGuid` text only; transient `EntityId` values are never persisted. The root schema is exactly `schemaVersion` plus ordered `entities`; each entity requires `guid`, nullable `parentGuid`, and `components`. Entity GUID uniqueness, parent existence, self-parent rejection, and parent-cycle rejection are validated before a document is returned.
+
+Schema v1 supports exactly the five P7-T05 component names. Every present component object carries its own `schemaVersion: 1`. Transform data stores local D-041 position meters, quaternion XYZW, and dimensionless scale without axis/unit conversion and canonicalizes rotation through existing `TransformComponent`/`Transform` semantics. Camera data retains D-045 vertical FOV radians and near/far meters. Mesh/material/audio references persist canonical `AssetId` text only. Unknown fields/component names and unsupported component versions fail under the P7-T07 strict baseline; P7-T08 retains ownership of required-versus-optional unknown-data preservation/warning policy.
+
+The production writer emits deterministic known-field ordering and canonical GUID/AssetId text. Focused acceptance covers a two-entity parented scene, all five components, independent semantic assertions, encode/decode round trip equality, empty scenes, malformed schemas/shapes/IDs/numbers, hierarchy failures, unknown fields/components, unsupported versions, optional component absence, and entity-order preservation.
+
+`engine-world` now declares direct `implementation(libs.jackson.databind)` using the already scope-selected Jackson 2.21.2 family. The mechanically generated lock change is confined to `engine-world/gradle.lockfile`, promoting the existing Jackson entries onto compile/test-compile classpaths without changing versions or adding a project edge.
+
+D-085 records the persisted-format and spatial contract. The implementation remains package-private: there is still no public `World`, public scene codec/lifecycle API, runtime scene instantiation/activation, prefab behavior, renderer/audio/physics/network integration, or P7-T08 unknown optional editor-data preservation.
+
+Wiki impact: yes — `wiki/WORLD/SCENES.md` documents the persisted schema contract and its current non-public activation boundary.
+Sandbox impact: none — the codec/document boundary is package-private and there is still no public scene activation/world lifecycle to exercise without pulling P7-T11+ work forward.
+Independent review: not performed in this connected session; no independent reviewer/provenance is currently available.
+
+Authoring verification: temporary branch preflight run #2 / `37013532281` passed module-local lock generation guard, Spotless, `engine-world` tests, and the architecture boundary test on the formatter-applied candidate lineage. Final full branch verification and the five-job exact-head PR matrix remain pending.
+
+Exact next action: finish P7-T07 / Issue #426 only, complete full branch verification and complete diff/persisted-format/spatial/wiki audits, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #426. Do not materialize P7-T08 before P7-T07 is accepted.
+"""
+write(status_path, prefix + status_tail)
+
+architecture_path = "docs/ARCHITECTURE.md"
+architecture = read(architecture_path)
+if "## Phase 7 versioned scene JSON document — P7-T07 / Issue #426" in architecture:
+    raise RuntimeError("P7-T07 architecture section already exists")
+architecture += """
+
+## Phase 7 versioned scene JSON document — P7-T07 / Issue #426
+
+`engine-world` now contains a package-private schema-v1 scene persistence boundary. `SceneDocument` preserves entity authoring order; each `SceneEntityDocument` carries a stable `EntityGuid`, nullable stable parent GUID, and optional values for exactly the five accepted P7-T05 components. The document validates GUID uniqueness plus parent target existence/self/cycle safety before becoming usable.
+
+`SceneJsonCodec` is an internal explicit tree codec rather than Jackson reflection over public component classes. It rejects duplicate object fields, unknown root/entity/component fields, unknown component names, missing/wrong schema versions, malformed shapes/identities/numbers, and invalid component values. Jackson types do not appear in supported public signatures. The writer emits deterministic known-field order and canonical GUID/AssetId text; textual byte equality is not a contract, while load-save-load semantic equality is.
+
+Transform persistence is local D-041 data: position meters, quaternion XYZW, and dimensionless scale. Load construction delegates canonical transform validation/normalization to the existing `TransformComponent`/`Transform` semantics and performs no handedness, axis, or unit conversion. Camera fields remain D-045 vertical FOV radians with near/far meters; aspect and pose are not duplicated. Mesh/material/audio references persist stable `AssetId` text and never resource handles/backend/native objects or paths.
+
+The task activates the already-selected Jackson 2.21.2 databind dependency directly in `engine-world`; no project edge or dependency family/version changes. D-085 records the persisted-format contract. P7-T08 retains the future unknown required-versus-optional/editor-data policy, and P7-T11 retains runtime world activation. No public `World`, public scene codec, prefab behavior, renderer/audio/physics/network integration, or concurrency contract is introduced.
+
+Wiki impact: yes — persisted scene schema v1 is documented under `wiki/WORLD/SCENES.md` while clearly identifying the package-private codec/runtime-activation limitation.
+Sandbox impact: none — no public scene/world activation boundary exists to drive the persistent sandbox honestly.
+"""
+write(architecture_path, architecture)
+
+decisions_path = "docs/DECISIONS.md"
+decisions = read(decisions_path)
+if "| D-085 |" in decisions:
+    raise RuntimeError("D-085 already exists")
+decision = "| D-085 | Accepted | P7-T07 / Issue #426 defines scene JSON schema v1 as an explicit strict persisted format independent of Java reflection/object serialization. The root is `schemaVersion: 1` plus ordered entities; persisted entity and parent identity use canonical `EntityGuid` text and never `EntityId`; each of the five known P7-T05 component objects has its own `schemaVersion: 1`; transform JSON is local D-041 position meters/quaternion-XYZW/dimensionless scale with no coordinate conversion; camera FOV is radians and near/far are meters under D-045; stable mesh/material/audio references use canonical `AssetId` text. Jackson 2.21.2 is internal to `engine-world`, and P7-T08 retains the forward-compatibility policy for unknown required components versus optional editor data. | Explicit versioned codecs preserve durable authoring data without coupling disk layout to Java class/reflection shape or transient allocator identity. Independent component versions create bounded migration seams, while delegating transform/camera/component validation to existing accepted contracts prevents persistence from inventing a second spatial/value policy. Strict unknown-data rejection is intentionally only the P7-T07 baseline so P7-T08 can add preserve/warn semantics deliberately. |\n\n"
+add_marker = "## Adding or changing a decision\n"
+if decisions.count(add_marker) != 1:
+    raise RuntimeError("Unexpected decisions insertion marker")
+write(decisions_path, decisions.replace(add_marker, decision + add_marker, 1))
+
+spatial_path = "docs/SPATIAL_CONVENTIONS.md"
+spatial = read(spatial_path)
+if "## Scene JSON spatial serialization" in spatial:
+    raise RuntimeError("Scene JSON spatial section already exists")
+scene_spatial = """## Scene JSON spatial serialization
+
+D-085 / P7-T07 persists scene transform and camera values directly in canonical engine semantics:
+
+- transform position is local D-041 meters in +X right, +Y up, -Z forward engine space;
+- transform rotation is local quaternion XYZW and is normalized through the canonical `Transform` contract when loaded;
+- transform scale is local dimensionless XYZ;
+- camera vertical FOV is radians;
+- camera near/far planes are meters with the existing D-045 finite ordering rules;
+- scene JSON performs no handedness, axis, unit, Euler, matrix, or external-format conversion.
+
+`parentGuid` records authored hierarchy identity only. P7-T07 does not compute or persist world matrices and does not call `Transform.setParent(...)`; runtime hierarchy activation remains later world-loading work. Asset IDs and entity GUIDs are identity domains, not spatial quantities.
+
+"""
+boundary_marker = "## Boundary conversion rule\n"
+if spatial.count(boundary_marker) != 1:
+    raise RuntimeError("Unexpected spatial boundary marker")
+spatial = spatial.replace(boundary_marker, scene_spatial + boundary_marker, 1)
+spatial = spatial.replace(
+    "- transform replication/quantization and any packet/adaptor wrapping D-047 values.\n",
+    "- transform replication/quantization and any packet/adaptor wrapping D-047 values;\n- scene transform/camera persistence and any later scene import/export adapter.\n",
+    1,
+)
+spatial = spatial.replace(
+    "D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, and D-047 records transform value quantization in `docs/DECISIONS.md`.",
+    "D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, D-047 records transform value quantization, and D-085 records scene JSON spatial serialization in `docs/DECISIONS.md`.",
+    1,
+)
+write(spatial_path, spatial)
+
+replace_once(
+    "wiki/README.md",
+    "- How do I construct the core world components entirely from data?\n",
+    "- How do I construct the core world components entirely from data?\n- What does the current version-1 scene JSON persistence contract store?\n",
+)
+replace_once(
+    "wiki/README.md",
+    "21. [Entity identities](WORLD/ENTITY_IDS.md)\n22. [World components](WORLD/COMPONENTS.md)\n23. [Current limitations](LIMITATIONS.md)\n24. [How this wiki must be maintained](MAINTENANCE.md)",
+    "21. [Entity identities](WORLD/ENTITY_IDS.md)\n22. [World components](WORLD/COMPONENTS.md)\n23. [Scene persistence format](WORLD/SCENES.md)\n24. [Current limitations](LIMITATIONS.md)\n25. [How this wiki must be maintained](MAINTENANCE.md)",
+)
+
+replace_once(
+    "wiki/API_INDEX.md",
+    "There is still no public `World`, entity allocator, component store/query API, deferred structural-command API, scene JSON/schema/parser, prefab lifecycle, public GUID-binding/resolution API, renderer extraction bridge, audio playback bridge, replication identity, or entity serialization format. `EntityGuid` now supplies stable authoring identity and canonical text only; P7-T07 still owns the first planned scene JSON format and parent/component representation.\n\nUsage: [Entity identities](WORLD/ENTITY_IDS.md) and [World components](WORLD/COMPONENTS.md).",
+    "P7-T07 now defines and tests an internal strict version-1 scene JSON persistence format using stable `EntityGuid`/`AssetId` text plus the five accepted component data contracts. The codec/document types remain package-private, so there is still no public `World`, entity allocator, component store/query API, deferred structural-command API, public scene load/save/activation API, prefab lifecycle, public GUID-binding/resolution API, renderer extraction bridge, audio playback bridge, or replication identity. P7-T08 retains unknown optional editor-data compatibility policy and P7-T11 retains runtime world activation.\n\nUsage: [Entity identities](WORLD/ENTITY_IDS.md), [World components](WORLD/COMPONENTS.md), and [Scene persistence format](WORLD/SCENES.md).",
+)
+
+replace_once(
+    "wiki/WORLD/ENTITY_IDS.md",
+    "P7-T06 proves this boundary with an internal resolver and save-like in-memory test data. It does **not** define the production scene JSON representation. P7-T07 owns schema versioning, entity/parent GUID fields, component objects, parsing, and save/load document behavior.",
+    "P7-T06 proves the identity boundary with the internal resolver. P7-T07 now defines schema-v1 scene persistence internally: entity `guid` and nullable `parentGuid` fields use canonical `EntityGuid` text, while runtime `EntityId` values never appear in the persisted document. The codec is still package-private and does not expose public world activation/loading.",
+)
+replace_once(
+    "wiki/WORLD/ENTITY_IDS.md",
+    "There is still no public `World`, public entity allocator, public GUID-binding API, component store/query API, scene JSON/schema/parser, prefab lifecycle, parent GUID contract, or replication identity.",
+    "There is still no public `World`, public entity allocator, public GUID-binding API, component store/query API, public scene codec/activation API, prefab lifecycle, or replication identity. The internal scene schema now records parent GUIDs, but runtime hierarchy activation remains later work.",
+)
+
+replace_once(
+    "wiki/LIMITATIONS.md",
+    "`engine-world` exposes P7-T01 immutable transient `EntityId(index,generation)` runtime handles, P7-T06 stable public `EntityGuid` authoring identities, plus the five P7-T05 public data-oriented components. `EntityGuid` provides canonical stable identity text but not a scene serialization format or public binding lifecycle. Allocation, destruction, liveness checks, GUID-to-runtime resolution, index reuse bookkeeping, and generation retirement remain package-private; there is still no public `World`, entity allocator, component store/query API, structural-command API, scene JSON/schema/parser, parent-GUID/component persistence format, prefab/scene entity lifecycle, world-to-renderer extraction/submission, runtime audio loading/playback bridge, replication/network identity, or concurrency contract.",
+    "`engine-world` exposes P7-T01 immutable transient `EntityId(index,generation)` runtime handles, P7-T06 stable public `EntityGuid` authoring identities, plus the five P7-T05 public data-oriented components. P7-T07 now implements a package-private strict schema-v1 scene JSON document/codec using stable GUID/AssetId text, parent GUIDs, and versioned component objects with semantic load-save-load coverage. Allocation, destruction, liveness checks, GUID-to-runtime resolution, index reuse bookkeeping, generation retirement, and scene codec/document types remain package-private; there is still no public `World`, entity allocator, component store/query API, structural-command API, public scene load/save/activation API, prefab/scene runtime lifecycle, world-to-renderer extraction/submission, runtime audio loading/playback bridge, replication/network identity, or concurrency contract. P7-T08 still owns unknown optional editor-data compatibility policy.",
+)
+
+scenes = Path("wiki/WORLD/SCENES.md")
+if scenes.exists():
+    raise RuntimeError("wiki/WORLD/SCENES.md already exists")
+scenes.write_text(
+    """# Scene persistence format
+
+P7-T07 defines the first persisted Sherko Engine scene document: strict UTF-8 JSON schema version 1. This page documents the accepted file contract. The production codec/document implementation is currently package-private inside `engine-world`; there is not yet a public `World` or public scene activation/loading API.
+
+## Root document
+
+```json
+{
+  "schemaVersion": 1,
+  "entities": []
+}
+```
+
+The root contains exactly `schemaVersion` and `entities`. Version must be integer `1`; other versions fail with an upgrade-required diagnostic. Entity array order is preserved across load/save and is authoring/document order, not runtime identity. Duplicate JSON fields are rejected.
+
+## Entity identity and hierarchy
+
+Each entity contains exactly `guid`, `parentGuid`, and `components`:
+
+```json
+{
+  "guid": "00000000-0000-0000-0000-000000000001",
+  "parentGuid": null,
+  "components": {}
+}
+```
+
+`guid` and non-null `parentGuid` use canonical lowercase `EntityGuid` text. Runtime `EntityId(index,generation)` values are never persisted. Entity GUIDs must be unique; a non-null parent must exist in the same document; self-parenting and parent cycles fail before a scene document is returned. P7-T07 stores authored hierarchy identity only and does not activate `Transform.parent()` relationships.
+
+## Versioned components
+
+The `components` object may contain any subset of exactly five known names. Every present component carries its own `schemaVersion: 1`.
+
+- `transform`: `position` XYZ meters, `rotation` quaternion XYZW, `scale` dimensionless XYZ. Values are local D-041 engine-space values with no axis/unit/handedness conversion. Rotation is canonicalized through the existing `Transform` semantics.
+- `name`: one required nonblank string preserved exactly.
+- `meshRenderer`: canonical `meshAssetId` and `materialAssetId` text only; no paths or runtime handles.
+- `camera`: finite `verticalFovRadians`, positive `nearPlaneMeters`, and farther `farPlaneMeters` under D-045. Pose comes from transform and aspect remains runtime input.
+- `audioEmitter`: canonical `audioAssetId` text only; no backend/native audio object.
+
+Unknown root/entity/component-object fields, unknown component names, duplicate fields, missing/wrong schema versions, malformed shapes, non-finite values, malformed identities, and component-domain violations fail under the P7-T07 strict baseline.
+
+## Save/load semantics
+
+The writer emits deterministic schema-v1 JSON with fixed known-field ordering and canonical GUID/AssetId text. Hand-authored input does not need to be reproduced byte-for-byte. The contract is semantic: load -> save -> load preserves the scene document's meaning, including entity order, identity, parent references, component values, normalized transform rotation, and optional component absence.
+
+## Current compatibility boundary
+
+P7-T07 intentionally does not define the final unknown-data forward-compatibility policy. P7-T08 owns the distinction between unknown required components and unknown optional editor data, including preserve/warn behavior.
+
+There is also still no public scene codec, file-path/atomic-save API, runtime world instantiation/activation, prefab expansion, renderer/audio/physics integration, editor workflow, or networking/replication identity. Those remain later bounded tasks.
+
+Normative sources: D-041/D-045/D-085 in `docs/DECISIONS.md`, `docs/SPATIAL_CONVENTIONS.md`, and Issue #426.
+""",
+    encoding="utf-8",
+    newline="\n",
+)

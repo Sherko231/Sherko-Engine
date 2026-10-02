@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   sync:
-    if: github.event.head_commit.message != 'chore: sync P7-T04 documentation'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

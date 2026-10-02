@@ -25,7 +25,7 @@ jobs:
       - name: Generate authorized lock and formatter changes
         shell: pwsh
         run: |
-          .\gradlew.bat resolveAndLockAllDependencies --write-locks
+          .\gradlew.bat :engine-world:dependencies --write-locks
           .\gradlew.bat spotlessApply
       - name: Guard generated diff
         shell: pwsh

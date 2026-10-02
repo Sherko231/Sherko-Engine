@@ -229,7 +229,8 @@ class DeferredStructuralCommandBufferTest {
             assertThatThrownBy(commands::flush).isInstanceOf(IllegalStateException.class).hasMessageContaining("already flushing");
             assertThatThrownBy(commands::deferEntityCreation).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
             assertThatThrownBy(() -> commands.deferEntityDestruction(entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
-            assertThatThrownBy(() -> commands.deferComponentAdd(store, entity, new TestComponent("value"))).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
+            assertThatThrownBy(() -> commands.deferComponentAdd(store, entity, new TestComponent("value"))).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("during flush");
             assertThatThrownBy(() -> commands.deferComponentRemoval(store, entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
         } finally {
             flushingField.setBoolean(commands, false);

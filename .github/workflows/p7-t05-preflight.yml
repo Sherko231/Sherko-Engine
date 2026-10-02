@@ -16,11 +16,15 @@ jobs:
       - name: Apply guarded documentation and wiki sync
         shell: powershell
         run: |
+          git checkout 2098866d1ae01d6d80e66777e1830cb08b6c0bdd -- README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/README.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item wiki/WORLD/COMPONENTS.md -ErrorAction SilentlyContinue
           python tools/p7_t05_sync.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $architecture = Get-Content docs/ARCHITECTURE.md -Raw
-          $architecture = $architecture.TrimEnd("`r", "`n") + "`n"
-          [System.IO.File]::WriteAllText((Resolve-Path docs/ARCHITECTURE.md), $architecture, [System.Text.UTF8Encoding]::new($false))
+          python -c "from pathlib import Path; p=Path('docs/ARCHITECTURE.md'); s=p.read_text(encoding='utf-8'); p.write_text(s.rstrip()+'\n', encoding='utf-8')"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -c "from pathlib import Path; s=Path('docs/ARCHITECTURE.md').read_text(encoding='utf-8'); assert 'â€”' not in s and 'â€' not in s, 'mojibake detected in ARCHITECTURE.md'"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git diff --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git diff --quiet
@@ -28,7 +32,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -- README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/README.md wiki/WORLD/COMPONENTS.md
-            git commit -m "docs: reconcile P7-T05 public component contract"
+            git commit -m "docs: repair and reconcile P7-T05 component contract"
             git push origin HEAD:$env:GITHUB_REF_NAME
           }
 

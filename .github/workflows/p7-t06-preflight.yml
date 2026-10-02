@@ -19,7 +19,9 @@ jobs:
       - name: Verify committed diff hygiene
         shell: powershell
         run: |
-          git diff --check master...HEAD
+          git fetch origin master --depth=1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check origin/master...HEAD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify formatting
         run: .\gradlew.bat spotlessCheck

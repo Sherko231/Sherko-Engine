@@ -14,6 +14,7 @@ Use it when you want to answer questions such as:
 - How do I track native resources safely?
 - How does the fixed-step timing foundation work?
 - How does orderly fatal shutdown work?
+- How do I construct the core world components entirely from data?
 - Which APIs are production-ready today, and which features are still planned?
 
 ## Start here
@@ -39,8 +40,9 @@ Use it when you want to answer questions such as:
 19. [Fallback assets](ASSETS/FALLBACKS.md)
 20. [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md)
 21. [Entity identities](WORLD/ENTITY_IDS.md)
-22. [Current limitations](LIMITATIONS.md)
-23. [How this wiki must be maintained](MAINTENANCE.md)
+22. [World components](WORLD/COMPONENTS.md)
+23. [Current limitations](LIMITATIONS.md)
+24. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

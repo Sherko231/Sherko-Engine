@@ -958,3 +958,21 @@ D-082 records the fixed order and successful-phase structural visibility boundar
 
 Wiki impact: none — the phase vocabulary and pipeline are package-private implementation boundaries.
 Sandbox impact: none — there is no public world lifecycle through which the persistent sandbox could invoke the pipeline without pulling later Phase 7 work forward.
+
+
+## Phase 7 core data-driven world components — P7-T05 / Issue #422
+
+`engine-world` now adds exactly five supported public data-oriented component types without exposing a public world/container API. Each component can be created from explicit Java data before any renderer, audio backend, native resource, loader, or scene parser exists.
+
+`TransformComponent` owns one fresh canonical `engine-core Transform`. Its constructor accepts local position XYZ in meters, quaternion XYZW, and dimensionless scale XYZ, delegates validation/normalization to the accepted D-041 `Transform`, and starts unparented. Returning the owned mutable `Transform` lets later bounded hierarchy/world work reuse the existing transform implementation rather than creating a second spatial-state/math contract.
+
+`NameComponent` is an immutable non-null/nonblank string and preserves accepted text exactly. `MeshRendererComponent` is an immutable pair of mesh/material `AssetId` values. `AudioEmitterComponent` is an immutable audio `AssetId` reference. Those asset-facing components retain stable authored identities only: they do not retain `ResourceHandle`, decoded resource values, renderer/audio objects, GPU/OpenAL/native IDs, or paths, and construction performs no asset-type lookup or I/O.
+
+`CameraComponent` is immutable projection configuration containing finite vertical FOV radians, positive near plane meters, and a farther finite far plane, matching the D-045 perspective domain that is independent of framebuffer aspect. Aspect remains runtime/framebuffer input. Camera pose comes from the same entity's `TransformComponent`; no duplicate camera position/orientation, matrix state, active-camera registry, or viewport policy is introduced.
+
+Because the supported `TransformComponent.transform()` signature exposes `engine-core Transform` and mesh/material/audio components expose `engine-assets AssetId`, `engine-world` publishes its already-existing `engine-core` and `engine-assets` project dependencies through Gradle `api(...)` metadata. This changes consumer compile metadata only: no project edge, dependency version/family, lockfile, ownership direction, or native dependency is added.
+
+D-083 records the stable component-data/reference policy. P7-T05 deliberately defines no public `World`, allocator/store/query/structural-command/update-phase API, GUIDs, scene JSON/schema/parser, persisted component format, prefab behavior, world activation, renderer extraction/submission, runtime audio loading/playback/spatialization, physics/Jolt integration, networking identity/protocol, concurrency, or later P7-T06+ behavior.
+
+Wiki impact: yes — the supported component APIs and their current integration limits are documented under `wiki/WORLD/COMPONENTS.md`, the API index, navigation, and limitations guide.
+Sandbox impact: none — the public values cannot yet drive an honest sandbox world feature without later public world lifecycle and renderer/audio integration boundaries.

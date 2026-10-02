@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":engine-core"))
-    implementation(project(":engine-assets"))
+    api(project(":engine-core"))
+    api(project(":engine-assets"))
 }

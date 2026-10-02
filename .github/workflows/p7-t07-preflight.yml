@@ -1,6 +1,9 @@
 name: P7-T07 Authoring Preflight
 
 "on":
+  push:
+    branches:
+      - p7-t07-scene-json
   workflow_dispatch:
 
 permissions:

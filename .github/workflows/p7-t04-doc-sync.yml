@@ -1,0 +1,39 @@
+name: P7-T04 Doc Sync
+
+on:
+  push:
+    branches: [ p7-t04-fixed-world-update-phases ]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.event.head_commit.message != 'chore: sync P7-T04 documentation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: p7-t04-fixed-world-update-phases
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Apply guarded documentation replacements
+        run: python .github/scripts/p7_t04_doc_sync.py
+      - name: Validate diff
+        run: |
+          git diff --check
+          git diff -- README.md ROADMAP.md docs/DEVELOPMENT_STATUS.md docs/ARCHITECTURE.md docs/DECISIONS.md
+      - name: Commit documentation
+        shell: bash
+        run: |
+          if git diff --quiet -- README.md ROADMAP.md docs/DEVELOPMENT_STATUS.md docs/ARCHITECTURE.md docs/DECISIONS.md; then
+            echo "Documentation already synchronized."
+            exit 0
+          fi
+          git config user.name "Sherko"
+          git config user.email "120306123+Sherko231@users.noreply.github.com"
+          git add README.md ROADMAP.md docs/DEVELOPMENT_STATUS.md docs/ARCHITECTURE.md docs/DECISIONS.md
+          git commit -m "chore: sync P7-T04 documentation"
+          git push origin HEAD:p7-t04-fixed-world-update-phases

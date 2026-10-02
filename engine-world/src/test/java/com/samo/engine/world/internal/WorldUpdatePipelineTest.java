@@ -77,7 +77,7 @@ class WorldUpdatePipelineTest {
     }
 
     @Test
-    void flushFailureStopsLaterPhasesWithoutDiscardingQueuedCommands() throws ReflectiveOperationException {
+    void flushFailureStopsLaterPhasesWithoutDiscardingQueuedCommandsAndGuardRecovers() throws ReflectiveOperationException {
 
         EntityIdAllocator allocator = new EntityIdAllocator();
         DeferredStructuralCommandBuffer commands = new DeferredStructuralCommandBuffer(allocator);
@@ -98,7 +98,11 @@ class WorldUpdatePipelineTest {
         assertThat(visited).containsExactly(WorldUpdatePhase.INPUT);
         assertThat(allocator.isAlive(entity)).isTrue();
 
-        commands.flush();
+        List<WorldUpdatePhase> retryVisited = new ArrayList<>();
+        pipeline.update(retryVisited::add);
+
+        assertThat(retryVisited).containsExactly(WorldUpdatePhase.INPUT, WorldUpdatePhase.PRE_PHYSICS, WorldUpdatePhase.PHYSICS, WorldUpdatePhase.POST_PHYSICS,
+            WorldUpdatePhase.GAMEPLAY, WorldUpdatePhase.REPLICATION_CAPTURE, WorldUpdatePhase.PRESENTATION_EXTRACTION);
         assertThat(allocator.isAlive(entity)).isFalse();
 
     }

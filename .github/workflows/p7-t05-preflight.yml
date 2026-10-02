@@ -18,6 +18,9 @@ jobs:
         run: |
           python tools/p7_t05_sync.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $architecture = Get-Content docs/ARCHITECTURE.md -Raw
+          $architecture = $architecture.TrimEnd("`r", "`n") + "`n"
+          [System.IO.File]::WriteAllText((Resolve-Path docs/ARCHITECTURE.md), $architecture, [System.Text.UTF8Encoding]::new($false))
           git diff --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git diff --quiet

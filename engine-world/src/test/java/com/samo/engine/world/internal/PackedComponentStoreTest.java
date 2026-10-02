@@ -216,6 +216,7 @@ class PackedComponentStoreTest {
         PackedComponentStore<TestComponent> store = new PackedComponentStore<>(allocator);
         EntityId first = allocator.create();
         EntityId second = allocator.create();
+        EntityId third = allocator.create();
         TestComponent firstComponent = new TestComponent("first");
         TestComponent secondComponent = new TestComponent("second");
 
@@ -223,9 +224,12 @@ class PackedComponentStoreTest {
         assertThat(store.add(second, secondComponent)).isTrue();
 
         assertThatThrownBy(() -> store.forEach((id, component) -> store.remove(id))).isInstanceOf(IllegalStateException.class).hasMessageContaining("during iteration");
+        assertThatThrownBy(() -> store.forEach((id, component) -> store.add(third, new TestComponent("third")))).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("during iteration");
 
         assertThat(store.get(first)).isSameAs(firstComponent);
         assertThat(store.get(second)).isSameAs(secondComponent);
+        assertThat(store.get(third)).isNull();
         assertThat(store.size()).isEqualTo(2);
 
     }

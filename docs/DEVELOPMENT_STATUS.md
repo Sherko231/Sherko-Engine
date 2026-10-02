@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / Issue #414 and P7-T02 / Issue #416 are accepted; P7-T03 / Issue #418 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
+| Active phase | Phase 7 active — P7-T01 / Issue #414, P7-T02 / Issue #416, and P7-T03 / Issue #418 are accepted; P7-T04 / Issue #420 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T03 / Issue #418 — package-private deferred entity/component structural commands with explicit post-iteration flush; implementation is on `p7-t03-deferred-structural-commands`; final PR/CI is not yet accepted |
+| Active executable task | P7-T04 / Issue #420 — package-private fixed world update phases with a P7-T03 structural-command flush after each successfully completed phase; implementation is on `p7-t04-fixed-world-update-phases`; final PR/CI is not yet accepted |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -292,14 +292,26 @@ Independent review: not performed in the connected authoring session; no indepen
 
 ## Phase 7 deferred structural commands — P7-T03 / Issue #418
 
-P7-T03 is active from accepted P7-T02 merge baseline `1b10c7683a231afec49e3fecd085314834ab2a96` on branch `p7-t03-deferred-structural-commands`. The bounded candidate adds package-private `DeferredStructuralCommandBuffer` plus focused internal tests only in `engine-world`. Entity creation/destruction and component add/removal requests are recorded without immediate structural mutation and are applied only by an explicit FIFO `flush()` after iteration. A pending internal creation result resolves only when its creation command executes. P7-T03 reuses the accepted P7-T01 allocator and P7-T02 store semantics rather than duplicating liveness, generation, sparse/dense, or removal logic.
+P7-T03 is accepted from the P7-T02 merge baseline `1b10c7683a231afec49e3fecd085314834ab2a96`. Final candidate `c02c4715a77eced7feeb8055d0c7dd01ae9d31a4` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #647 / `36993124976`. PR #419 merged as `e97dceb477d9492d28aa2a924e5c5adc93628ba8`, and exact merged master passed Lightweight verification in run #648 / `36994718637`. Issue #418 is closed completed.
 
-The buffer rejects recursive flush and recording during an active flush. Commands are removed from the queue before execution: commands already reached stay applied, a failing command is consumed and propagates its exception, and untouched tail commands remain queued in original order for a later explicit flush. No transactional rollback or automatic flush/update phase is claimed; P7-T04 retains ownership of fixed world update phases and eventual flush scheduling.
-
-Authoring preflight run #3 / `36990597864` on head `254d927326ea9a288324ee2ef93f89ba896907fe` passed Spotless verification, `:engine-world:test --rerun-tasks`, and the architecture boundary test. The temporary branch-only preflight tooling was removed before this final candidate; this authoring evidence is not acceptance evidence, and final acceptance still requires the exact-head five-job PR matrix and exact-merge Lightweight verification. The connected environment does not execute the Gradle wrapper locally, so no separate local command run is claimed.
+The accepted implementation adds package-private `DeferredStructuralCommandBuffer` above the accepted P7-T01 allocator and P7-T02 packed store. Entity creation/destruction and component add/removal are recorded without immediate structural mutation and execute only through explicit FIFO `flush()`. Commands are consumed before execution, so reached work stays applied, a failing command is consumed and propagates, and untouched tail commands remain queued for a later explicit flush. Recursive flush and recording during active flush are rejected. P7-T03 intentionally defines no automatic update-phase scheduling; P7-T04 owns phase boundaries.
 
 Wiki impact: none — P7-T03 adds no supported public engine API or consumer-visible behavior.
-Sandbox impact: none — deferred commands remain package-private and there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.
+Sandbox impact: none — deferred commands remain package-private and there is still no public world lifecycle to exercise honestly.
+Independent review: not performed in the connected authoring session; no independent reviewer/provenance was available.
+
+## Phase 7 fixed world update phases — P7-T04 / Issue #420
+
+P7-T04 is active from accepted P7-T03 merge baseline `e97dceb477d9492d28aa2a924e5c5adc93628ba8` on branch `p7-t04-fixed-world-update-phases`. The bounded candidate adds package-private `WorldUpdatePhase` and `WorldUpdatePipeline` only in `engine-world`. One caller-supplied callback runs exactly once in fixed order: INPUT, PRE_PHYSICS, PHYSICS, POST_PHYSICS, GAMEPLAY, REPLICATION_CAPTURE, PRESENTATION_EXTRACTION.
+
+After each successfully completed phase callback, the pipeline invokes the accepted P7-T03 command buffer `flush()` before the next phase. Structural changes recorded by a phase therefore remain invisible during that callback and become visible at the next successful phase boundary. The final presentation-extraction phase is also followed by a flush. Callback or flush failure propagates and stops later phases; a failed callback is not auto-flushed, and command-buffer partial-failure/tail behavior remains P7-T03-owned. Recursive update is rejected, the guard recovers after failure, and no concurrency guarantee is introduced.
+
+Authoring preflight run #6 / `36996034761` on committed Java head `a8c9d6682db4467aec9f33e798e5090684bf1524` passed `spotlessCheck`, `:engine-world:test --rerun-tasks`, and the architecture boundary test. This branch-only authoring evidence is not final acceptance evidence. The connected environment does not execute the Gradle wrapper locally, so no separate local command run is claimed.
+
+P7-T04 adds no public `World`/phase/system API, timing/fixed-step loop, concrete P7-T05 components, physics stepping/Jolt dependency, replication/network implementation, renderer/presentation implementation, platform input acquisition, event/query scheduler, prefab/scene/GUID behavior, production dependency, module edge, Gradle change, or lockfile change.
+
+Wiki impact: none — all P7-T04 types remain package-private and supported consumer API is unchanged.
+Sandbox impact: none — there is still no public world lifecycle through which the sandbox could exercise update phases honestly.
 Independent review: not performed in this connected session; no independent reviewer/provenance is available.
 
-Exact next action: finish P7-T03 / Issue #418 only, complete the final diff/self-review/consistency audit, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #418. Do not materialize P7-T04 before P7-T03 is accepted.
+Exact next action: finish P7-T04 / Issue #420 only, complete final diff/self-review/consistency audit, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #420. Do not materialize P7-T05 before P7-T04 is accepted.

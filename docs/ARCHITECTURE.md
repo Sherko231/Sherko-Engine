@@ -99,7 +99,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 through P6-T14 provide stable identity, strict source metadata, deterministic cooking/formats/dependencies, typed resource handles/fallbacks, asynchronous manifest-backed MESH/MATERIAL loading, and opt-in development MATERIAL hot reload; caches/reference counting and other runtime asset types remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
-| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; P7-T02 adds package-private packed one-type component storage keyed sparsely by entity index with exact-ID stale safety; P7-T03 adds package-private FIFO deferred entity/component structural commands with explicit flush; public world lifecycle, fixed update phases, concrete components, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
+| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; P7-T02 adds package-private packed one-type component storage keyed sparsely by entity index with exact-ID stale safety; P7-T03 adds package-private FIFO deferred entity/component structural commands with explicit flush; P7-T04 adds a package-private fixed seven-phase update pipeline with a structural-command flush after each successfully completed phase; public world lifecycle, concrete components, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
 | `engine-physics-jolt` | Jolt-backed physics adapter and ownership | Skeleton | `engine-core` |
 | `engine-audio-openal` | OpenAL-backed positional audio | Skeleton | `engine-core` |
 | `engine-network-api` | Transport-neutral session/message contracts | Skeleton | `engine-core` |
@@ -944,3 +944,17 @@ P7-T03 does not define automatic flush scheduling or a world update phase. P7-T0
 Durable decision impact: none — the active Issue bounds this internal FIFO/explicit-flush mechanism without establishing a broader public or cross-phase contract.
 Wiki impact: none — no supported public engine API or consumer-visible usage changes.
 Sandbox impact: none — there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.
+
+
+## Phase 7 fixed world update phases — P7-T04 / Issue #420
+
+`engine-world` adds package-private `WorldUpdatePhase` and `WorldUpdatePipeline` above the accepted P7-T03 deferred-command boundary. One already-scheduled world update invokes exactly one internal callback for each phase in fixed order: INPUT -> PRE_PHYSICS -> PHYSICS -> POST_PHYSICS -> GAMEPLAY -> REPLICATION_CAPTURE -> PRESENTATION_EXTRACTION. The pipeline is ordering/visibility infrastructure only; it owns no wall-clock timing, fixed-step accumulation, sleeping, render loop, physics step, replication codec, presentation extractor, system registry, or parallel job scheduling.
+
+After a phase callback returns successfully, the pipeline invokes the existing `DeferredStructuralCommandBuffer.flush()` before entering the next phase. Structural commands recorded in PRE_PHYSICS are therefore invisible within PRE_PHYSICS but visible to PHYSICS after the successful boundary; the same rule applies at every boundary, including a final flush after PRESENTATION_EXTRACTION. P7-T04 does not duplicate allocator, packed-store, or command-queue semantics.
+
+If a phase callback throws, the exception propagates, later phases do not run, and commands recorded by the failed callback are not auto-flushed. If a boundary flush throws, the exception propagates and later phases do not run; already-applied and still-queued work retains the accepted P7-T03 partial-failure semantics. Recursive update is rejected and the update guard is restored in `finally`. Access remains externally serialized and no concurrency guarantee is added.
+
+D-082 records the fixed order and successful-phase structural visibility boundary. No public `World`, public phase/system scheduler, concrete component set, physics/network/renderer/platform dependency, persistence/protocol behavior, project edge, or production dependency is introduced.
+
+Wiki impact: none — the phase vocabulary and pipeline are package-private implementation boundaries.
+Sandbox impact: none — there is no public world lifecycle through which the persistent sandbox could invoke the pipeline without pulling later Phase 7 work forward.

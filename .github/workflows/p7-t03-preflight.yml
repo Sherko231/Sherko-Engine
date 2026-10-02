@@ -32,6 +32,11 @@ jobs:
         shell: bash
         run: |
           python .github/scripts/p7_t03_doc_sync.py > /dev/null
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("docs/ARCHITECTURE.md")
+          path.write_text(path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
+          PY
           git diff --check
           changed="$(git diff --name-only -- docs/DEVELOPMENT_STATUS.md docs/ARCHITECTURE.md)"
           printf '%s\n' "$changed"

@@ -225,7 +225,7 @@ class PackedComponentStoreTest {
 
         assertThatThrownBy(() -> store.forEach((id, component) -> store.remove(id))).isInstanceOf(IllegalStateException.class).hasMessageContaining("during iteration");
         assertThatThrownBy(() -> store.forEach((id, component) -> store.add(third, new TestComponent("third")))).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("during iteration");
+        .hasMessageContaining("during iteration");
 
         assertThat(store.get(first)).isSameAs(firstComponent);
         assertThat(store.get(second)).isSameAs(secondComponent);
@@ -234,5 +234,6 @@ class PackedComponentStoreTest {
 
     }
 
-    private record TestComponent(String value) {}
+    private record TestComponent(String value) {
+    }
 }

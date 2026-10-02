@@ -20,14 +20,8 @@ class WorldUpdatePipelineTest {
 
         pipeline.update(visited::add);
 
-        assertThat(visited).containsExactly(
-            WorldUpdatePhase.INPUT,
-            WorldUpdatePhase.PRE_PHYSICS,
-            WorldUpdatePhase.PHYSICS,
-            WorldUpdatePhase.POST_PHYSICS,
-            WorldUpdatePhase.GAMEPLAY,
-            WorldUpdatePhase.REPLICATION_CAPTURE,
-            WorldUpdatePhase.PRESENTATION_EXTRACTION);
+        assertThat(visited).containsExactly(WorldUpdatePhase.INPUT, WorldUpdatePhase.PRE_PHYSICS, WorldUpdatePhase.PHYSICS, WorldUpdatePhase.POST_PHYSICS,
+            WorldUpdatePhase.GAMEPLAY, WorldUpdatePhase.REPLICATION_CAPTURE, WorldUpdatePhase.PRESENTATION_EXTRACTION);
 
     }
 
@@ -96,8 +90,7 @@ class WorldUpdatePipelineTest {
         commands.deferEntityDestruction(entity);
         flushingField.setBoolean(commands, true);
         try {
-            assertThatThrownBy(() -> pipeline.update(visited::add)).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already flushing");
+            assertThatThrownBy(() -> pipeline.update(visited::add)).isInstanceOf(IllegalStateException.class).hasMessageContaining("already flushing");
         } finally {
             flushingField.setBoolean(commands, false);
         }
@@ -127,14 +120,8 @@ class WorldUpdatePipelineTest {
         List<WorldUpdatePhase> retryVisited = new ArrayList<>();
         pipeline.update(retryVisited::add);
 
-        assertThat(retryVisited).containsExactly(
-            WorldUpdatePhase.INPUT,
-            WorldUpdatePhase.PRE_PHYSICS,
-            WorldUpdatePhase.PHYSICS,
-            WorldUpdatePhase.POST_PHYSICS,
-            WorldUpdatePhase.GAMEPLAY,
-            WorldUpdatePhase.REPLICATION_CAPTURE,
-            WorldUpdatePhase.PRESENTATION_EXTRACTION);
+        assertThat(retryVisited).containsExactly(WorldUpdatePhase.INPUT, WorldUpdatePhase.PRE_PHYSICS, WorldUpdatePhase.PHYSICS, WorldUpdatePhase.POST_PHYSICS,
+            WorldUpdatePhase.GAMEPLAY, WorldUpdatePhase.REPLICATION_CAPTURE, WorldUpdatePhase.PRESENTATION_EXTRACTION);
 
     }
 
@@ -145,10 +132,8 @@ class WorldUpdatePipelineTest {
         DeferredStructuralCommandBuffer commands = new DeferredStructuralCommandBuffer(allocator);
         WorldUpdatePipeline pipeline = new WorldUpdatePipeline(commands);
 
-        assertThatThrownBy(() -> new WorldUpdatePipeline(null)).isInstanceOf(NullPointerException.class)
-            .hasMessageContaining("commands");
-        assertThatThrownBy(() -> pipeline.update(null)).isInstanceOf(NullPointerException.class)
-            .hasMessageContaining("callback");
+        assertThatThrownBy(() -> new WorldUpdatePipeline(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("commands");
+        assertThatThrownBy(() -> pipeline.update(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("callback");
 
     }
 
@@ -157,7 +142,9 @@ class WorldUpdatePipelineTest {
 
     private static final class TestFailure extends RuntimeException {
         private TestFailure(String message) {
+
             super(message);
+
         }
     }
 }

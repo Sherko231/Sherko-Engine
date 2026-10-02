@@ -976,3 +976,19 @@ D-083 records the stable component-data/reference policy. P7-T05 deliberately de
 
 Wiki impact: yes — the supported component APIs and their current integration limits are documented under `wiki/WORLD/COMPONENTS.md`, the API index, navigation, and limitations guide.
 Sandbox impact: none — the public values cannot yet drive an honest sandbox world feature without later public world lifecycle and renderer/audio integration boundaries.
+
+
+## Phase 7 stable authoring entity GUIDs — P7-T06 / Issue #424
+
+`engine-world` exposes immutable `com.samo.engine.world.api.EntityGuid` as the stable 128-bit identity of one authored logical entity. Its two `long` components are the complete value; `generate()` uses the JDK UUID generator, `parse(String)` accepts only canonical lowercase 8-4-4-4-12 hexadecimal UUID text, and `toString()` emits that canonical form. All bit patterns are valid and there is no sentinel GUID.
+
+`EntityGuid` and `EntityId` have deliberately different lifetimes. `EntityGuid` is stable authoring/persistence identity. `EntityId(index,generation)` remains a transient runtime handle whose slot may be reused only under P7-T01 generation safety; it is not persisted and is not network/replication identity.
+
+Package-private `EntityGuidIndex` is the bounded runtime resolution boundary for the current internal world foundation. One index is tied to one `EntityIdAllocator` and keeps a one-to-one mapping between stable GUIDs and currently live exact runtime IDs. Binding requires a live ID; duplicate GUID or runtime-ID bindings fail without replacing the existing pair. Resolve/reverse lookup validate allocator liveness, dead mappings are removed safely, and exact stale unbind cannot remove a replacement generation's binding.
+
+The acceptance test uses an in-memory save-like record containing canonical GUID text only. It destroys the first runtime entities, reloads them in an order that changes their generational runtime IDs, rebinds the parsed stable GUIDs, and proves the saved cross-entity GUID resolves to the new target runtime ID rather than the old handle. This establishes the P7-T06 identity boundary without defining a production persistence document.
+
+D-084 records the durable identity policy. P7-T07 still owns schema versioning, scene JSON fields, entity/parent GUID representation, component objects, parsing, saving, and semantic load-save-load behavior. P7-T06 adds no public `World`, allocator/store/query API, prefab behavior, replication identity, renderer/audio/physics integration, project edge, production dependency, or lockfile change.
+
+Wiki impact: yes — public identity guidance distinguishes stable authored `EntityGuid` values from transient runtime `EntityId` values.
+Sandbox impact: none — there is no public entity lifecycle or public GUID binding/resolution boundary to exercise without pulling P7-T07+ work forward.

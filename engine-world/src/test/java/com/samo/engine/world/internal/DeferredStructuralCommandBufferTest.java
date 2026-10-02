@@ -31,7 +31,7 @@ class DeferredStructuralCommandBufferTest {
         store.forEach((id, component) -> {
             visited.add(id);
             if (id.equals(destroyed)) {
-                commands.destroyEntity(id);
+                commands.deferEntityDestruction(id);
                 assertThat(allocator.isAlive(destroyed)).isTrue();
                 assertThat(store.get(destroyed)).isSameAs(destroyedComponent);
             }
@@ -64,9 +64,9 @@ class DeferredStructuralCommandBufferTest {
         EntityId wrongGeneration = new EntityId(replacement.index(), replacement.generation() + 1);
         EntityId unknown = new EntityId(99, 0);
 
-        commands.destroyEntity(original);
-        commands.destroyEntity(wrongGeneration);
-        commands.destroyEntity(unknown);
+        commands.deferEntityDestruction(original);
+        commands.deferEntityDestruction(wrongGeneration);
+        commands.deferEntityDestruction(unknown);
         commands.flush();
 
         assertThat(allocator.isAlive(replacement)).isTrue();
@@ -79,7 +79,7 @@ class DeferredStructuralCommandBufferTest {
         EntityIdAllocator allocator = new EntityIdAllocator();
         DeferredStructuralCommandBuffer commands = new DeferredStructuralCommandBuffer(allocator);
 
-        DeferredStructuralCommandBuffer.PendingEntityCreation pending = commands.createEntity();
+        DeferredStructuralCommandBuffer.PendingEntityCreation pending = commands.deferEntityCreation();
         assertThatThrownBy(pending::resolvedId).isInstanceOf(IllegalStateException.class).hasMessageContaining("has not been flushed");
 
         EntityId immediate = allocator.create();
@@ -111,7 +111,7 @@ class DeferredStructuralCommandBufferTest {
         assertThat(store.add(iterated, new TestComponent("iterated"))).isTrue();
 
         store.forEach((id, component) -> {
-            commands.addComponent(store, target, targetComponent);
+            commands.deferComponentAdd(store, target, targetComponent);
             assertThat(store.get(target)).isNull();
         });
 
@@ -136,7 +136,7 @@ class DeferredStructuralCommandBufferTest {
 
         store.forEach((id, component) -> {
             if (id.equals(removed)) {
-                commands.removeComponent(store, removed);
+                commands.deferComponentRemoval(store, removed);
                 assertThat(store.get(removed)).isSameAs(removedComponent);
             }
         });
@@ -158,13 +158,13 @@ class DeferredStructuralCommandBufferTest {
         TestComponent first = new TestComponent("first");
         TestComponent second = new TestComponent("second");
 
-        commands.addComponent(store, entity, first);
-        commands.removeComponent(store, entity);
+        commands.deferComponentAdd(store, entity, first);
+        commands.deferComponentRemoval(store, entity);
         commands.flush();
         assertThat(store.get(entity)).isNull();
 
-        commands.removeComponent(store, entity);
-        commands.addComponent(store, entity, second);
+        commands.deferComponentRemoval(store, entity);
+        commands.deferComponentAdd(store, entity, second);
         commands.flush();
         assertThat(store.get(entity)).isSameAs(second);
 
@@ -197,9 +197,9 @@ class DeferredStructuralCommandBufferTest {
         TestComponent original = new TestComponent("original");
 
         assertThat(store.add(iterated, original)).isTrue();
-        commands.destroyEntity(appliedBeforeFailure);
-        commands.addComponent(store, iterated, new TestComponent("cannot-add-during-iteration"));
-        commands.destroyEntity(deferredTail);
+        commands.deferEntityDestruction(appliedBeforeFailure);
+        commands.deferComponentAdd(store, iterated, new TestComponent("cannot-add-during-iteration"));
+        commands.deferEntityDestruction(deferredTail);
 
         assertThatThrownBy(() -> store.forEach((id, component) -> commands.flush())).isInstanceOf(IllegalStateException.class).hasMessageContaining("during iteration");
 
@@ -227,10 +227,10 @@ class DeferredStructuralCommandBufferTest {
 
         try {
             assertThatThrownBy(commands::flush).isInstanceOf(IllegalStateException.class).hasMessageContaining("already flushing");
-            assertThatThrownBy(commands::createEntity).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
-            assertThatThrownBy(() -> commands.destroyEntity(entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
-            assertThatThrownBy(() -> commands.addComponent(store, entity, new TestComponent("value"))).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
-            assertThatThrownBy(() -> commands.removeComponent(store, entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
+            assertThatThrownBy(commands::deferEntityCreation).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
+            assertThatThrownBy(() -> commands.deferEntityDestruction(entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
+            assertThatThrownBy(() -> commands.deferComponentAdd(store, entity, new TestComponent("value"))).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
+            assertThatThrownBy(() -> commands.deferComponentRemoval(store, entity)).isInstanceOf(IllegalStateException.class).hasMessageContaining("during flush");
         } finally {
             flushingField.setBoolean(commands, false);
         }
@@ -246,12 +246,12 @@ class DeferredStructuralCommandBufferTest {
         EntityId entity = allocator.create();
 
         assertThatThrownBy(() -> new DeferredStructuralCommandBuffer(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("allocator");
-        assertThatThrownBy(() -> commands.destroyEntity(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
-        assertThatThrownBy(() -> commands.addComponent(null, entity, new TestComponent("value"))).isInstanceOf(NullPointerException.class).hasMessageContaining("store");
-        assertThatThrownBy(() -> commands.addComponent(store, null, new TestComponent("value"))).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
-        assertThatThrownBy(() -> commands.addComponent(store, entity, null)).isInstanceOf(NullPointerException.class).hasMessageContaining("component");
-        assertThatThrownBy(() -> commands.removeComponent(null, entity)).isInstanceOf(NullPointerException.class).hasMessageContaining("store");
-        assertThatThrownBy(() -> commands.removeComponent(store, null)).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
+        assertThatThrownBy(() -> commands.deferEntityDestruction(null)).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
+        assertThatThrownBy(() -> commands.deferComponentAdd(null, entity, new TestComponent("value"))).isInstanceOf(NullPointerException.class).hasMessageContaining("store");
+        assertThatThrownBy(() -> commands.deferComponentAdd(store, null, new TestComponent("value"))).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
+        assertThatThrownBy(() -> commands.deferComponentAdd(store, entity, null)).isInstanceOf(NullPointerException.class).hasMessageContaining("component");
+        assertThatThrownBy(() -> commands.deferComponentRemoval(null, entity)).isInstanceOf(NullPointerException.class).hasMessageContaining("store");
+        assertThatThrownBy(() -> commands.deferComponentRemoval(store, null)).isInstanceOf(NullPointerException.class).hasMessageContaining("id");
 
     }
 

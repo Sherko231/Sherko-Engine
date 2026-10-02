@@ -992,3 +992,17 @@ D-084 records the durable identity policy. P7-T07 still owns schema versioning, 
 
 Wiki impact: yes — public identity guidance distinguishes stable authored `EntityGuid` values from transient runtime `EntityId` values.
 Sandbox impact: none — there is no public entity lifecycle or public GUID binding/resolution boundary to exercise without pulling P7-T07+ work forward.
+
+
+## Phase 7 versioned scene JSON document — P7-T07 / Issue #426
+
+`engine-world` now contains a package-private schema-v1 scene persistence boundary. `SceneDocument` preserves entity authoring order; each `SceneEntityDocument` carries a stable `EntityGuid`, nullable stable parent GUID, and optional values for exactly the five accepted P7-T05 components. The document validates GUID uniqueness plus parent target existence/self/cycle safety before becoming usable.
+
+`SceneJsonCodec` is an internal explicit tree codec rather than Jackson reflection over public component classes. It rejects duplicate object fields, unknown root/entity/component fields, unknown component names, missing/wrong schema versions, malformed shapes/identities/numbers, and invalid component values. Jackson types do not appear in supported public signatures. The writer emits deterministic known-field order and canonical GUID/AssetId text; textual byte equality is not a contract, while load-save-load semantic equality is.
+
+Transform persistence is local D-041 data: position meters, quaternion XYZW, and dimensionless scale. Load construction delegates canonical transform validation/normalization to the existing `TransformComponent`/`Transform` semantics and performs no handedness, axis, or unit conversion. Camera fields remain D-045 vertical FOV radians with near/far meters; aspect and pose are not duplicated. Mesh/material/audio references persist stable `AssetId` text and never resource handles/backend/native objects or paths.
+
+The task activates the already-selected Jackson 2.21.2 databind dependency directly in `engine-world`; no project edge or dependency family/version changes. D-085 records the persisted-format contract. P7-T08 retains the future unknown required-versus-optional/editor-data policy, and P7-T11 retains runtime world activation. No public `World`, public scene codec, prefab behavior, renderer/audio/physics/network integration, or concurrency contract is introduced.
+
+Wiki impact: yes — persisted scene schema v1 is documented under `wiki/WORLD/SCENES.md` while clearly identifying the package-private codec/runtime-activation limitation.
+Sandbox impact: none — no public scene/world activation boundary exists to drive the persistent sandbox honestly.

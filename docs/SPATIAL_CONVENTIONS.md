@@ -123,6 +123,19 @@ Quaternion quantization:
 
 These semantics are value-level only. The caller still decides whether the values represent local, world, or origin-relative transforms under a future replication/storage contract. P4-T09 defines no byte order, packet field order, protocol version, entity/tick IDs, delta compression, transport, authority, or scale quantization.
 
+## Scene JSON spatial serialization
+
+D-085 / P7-T07 persists scene transform and camera values directly in canonical engine semantics:
+
+- transform position is local D-041 meters in +X right, +Y up, -Z forward engine space;
+- transform rotation is local quaternion XYZW and is normalized through the canonical `Transform` contract when loaded;
+- transform scale is local dimensionless XYZ;
+- camera vertical FOV is radians;
+- camera near/far planes are meters with the existing D-045 finite ordering rules;
+- scene JSON performs no handedness, axis, unit, Euler, matrix, or external-format conversion.
+
+`parentGuid` records authored hierarchy identity only. P7-T07 does not compute or persist world matrices and does not call `Transform.setParent(...)`; runtime hierarchy activation remains later world-loading work. Asset IDs and entity GUIDs are identity domains, not spatial quantities.
+
 ## Boundary conversion rule
 
 External systems may use different coordinate or unit conventions. Conversion belongs at the boundary that owns that external system.
@@ -164,13 +177,14 @@ Any future task that defines or implements one of the following must treat this 
 - spatial audio positions/directions;
 - asset conversion into cooked runtime data;
 - world-space geometry primitives;
-- transform replication/quantization and any packet/adaptor wrapping D-047 values.
+- transform replication/quantization and any packet/adaptor wrapping D-047 values;
+- scene transform/camera persistence and any later scene import/export adapter.
 
 Future renderer, physics, and asset-conversion tests must cite the canonical conventions once those production paths exist. P4-T01/P4-T07/P4-T08/P4-T09 do not fabricate those implementations merely to satisfy forward-looking acceptance statements.
 
 ## Decision authority
 
-D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, and D-047 records transform value quantization in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.
+D-041 records canonical world space, D-045 records the camera view/projection convention, D-046 records the screen-to-world mapping, D-047 records transform value quantization, and D-085 records scene JSON spatial serialization in `docs/DECISIONS.md`. `ENGINE_SCOPE.md` remains authoritative for product boundaries and technology choices; this document defines accepted spatial semantics within that scope.
 
 
 ## glTF / Assimp mesh import conversion

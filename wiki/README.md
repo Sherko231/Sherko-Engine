@@ -15,6 +15,7 @@ Use it when you want to answer questions such as:
 - How does the fixed-step timing foundation work?
 - How does orderly fatal shutdown work?
 - How do I construct the core world components entirely from data?
+- What does the current version-1 scene JSON persistence contract store?
 - Which APIs are production-ready today, and which features are still planned?
 
 ## Start here
@@ -41,8 +42,9 @@ Use it when you want to answer questions such as:
 20. [Runtime mesh loading](ASSETS/RUNTIME_LOADING.md)
 21. [Entity identities](WORLD/ENTITY_IDS.md)
 22. [World components](WORLD/COMPONENTS.md)
-23. [Current limitations](LIMITATIONS.md)
-24. [How this wiki must be maintained](MAINTENANCE.md)
+23. [Scene persistence format](WORLD/SCENES.md)
+24. [Current limitations](LIMITATIONS.md)
+25. [How this wiki must be maintained](MAINTENANCE.md)
 
 ## What this wiki is
 

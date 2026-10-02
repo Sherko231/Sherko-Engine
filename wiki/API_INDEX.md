@@ -175,12 +175,19 @@ Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_MET
 | Type | Purpose |
 | --- | --- |
 | `EntityId` | Immutable generational world-entity identity containing a non-negative reusable index plus non-negative generation. |
+| `TransformComponent` | Mutable spatial component that owns one canonical `engine-core Transform` created from explicit local position/quaternion/scale data. |
+| `NameComponent` | Immutable nonblank human-readable entity name preserving accepted text exactly. |
+| `MeshRendererComponent` | Immutable stable mesh/material `AssetId` references; it does not load or submit renderer resources. |
+| `CameraComponent` | Immutable vertical-FOV/near/far perspective configuration; pose comes from transform and framebuffer aspect stays runtime-owned. |
+| `AudioEmitterComponent` | Immutable stable audio `AssetId` reference; it does not load, play, or own backend audio state. |
 
-`EntityId` is the complete identity pair; callers must not compare or retain only the index. P7-T01 keeps allocation, destruction, liveness tracking, index reuse, and generation retirement inside `engine-world` rather than freezing a public world-management API early. Any later reuse of an internal slot returns its index with the previous generation plus one, and generation wraparound is forbidden: a slot destroyed at `Integer.MAX_VALUE` generation is retired rather than returning to generation zero.
+`EntityId` is the complete identity pair; callers must not compare or retain only the index. P7-T01 keeps allocation, destruction, liveness tracking, index reuse, and generation retirement inside `engine-world` rather than freezing a public world-management API early. Any later reuse of an internal slot returns its index with the previous generation plus one, and generation wraparound is forbidden: a slot destroyed at `Integer.MAX_VALUE` generation is retired permanently.
 
-P7-T01 does not define a public `World`, component store, structural-command API, prefab/scene lifecycle, persistence format, packet/network identity, or concurrency policy.
+P7-T05 component construction is data-only. `TransformComponent` creates and owns a fresh canonical `Transform`; mesh/material/audio references are stable path-independent `AssetId` values rather than loaded `ResourceHandle` or backend/native identifiers. `CameraComponent` stores only projection values independent of framebuffer aspect. These component values do not perform I/O and do not imply that world-to-renderer or runtime-audio integration exists.
 
-Usage: [Entity identities](WORLD/ENTITY_IDS.md).
+There is still no public `World`, entity allocator, component store/query API, deferred structural-command API, scene JSON/schema/parser, prefab lifecycle, GUID/persistence contract, renderer extraction bridge, audio playback bridge, replication identity, or entity serialization contract. P7-T07 still owns the first planned scene JSON format.
+
+Usage: [Entity identities](WORLD/ENTITY_IDS.md) and [World components](WORLD/COMPONENTS.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 

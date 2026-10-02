@@ -15,7 +15,7 @@ This document describes intended module responsibilities and the architecture ac
 
 The repository has a working Java 25 multi-project build with 17 declared Gradle subprojects: the 16 production-target engine/game/support modules defined by `ENGINE_SCOPE.md`, plus the experimental `feasibility-spikes` subproject. `engine-core` implements the shared lifecycle, dependency-ordering/startup-rollback, timing, configuration, native-resource diagnostics, structured logging, fatal-termination foundation, P3-T09 device-neutral tick-command/replay contract, P3-T10 deterministic input-response settings, P4-T02 JOML math dependency/allocation evidence, and P4-T03 cached hierarchical `Transform` under D-041/D-042. `engine-platform-lwjgl` contains the P3-T01 production `GlfwWindow` lifecycle boundary, P3-T02 renderer-neutral logical-window/framebuffer-size delivery, P3-T03 in-place windowed/borderless/exclusive primary-monitor mode transitions, P3-T04 focus-loss-safe cursor capture plus bounded held-key/button safety state, P3-T05 raw/fallback relative mouse acquisition, P3-T06 public immutable renderer-frame `InputSnapshot`, P3-T07 immutable data-driven gameplay action-binding metadata/strict JSON loader, P3-T08 caller-owned renderer-frame action evaluator, P3-T09 renderer-frame-to-tick `PlayerInputCommandSampler`, and P3-T10 response-aware mouse-delta evaluation over the selected LWJGL 3.4.3 GLFW/OpenGL stack. P2-T11 and Issue #135 remain test/evidence-only paths. `engine-render-opengl` now contains the P5-T03 through P5-T12 renderer foundation, including the bounded public `OpenGlRenderer`, explicit D-056 sRGB color path, internal material/state policy, immutable public frame-submission snapshots, bounded CPU frustum culling over accepted P4 geometry, and deterministic renderer-owned draw ordering; other not-yet-implemented engine subsystems remain skeletons. `game-sandbox` owns the persistent cumulative owner-facing playground introduced by P3-T04A and reshaped by Issue #165; it keeps the public renderer together with window/input/timing/action/tick-command capabilities live through non-exported platform/renderer runtime composition, with owner-controlled window mode, cursor capture, mouse sensitivity, and mouse-Y inversion. `game-client` and `game-server` provide minimal executable composition roots for the foundation state.
 
-## Phase 5R public/internal boundary audit — P5R-T02 / Issue #262
+## Phase 5R public/internal boundary audit â€” P5R-T02 / Issue #262
 
 The accepted P1-P5 consumer boundary is package- and contract-based, not equivalent to every Java `public` declaration in the repository. Supported engine-consumer packages are `com.samo.engine.core.api`, `com.samo.engine.platform.api`, and `com.samo.engine.render.api`. `config/architecture/module-boundaries.properties` plus D-016 source checks prevent in-repository cross-module Java references outside a target module's declared API root. The renderer adds D-055 artifact-level separation: its compile artifact contains only `com.samo.engine.render.api`, while runtime resolution retains implementation classes/resources.
 
@@ -25,19 +25,19 @@ P5R-T03 through P5R-T05 must preserve `GlfwWindow` as the public platform facade
 
 The complete type/consumer-role map and later-task deferrals are recorded in `docs/refactor/BOUNDARY_AUDIT.md`. This audit documents existing D-016/D-055 architecture and current source state; it introduces no new dependency/module edge, public contract, visibility rule, or durable decision.
 
-## Phase 5R GLFW native backend decomposition — P5R-T03 / Issue #263
+## Phase 5R GLFW native backend decomposition â€” P5R-T03 / Issue #263
 
 The accepted P5R-T03 implementation keeps `com.samo.engine.platform.api.GlfwWindow` as the public platform facade while extracting its native test/adapter plumbing into package-private top-level collaborators in the same package. `GlfwNativeBackend` is the replaceable deterministic-test/native-operation boundary; `LwjglGlfwNativeBackend` is the production LWJGL/GLFW/OpenGL adapter. Responsibility-specific callback registration records and event-sink interfaces carry error, size, input, cursor-position, and OpenGL-debug callback ownership without becoming public API.
 
 The extraction deliberately leaves input/focus/cursor state in `GlfwWindow` for P5R-T04 and window-mode/size transition model responsibilities in `GlfwWindow` for P5R-T05. It also deliberately avoids moving the helpers to `com.samo.engine.platform.lwjgl.internal` in this task, because doing so would either widen visibility or require additional facade/package restructuring; stable package reorganization remains P5R-T23 work. Public `GlfwWindow` constructors/methods, native ownership/cleanup order, thread-affinity, callback semantics, input vocabulary, window-mode behavior, and module edges remain unchanged.
 
-## Phase 5R GLFW input/focus/cursor decomposition — P5R-T04 / Issue #264
+## Phase 5R GLFW input/focus/cursor decomposition â€” P5R-T04 / Issue #264
 
 The accepted P5R-T04 implementation keeps `GlfwWindow` as the public lifecycle/thread-affinity facade while extracting three package-private responsibility owners in `com.samo.engine.platform.api`. `GlfwInputState` owns the current focus flag, GLFW keyboard/mouse held state, frame press/release edges, focus-loss release synthesis, GLFW-to-engine input mapping, and immutable `InputSnapshot` edge consumption. `GlfwMouseMotionTracker` owns the cursor-position baseline and accumulated relative delta. `GlfwCursorCaptureController` owns requested/effective capture, explicit-rearm state, retryable cursor normalization, raw-motion selection, rollback, focus-loss release, and cleanup retry state.
 
 The facade still installs/releases the accepted T03 native callbacks, enforces owner-thread/lifecycle preconditions, stages callback-side failures for `pollEvents()`, and orchestrates these collaborators. Focus regain does not recapture automatically; failed raw-disable or cursor-normalization work remains retryable through explicit release/stop/close. Public input types/signatures and P5R-T05 logical/framebuffer/window-mode/restore/monitor/transition responsibilities remain unchanged. No helper is public and no package/module/dependency edge changes.
 
-## Phase 5R GLFW window-mode/size decomposition — P5R-T05 / Issue #265
+## Phase 5R GLFW window-mode/size decomposition â€” P5R-T05 / Issue #265
 
 The accepted P5R-T05 implementation keeps `GlfwWindow` as the public lifecycle/thread-affinity facade while extracting the remaining Phase 3 window-mode and size-delivery state into package-private collaborators in `com.samo.engine.platform.api`. `GlfwWindowModeController` owns current mode, captured windowed restore geometry, primary-monitor/current-video-mode targeting, transition-plan construction, native transition application, successful state commit, and the existing single best-effort rollback with distinct-failure suppression. `GlfwDeferredSizeDelivery` owns independent logical/framebuffer staging, latest-value coalescing, negative-dimension validation, logical-before-framebuffer post-poll delivery, and lifecycle clearing.
 
@@ -45,14 +45,14 @@ The former nested `Dimensions`, `Position`, `VideoMode`, `WindowGeometry`, `Moni
 
 `GlfwWindow.setWindowMode(...)` still performs null, lifecycle, and owner-thread checks before delegating. Same-mode requests remain no-ops; direct borderless/exclusive switches preserve the original windowed restore geometry; returning to windowed restores and clears it; transition failures retain the original throwable and make one rollback attempt. Size callbacks still stage only, and public size-listener delivery remains after native polling returns. Accepted T04 input/focus/cursor collaborators are unchanged. No helper/value type is public and no package/module/dependency edge changes.
 
-## Phase 5R input-binding loading/parsing/validation decomposition — P5R-T06 / Issue #266
+## Phase 5R input-binding loading/parsing/validation decomposition â€” P5R-T06 / Issue #266
 
 The accepted P5R-T06 implementation preserves the public `InputActionBindings`, `InputBinding`, `InputBindingLoadException`, action/component/value/control vocabulary, and strict schema-v1 contract while separating three package-private responsibilities in `com.samo.engine.platform.api`. `InputActionBindingsLoader` owns readable-regular-file checks, UTF-8 reader lifetime, and I/O-to-load-exception wrapping. `InputActionBindingsJsonParser` owns Jackson strict duplicate-field parsing, schema shape/version checks, field/control decoding, numeric scale validation, document-level duplicate detection, and path/context diagnostics. `InputActionBindingsValidator` owns complete-set domain validation plus defensive immutable copying and supplies the shared action/component compatibility check.
 
 The split preserves the existing failure precedence and text for accepted P3-T07 scenarios: malformed/duplicate JSON object fields still fail as read/parse errors; schema/type/enum/context failures remain `InputBindingLoadException`; public-constructor programmer errors remain `IllegalArgumentException` or `NullPointerException` with the existing messages. The committed v1 fixture, Jackson version, Gradle/lockfiles, public signatures, evaluator/sampler behavior, module edges, wiki usage, and sandbox behavior remain unchanged. No package reorganization occurs; T23 remains the package-grouping task.
 
 
-## Phase 5R core lifecycle naming normalization — P5R-T07 / Issue #267
+## Phase 5R core lifecycle naming normalization â€” P5R-T07 / Issue #267
 
 The accepted P5R-T07 implementation changes only two supported public type names under D-066: `SubsystemStartupCoordinator` names the stateless coordinator that starts an already-resolved dependency-first subsystem order and rolls back partial startup, while `FatalTerminationCoordinator` names the one-shot synchronous fatal-shutdown coordinator. The public operations remain `start(...)` and `terminate(...)`; D-020 and D-029 ordering, ownership, failure identity/suppression, cleanup/reporting/flush sequence, and exit status remain unchanged.
 
@@ -117,12 +117,12 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 P5-T13 / D-061 adds exactly one renderer-owned unshadowed directional light without changing the public renderer boundary. Package-internal `DirectionalLight` stores normalized D-041 world-space ray-travel direction, linear RGB color, and bounded SDR intensity. The fixed reference vertex stream now contains +Z normals, and the P5 shader computes Lambert diffuse as `max(dot(normal, -direction), 0)` in linear space before the accepted D-056 presentation encode. The same light applies to the existing opaque baseline and transparent tinted material submissions after P5-T11 culling/P5-T12 ordering. No new native resource is owned, no project or production dependency is added, and `OpenGlRenderer` / `RenderFramePacket` remain unchanged. Public light submission, world/ECS ownership, local lights, shadows, PBR/IBL, HDR/tonemapping, and fog remain outside this bounded path.
 
 
-P5-T14 / D-062 adds the first public local-light renderer submission boundary while keeping ownership outside world/ECS. `RenderPointLight` and `RenderSpotLight` are immutable public render values using D-041 meters/radians and linear bounded color/intensity. `RenderFramePacket` snapshots their ordered list defensively and retains its prior empty-light constructor. `OpenGlRenderer` adds a creation overload with caller-provided `EngineLogger` and configured maximum 1–8; the compatibility creation path uses the fixed ceiling of eight and emits overflow warnings to stderr. The renderer deterministically accepts the first N local lights and packs them into an independent fixed-capacity std140 `LocalLightBlock` at binding 2: position/range, normalized direction/type, linear color/intensity, cone cosines, and count. Point and spot Lambert/range/cone contributions are accumulated with D-061 directional light in linear space and the bounded SDR illumination vector is clamped before the existing D-056 single presentation encode. The new buffer is explicitly owned/closed with the existing renderer resources. No new project edge, production dependency, asset identity, world/ECS light component, shadows, clustered/Forward+, PBR/IBL, HDR/tonemapping, or fog is added.
+P5-T14 / D-062 adds the first public local-light renderer submission boundary while keeping ownership outside world/ECS. `RenderPointLight` and `RenderSpotLight` are immutable public render values using D-041 meters/radians and linear bounded color/intensity. `RenderFramePacket` snapshots their ordered list defensively and retains its prior empty-light constructor. `OpenGlRenderer` adds a creation overload with caller-provided `EngineLogger` and configured maximum 1â€“8; the compatibility creation path uses the fixed ceiling of eight and emits overflow warnings to stderr. The renderer deterministically accepts the first N local lights and packs them into an independent fixed-capacity std140 `LocalLightBlock` at binding 2: position/range, normalized direction/type, linear color/intensity, cone cosines, and count. Point and spot Lambert/range/cone contributions are accumulated with D-061 directional light in linear space and the bounded SDR illumination vector is clamped before the existing D-056 single presentation encode. The new buffer is explicitly owned/closed with the existing renderer resources. No new project edge, production dependency, asset identity, world/ECS light component, shadows, clustered/Forward+, PBR/IBL, HDR/tonemapping, or fog is added.
 
 
 
 
-## Phase 5R uniform/color/presentation naming normalization — P5R-T13 / Issue #273
+## Phase 5R uniform/color/presentation naming normalization â€” P5R-T13 / Issue #273
 
 The accepted T13 implementation applies only three justified package-private Java type renames: `CameraMatricesUniformBlock` names the view/projection std140 packer precisely, `FramebufferMetricsUniformBlock` names the width/height/inverse-metrics packer instead of implying general per-frame state, and `SrgbPresentationMode` names the bounded hardware-vs-manual sRGB presentation dimension explicitly.
 
@@ -178,7 +178,7 @@ The client will compose platform/input, OpenGL rendering, runtime UI, audio, wor
 
 P1-T09 establishes only the runnable composition roots and their Gradle tasks. The current client entry point intentionally does not yet instantiate `GlfwWindow`; P3-T01 defines the reusable production platform ownership boundary first, P3-T02 adds bounded size-event/polling, P3-T03 adds display-mode transitions, P3-T04 adds focus-loss/cursor-capture safety, P3-T05 adds relative mouse acquisition, P3-T06 adds the public renderer-frame hardware snapshot boundary, P3-T07 adds configuration-time data-driven action-binding metadata/loading, P3-T08 adds caller-owned renderer-frame action aggregation/transitions, P3-T09 adds the separate tick-aligned device-neutral `PlayerInputCommand`/replay boundary, and P3-T10 applies deterministic response policy before renderer-frame action values reach that tick bridge. P3-T04A originally composed those public platform capabilities in a scripted owner-facing demo; Issue #165 supersedes that presentation model with the persistent `SandboxMain` playground while preserving the same public boundaries and non-exported platform runtime. Later composition work decides when the real client owns the platform subsystem. `game-server` additionally verifies that its runtime classpath contains no platform, renderer, audio, GLFW, OpenGL, or OpenAL dependencies.
 
-## Canonical spatial convention — P4-T01 / Issue #94
+## Canonical spatial convention â€” P4-T01 / Issue #94
 
 D-041 establishes one repository-wide world-space contract before transform, camera, renderer, physics, audio, asset-conversion, or network-spatial implementation begins. The normative document is [`SPATIAL_CONVENTIONS.md`](SPATIAL_CONVENTIONS.md).
 
@@ -188,7 +188,7 @@ External libraries and authoring formats do not redefine this basis. Their adapt
 
 P4-T01 is deliberately documentation-only. It does not select projection/NDC depth convention, reversed-Z, FOV/near/far policy, Euler storage/order, quaternion canonical sign, glTF/Jolt/OpenAL conversion details, or network quantization. Those remain bounded later tasks. Future renderer, physics, and asset-conversion tests must cite the canonical document when those production paths exist; P4-T01 does not fabricate those implementations merely to create evidence early.
 
-## JOML allocation and cached hierarchical transforms — P4-T02/P4-T03
+## JOML allocation and cached hierarchical transforms â€” P4-T02/P4-T03
 
 P4-T02 / Issue #95 establishes JOML 1.10.9 as the concrete `engine-core` math library and verifies the Phase 4 hot-loop policy with a test-only preallocated mutable vector/quaternion/matrix workload. Its Java 25 `ThreadMXBean` acceptance windows require repeated zero-byte current-thread allocation deltas after warm-up while an escaping control must report positive allocation. This is bounded HotSpot/Temurin evidence and does not replace P2-T11 sampled profiling or claim mathematical zero allocation across all JVMs.
 
@@ -200,7 +200,7 @@ Local position/rotation/scale mutation explicitly marks the changed transform an
 
 P4-T04 added synchronous cycle rejection to `Transform.setParent(...)`: self-parenting and indirect descendant cycles are rejected before hierarchy mutation, while same-parent no-op, detach, unrelated-parent reparenting, and legal reparenting to an existing ancestor remain valid. Zero and negative scale are allowed because the current transform contract defines forward composition only; inverse/decomposition semantics remain future work. `Transform` is mutable and externally serialized and makes no concurrent mutation/read guarantee.
 
-## Single-subsystem lifecycle — P2-T01 / Issue #64
+## Single-subsystem lifecycle â€” P2-T01 / Issue #64
 
 `com.samo.engine.core.api.EngineSubsystem` is an abstract `AutoCloseable` base class in `engine-core`. Final public `initialize`, `start`, `stop`, and `close` methods enforce ordering around protected `onInitialize`, `onStart`, `onStop`, and `onClose` hooks. No dependency or native library is added.
 
@@ -218,7 +218,7 @@ An unchecked initialize/start/stop failure propagates unchanged and leaves FAILE
 
 Each instance has one lifetime, with no restart promise. This does not establish whether a native process-global subsystem supports reinitialization; P0-T14 remains the evidence gate. A successful running instance requires explicit stop before close. Client/server composition roots do not yet instantiate a subsystem.
 
-## Subsystem dependency ordering — P2-T02 / Issue #72
+## Subsystem dependency ordering â€” P2-T02 / Issue #72
 
 `com.samo.engine.core.api.SubsystemGraph` snapshots a list of nested `Registration` records: an exact case-sensitive nonblank ID, an `EngineSubsystem` reference, and ordered prerequisite IDs. Lists are defensively copied. The constructor rejects duplicate IDs, repeated subsystem instances by identity, and missing dependencies after indexing the full list; forward references are valid. A registration rejects null/blank IDs and duplicate prerequisite IDs.
 
@@ -228,7 +228,7 @@ A cycle anywhere, including a self-cycle or later disconnected component, fails 
 
 The graph never calls lifecycle methods, checks subsystem state, owns resources, or performs cleanup. The caller must resolve the entire graph before invoking any hooks and retains explicit lifecycle ownership under D-018. Structural immutability does not make the referenced subsystems immutable. Synthetic composition tests exercise the real lifecycle guards but do not by themselves satisfy D-030's 60-second integrated Phase 2 gate or prove native safety.
 
-## Coordinated startup rollback — P2-T03 / Issue #73
+## Coordinated startup rollback â€” P2-T03 / Issue #73
 
 `com.samo.engine.core.api.SubsystemStartupCoordinator` is a stateless utility above D-018 and D-019. It accepts an already-resolved dependency-first `List<EngineSubsystem>`, snapshots the complete list before any hook executes, then calls `initialize()` and `start()` on each subsystem before advancing to the next.
 
@@ -238,7 +238,7 @@ If initialize/start fails, the exact `RuntimeException` or `Error` remains prima
 
 This is intentionally not a general lifecycle manager, dependency injection framework, restart mechanism, or native-lifecycle proof. It adds no state accessor and does not change `EngineSubsystem` or `SubsystemGraph`. Synthetic Java tests establish ordering and failure preservation only; P0-T14 remains an independent native lifecycle gate, and D-030/#135 owns the 60-second Java headless integration-cleanup gate.
 
-## Monotonic elapsed-time sampling — P2-T04 / Issue #74
+## Monotonic elapsed-time sampling â€” P2-T04 / Issue #74
 
 `com.samo.engine.core.api.EngineClock` is the first production timing primitive in `engine-core`. It exposes a default constructor backed by `System.nanoTime()`, an injectable `LongSupplier` constructor for deterministic tests, and `sampleElapsedNanos()`.
 
@@ -248,7 +248,7 @@ Ordinary two's-complement subtraction is deliberate: a forward interval smaller 
 
 `EngineClock` does not own the fixed-step accumulator, the locked 60 Hz target, frame-gap clamping, catch-up limits, render interpolation, sleeping/pacing, frame identity, wall-clock/calendar time, profiling, or subsystem lifecycle. Those remain separate Phase 2 contracts. P2-T04 tests prove deterministic elapsed-time semantics only; D-030/#135 owns the 60-second integrated fixed-tick evidence.
 
-## Fixed-step simulation accumulation — P2-T05 / Issue #75
+## Fixed-step simulation accumulation â€” P2-T05 / Issue #75
 
 `com.samo.engine.core.api.FixedStepAccumulator` converts non-negative elapsed nanoseconds into newly due whole simulation ticks at exactly 60 ticks per second. It keeps one exact fractional remainder expressed in integer tick-nanosecond units over a one-billion denominator. The implementation decomposes each elapsed duration into whole seconds plus a sub-second remainder, so every non-negative `long` input can be processed without multiplying an arbitrary elapsed value by 60 and overflowing.
 
@@ -258,7 +258,7 @@ The accumulator owns neither a clock nor tick execution. A caller typically samp
 
 P2-T05 established exact fractional ownership but intentionally left interpolation exposure to P2-T07. Frame-gap clamping, catch-up limits, pacing, callbacks, lifecycle integration, and configurable tick rates remain separate concerns.
 
-## Bounded frame-gap and catch-up policy — P2-T06 / Issue #76
+## Bounded frame-gap and catch-up policy â€” P2-T06 / Issue #76
 
 `com.samo.engine.core.api.FixedStepCatchUpPolicy` composes with a caller-owned `FixedStepAccumulator`. The default policy accepts at most 250,000,000 ns from one update and exposes at most 5 whole simulation steps from that update. An explicit constructor accepts different strictly positive limits without changing the semantics.
 
@@ -270,7 +270,7 @@ The default 2-second-stall behavior is therefore bounded: 2,000,000,000 ns is cl
 
 The policy owns no clock, simulation callback, tick numbering, cumulative simulation counter, pacing, lifecycle, synchronization, or interpolation. P2-T08/P2-T09 own configuration. D-030/#135 integrates this policy with the real clock/accumulator/lifecycle path for the 60-second Phase 2 exit evidence.
 
-## Render interpolation alpha — P2-T07 / Issue #77
+## Render interpolation alpha â€” P2-T07 / Issue #77
 
 `FixedStepAccumulator.interpolationAlpha()` exposes the accumulator's retained sub-tick progress as a read-only `double` in `[0.0, 1.0)`. The value is computed from the existing exact integer remainder as `scaledRemainder / 1_000_000_000.0`; querying it neither mutates nor consumes progress.
 
@@ -280,7 +280,7 @@ Floating point exists only at the presentation boundary. Fixed-step accumulation
 
 After P2-T06 recovery, alpha reflects only the retained fraction from accepted/clamped elapsed time. Whole due ticks discarded by the step cap and elapsed time discarded by the frame-gap clamp are not represented as alpha and do not become backlog. Calls remain externally serialized; no thread-safety promise is added.
 
-## Typed startup configuration validation — P2-T08 / Issue #78
+## Typed startup configuration validation â€” P2-T08 / Issue #78
 
 `EngineConfigSchema` validates one already-resolved `Map<String, ConfigEntry>` before subsystem startup. It does not load files or merge sources. The initial canonical keys are `fullscreen.width`, `fullscreen.height`, and `simulation.tickRate`; each key is represented by a public `ConfigKey<Integer>` with a documented default.
 
@@ -290,7 +290,7 @@ Defaults are 1920x1080 and 60 Hz. Width accepts `320..16384`, height accepts `20
 
 Successful validation returns an immutable map containing all three canonical keys and typed integer values. Validation invokes no subsystem lifecycle hook. P2-T08 intentionally has no filesystem, JSON/properties, environment, CLI, hot-reload, or mutable-settings service; P2-T09 adds only the fixed source layering described below.
 
-## Phase 5R reference-scene renderer decomposition — P5R-T10 / Issue #270
+## Phase 5R reference-scene renderer decomposition â€” P5R-T10 / Issue #270
 
 The accepted P5R-T10 implementation renames renderer-internal `IndexedStaticMeshPipeline` to `ReferenceSceneRenderer` because the implementation owns the renderer's fixed reference-room/world path rather than a generic indexed-mesh pipeline. `OpenGlRenderer` keeps its supported public signatures and delegates internally to that renamed implementation.
 
@@ -298,7 +298,7 @@ Package-private `ReferenceRoomFixture` owns only the fixed CPU-side room fixture
 
 `ReferenceSceneRenderer` remains Java-public solely because `OpenGlRenderer` is in a separate API package. It remains under the declared renderer `.internal` package, is excluded from the API compile artifact, and is not supported consumer API. `ReferenceRoomFixture` is package-private. No public mesh/material/texture/resource submission surface is introduced and Phase 5 visual/native behavior remains unchanged.
 
-## Phase 5R renderer frame-orchestration decomposition — P5R-T11 / Issue #271
+## Phase 5R renderer frame-orchestration decomposition â€” P5R-T11 / Issue #271
 
 The accepted T11 implementation keeps `ReferenceSceneRenderer` as the internal reference-scene lifecycle and native-resource owner. Resource creation, rollback, explicit close ordering, shader/program/material construction, presentation negotiation, local-light selection, captured frame matrices, and the public-facade delegation remain there. Extracted collaborators are package-private and non-owning: `RendererFrameUniformUploader` owns reusable frame-uniform packing/upload state, `ReferenceSceneVisibilityPlanner` owns frustum extraction plus reference-scene visibility and ordered submission preparation, `ReferenceSceneDrawExecutor` owns the world -> debug -> view-model execution sequence and framebuffer/viewport restoration, and `RendererFrameDiagnostics` owns latest-success culling/text-counter publication state.
 
@@ -308,7 +308,7 @@ T11 does not rename or redefine `CpuFrustumCuller`, `DrawSubmissionSorter`, mate
 
 Accepted evidence: final PR head `2512677512e657de4f82b64e09f0b74fabd75c95` passed the five-job matrix in run #463 / `35507186284`; PR #327 merged as `71ae263026f674bdfda2462f4bfb8c077ef24098`; exact merged-master Lightweight verification passed in run #464 / `35507442998`.
 
-## Phase 5R renderer internal naming normalization — P5R-T12 / Issue #272
+## Phase 5R renderer internal naming normalization â€” P5R-T12 / Issue #272
 
 The accepted T12 implementation applies only three justified package-private renderer renames. `RenderMaterialDescriptor` names the immutable declarative material value without implying renderer/resource ownership. `OpenGlMaterialStatePolicy` makes explicit that the record contains concrete OpenGL blend/depth/cull enum decisions rather than renderer-neutral policy. `LocalLightSelector` names the stateful bounded first-N selector actor rather than sounding like a selected-result value.
 
@@ -319,7 +319,7 @@ The rename preserves D-057 material payload/immutability, D-059 culling semantic
 Accepted evidence: final PR head `85de9922f0fef5bbedc17add1bc41b1065d94f4a` passed all five required jobs in run #465 / `35508358983`; PR #329 merged as `aa3cccf885216f4e955c5cf671a96bb73702af8d`; exact merged-master Lightweight verification passed in run #466 / `35508613959`.
 
 
-## Phase 5R spatial/math naming audit — P5R-T09 / Issue #269
+## Phase 5R spatial/math naming audit â€” P5R-T09 / Issue #269
 
 P5R-T09 re-audits the accepted engine-core spatial/math vocabulary against `docs/SPATIAL_CONVENTIONS.md` and D-041 through D-047 and records no rename or structural source change. `Transform`, `CameraMatrices`, `ScreenRays`, `Ray3f`, `Plane3f`, `Sphere3f`, `Aabb3f`, `Frustum3f`, `TransformQuantization`, `QuantizedPosition`, and `QuantizedRotation` already name their responsibilities directly and consistently with the accepted world/camera/screen/geometry/quantization contracts.
 
@@ -327,7 +327,7 @@ Implementation-level local/world/cached-matrix, hierarchy invalidation, camera b
 
 This KEEP audit preserves D-041 handedness/axes/units, D-042 JOML ownership/allocation policy, D-043 transform hierarchy/cache semantics, D-044 exact geometry comparisons, D-045 camera/projection depth convention, D-046 screen-to-world mapping, and D-047 quantization ranges/error/layout meaning exactly. `docs/SPATIAL_CONVENTIONS.md` remains byte-unchanged.
 
-## Phase 5R core config/logging/timing/native-resource naming audit — P5R-T08 / Issue #268
+## Phase 5R core config/logging/timing/native-resource naming audit â€” P5R-T08 / Issue #268
 
 P5R-T08 re-audits the accepted core configuration, logging, timing, and native-resource ownership vocabulary against the live implementation and records no rename or decomposition. `EngineConfigLoader`, `EngineConfigSchema`, `ConfigKey`, `ConfigEntry`, `ConfigSource`, `ConfigError`, `ConfigValidationException`, `EngineLogger`, `EngineClock`, `FixedStepAccumulator`, `FixedStepCatchUpPolicy`, `NativeResourceRegistry`, and `NativeResourceRegistry.Registration` all already name their current responsibilities directly.
 
@@ -335,7 +335,7 @@ The audit also retains the implementation-level vocabulary used by those contrac
 
 This KEEP decision preserves D-021 through D-028 exactly: monotonic sampling, exact 60 Hz accumulation/interpolation, bounded catch-up, startup-schema validation, layered config precedence/diagnostics, synchronous structured logging, and explicit native ownership/terminal-close diagnostics are unchanged. No public API, configuration key/format, exception behavior, allocation/hot-loop policy, module edge, dependency, wiki usage, or sandbox behavior changes.
 
-## Layered startup configuration — P2-T09 / Issue #79
+## Layered startup configuration â€” P2-T09 / Issue #79
 
 `EngineConfigLoader` composes one startup configuration using fixed precedence `EngineConfigSchema` defaults < optional game UTF-8 key/value file < optional user UTF-8 key/value file < already-parsed command-line overrides, then validates the final effective raw map exactly once through D-025. File entries preserve normalized `path:line` sources; missing files are absent layers; malformed lines, blank keys, and duplicate keys within one file fail before schema validation; unreadable existing paths propagate `IOException`.
 
@@ -343,7 +343,7 @@ Every file value carries a `ConfigSource` of `<normalized-path>:<line>`. Command
 
 The loader invokes no lifecycle method and adds no dependency, environment-variable layer, generic provider framework, Java `Properties` escaping semantics, persistence, hot reload, or mutable settings service.
 
-## Explicit native-resource ownership diagnostics — P2-T10 / Issue #80
+## Explicit native-resource ownership diagnostics â€” P2-T10 / Issue #80
 
 `NativeResourceRegistry` gives later native wrappers one engine-core ownership diagnostic without depending on any native library. A successful registration normalizes a nonblank resource type, requires an opaque nonzero `long` handle, captures the first allocation call-site frame outside the registry, stores the caller-supplied `Runnable` closer, and returns a nested `Registration` implementing `AutoCloseable`.
 
@@ -355,7 +355,7 @@ A live identity is `(resourceType, handle)`. Duplicate live identities fail befo
 
 The registry is not thread-safe. Registration, close, and verification remain externally serialized, preserving caller/native thread-affinity. Synthetic Java tests establish bookkeeping and diagnostics only; they are not evidence that GLFW/OpenGL/Jolt/OpenAL/Steam resources are leak-free, sustained-stable, or restartable. P0-T13/P0-T14 remain separate native evidence gates; D-030/#135 owns the 60-second Java headless integration-cleanup gate.
 
-## Allocation observability evidence — P2-T11 / Issue #81
+## Allocation observability evidence â€” P2-T11 / Issue #81
 
 P2-T11 deliberately adds no runtime allocation-metric service or public engine API. `AllocationMetricBenchmarkTest` lives in `engine-core` test source and uses the Java 25 JFR `jdk.ObjectAllocationSample` event selected by the existing profiling baseline.
 
@@ -365,7 +365,7 @@ An allocating control must produce usable sampled evidence; otherwise the benchm
 
 This evidence is sampled Java-heap allocation pressure, not an exact per-call counter. It excludes direct/native allocations, GPU/driver memory, retained-heap size, and GC pause cost. The render channel is not evidence from the future OpenGL renderer. No product budget or threshold is established by P2-T11, and no durable architecture decision is added.
 
-## Structured runtime logging boundary — P2-T12 / Issue #82
+## Structured runtime logging boundary â€” P2-T12 / Issue #82
 
 `EngineLogger` is the shared `engine-core` structured logging seam selected by D-028. It owns no persistence format or logging backend. A caller supplies one `Sink`, and each valid `log(...)` call synchronously creates an immutable `Event` containing `Instant.now()`, severity, message, the actual calling thread ID/name, and one immutable `Context` snapshot before invoking `Sink.write`.
 
@@ -375,7 +375,7 @@ Every severity from `DEBUG` through `FATAL` is forwarded; the logger performs no
 
 The sink is caller-owned and is not closed by `EngineLogger`. P2-T12 adds no background worker, queue, buffering, retry/drop policy, shutdown hook, global singleton, file/console/JSON format, rotation policy, or composition-root wiring. P2-T13 composes this boundary without changing those ownership or format decisions.
 
-## Orderly fatal termination — P2-T13 / Issue #83
+## Orderly fatal termination â€” P2-T13 / Issue #83
 
 `FatalTerminationCoordinator` is the D-029 one-shot fatal-shutdown coordinator in `engine-core`. The public constructor receives the existing `EngineLogger`; production termination uses `System.exit(1)`. A package-private `IntConsumer` constructor exists only as a unit-test seam so tests can inspect ordering without terminating the test JVM.
 
@@ -389,7 +389,7 @@ Each `FatalTerminationCoordinator` instance is one-shot. Reentrant, concurrent, 
 
 JUnit tests use handwritten traces/counters plus a real child JVM. The child uses the public constructor and proves exit status `1` occurs only after a synthetic subsystem stops, closes its registered resource, and flushes its sink. This is Java orchestration evidence only; it does not establish native GLFW/OpenGL/Jolt/OpenAL/Steam cleanup, sustained stability, or restartability. D-030/#135 separately owns the 60-second integrated Phase 2 gate.
 
-## Phase 2 integrated exit evidence — Issue #135 / D-030
+## Phase 2 integrated exit evidence â€” Issue #135 / D-030
 
 `Phase2IntegratedGateTest` is a test-only integration harness in `engine-core`; it adds no production API, dependency, module edge, lifecycle manager, or force-close behavior. When explicitly enabled, it starts a synthetic `EngineSubsystem` through `SubsystemStartupCoordinator`, registers one synthetic owned handle through `NativeResourceRegistry`, and then runs a headless loop with the production `EngineClock`, `FixedStepAccumulator`, and default `FixedStepCatchUpPolicy`.
 
@@ -399,7 +399,7 @@ After the duration completes, the harness stops and closes the subsystem, the ow
 
 The test is opt-in for ordinary Gradle test runs and is explicitly enabled once by the CI evidence step so routine aggregate/coverage tasks do not duplicate the 60-second delay. A passing gate proves Java headless integration correctness for the Phase 2 contracts only. It does not exercise actual GLFW/OpenGL/Jolt/OpenAL/Steam ownership, does not claim sustained native stability or restartability, and does not replace P0-T13 or P0-T14.
 
-## Production GLFW/OpenGL window lifecycle — P3-T01 / Issue #84
+## Production GLFW/OpenGL window lifecycle â€” P3-T01 / Issue #84
 
 `com.samo.engine.platform.api.GlfwWindow` is the first concrete production platform subsystem and the D-031 ownership boundary. Construction validates positive dimensions, a nonblank preserved title, an `EngineLogger`, and a caller-owned `NativeResourceRegistry` without making a native call. The original P3-T01 public surface adds no raw GLFW handle, LWJGL capability type, event API, swap/poll API, size API, fullscreen API, or input API.
 
@@ -413,7 +413,7 @@ The platform module places the selected LWJGL 3.4.3 core/GLFW/OpenGL libraries p
 
 P3-T01 intentionally did not install the OpenGL debug callback (P5-T01), run a frame/render loop, swap buffers/poll events, expose framebuffer/logical sizes, change fullscreen mode, capture input, or implement the Phase 3 replay exit gate. P3-T02 adds only the bounded polling/size behavior described next and does not retroactively broaden P3-T01's original acceptance.
 
-## Logical window and framebuffer sizing — P3-T02 / Issue #85
+## Logical window and framebuffer sizing â€” P3-T02 / Issue #85
 
 D-032 extends `GlfwWindow` without exposing GLFW/LWJGL types. `WindowSizeListener` has two separate callbacks: `onLogicalWindowSizeChanged(width, height)` for GLFW logical/screen-coordinate dimensions and `onFramebufferSizeChanged(width, height)` for framebuffer pixel dimensions. The existing five-argument constructor remains source-compatible and uses an internal no-op listener; a six-argument overload accepts the explicit listener.
 
@@ -425,7 +425,7 @@ Zero dimensions are valid platform states, especially framebuffer `0x0` while mi
 
 The size path is renderer-neutral. Renderer-facing code may consume framebuffer pixels later, while logical dimensions remain available for window/layout semantics, but P3-T02 introduces no renderer dependency, viewport mutation, buffer swapping, fullscreen mode, focus/input state, content-scale callback API, raw handle, multi-window management, or native restartability claim. Deterministic tests deliberately use unequal logical/framebuffer pairs; the Windows native acceptance compares production listener delivery against direct GLFW logical/framebuffer queries and records content scale without requiring the machine to have non-100% DPI scaling.
 
-## Windowed and fullscreen mode transitions — P3-T03 / Issue #86
+## Windowed and fullscreen mode transitions â€” P3-T03 / Issue #86
 
 D-033 extends the same D-031/D-032 `GlfwWindow` boundary with public `WindowMode` and owner-thread `setWindowMode(WindowMode)`. Calls are legal only while STARTED; null is rejected before native work and requesting the already-active mode is a no-op. Successful transitions mutate the existing GLFW window in place and do not recreate its OpenGL context.
 
@@ -437,7 +437,7 @@ If a backend transition throws `RuntimeException` or `Error`, the original throw
 
 Deterministic tests use the existing package-private backend seam to prove capture/restore, direct fullscreen-mode transitions, fresh recapture after returning windowed, invalid monitor state, owner-thread/lifecycle rejection, same-mode no-op, and failure/rollback semantics without a display. The opt-in Windows x64 `GlfwWindowModeNativeTest` runs the production API through exactly 20 successful mode changes (five `BORDERLESS_FULLSCREEN -> WINDOWED -> EXCLUSIVE_FULLSCREEN -> WINDOWED` cycles), verifies after every step that the original context remains current and OpenGL remains usable, checks native monitor/window state and geometry, and requires final cleanup with an empty `NativeResourceRegistry`. This bounded run is not P0-T13 soak or P0-T14 repeated-lifecycle evidence.
 
-## Focus-loss input safety and cursor capture — P3-T04 / Issue #87
+## Focus-loss input safety and cursor capture â€” P3-T04 / Issue #87
 
 D-034 adds the public owner-thread `GlfwWindow.setCursorCaptured(boolean)` operation and keeps the pre-snapshot hardware safety state inside `engine-platform-lwjgl`. While STARTED, a focused window may request GLFW disabled-cursor capture; explicit release restores the normal cursor. Focus, key, and mouse-button callbacks are installed and owned by the same window lifecycle and are released during stop/start-failure cleanup.
 
@@ -447,7 +447,7 @@ Native focus callbacks never invoke game code. If cursor release throws while ha
 
 P3-T04 itself intentionally added no raw mouse motion, public focus listener, public snapshot, action transitions, controller mapping, player commands, renderer behavior, or game pause/menu policy. Later P3 tasks extend this internal hardware state without changing the historical P3-T04 acceptance.
 
-## Relative mouse-motion acquisition — P3-T05 / Issue #88
+## Relative mouse-motion acquisition â€” P3-T05 / Issue #88
 
 D-035 extends the existing D-031 through D-034 `GlfwWindow` ownership boundary with relative mouse-motion acquisition while effective cursor capture is active. The window owns one cursor-position callback alongside the focus/key/button callbacks. Cursor-position samples are considered only while the window is focused and cursor capture is effectively active.
 
@@ -459,7 +459,7 @@ Native callbacks do not invoke gameplay code. Raw-enable failure during a direct
 
 Deterministic `GlfwWindowMouseMotionTest` proves ignored pre-capture/unfocused events, zero first sample, signed accumulation, absolute-position independence, raw-supported and forced-unsupported fallback selection, release/focus baseline reset, explicit recapture, failure rollback/staging, callback ownership, and lifecycle cleanup. The opt-in Windows x64 `GlfwWindowMouseMotionNativeTest` verifies real GLFW raw-mode state before/during/after capture, release, focus transfer, regain, and explicit recapture plus registry cleanup. It intentionally does not treat programmatic `glfwSetCursorPos` as a physical raw-device oracle; deterministic tests own exact delta arithmetic while the native test proves real mode/focus/lifecycle integration.
 
-## Renderer-frame hardware input snapshot — P3-T06 / Issue #89
+## Renderer-frame hardware input snapshot â€” P3-T06 / Issue #89
 
 D-036 adds public `InputSnapshot`, `InputKey`, and `InputMouseButton` under `com.samo.engine.platform.api` plus owner-thread `GlfwWindow.captureInputSnapshot(long frameId)`. The snapshot is a client/platform hardware view; no new module dependency is introduced and `game-server` remains independent of `engine-platform-lwjgl`.
 
@@ -475,7 +475,7 @@ Validation failures happen before consumption. Snapshot capture is pure Java and
 
 Deterministic `InputSnapshotTest` and `GlfwWindowInputSnapshotTest` cover defensive immutability, edge retention/consumption, key-repeat semantics, mouse-delta one-shot consumption without baseline reset, focus-loss releases, validation-before-consumption, stable shared snapshots, and proof that snapshot capture does not poll GLFW. Existing P3-T04/P3-T05 native acceptance continues to verify the real callback/focus/raw ingestion path because P3-T06 itself makes no new native call.
 
-## Data-driven gameplay action bindings — P3-T07 / Issue #90
+## Data-driven gameplay action bindings â€” P3-T07 / Issue #90
 
 D-037 adds immutable configuration-time action metadata under `com.samo.engine.platform.api` without changing the module graph. `InputAction` defines exactly MOVE, LOOK, JUMP, CROUCH, SPRINT, INTERACT, GRAB, THROW, PRIMARY_USE, PAUSE, and PUSH_TO_TALK. MOVE and LOOK are `VECTOR2`; the other nine are `DIGITAL`. `InputAction.valueType()` is the single source of truth for that classification.
 
@@ -489,7 +489,7 @@ Jackson is the first production JSON parser dependency selected under the existi
 
 Deterministic `InputActionBindingsTest` uses a committed complete schema-v1 fixture and handwritten expected descriptors. It covers exact action typing, all three descriptor kinds, defensive ownership/immutability, strict schema/property rejection, malformed/missing files, invalid action/component/control/scale values, duplicate actions/bindings/JSON fields, and null programmer-contract input. Existing architecture/headless tests remain responsible for proving no Jackson/native type leaks across public/module boundaries and no platform dependency enters `game-server`.
 
-## Renderer-frame gameplay action evaluation — P3-T08 / Issue #91
+## Renderer-frame gameplay action evaluation â€” P3-T08 / Issue #91
 
 D-038 adds `InputActionEvaluator`, immutable `InputActionSnapshot`, and immutable `InputActionState` under `com.samo.engine.platform.api`. One evaluator is constructed from one complete immutable `InputActionBindings` value and is owned/externally serialized by one caller. It accepts renderer-frame `InputSnapshot` values and retains only the last successful frame ID plus whether each action was active after that frame.
 
@@ -505,7 +505,7 @@ This layer is intentionally renderer-frame/client-platform state, not the replay
 
 Deterministic `InputActionEvaluatorTest` plus P3-T10 response integration coverage exercise digital press/held/release, complete same-binding one-frame taps, mouse-button equivalents, simultaneous positive bindings, exact signed cancellation, no duplicate press/release through overlapping bindings, MOVE vector aggregation, LOOK response/scaling and nonzero->zero release, focus-loss-style release, immutable result stability, frame-order rejection, null/non-finite input rejection, response/aggregate overflow rejection, runtime settings replacement, and failure-state preservation.
 
-## Tick-aligned replayable player input — P3-T09 / Issue #92
+## Tick-aligned replayable player input â€” P3-T09 / Issue #92
 
 D-039 places immutable `PlayerInputCommand` and `PlayerInputCommandCodec` in `engine-core`, while caller-owned `PlayerInputCommandSampler` remains in `engine-platform-lwjgl` at the renderer-frame/tick boundary. No project/module edge is added and `game-server` remains independent of the platform module.
 
@@ -515,7 +515,7 @@ The sampler accepts successful renderer-frame `InputActionSnapshot` values. Late
 
 A deterministic encode/decode/headless replay test uses platform-independent commands and an independently calculated final state. This is the Phase 3 input-recording/replay exit evidence at the command boundary only; it is not deterministic physics, production networking, or Steam evidence.
 
-## Deterministic input response settings — P3-T10 / Issue #93
+## Deterministic input response settings â€” P3-T10 / Issue #93
 
 D-040 adds immutable `InputResponseSettings` to `engine-core` with mouse sensitivity, mouse Y inversion, controller dead zone, and controller curve exponent. Neutral defaults are `1.0`, `false`, `0.0`, and `1.0`. Construction rejects non-finite/negative sensitivity, dead zones outside `[0,1)`, and non-positive/non-finite exponents.
 
@@ -525,7 +525,7 @@ D-040 adds immutable `InputResponseSettings` to `engine-core` with mouse sensiti
 
 P3-T10 adds no native call, dependency, binding-schema change, project edge, or server runtime dependency. Its exact final candidate passed the required five-job heavy matrix, PR #160 merged to `master` as `e1801b11a713ce6cc73276c644aa15351ac508a1`, and the exact merged commit passed the lightweight master verifier. Together with the retained P3-T09 replay evidence, Phase 3 is accepted.
 
-## Persistent owner-facing engine sandbox — P3-T04A / Issue #149, presentation policy superseded by Issue #165
+## Persistent owner-facing engine sandbox â€” P3-T04A / Issue #149, presentation policy superseded by Issue #165
 
 P3-T04A established `game-sandbox` as the canonical owner-facing observation surface and originally implemented it as a scripted timeline. Issue #165 deliberately supersedes that presentation/maintenance policy while preserving the same production engine APIs and dependency boundary. The current canonical surface is `SandboxMain`, launched by `:game-sandbox:runSandbox`. P5R-T17 removes the obsolete `EngineDemoMain` / `runEngineDemo` compatibility surface after repository-wide reference verification.
 
@@ -535,7 +535,7 @@ Issue #408 adds the bounded Phase 6 Asset Lab. The sandbox materializes a commit
 
 Current owner controls are intentionally built from the existing public input vocabulary: `E` cycles a valid MATERIAL preset, `Right Shift + E` demonstrates failed reload preservation, `Alt + E` demonstrates missing-MESH fallback, `Ctrl + E` releases/reloads asset handles, `F` cycles window modes, `R` toggles cursor capture, `Right Shift + F` cycles mouse sensitivity, `Right Shift + R` toggles mouse-Y inversion, and `Ctrl+Q` exits. Normal action bindings continue to evaluate concurrently. In particular, E/INTERACT still appears in diagnostics when E drives the Asset Lab; the current sandbox has no gameplay interaction side effect. `SandboxControlsTest` verifies control selection without a native window, and `SandboxAssetLabTest` exercises the real public cooked-runtime loader without a native graphics window. The sandbox still makes no direct OpenGL/LWJGL call.
 
-The sandbox must not become a second engine architecture. It may not import another module's internal package, call LWJGL/native APIs directly, or expose a new production API merely to make owner observation easier. When a future task adds a capability that is meaningfully usable through its already-authorized public API, the same PR extends the existing cumulative sandbox and preserves other usable controls/capabilities. When that is not possible without pulling later roadmap work forward, the PR records `Sandbox impact: none — <reason>`. Separate throwaway demos are exceptional and require explicit Issue authorization.
+The sandbox must not become a second engine architecture. It may not import another module's internal package, call LWJGL/native APIs directly, or expose a new production API merely to make owner observation easier. When a future task adds a capability that is meaningfully usable through its already-authorized public API, the same PR extends the existing cumulative sandbox and preserves other usable controls/capabilities. When that is not possible without pulling later roadmap work forward, the PR records `Sandbox impact: none â€” <reason>`. Separate throwaway demos are exceptional and require explicit Issue authorization.
 
 The platform and renderer dependencies used by the playground are intentionally non-exported. `game-sandbox` also declares a normal implementation dependency on `engine-assets` because Issue #408 directly consumes that module's supported public runtime API. `game-sandbox` compiles against `engine-platform-lwjgl` normally and, for the in-repository renderer module only, resolves `engine-render-opengl` compile-only from its `runtimeElements` variant with transitivity disabled. This keeps IntelliJ/Gradle module resolution on the real renderer source-set module while D-055's default `apiElements` remains API-only for ordinary consumers. Cross-module source imports are still restricted to declared API roots by `ModulePackageBoundaryTest`. A dedicated non-consumable `sandboxRuntime` supplies platform/renderer runtime composition for `runSandbox`; those dependencies are not part of the sandbox runtime elements consumed by `game-server`. P5R-T17 removes the former compatibility `runEngineDemo` task, leaving one canonical owner-facing sandbox command. The existing headless-server runtime gate remains the proof that this owner-facing playground did not contaminate server composition.
 
@@ -593,17 +593,17 @@ P0-T09A / Issue #42, P0-T13 / Issue #43, and P0-T14 / Issue #44 remain independe
 | Deterministic input response settings | P3-T10 / Issue #93: core immutable response math plus evaluator mouse-response integration; completed PR #160 / merged-master acceptance |
 | Canonical world-space convention | P4-T01 / Issue #94: D-041 + `docs/SPATIAL_CONVENTIONS.md` |
 | JOML hot-loop allocation baseline | P4-T02 / Issue #95: JOML 1.10.9 plus warmed zero-byte ThreadMXBean acceptance evidence |
-| Cached hierarchical transform API | P4-T03 through P4-T05 / Issues #96–#98: D-042 public JOML math ownership, local TRS, parent-world composition, atomic cycle rejection, private child tracking, and explicit descendant dirty propagation |
+| Cached hierarchical transform API | P4-T03 through P4-T05 / Issues #96â€“#98: D-042 public JOML math ownership, local TRS, parent-world composition, atomic cycle rejection, private child tracking, and explicit descendant dirty propagation |
 | Persistent owner-facing sandbox playground | P3-T04A origin, Issue #165 current presentation policy: public-API cumulative playground with non-exported platform runtime and deterministic control mapping |
 | Other concrete production engine subsystems | Planned: later phases |
 
 ## Wiki synchronization
 
-This file remains the architecture authority for module roles, boundaries, and accepted implementation maturity. The [`../wiki/`](../wiki/README.md) directory is a lower-authority consumer guide. Whenever an architecture task adds/removes/renames a public API or changes lifecycle, ownership, thread-affinity, failure, configuration, or other caller-visible semantics, update the relevant wiki pages and examples in the same PR. When no consumer behavior changes, record `Wiki impact: none — <reason>` rather than editing the wiki unnecessarily.
+This file remains the architecture authority for module roles, boundaries, and accepted implementation maturity. The [`../wiki/`](../wiki/README.md) directory is a lower-authority consumer guide. Whenever an architecture task adds/removes/renames a public API or changes lifecycle, ownership, thread-affinity, failure, configuration, or other caller-visible semantics, update the relevant wiki pages and examples in the same PR. When no consumer behavior changes, record `Wiki impact: none â€” <reason>` rather than editing the wiki unnecessarily.
 
 `game-sandbox` is also lower-authority than production code/tests and architecture. Its purpose is persistent owner interaction with already-implemented public behavior, not specification. Future tasks must keep the cumulative playground synchronized when appropriate under the `AGENTS.md` sandbox rule without using it to justify a production API or architecture change.
 
-## Phase 5R OpenGL ownership cleanup — P5R-T14 / Issue #274
+## Phase 5R OpenGL ownership cleanup â€” P5R-T14 / Issue #274
 
 The accepted T14 implementation keeps the established D-050 resource-wrapper and backend vocabulary unchanged: `OwnedOpenGlHandle`, `OpenGlBuffer`, `OpenGlVertexArray`, `OpenGlTexture`, `OpenGlSampler`, `OpenGlShader`, `OpenGlProgram`, `OpenGlFramebuffer`, `OpenGlResourceBackend`, and `LwjglOpenGlResourceBackend` remain the canonical internal names.
 
@@ -612,27 +612,27 @@ The bounded refactor renames only the ambiguous cleanup utility `CleanupFailures
 Accepted evidence: final PR head `c82e0276b57773d1524b47eb581c3a1a3bef520d` passed all five required jobs in run #469 / `35511357500`; PR #333 merged as `750e36a678ef70e497d019beafa0c0bf97d56324`; exact merged-master Lightweight verification passed in run #470 / `35511620539`.
 
 
-## Phase 5R debug/view-model responsibility cleanup — P5R-T15 / Issue #275
+## Phase 5R debug/view-model responsibility cleanup â€” P5R-T15 / Issue #275
 
 The accepted T15 implementation keeps the accepted debug split unchanged: `DebugLineVertexPacker` continues to own bounded world-space debug primitive -> line-vertex packing, and `DebugLineRenderer` continues to own only the corresponding GL resources/upload/draw lifecycle. Their names and behavior remain canonical.
 
-For the internal P5-T17 validation layer, `ViewModelProjectionFactory` is the canonical stateless creator for the fixed 55° vertical-FOV, framebuffer-aspect, 0.01 m near, 10 m far perspective. `ViewModelFixtureVertexPacker` owns only the fixed six-vertex validation-fixture byte packing and linear RGB `(0.95, 0.55, 0.15)`. `ViewModelRenderer` remains the GL resource/render owner and consumes those helpers without transferring ownership.
+For the internal P5-T17 validation layer, `ViewModelProjectionFactory` is the canonical stateless creator for the fixed 55Â° vertical-FOV, framebuffer-aspect, 0.01 m near, 10 m far perspective. `ViewModelFixtureVertexPacker` owns only the fixed six-vertex validation-fixture byte packing and linear RGB `(0.95, 0.55, 0.15)`. `ViewModelRenderer` remains the GL resource/render owner and consumes those helpers without transferring ownership.
 
 D-041/D-045 world/view conventions remain untouched, view-model view remains identity, ordering remains world -> debug -> depth-only reset -> view-model, and D-063 presentation plus GL state/restoration semantics remain unchanged. No public view-model/gameplay submission API, weapon/hand system, animation/IK, render graph/FBO, or asset/resource identity is introduced.
 
 Accepted evidence: final PR head `96510a58644eea158c75c3327d3ac1959c0ab9ef` passed all five required jobs in run #471 / `35512198379`; PR #335 merged as `9c41a1db72834d162f58f503a9d03aa0fd00add3`; exact merged-master Lightweight verification passed in run #472 / `35512467254`.
 
 
-## Phase 5R sandbox entry-point decomposition — P5R-T16 / Issue #276
+## Phase 5R sandbox entry-point decomposition â€” P5R-T16 / Issue #276
 
-The accepted T16 implementation keeps public `SandboxMain` as the canonical persistent-playground bootstrap and lifecycle owner while removing unrelated per-frame responsibilities from that entry point. Package-private `SandboxApplicationLoop` owns fixed-step/frame sequencing, public input sampling/evaluation, tick-command sampling, camera application, render/present ordering, and the 5 ms non-exit sleep. `SandboxControlState` owns the current window mode plus input-response settings and applies already-resolved `SandboxControls.SandboxAction` values in the existing side-effect/log order. `SandboxSceneSetup` owns the fixed public point/spot lights, P5-T16 debug primitives, 70° / framebuffer-aspect / 0.1 m / 100 m world projection, and per-frame `RenderFramePacket` construction. `SandboxDiagnostics` owns elapsed diagnostic time, accumulated mouse deltas, command/culling/debug-counter assembly, and once-per-second publication through the unchanged `SandboxDiagnosticFormatter`. `SandboxFramebufferSize` becomes a package-private top-level mutable value rather than a private nested type.
+The accepted T16 implementation keeps public `SandboxMain` as the canonical persistent-playground bootstrap and lifecycle owner while removing unrelated per-frame responsibilities from that entry point. Package-private `SandboxApplicationLoop` owns fixed-step/frame sequencing, public input sampling/evaluation, tick-command sampling, camera application, render/present ordering, and the 5 ms non-exit sleep. `SandboxControlState` owns the current window mode plus input-response settings and applies already-resolved `SandboxControls.SandboxAction` values in the existing side-effect/log order. `SandboxSceneSetup` owns the fixed public point/spot lights, P5-T16 debug primitives, 70Â° / framebuffer-aspect / 0.1 m / 100 m world projection, and per-frame `RenderFramePacket` construction. `SandboxDiagnostics` owns elapsed diagnostic time, accumulated mouse deltas, command/culling/debug-counter assembly, and once-per-second publication through the unchanged `SandboxDiagnosticFormatter`. `SandboxFramebufferSize` becomes a package-private top-level mutable value rather than a private nested type.
 
 `SandboxCamera`, `SandboxControls`, and `SandboxDiagnosticFormatter` remain canonical and behaviorally unchanged. `SandboxMain` retains banner output, console logger construction, binding-resource materialization, framebuffer-size listener wiring, window/renderer startup ownership, interrupt/failure propagation, ordered shutdown, and native-registry verification. D-041/D-045 camera semantics, focus/cursor safety, owner controls, fixed scene values, render ordering, diagnostics, and the public-production-API-only sandbox boundary remain unchanged. P5R-T17 subsequently removes the verified-obsolete legacy compatibility surface and normalizes only the nested owner-control names.
 
 Accepted evidence: final corrected PR head `8705d6b031b9bb437c74405f5963a60aa731b175` passed all five required jobs in run #479 / `35514285664`; PR #337 merged as `c4d9675e7c03cf046bc684b668ac1117af0f23fe`; exact merged-master Lightweight verification passed in run #480 / `35514559730`. Initial run #473 / `35514092541` is retained only as superseded provenance for the compile-only test-boundary correction.
 
 
-## Phase 5R sandbox naming/compatibility cleanup — P5R-T17 / Issue #277
+## Phase 5R sandbox naming/compatibility cleanup â€” P5R-T17 / Issue #277
 
 Fresh repository-reference verification established that the legacy `EngineDemoMain` class and `:game-sandbox:runEngineDemo` task had no live code/workflow/test consumers and were obsolete compatibility-only surfaces. The accepted T17 implementation removes both and leaves public `SandboxMain` plus `:game-sandbox:runSandbox` as the sole canonical persistent owner-facing entry path.
 
@@ -641,31 +641,31 @@ Within the package-private owner-control mapper, nested `SandboxControls.Sandbox
 Accepted P5R-T17 evidence: final PR head `31172c12de2eb1a5c78d75a74b1a58268f67faa3` passed all five required jobs in run #482 / `35518803707`; PR #339 merged as `62e9bbd1683557193a6afe27e9b08fbacc32212a`; exact merged-master Lightweight verification passed in run #483 / `35519165178`. Run #481 / `35518792283` is superseded because a later documentation-only commit advanced the PR head.
 
 
-## Phase 5R standalone renderer visual-demo decomposition — P5R-T18 / Issue #278
+## Phase 5R standalone renderer visual-demo decomposition â€” P5R-T18 / Issue #278
 
 The accepted T18 implementation keeps public `RendererVisualDemo` as the owner-facing JavaExec entry point and keeps `:engine-render-opengl:runRendererVisualDemo` unchanged, while removing unrelated responsibilities from that entry class. Package-private `RendererVisualDemoApplication` owns demo composition plus window/native-resource lifecycle, `RendererVisualDemoLoop` owns elapsed-time/input/frame sequencing and renderer -> overlay -> present order, `RendererVisualDemoFramebufferSize` owns framebuffer-size callback state, `AnimatedDemoLighting` owns the exact moving point/spot lights plus their debug crosses/ray, and `MaterialComparisonOverlay` owns the isolated opaque/transparent overlay GL resources, draw state, rollback, and close ordering.
 
 This remains entirely inside the dedicated non-production `visualDemo` source set. The accepted implementation does not change `OpenGlRenderer`, production renderer internals, Gradle dependency/module direction, material/shader ABI or values, D-041/D-045 camera semantics, D-062 local-light semantics, D-063 presentation behavior, native-resource ownership rules, or the persistent `game-sandbox`. No mesh/material/resource API is promoted and no Phase 6 identity/asset work is introduced.
 
-Wiki impact: none — the decomposed types are not supported engine consumer API.
-Sandbox impact: none — the persistent sandbox and its controls remain unchanged; only the already-separate renderer visual demo is refactored internally.
+Wiki impact: none â€” the decomposed types are not supported engine consumer API.
+Sandbox impact: none â€” the persistent sandbox and its controls remain unchanged; only the already-separate renderer visual demo is refactored internally.
 
 Accepted P5R-T18 evidence: corrected final head `5f6ff0c1dfb05a078486abf05f4f10860f14dac4` passed all five required jobs in run #485 / `35523275737`; PR #341 merged as `9fa3a5c831cd0d9884b7b6a89c26029a3d41a6dd`; exact merged-master Lightweight verification passed in run #486 / `35523595439`. Run #484 / `35523166142` is superseded after the malformed test-source newline was corrected.
 
 
-## Phase 5R client/server version-report naming — P5R-T19 / Issue #279
+## Phase 5R client/server version-report naming â€” P5R-T19 / Issue #279
 
 The accepted T19 implementation keeps `ClientMain` and `ServerMain` as the canonical executable bootstrap entry points because their current responsibilities are already small and explicit. It renames only the executable-specific internal reporting helpers to `com.samo.game.client.internal.ClientVersionReport` and `com.samo.game.server.internal.ServerVersionReport`.
 
 The rename does not change `runClient` / `runServer`, the main-class FQCNs, default startup/shutdown output, `META-INF/sherko-version.properties`, generated metadata, report key order or values, the client/server dependency graphs, or the server headless-runtime boundary. No shared reporter abstraction or new module edge is introduced merely to remove trivial duplicated reporting code.
 
-Wiki impact: none — these are executable/internal surfaces, not supported engine consumer API.
-Sandbox impact: none — no engine capability or persistent sandbox behavior changes.
+Wiki impact: none â€” these are executable/internal surfaces, not supported engine consumer API.
+Sandbox impact: none â€” no engine capability or persistent sandbox behavior changes.
 
 Accepted P5R-T19 evidence: final head `47ae52f78f9f9d99d462975266337025b84ae9f6` passed all five required jobs in run #487 / `35524411941`; PR #343 merged as `7215fc12c123325adb62521e971f5dc4965064d7`; exact merged-master Lightweight verification passed in run #488 / `35524646827`, including dependency locks, headless-server runtime isolation, and exact-merge client/server version reporting.
 
 
-## Phase 5R feasibility-spike naming and isolation — P5R-T20 / Issue #280
+## Phase 5R feasibility-spike naming and isolation â€” P5R-T20 / Issue #280
 
 The accepted T20 implementation keeps `feasibility-spikes` as a separate experimental Gradle subproject with external native/network dependencies only for reproducible evidence. Production engine/game/support modules remain forbidden from depending on it, and the existing root `run*Spike` / harness aliases remain historical build conveniences rather than classpath/module dependencies.
 
@@ -673,15 +673,15 @@ A complete top-level naming audit keeps `OpenGL46Spike`, `JoltLifecycleSpike`, `
 
 The module now owns `verifyFeasibilitySpikeIsolation`, wired into its `check` task, which rejects project dependencies from any other declared subproject to `:feasibility-spikes`. This reinforces rather than changes the existing architecture rule that feasibility evidence must not become production architecture.
 
-Wiki impact: none — feasibility spikes are explicitly not engine-consumer API.
-Sandbox impact: none — experimental evidence executables are not the persistent public-API sandbox.
-Durable decision impact: none — existing experimental isolation is enforced; no new architecture decision is introduced.
+Wiki impact: none â€” feasibility spikes are explicitly not engine-consumer API.
+Sandbox impact: none â€” experimental evidence executables are not the persistent public-API sandbox.
+Durable decision impact: none â€” existing experimental isolation is enforced; no new architecture decision is introduced.
 
 
 Accepted P5R-T20 evidence: final head `244041127c1851d477f557c92734c981ee5649b7` passed all five required jobs in run #489 / `35525360797`; PR #345 merged as `510e61d6d44eab4cb986d5c03078138aaa40a020`; exact merged-master Lightweight verification passed in run #490 / `35525718982`. The accepted boundary keeps feasibility code experimental and prevents declared subproject dependencies on `:feasibility-spikes`.
 
 
-## Phase 5R internal package audit — P5R-T23 / Issue #303
+## Phase 5R internal package audit â€” P5R-T23 / Issue #303
 
 Fresh T23 review keeps the current package layout.
 
@@ -693,15 +693,15 @@ The standalone renderer visual demo remains in the existing renderer internal pa
 
 The durable analysis is recorded in `docs/refactor/INTERNAL_PACKAGE_AUDIT.md`.
 
-Wiki impact: none — no supported public package/type/signature/usage changes.
-Sandbox impact: none — no runtime capability or owner-facing usage changes.
-Durable decision impact: none — current package-private cohesion is retained rather than replaced.
+Wiki impact: none â€” no supported public package/type/signature/usage changes.
+Sandbox impact: none â€” no runtime capability or owner-facing usage changes.
+Durable decision impact: none â€” current package-private cohesion is retained rather than replaced.
 
 
 Accepted P5R-T23 evidence: Markdown-only PR #351 merged final audit head `d6ce4a096c47ec4226fc070ff65f2a76eba4486e` as `36352d874c04c383ce53527001e279f7634f973b`. The accepted result is KEEP for the current package layout; no Java visibility, package, module edge, public API, runtime behavior, wiki, or sandbox contract changed.
 
 
-## Phase 5R pattern/scalability hardening — P5R-T24 / Issue #304
+## Phase 5R pattern/scalability hardening â€” P5R-T24 / Issue #304
 
 T24 strengthens the existing renderer Adapter + composition/DI seam without broadening any adapter responsibility. The package-private `OpenGlBackendSet` composes the existing `OpenGlResourceBackend`, `OpenGlDrawBackend`, and `OpenGlUniformBlockReflectionBackend` references so renderer construction passes one cohesive backend dependency instead of three parallel positional parameters.
 
@@ -711,15 +711,15 @@ The concrete problem solved is construction-signature scaling: the same adapter 
 
 Fresh T24 review explicitly rejects speculative Singleton, Service Locator, Object Pool, ECS, job-system/command-bus, public DI container/backend registry, and merged mega-backend designs because current P1-P5 code provides no evidence requiring them.
 
-Wiki impact: none — `OpenGlBackendSet` is package-private and no supported API changes.
-Sandbox impact: none — public renderer behavior/usage is unchanged.
-Durable decision impact: none — existing internal Adapter boundaries are retained and composed more cleanly.
+Wiki impact: none â€” `OpenGlBackendSet` is package-private and no supported API changes.
+Sandbox impact: none â€” public renderer behavior/usage is unchanged.
+Durable decision impact: none â€” existing internal Adapter boundaries are retained and composed more cleanly.
 
 
 Accepted P5R-T24 evidence: PR #353 final head `aa43d2fee5e4f4f08723ba1323232eb7c8dc5005` passed the five-job matrix in run #493 / `35534567287`, merged as `3d7a3fbf302b1b4caf46ca780aeb68f651810fa1`, and exact-merge Lightweight verification passed in run #494 / `35534881306`. The accepted result strengthens only internal renderer Adapter composition through package-private `OpenGlBackendSet`; public and runtime architecture contracts remain unchanged.
 
 
-## Phase 5R exit reconciliation — P5R-T26 / Issue #306
+## Phase 5R exit reconciliation â€” P5R-T26 / Issue #306
 
 The exit review on baseline `69c860f02aa54bdb8e8d32055f9e582dc19942b9` finds no architecture contradiction requiring a new decision before Phase 6. Supported consumer roots remain `com.samo.engine.core.api`, `com.samo.engine.platform.api`, and `com.samo.engine.render.api`; P5R-T23's current internal-package KEEP result and D-016/D-055 module/artifact boundaries remain valid. Native ownership remains explicit in the accepted GLFW/OpenGL owners and wrappers, while extracted P5R collaborators remain non-owning unless already documented otherwise. D-041/D-045/D-046/D-047 spatial conventions remain unchanged, and P5R introduced no persisted/config/wire/protocol semantic migration beyond the already accepted public type-name correction D-066.
 
@@ -731,17 +731,17 @@ This is a reconciliation result, not a new durable architecture decision. Final 
 Accepted P5R-T26 exit evidence: exact candidate `40f2bb91ae3afeeee07d7f8be92dd7b088419fa0` passed all five required jobs in run #495 / `35537699489`; PR #357 merged as `5e0cac4e7748a66b7c2d19e0cf444eaca0a49fce`; exact-merge Lightweight verification passed in run #496 / `35537989459`. The reconciliation found no new architecture decision requirement. Phase 5R exit result: PASS; Phase 6 may proceed only through a freshly refined P6-T01 contract.
 
 
-## Phase 6 asset identity — P6-T01 / Issue #362
+## Phase 6 asset identity â€” P6-T01 / Issue #362
 
 `engine-assets` now begins its production public surface with `com.samo.engine.assets.api.AssetId`. The value is exactly two 64-bit halves and contains no source path, metadata path, cache path, file handle, native ownership, or renderer/world reference. Canonical text is lowercase UUID-style hexadecimal and round-trips the full 128-bit value.
 
 The identity boundary is deliberately narrower than a resource system. P6-T02 remains responsible for versioned source metadata; later Phase 6 tasks own cooking, manifests, imported formats, cache layout, runtime handles, reference counting, and renderer/world consumption. P6-T01 therefore adds no module edge, production dependency, persisted metadata schema, or ownership/lifetime behavior.
 
-Wiki impact: yes — `AssetId` is a new supported public asset API and is documented under `wiki/ASSETS/ASSET_ID.md`.
-Sandbox impact: none — a nonvisual identity value has no meaningful owner-facing sandbox behavior without pulling later metadata/loading systems forward.
+Wiki impact: yes â€” `AssetId` is a new supported public asset API and is documented under `wiki/ASSETS/ASSET_ID.md`.
+Sandbox impact: none â€” a nonvisual identity value has no meaningful owner-facing sandbox behavior without pulling later metadata/loading systems forward.
 
 
-## Phase 6 versioned source metadata — P6-T02 / Issue #365
+## Phase 6 versioned source metadata â€” P6-T02 / Issue #365
 
 `engine-assets` now owns strict source metadata loading in addition to P6-T01 identity. Public `SourceAssetMetadata` carries schema version, `AssetId`, and `AssetType`; `AssetType` contains exactly MESH, TEXTURE, MATERIAL, SKELETON, ANIMATION, AUDIO, PREFAB, and SCENE. `SourceAssetMetadata.load(Path)` is the public file-loading boundary and reports data/file failures through `SourceAssetMetadataLoadException` while null-path misuse remains a programmer-contract `NullPointerException`.
 
@@ -749,11 +749,11 @@ Schema v1 is UTF-8 JSON with exactly `schemaVersion`, `assetId`, and `assetType`
 
 The schema is intentionally common-only. P6-T02 introduces no sidecar discovery/name convention, writer/save API, importer settings, cooker, manifest, dependency graph, cooked schema, cache, runtime resource lifetime, renderer/world integration, or editor behavior. Jackson 2.21.2 is reused as an implementation-only dependency of `engine-assets`; no new library/version is selected and no Jackson type enters public API.
 
-Wiki impact: yes — public metadata API and strict failure behavior are documented under `wiki/ASSETS/SOURCE_METADATA.md`.
-Sandbox impact: none — source-authoring metadata loading is nonvisual infrastructure and has no meaningful persistent-playground behavior before cooker/runtime asset loading exists.
+Wiki impact: yes â€” public metadata API and strict failure behavior are documented under `wiki/ASSETS/SOURCE_METADATA.md`.
+Sandbox impact: none â€” source-authoring metadata loading is nonvisual infrastructure and has no meaningful persistent-playground behavior before cooker/runtime asset loading exists.
 
 
-## Phase 6 command-line cooker foundation — P6-T03 / Issue #368
+## Phase 6 command-line cooker foundation â€” P6-T03 / Issue #368
 
 `engine-assets` now also owns the first offline authoring cooker entry point under its internal package boundary. `:engine-assets:runAssetCooker --args="<input-directory> <output-cache>"` invokes `AssetCookerMain`, which accepts exactly one input directory and one fresh output cache path. The tooling entry point is not supported engine-library API.
 
@@ -763,11 +763,11 @@ A successful clean cook creates `manifest.json` schema v1 and `assets/<AssetId>.
 
 A package-private filesystem seam exists only to test cleanup deterministically. If a write-stage failure occurs after the cooker creates its fresh output tree, cleanup is attempted recursively and the original failure is propagated; pre-existing paths are never deleted by this task.
 
-Wiki impact: yes — offline cooker usage and current pass-through limitation are documented under `wiki/ASSETS/COOKER.md`.
-Sandbox impact: none — this is an offline content-authoring command, not a runtime playground capability.
+Wiki impact: yes â€” offline cooker usage and current pass-through limitation are documented under `wiki/ASSETS/COOKER.md`.
+Sandbox impact: none â€” this is an offline content-authoring command, not a runtime playground capability.
 
 
-## Phase 6 glTF mesh import boundary — P6-T04 / Issue #371
+## Phase 6 glTF mesh import boundary â€” P6-T04 / Issue #371
 
 `engine-assets` now activates the already scope-locked LWJGL 3.4.3 Assimp binding for offline MESH import. The package-private `AssimpGltfMeshImporter` accepts only `.gltf` / `.glb` MESH source files, calls `aiImportFile(..., 0)` with no post-process flags, copies every Assimp mesh into Java-owned package-private `ImportedMesh` values, and releases every non-null `AIScene` in `finally` before returning. No Assimp pointer or struct becomes engine API or survives the import call.
 
@@ -777,11 +777,11 @@ The importer is invoked during P6-T03 source validation before output-cache crea
 
 P6-T03 manifest schema v1, AssetId-based output paths, and temporary `.bin` pass-through bytes remain unchanged. P6-T04 introduces no persisted mesh schema, renderer/world/runtime resource API, module edge, or sandbox behavior.
 
-Wiki impact: yes — cooker MESH import behavior and source-basis limitation are documented under `wiki/ASSETS/COOKER.md` and `wiki/LIMITATIONS.md`.
-Sandbox impact: none — this is offline importer infrastructure with no authorized public runtime mesh/resource API.
+Wiki impact: yes â€” cooker MESH import behavior and source-basis limitation are documented under `wiki/ASSETS/COOKER.md` and `wiki/LIMITATIONS.md`.
+Sandbox impact: none â€” this is offline importer infrastructure with no authorized public runtime mesh/resource API.
 
 
-## Phase 6 engine-basis mesh conversion — P6-T05 / Issue #374
+## Phase 6 engine-basis mesh conversion â€” P6-T05 / Issue #374
 
 `engine-assets` now converts every P6-T04 MESH import exactly once from Assimp import basis into D-041 engine basis before output-cache creation. Package-private `MeshCoordinateConverter` accepts only `ImportedMesh` and returns a distinct Java-owned `EngineMesh`; the P6-T03 source-work item retains engine-basis meshes, not import-basis meshes.
 
@@ -789,29 +789,29 @@ The conversion is `(-X,+Y,-Z)` for positions, normals, and tangent xyz with scal
 
 The converter validates internal attribute lengths and rejects non-finite positions/normals/tangents with mesh context. Missing optional normals/tangents/UV0 remain absent. It does not normalize, repair, generate, clamp, bake node transforms, or perform P6-T06 tangent/UV policy.
 
-A committed one-meter cube fixture proves importer + converter output retains a 1m × 1m × 1m engine-space AABB. P6-T03 manifest schema/output paths and temporary source-byte payloads remain unchanged until P6-T07.
+A committed one-meter cube fixture proves importer + converter output retains a 1m Ã— 1m Ã— 1m engine-space AABB. P6-T03 manifest schema/output paths and temporary source-byte payloads remain unchanged until P6-T07.
 
-Wiki impact: yes — the offline cooker now crosses explicitly into D-041 engine basis.
-Sandbox impact: none — converted mesh data remains package-internal cooker state and no public/runtime mesh loading path exists yet.
+Wiki impact: yes â€” the offline cooker now crosses explicitly into D-041 engine basis.
+Sandbox impact: none â€” converted mesh data remains package-internal cooker state and no public/runtime mesh loading path exists yet.
 
 
-## Phase 6 tangent-space preparation — P6-T06 / Issue #377
+## Phase 6 tangent-space preparation â€” P6-T06 / Issue #377
 
 `engine-assets` now runs Assimp glTF MESH import with exactly `aiProcess_CalcTangentSpace`. No other Assimp post-process flag is enabled. P6-T04's accepted glTF decode behavior and P6-T05's exactly-once D-041 conversion remain otherwise unchanged.
 
 The importer detects tangent-space normal-map use from the mesh's referenced Assimp material containing `aiTextureType_NORMALS`. UV0 is the only supported normal-map UV channel in this bounded slice. A tangent-space-required mesh fails before output-cache creation when it lacks UV0 or authored normals, selects a normal-map UV channel other than 0, or Assimp does not provide tangent/bitangent output.
 
-When tangent and bitangent data are present, the importer copies tangent xyz and derives a per-vertex handedness sign using `dot(cross(normal, tangent), bitangent)`. Signs are exactly ±1 and are retained as Java-owned internal data. Inconsistent tangent/bitangent presence, non-finite tangent-space vectors, or degenerate handedness fail with source-path and mesh context. P6-T05 converts tangent xyz with `(-X,+Y,-Z)` and copies signs unchanged because D-071 has determinant +1.
+When tangent and bitangent data are present, the importer copies tangent xyz and derives a per-vertex handedness sign using `dot(cross(normal, tangent), bitangent)`. Signs are exactly Â±1 and are retained as Java-owned internal data. Inconsistent tangent/bitangent presence, non-finite tangent-space vectors, or degenerate handedness fail with source-path and mesh context. P6-T05 converts tangent xyz with `(-X,+Y,-Z)` and copies signs unchanged because D-071 has determinant +1.
 
 Meshes without a tangent-space normal map are not forced to provide UV0. Assimp may still generate tangents when normals and UV0 are available. The task does not generate normals or UVs, decode normal-map images, change source metadata, serialize final mesh streams, or introduce a runtime material/resource API.
 
 P6-T03 manifest schema/output paths and temporary source-byte MESH payloads remain unchanged until P6-T07.
 
-Wiki impact: yes — offline MESH cooking now includes tangent-space generation and required normal-map UV validation.
-Sandbox impact: none — tangent-space values remain package-internal cooker state and no public/runtime mesh-loading path exists yet.
+Wiki impact: yes â€” offline MESH cooking now includes tangent-space generation and required normal-map UV validation.
+Sandbox impact: none â€” tangent-space values remain package-internal cooker state and no public/runtime mesh-loading path exists yet.
 
 
-## Phase 6 cooked mesh binary — P6-T07 / Issue #380
+## Phase 6 cooked mesh binary â€” P6-T07 / Issue #380
 
 `engine-assets` now persists MESH assets as package-internal `SMES` schema v1 instead of the temporary source-byte pass-through used by P6-T03 through P6-T06. Non-MESH asset types keep the existing opaque source-byte payload until their own bounded cooking tasks.
 
@@ -819,14 +819,14 @@ Sandbox impact: none — tangent-space values remain package-internal cooker sta
 
 Each body record has a fixed 48-byte header containing mesh index, UTF-8 name length, vertex/index counts, attribute flags, exact vertex stride, and six D-041 engine-space AABB floats. Name bytes are strict UTF-8. Vertices are interleaved as position XYZ, optional normal XYZ, optional tangent XYZS, and optional UV0 XY. Tangent S is the accepted P6-T06 handedness sign. Indices are little-endian int32 triangles.
 
-The codec validates finite numeric data, exact stream lengths/stride, supported flags only, paired tangent/sign streams, signs exactly ±1, valid triangle indices, unique nonnegative meshIndex values, exact recomputed AABB equality, strict UTF-8, overflow/truncation/trailing data, and checksum integrity. It does not repair or transform data.
+The codec validates finite numeric data, exact stream lengths/stride, supported flags only, paired tangent/sign streams, signs exactly Â±1, valid triangle indices, unique nonnegative meshIndex values, exact recomputed AABB equality, strict UTF-8, overflow/truncation/trailing data, and checksum integrity. It does not repair or transform data.
 
 The cooker writes `CookedMeshBinary.encode(source.engineMeshes())` only for MESH assets. Manifest v1 and `assets/<AssetId>.bin` naming are unchanged; manifest `byteSize` reflects the actual SMES file size. The existing output-tree ownership and cleanup rules remain unchanged.
 
 No runtime manifest loader, public mesh/resource API, GPU upload, renderer/world/editor integration, compression, or P6-T08+ work is introduced. A later runtime path must cross the same validated binary boundary before mesh values can become eligible for GPU upload.
 
-Wiki impact: yes — MESH cooker output is now a documented cooked binary instead of source pass-through.
-Sandbox impact: none — this is package-internal offline persistence/validation with no public runtime loading path yet.
+Wiki impact: yes â€” MESH cooker output is now a documented cooked binary instead of source pass-through.
+Sandbox impact: none â€” this is package-internal offline persistence/validation with no public runtime loading path yet.
 
 
 ## P6-T08 offline texture cooking
@@ -894,7 +894,7 @@ Manifest-backed MESH requests return a P6-T11 `ResourceHandle<MeshAsset>` in LOA
 P6-T13 deliberately does not create a public arbitrary mesh draw/VAO/material submission API, render command queue, cache/reference counting, texture/audio/material runtime loader, OpenAL path, compression envelope, world integration, sandbox integration, or hot reload.
 
 
-## Phase 6 development material/shader hot reload — P6-T14
+## Phase 6 development material/shader hot reload â€” P6-T14
 
 P6-T14 keeps runtime asset ownership in `engine-assets` and OpenGL ownership in `engine-render-opengl`. MATERIAL payloads are strict UTF-8 JSON schema v1 containing exactly schemaVersion, one canonical D-076 logical shader key, and four bounded scalar multipliers. The cooker validates MATERIAL before output creation while preserving manifest/dependency schemas and the existing AssetId-based payload path.
 
@@ -903,7 +903,7 @@ P6-T14 keeps runtime asset ownership in `engine-assets` and OpenGL ownership in 
 `DevelopmentMaterialHotReloader` remains package-private in the OpenGL adapter. It consumes only public MaterialAsset/ResourceHandle values, asserts D-049 before backend mutation, compiles/links complete shader candidates selected by the logical key, then atomically swaps its internal program/material descriptor and closes superseded owned resources. Failed shader reads/compiles/links do not replace current state. No public renderer API, SHADER AssetType, reverse module edge, cache/reference counting, or arbitrary material submission is introduced.
 
 
-## Phase 7 generational entity identity — P7-T01 / Issue #414
+## Phase 7 generational entity identity â€” P7-T01 / Issue #414
 
 `engine-world` now begins its public Phase 7 surface with immutable `com.samo.engine.world.api.EntityId`. The complete identity is a non-negative integer index plus a non-negative generation; public construction rejects negative components. The value owns no native resource and introduces no persistence, packet, or spatial meaning.
 
@@ -913,11 +913,11 @@ Generation wraparound is forbidden. Destroying a live slot at `Integer.MAX_VALUE
 
 The allocator remains internal: P7-T01 does not define public entity creation/destruction, a public `World`, component storage, deferred structural commands, update phases, prefab/scene lifecycle, replication/network IDs, serialization, renderer integration, physics/audio integration, or gameplay behavior. No project dependency or production dependency is added.
 
-Wiki impact: yes — `EntityId` and its stale/reuse semantics are documented in `wiki/WORLD/ENTITY_IDS.md` and indexed from the public API guide.
-Sandbox impact: none — there is no public entity lifecycle/allocator to exercise without pulling P7-T02+ work forward.
+Wiki impact: yes â€” `EntityId` and its stale/reuse semantics are documented in `wiki/WORLD/ENTITY_IDS.md` and indexed from the public API guide.
+Sandbox impact: none â€” there is no public entity lifecycle/allocator to exercise without pulling P7-T02+ work forward.
 
 
-## Phase 7 packed component storage — P7-T02 / Issue #416
+## Phase 7 packed component storage â€” P7-T02 / Issue #416
 
 `engine-world` now adds package-private `PackedComponentStore<T>` as a one-component-type-per-instance storage foundation. A sparse integer lookup maps entity indices to dense positions while dense storage retains the exact `EntityId` beside each component value. `EntityIdAllocator` remains the sole liveness/generation authority, so the store does not duplicate P7-T01 generation bookkeeping.
 
@@ -927,11 +927,11 @@ Removal uses swap-compaction and repairs the moved entity's sparse position so p
 
 The store remains internal and externally serialized. P7-T02 introduces no public `World` or component-store API, concrete gameplay component types, query/event/deferred-command system, persistence/serialization/network identity, renderer/physics/audio/game behavior, dependency, or module edge.
 
-Durable decision impact: none — this is the bounded internal implementation of the already planned P7-T02 packed-store contract and consumes P7-T01 identity validity without adding a new cross-task architecture policy.
-Wiki impact: none — no supported public engine API or consumer-visible behavior changes.
-Sandbox impact: none — there is still no public world/entity/component lifecycle that can be exercised honestly without pulling P7-T03+ work forward.
+Durable decision impact: none â€” this is the bounded internal implementation of the already planned P7-T02 packed-store contract and consumes P7-T01 identity validity without adding a new cross-task architecture policy.
+Wiki impact: none â€” no supported public engine API or consumer-visible behavior changes.
+Sandbox impact: none â€” there is still no public world/entity/component lifecycle that can be exercised honestly without pulling P7-T03+ work forward.
 
-## Phase 7 deferred structural commands — P7-T03 / Issue #418
+## Phase 7 deferred structural commands â€” P7-T03 / Issue #418
 
 `engine-world` adds package-private `DeferredStructuralCommandBuffer` above the accepted P7-T01 identity allocator and P7-T02 packed component store. Internal callers record entity creation/destruction and typed component add/removal requests while packed-store iteration is active; recording itself does not mutate allocator or store structure. An owner later invokes `flush()` explicitly, and queued commands execute in FIFO record order.
 
@@ -941,12 +941,12 @@ Deferred entity creation uses a package-private pending result whose `EntityId` 
 
 P7-T03 does not define automatic flush scheduling or a world update phase. P7-T04 remains the owner of fixed update phases and eventual structural-command visibility timing. No public `World`, public command buffer/component store, concrete component set, query/event scheduler, prefab/scene behavior, persistence/protocol/network identity, renderer/physics/audio/assets/game behavior, project edge, or production dependency is introduced.
 
-Durable decision impact: none — the active Issue bounds this internal FIFO/explicit-flush mechanism without establishing a broader public or cross-phase contract.
-Wiki impact: none — no supported public engine API or consumer-visible usage changes.
-Sandbox impact: none — there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.
+Durable decision impact: none â€” the active Issue bounds this internal FIFO/explicit-flush mechanism without establishing a broader public or cross-phase contract.
+Wiki impact: none â€” no supported public engine API or consumer-visible usage changes.
+Sandbox impact: none â€” there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.
 
 
-## Phase 7 fixed world update phases — P7-T04 / Issue #420
+## Phase 7 fixed world update phases â€” P7-T04 / Issue #420
 
 `engine-world` adds package-private `WorldUpdatePhase` and `WorldUpdatePipeline` above the accepted P7-T03 deferred-command boundary. One already-scheduled world update invokes exactly one internal callback for each phase in fixed order: INPUT -> PRE_PHYSICS -> PHYSICS -> POST_PHYSICS -> GAMEPLAY -> REPLICATION_CAPTURE -> PRESENTATION_EXTRACTION. The pipeline is ordering/visibility infrastructure only; it owns no wall-clock timing, fixed-step accumulation, sleeping, render loop, physics step, replication codec, presentation extractor, system registry, or parallel job scheduling.
 
@@ -956,5 +956,23 @@ If a phase callback throws, the exception propagates, later phases do not run, a
 
 D-082 records the fixed order and successful-phase structural visibility boundary. No public `World`, public phase/system scheduler, concrete component set, physics/network/renderer/platform dependency, persistence/protocol behavior, project edge, or production dependency is introduced.
 
-Wiki impact: none — the phase vocabulary and pipeline are package-private implementation boundaries.
-Sandbox impact: none — there is no public world lifecycle through which the persistent sandbox could invoke the pipeline without pulling later Phase 7 work forward.
+Wiki impact: none â€” the phase vocabulary and pipeline are package-private implementation boundaries.
+Sandbox impact: none â€” there is no public world lifecycle through which the persistent sandbox could invoke the pipeline without pulling later Phase 7 work forward.
+
+
+## Phase 7 core data-driven world components â€” P7-T05 / Issue #422
+
+`engine-world` now adds exactly five supported public data-oriented component types without exposing a public world/container API. Each component can be created from explicit Java data before any renderer, audio backend, native resource, loader, or scene parser exists.
+
+`TransformComponent` owns one fresh canonical `engine-core Transform`. Its constructor accepts local position XYZ in meters, quaternion XYZW, and dimensionless scale XYZ, delegates validation/normalization to the accepted D-041 `Transform`, and starts unparented. Returning the owned mutable `Transform` lets later bounded hierarchy/world work reuse the existing transform implementation rather than creating a second spatial-state/math contract.
+
+`NameComponent` is an immutable non-null/nonblank string and preserves accepted text exactly. `MeshRendererComponent` is an immutable pair of mesh/material `AssetId` values. `AudioEmitterComponent` is an immutable audio `AssetId` reference. Those asset-facing components retain stable authored identities only: they do not retain `ResourceHandle`, decoded resource values, renderer/audio objects, GPU/OpenAL/native IDs, or paths, and construction performs no asset-type lookup or I/O.
+
+`CameraComponent` is immutable projection configuration containing finite vertical FOV radians, positive near plane meters, and a farther finite far plane, matching the D-045 perspective domain that is independent of framebuffer aspect. Aspect remains runtime/framebuffer input. Camera pose comes from the same entity's `TransformComponent`; no duplicate camera position/orientation, matrix state, active-camera registry, or viewport policy is introduced.
+
+Because the supported `TransformComponent.transform()` signature exposes `engine-core Transform` and mesh/material/audio components expose `engine-assets AssetId`, `engine-world` publishes its already-existing `engine-core` and `engine-assets` project dependencies through Gradle `api(...)` metadata. This changes consumer compile metadata only: no project edge, dependency version/family, lockfile, ownership direction, or native dependency is added.
+
+D-083 records the stable component-data/reference policy. P7-T05 deliberately defines no public `World`, allocator/store/query/structural-command/update-phase API, GUIDs, scene JSON/schema/parser, persisted component format, prefab behavior, world activation, renderer extraction/submission, runtime audio loading/playback/spatialization, physics/Jolt integration, networking identity/protocol, concurrency, or later P7-T06+ behavior.
+
+Wiki impact: yes â€” the supported component APIs and their current integration limits are documented under `wiki/WORLD/COMPONENTS.md`, the API index, navigation, and limitations guide.
+Sandbox impact: none â€” the public values cannot yet drive an honest sandbox world feature without later public world lifecycle and renderer/audio integration boundaries.

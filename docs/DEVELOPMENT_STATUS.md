@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / Issue #414, P7-T02 / Issue #416, and P7-T03 / Issue #418 are accepted; P7-T04 / Issue #420 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T04 / #420 are accepted; P7-T05 / Issue #422 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T04 / Issue #420 — package-private fixed world update phases with a P7-T03 structural-command flush after each successfully completed phase; implementation is on `p7-t04-fixed-world-update-phases`; final PR/CI is not yet accepted |
+| Active executable task | P7-T05 / Issue #422 — five public data-oriented world components with stable `AssetId` references and canonical `Transform` reuse; implementation is on `p7-t05-core-world-components`; final PR/CI is not yet accepted |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -300,18 +300,28 @@ Wiki impact: none — P7-T03 adds no supported public engine API or consumer-vis
 Sandbox impact: none — deferred commands remain package-private and there is still no public world lifecycle to exercise honestly.
 Independent review: not performed in the connected authoring session; no independent reviewer/provenance was available.
 
-## Phase 7 fixed world update phases — P7-T04 / Issue #420
+## Phase 7 fixed world update phases — P7-T04 / Issue #420 — accepted
 
-P7-T04 is active from accepted P7-T03 merge baseline `e97dceb477d9492d28aa2a924e5c5adc93628ba8` on branch `p7-t04-fixed-world-update-phases`. The bounded candidate adds package-private `WorldUpdatePhase` and `WorldUpdatePipeline` only in `engine-world`. One caller-supplied callback runs exactly once in fixed order: INPUT, PRE_PHYSICS, PHYSICS, POST_PHYSICS, GAMEPLAY, REPLICATION_CAPTURE, PRESENTATION_EXTRACTION.
+P7-T04 is accepted. Final candidate `7bb6f7f69f8979b4f803dda9ea33d7490f55c616` passed all five required PR jobs in run #649 / `36997114403`; PR #421 merged as `2098866d1ae01d6d80e66777e1830cb08b6c0bdd`; exact merged `master` then passed Lightweight verification in run #650 / `36997764861`. Issue #420 closed completed after that exact-merge gate.
 
-After each successfully completed phase callback, the pipeline invokes the accepted P7-T03 command buffer `flush()` before the next phase. Structural changes recorded by a phase therefore remain invisible during that callback and become visible at the next successful phase boundary. The final presentation-extraction phase is also followed by a flush. Callback or flush failure propagates and stops later phases; a failed callback is not auto-flushed, and command-buffer partial-failure/tail behavior remains P7-T03-owned. Recursive update is rejected, the guard recovers after failure, and no concurrency guarantee is introduced.
+The accepted package-private `WorldUpdatePhase` / `WorldUpdatePipeline` order is INPUT, PRE_PHYSICS, PHYSICS, POST_PHYSICS, GAMEPLAY, REPLICATION_CAPTURE, PRESENTATION_EXTRACTION. A successful callback is followed by the P7-T03 structural-command flush before the next phase, including the final presentation boundary; callback/flush failure and recovery semantics remain as recorded by D-082.
 
-Authoring preflight run #6 / `36996034761` on committed Java head `a8c9d6682db4467aec9f33e798e5090684bf1524` passed `spotlessCheck`, `:engine-world:test --rerun-tasks`, and the architecture boundary test. This branch-only authoring evidence is not final acceptance evidence. The connected environment does not execute the Gradle wrapper locally, so no separate local command run is claimed.
+Wiki impact: none — all P7-T04 phase/pipeline types remain package-private.
+Sandbox impact: none — there is still no public world lifecycle through which the sandbox can invoke the pipeline honestly.
+Independent review: not performed in the connected authoring session; acceptance relied on the required exact-head repository CI and exact-merge verification.
 
-P7-T04 adds no public `World`/phase/system API, timing/fixed-step loop, concrete P7-T05 components, physics stepping/Jolt dependency, replication/network implementation, renderer/presentation implementation, platform input acquisition, event/query scheduler, prefab/scene/GUID behavior, production dependency, module edge, Gradle change, or lockfile change.
+## Phase 7 core data-driven world components — P7-T05 / Issue #422
 
-Wiki impact: none — all P7-T04 types remain package-private and supported consumer API is unchanged.
-Sandbox impact: none — there is still no public world lifecycle through which the sandbox could exercise update phases honestly.
-Independent review: not performed in this connected session; no independent reviewer/provenance is available.
+P7-T05 is active from accepted P7-T04 merge baseline `2098866d1ae01d6d80e66777e1830cb08b6c0bdd` on branch `p7-t05-core-world-components`. The bounded implementation adds exactly five supported public `engine-world` component types: `TransformComponent`, `NameComponent`, `MeshRendererComponent`, `CameraComponent`, and `AudioEmitterComponent`.
 
-Exact next action: finish P7-T04 / Issue #420 only, complete final diff/self-review/consistency audit, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #420. Do not materialize P7-T05 before P7-T04 is accepted.
+`TransformComponent` creates and owns a fresh canonical `engine-core Transform` from explicit local position/quaternion/scale data and exposes that owned transform for later hierarchy/world integration. `NameComponent` stores one nonblank string without silent normalization. `MeshRendererComponent` stores stable mesh/material `AssetId` values only. `CameraComponent` stores D-045 vertical FOV plus near/far plane data while framebuffer aspect remains runtime input and pose remains transform-owned. `AudioEmitterComponent` stores one stable audio `AssetId` only. No component performs I/O, resource loading, renderer/audio/native lookup, or service discovery.
+
+Because supported public signatures expose existing `Transform` and `AssetId` types, `engine-world` publishes its already-existing `engine-core` and `engine-assets` edges through Gradle `api(...)` metadata. This adds no project edge, dependency family/version, lockfile change, reverse dependency, renderer/audio dependency, or persisted schema.
+
+P7-T07 still owns scene JSON. P7-T05 tests represent scene-like parsed data in memory and construct all five components directly from that data, without introducing a production scene parser/schema, public `World`, GUIDs, entity lifecycle, component store/query API, world-to-renderer extraction, arbitrary mesh/material submission, runtime audio playback, physics integration, serialization, or networking.
+
+Wiki impact: yes — the five new supported component APIs require `wiki/WORLD/COMPONENTS.md`, API index/navigation, and limitation updates.
+Sandbox impact: none — public component values alone still cannot be exercised as an integrated world feature without a public world/entity lifecycle plus renderer/audio bridges that belong to later tasks.
+Independent review: not performed in this connected session; no independent reviewer/provenance is currently available.
+
+Exact next action: finish P7-T05 / Issue #422 only, complete full verification/documentation/wiki/API-metadata/spatial audits, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #422. Do not materialize P7-T06 before P7-T05 is accepted.

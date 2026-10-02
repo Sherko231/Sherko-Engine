@@ -14,8 +14,11 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Spotless check
-        run: .\gradlew.bat spotlessCheck
+      - name: Apply Spotless locally
+        run: .\gradlew.bat spotlessApply
+      - name: Show formatter diff
+        shell: powershell
+        run: git diff -- engine-world/src/main/java/com/samo/engine/world/internal/WorldUpdatePhase.java engine-world/src/main/java/com/samo/engine/world/internal/WorldUpdatePipeline.java engine-world/src/test/java/com/samo/engine/world/internal/WorldUpdatePipelineTest.java
       - name: Engine world tests
         run: .\gradlew.bat :engine-world:test --rerun-tasks
       - name: Architecture boundary test

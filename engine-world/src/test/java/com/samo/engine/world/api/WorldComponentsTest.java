@@ -13,11 +13,11 @@ class WorldComponentsTest {
     @Test
     void createsEveryPlannedComponentEntirelyFromSceneLikeData() {
 
-        SceneLikeData data = new SceneLikeData(1.0f, 2.0f, -3.0f, 0.0f, 0.0f, 0.0f, 2.0f, 1.0f, 1.0f, 1.0f, "Camera Rig",
-            new AssetId(1L, 2L), new AssetId(3L, 4L), (float) Math.toRadians(60.0), 0.1f, 250.0f, new AssetId(5L, 6L));
+        SceneLikeData data = new SceneLikeData(1.0f, 2.0f, -3.0f, 0.0f, 0.0f, 0.0f, 2.0f, 1.0f, 1.0f, 1.0f, "Camera Rig", new AssetId(1L, 2L), new AssetId(3L, 4L),
+            (float) Math.toRadians(60.0), 0.1f, 250.0f, new AssetId(5L, 6L));
 
-        TransformComponent transformComponent = new TransformComponent(data.positionX(), data.positionY(), data.positionZ(), data.rotationX(), data.rotationY(),
-            data.rotationZ(), data.rotationW(), data.scaleX(), data.scaleY(), data.scaleZ());
+        TransformComponent transformComponent = new TransformComponent(data.positionX(), data.positionY(), data.positionZ(), data.rotationX(), data.rotationY(), data.rotationZ(),
+            data.rotationW(), data.scaleX(), data.scaleY(), data.scaleZ());
         NameComponent nameComponent = new NameComponent(data.name());
         MeshRendererComponent meshRendererComponent = new MeshRendererComponent(data.meshAssetId(), data.materialAssetId());
         CameraComponent cameraComponent = new CameraComponent(data.verticalFovRadians(), data.nearPlaneMeters(), data.farPlaneMeters());
@@ -44,12 +44,12 @@ class WorldComponentsTest {
         TransformComponent normalized = new TransformComponent(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 4.0f, 1.0f, 1.0f, 1.0f);
 
         assertThat(normalized.transform().localRotation(new Quaternionf())).isEqualTo(new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f));
-        assertThatThrownBy(() -> new TransformComponent(Float.NaN, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f))
-            .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("position.x");
-        assertThatThrownBy(() -> new TransformComponent(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f))
-            .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("rotation quaternion");
-        assertThatThrownBy(() -> new TransformComponent(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, Float.POSITIVE_INFINITY, 1.0f, 1.0f))
-            .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("scale.x");
+        assertThatThrownBy(() -> new TransformComponent(Float.NaN, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("position.x");
+        assertThatThrownBy(() -> new TransformComponent(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("rotation quaternion");
+        assertThatThrownBy(() -> new TransformComponent(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, Float.POSITIVE_INFINITY, 1.0f, 1.0f)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("scale.x");
 
     }
 
@@ -88,25 +88,18 @@ class WorldComponentsTest {
         assertThat(nearBoundary.nearPlaneMeters()).isPositive();
         assertThat(nearBoundary.farPlaneMeters()).isGreaterThan(nearBoundary.nearPlaneMeters());
 
-        assertThatThrownBy(() -> new CameraComponent(Float.NaN, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("verticalFovRadians");
-        assertThatThrownBy(() -> new CameraComponent(0.0f, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("verticalFovRadians");
-        assertThatThrownBy(() -> new CameraComponent(-0.1f, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("verticalFovRadians");
-        assertThatThrownBy(() -> new CameraComponent((float) Math.PI, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("verticalFovRadians");
-        assertThatThrownBy(() -> new CameraComponent(1.0f, Float.POSITIVE_INFINITY, 10.0f)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("nearPlaneMeters");
+        assertThatThrownBy(() -> new CameraComponent(Float.NaN, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("verticalFovRadians");
+        assertThatThrownBy(() -> new CameraComponent(0.0f, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("verticalFovRadians");
+        assertThatThrownBy(() -> new CameraComponent(-0.1f, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("verticalFovRadians");
+        assertThatThrownBy(() -> new CameraComponent((float) Math.PI, 0.1f, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("verticalFovRadians");
+        assertThatThrownBy(() -> new CameraComponent(1.0f, Float.POSITIVE_INFINITY, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nearPlaneMeters");
         assertThatThrownBy(() -> new CameraComponent(1.0f, 0.0f, 10.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nearPlaneMeters");
-        assertThatThrownBy(() -> new CameraComponent(1.0f, 1.0f, Float.NEGATIVE_INFINITY)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("farPlaneMeters");
+        assertThatThrownBy(() -> new CameraComponent(1.0f, 1.0f, Float.NEGATIVE_INFINITY)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("farPlaneMeters");
         assertThatThrownBy(() -> new CameraComponent(1.0f, 1.0f, 1.0f)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("farPlaneMeters");
 
     }
 
-    private record SceneLikeData(float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW, float scaleX,
-        float scaleY, float scaleZ, String name, AssetId meshAssetId, AssetId materialAssetId, float verticalFovRadians, float nearPlaneMeters, float farPlaneMeters,
-        AssetId audioAssetId) {
+    private record SceneLikeData(float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW, float scaleX, float scaleY,
+        float scaleZ, String name, AssetId meshAssetId, AssetId materialAssetId, float verticalFovRadians, float nearPlaneMeters, float farPlaneMeters, AssetId audioAssetId) {
     }
 }

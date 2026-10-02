@@ -36,8 +36,8 @@ public final class TransformComponent {
      * @param scaleZ
      *            local dimensionless Z scale
      */
-    public TransformComponent(float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW,
-        float scaleX, float scaleY, float scaleZ) {
+    public TransformComponent(float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW, float scaleX, float scaleY,
+        float scaleZ) {
 
         Transform ownedTransform = new Transform();
         ownedTransform.setLocalPosition(positionX, positionY, positionZ);

@@ -4,9 +4,6 @@ on:
   push:
     branches: [ p7-t06-authoring-entity-guids ]
 
-permissions:
-  contents: write
-
 jobs:
   preflight:
     runs-on: windows-latest
@@ -19,24 +16,23 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Apply guarded documentation reconciliation
+      - name: Verify committed diff hygiene
         shell: powershell
         run: |
-          python tools/p7_t06_sync.py
+          git diff --check master...HEAD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git diff --check
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git config user.name "Sherko"
-          git config user.email "120306123+Sherko231@users.noreply.github.com"
-          git add README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/WORLD/ENTITY_IDS.md
-          git diff --cached --quiet
-          if ($LASTEXITCODE -ne 0) {
-            git commit -m "docs: reconcile P7-T06 identity contract"
-            git push
-          }
       - name: Verify formatting
         run: .\gradlew.bat spotlessCheck
       - name: Run engine-world tests
         run: .\gradlew.bat :engine-world:test --rerun-tasks
       - name: Run architecture boundary test
         run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+      - name: Run repository check
+        run: .\gradlew.bat check
+      - name: Resolve and verify dependency locks
+        shell: powershell
+        run: |
+          & .\gradlew.bat resolveAndLockAllDependencies
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- '*.lockfile'
+          if ($LASTEXITCODE -ne 0) { Write-Error 'P7-T06 unexpectedly changed dependency lockfiles'; exit $LASTEXITCODE }

@@ -22,11 +22,13 @@ record SceneDocument(List<SceneEntityDocument> entities) {
     private static void validateHierarchy(List<SceneEntityDocument> entities) {
 
         Map<EntityGuid, EntityGuid> parentsByGuid = new HashMap<>();
+        Set<EntityGuid> seenGuids = new HashSet<>();
         for (SceneEntityDocument entity : entities) {
             EntityGuid guid = entity.guid();
-            if (parentsByGuid.putIfAbsent(guid, entity.parentGuid()) != null || parentsByGuid.containsKey(guid) && countGuid(entities, guid) > 1) {
+            if (!seenGuids.add(guid)) {
                 throw new SceneFormatException("duplicate entity guid: " + guid);
             }
+            parentsByGuid.put(guid, entity.parentGuid());
         }
 
         for (SceneEntityDocument entity : entities) {
@@ -54,18 +56,6 @@ record SceneDocument(List<SceneEntityDocument> entities) {
             }
             resolved.addAll(path);
         }
-
-    }
-
-    private static int countGuid(List<SceneEntityDocument> entities, EntityGuid guid) {
-
-        int count = 0;
-        for (SceneEntityDocument entity : entities) {
-            if (entity.guid().equals(guid)) {
-                count++;
-            }
-        }
-        return count;
 
     }
 }

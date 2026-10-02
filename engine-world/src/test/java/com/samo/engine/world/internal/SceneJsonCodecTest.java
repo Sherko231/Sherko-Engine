@@ -141,25 +141,17 @@ class SceneJsonCodecTest {
     @Test
     void rejectsDuplicateAndUnknownFields() {
 
-        assertFormatFailure(
-            "{\"schemaVersion\":1,\"schemaVersion\":1,\"entities\":[]}",
-            "{\"schemaVersion\":1,\"entities\":[],\"extra\":true}",
+        assertFormatFailure("{\"schemaVersion\":1,\"schemaVersion\":1,\"entities\":[]}", "{\"schemaVersion\":1,\"entities\":[],\"extra\":true}",
             sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{},\"extra\":true"),
-            sceneWithComponents("{\"futureComponent\":{\"schemaVersion\":1}}"),
-            sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"ok\",\"extra\":true}}"));
+            sceneWithComponents("{\"futureComponent\":{\"schemaVersion\":1}}"), sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"ok\",\"extra\":true}}"));
 
     }
 
     @Test
     void rejectsWrongShapesAndSchemaVersions() {
 
-        assertFormatFailure(
-            "{\"entities\":[]}",
-            "{\"schemaVersion\":2,\"entities\":[]}",
-            "{\"schemaVersion\":\"1\",\"entities\":[]}",
-            "[]",
-            "{\"schemaVersion\":1,\"entities\":{}}",
-            "{\"schemaVersion\":1,\"entities\":[1]}",
+        assertFormatFailure("{\"entities\":[]}", "{\"schemaVersion\":2,\"entities\":[]}", "{\"schemaVersion\":\"1\",\"entities\":[]}", "[]",
+            "{\"schemaVersion\":1,\"entities\":{}}", "{\"schemaVersion\":1,\"entities\":[1]}",
             sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":[]"),
             sceneWithComponents("{\"transform\":{\"position\":[0,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}}"),
             sceneWithComponents("{\"name\":{\"schemaVersion\":2,\"name\":\"ok\"}}"));
@@ -169,39 +161,31 @@ class SceneJsonCodecTest {
     @Test
     void rejectsMalformedDuplicateAndInvalidHierarchyGuids() {
 
-        assertFormatFailure(
-            sceneWithEntityFields("\"guid\":\"not-a-guid\",\"parentGuid\":null,\"components\":{}"),
+        assertFormatFailure(sceneWithEntityFields("\"guid\":\"not-a-guid\",\"parentGuid\":null,\"components\":{}"),
             sceneWithEntityFields("\"guid\":\"AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA\",\"parentGuid\":null,\"components\":{}"),
             sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":\"AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA\",\"components\":{}"),
-            sceneWithEntities(
-                "{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{}},"
-                    + "{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{}}"),
+            sceneWithEntities("{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{}}," + "{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{}}"),
             sceneWithEntityFields("\"guid\":\"" + CHILD_GUID + "\",\"parentGuid\":\"" + ROOT_GUID + "\",\"components\":{}"),
-            sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":\"" + ROOT_GUID + "\",\"components\":{}"),
-            sceneWithEntities(
-                "{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":\"" + CHILD_GUID + "\",\"components\":{}},"
-                    + "{\"guid\":\"" + CHILD_GUID + "\",\"parentGuid\":\"" + ROOT_GUID + "\",\"components\":{}}"));
+            sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":\"" + ROOT_GUID + "\",\"components\":{}"), sceneWithEntities("{\"guid\":\"" + ROOT_GUID
+                + "\",\"parentGuid\":\"" + CHILD_GUID + "\",\"components\":{}}," + "{\"guid\":\"" + CHILD_GUID + "\",\"parentGuid\":\"" + ROOT_GUID + "\",\"components\":{}}"));
 
     }
 
     @Test
     void rejectsInvalidTransformAndNameData() {
 
-        assertFormatFailure(
-            sceneWithComponents("{\"transform\":{\"schemaVersion\":1,\"position\":[0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}}"),
+        assertFormatFailure(sceneWithComponents("{\"transform\":{\"schemaVersion\":1,\"position\":[0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}}"),
             sceneWithComponents("{\"transform\":{\"schemaVersion\":1,\"position\":[0,\"x\",0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}}"),
             sceneWithComponents("{\"transform\":{\"schemaVersion\":1,\"position\":[1e100,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}}"),
             sceneWithComponents("{\"transform\":{\"schemaVersion\":1,\"position\":[0,0,0],\"rotation\":[0,0,0,0],\"scale\":[1,1,1]}}"),
-            sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"   \"}}"),
-            sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":null}}"));
+            sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"   \"}}"), sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":null}}"));
 
     }
 
     @Test
     void rejectsInvalidAssetReferencesAndCameraValues() {
 
-        assertFormatFailure(
-            sceneWithComponents("{\"meshRenderer\":{\"schemaVersion\":1,\"meshAssetId\":\"bad\",\"materialAssetId\":\"" + MATERIAL_ID + "\"}}"),
+        assertFormatFailure(sceneWithComponents("{\"meshRenderer\":{\"schemaVersion\":1,\"meshAssetId\":\"bad\",\"materialAssetId\":\"" + MATERIAL_ID + "\"}}"),
             sceneWithComponents("{\"meshRenderer\":{\"schemaVersion\":1,\"meshAssetId\":\"AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA\",\"materialAssetId\":\"" + MATERIAL_ID + "\"}}"),
             sceneWithComponents("{\"audioEmitter\":{\"schemaVersion\":1,\"audioAssetId\":\"bad\"}}"),
             sceneWithComponents("{\"camera\":{\"schemaVersion\":1,\"verticalFovRadians\":0,\"nearPlaneMeters\":0.1,\"farPlaneMeters\":100}}"),

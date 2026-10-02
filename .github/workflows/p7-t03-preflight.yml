@@ -24,3 +24,9 @@ jobs:
         run: .\gradlew.bat :engine-world:test --rerun-tasks
       - name: Run architecture boundary test
         run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+      - name: Generate bounded documentation candidate
+        shell: bash
+        run: |
+          python .github/scripts/p7_t03_doc_sync.py
+          git diff --check
+          git diff --name-only -- docs/DEVELOPMENT_STATUS.md docs/ARCHITECTURE.md

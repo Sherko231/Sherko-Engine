@@ -15,7 +15,7 @@ final class DeferredStructuralCommandBuffer {
 
     }
 
-    PendingEntityCreation createEntity() {
+    PendingEntityCreation deferEntityCreation() {
 
         requireRecordingAllowed();
         PendingEntityCreation pendingCreation = new PendingEntityCreation();
@@ -24,7 +24,7 @@ final class DeferredStructuralCommandBuffer {
 
     }
 
-    void destroyEntity(EntityId id) {
+    void deferEntityDestruction(EntityId id) {
 
         Objects.requireNonNull(id, "id");
         requireRecordingAllowed();
@@ -32,7 +32,7 @@ final class DeferredStructuralCommandBuffer {
 
     }
 
-    <T> void addComponent(PackedComponentStore<T> store, EntityId id, T component) {
+    <T> void deferComponentAdd(PackedComponentStore<T> store, EntityId id, T component) {
 
         Objects.requireNonNull(store, "store");
         Objects.requireNonNull(id, "id");
@@ -42,7 +42,7 @@ final class DeferredStructuralCommandBuffer {
 
     }
 
-    <T> void removeComponent(PackedComponentStore<T> store, EntityId id) {
+    <T> void deferComponentRemoval(PackedComponentStore<T> store, EntityId id) {
 
         Objects.requireNonNull(store, "store");
         Objects.requireNonNull(id, "id");

@@ -23,9 +23,9 @@ final class PackedComponentStore<T> {
 
     boolean add(EntityId id, T component) {
 
-        requireStructuralMutationAllowed();
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(component, "component");
+        requireStructuralMutationAllowed();
         if (!allocator.isAlive(id)) {
             return false;
         }
@@ -63,8 +63,8 @@ final class PackedComponentStore<T> {
 
     boolean remove(EntityId id) {
 
-        requireStructuralMutationAllowed();
         Objects.requireNonNull(id, "id");
+        requireStructuralMutationAllowed();
         if (!allocator.isAlive(id)) {
             return false;
         }

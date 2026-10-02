@@ -4,62 +4,37 @@ on:
   push:
     branches: [ p7-t05-core-world-components ]
 
-permissions:
-  contents: write
-
 jobs:
   preflight:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Apply guarded documentation and wiki sync
-        shell: powershell
-        run: |
-          git fetch --no-tags --depth=1 origin 2098866d1ae01d6d80e66777e1830cb08b6c0bdd
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git checkout 2098866d1ae01d6d80e66777e1830cb08b6c0bdd -- README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/README.md
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Remove-Item wiki/WORLD/COMPONENTS.md -ErrorAction SilentlyContinue
-          python tools/p7_t05_sync.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -c "from pathlib import Path; p=Path('docs/ARCHITECTURE.md'); s=p.read_text(encoding='utf-8'); p.write_text(s.rstrip()+'\n', encoding='utf-8')"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -c "from pathlib import Path; s=Path('docs/ARCHITECTURE.md').read_text(encoding='utf-8'); assert 'â€”' not in s and 'â€' not in s, 'mojibake detected in ARCHITECTURE.md'"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git diff --check
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git diff --quiet
-          if ($LASTEXITCODE -ne 0) {
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -- README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/README.md wiki/WORLD/COMPONENTS.md
-            git commit -m "docs: repair and reconcile P7-T05 component contract"
-            git push origin HEAD:$env:GITHUB_REF_NAME
-          }
-
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Apply authoritative formatting
+      - name: Verify committed documentation text integrity
         shell: powershell
         run: |
-          & .\gradlew.bat spotlessApply
+          python -c "from pathlib import Path; files=['README.md','ROADMAP.md','docs/ARCHITECTURE.md','docs/DECISIONS.md','docs/DEVELOPMENT_STATUS.md','wiki/API_INDEX.md','wiki/LIMITATIONS.md','wiki/README.md','wiki/WORLD/COMPONENTS.md']; bad=[]; [bad.append(p) for p in files if 'â€' in Path(p).read_text(encoding='utf-8')]; assert not bad, f'mojibake detected: {bad}'"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          git diff --quiet
-          if ($LASTEXITCODE -ne 0) {
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -- engine-world/src/main/java engine-world/src/test/java
-            git commit -m "style: apply Spotless to P7-T05"
-            git push origin HEAD:$env:GITHUB_REF_NAME
-          }
+          git diff --check HEAD^ HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: .\gradlew.bat spotlessCheck
       - name: Run engine-world tests
         run: .\gradlew.bat :engine-world:test --rerun-tasks
       - name: Run architecture boundary test
         run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+      - name: Run repository check
+        run: .\gradlew.bat check
+      - name: Resolve and verify dependency locks
+        shell: powershell
+        run: |
+          & .\gradlew.bat resolveAndLockAllDependencies
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- '*.lockfile'
+          if ($LASTEXITCODE -ne 0) { Write-Error 'P7-T05 unexpectedly changed dependency lockfiles'; exit $LASTEXITCODE }

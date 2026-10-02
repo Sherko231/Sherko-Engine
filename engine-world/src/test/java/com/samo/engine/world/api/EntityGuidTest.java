@@ -30,13 +30,8 @@ class EntityGuidTest {
     @Test
     void rejectsNonCanonicalText() {
 
-        String[] invalid = {
-            "00112233-4455-6677-8899-AABBCCDDEEFF",
-            "00112233445566778899aabbccddeeff",
-            "00112233-4455-6677-8899-aabbccddee",
-            "00112233-4455-6677-8899-aabbccddeeff0",
-            "not-a-guid"
-        };
+        String[] invalid = {"00112233-4455-6677-8899-AABBCCDDEEFF", "00112233445566778899aabbccddeeff", "00112233-4455-6677-8899-aabbccddee",
+            "00112233-4455-6677-8899-aabbccddeeff0", "not-a-guid"};
 
         for (String text : invalid) {
             assertThatThrownBy(() -> EntityGuid.parse(text)).isInstanceOf(IllegalArgumentException.class);

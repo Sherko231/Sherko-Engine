@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T04 / #420 are accepted; P7-T05 / Issue #422 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T05 / #422 are accepted; P7-T06 / Issue #424 is the current bounded task; Phase 6 remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T05 / Issue #422 — five public data-oriented world components with stable `AssetId` references and canonical `Transform` reuse; implementation is on `p7-t05-core-world-components`; final PR/CI is not yet accepted |
+| Active executable task | P7-T06 / Issue #424 — stable public authoring `EntityGuid` plus package-private live GUID-to-`EntityId` resolution; implementation is on `p7-t06-authoring-entity-guids`; final PR/CI is not yet accepted |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -312,16 +312,24 @@ Independent review: not performed in the connected authoring session; acceptance
 
 ## Phase 7 core data-driven world components — P7-T05 / Issue #422
 
-P7-T05 is active from accepted P7-T04 merge baseline `2098866d1ae01d6d80e66777e1830cb08b6c0bdd` on branch `p7-t05-core-world-components`. The bounded implementation adds exactly five supported public `engine-world` component types: `TransformComponent`, `NameComponent`, `MeshRendererComponent`, `CameraComponent`, and `AudioEmitterComponent`.
+P7-T05 is accepted. Final candidate `4ad2a804c18920212dea6b76f033ef2dd876411a` passed all five required PR jobs in run #651 / `37004765576`; PR #423 merged as `8275f5e86647b2629d3cb1b4d3ae973a647043ca`, and exact merged `master` passed Lightweight verification in run #652 / `37005330891`. Issue #422 is closed completed.
 
-`TransformComponent` creates and owns a fresh canonical `engine-core Transform` from explicit local position/quaternion/scale data and exposes that owned transform for later hierarchy/world integration. `NameComponent` stores one nonblank string without silent normalization. `MeshRendererComponent` stores stable mesh/material `AssetId` values only. `CameraComponent` stores D-045 vertical FOV plus near/far plane data while framebuffer aspect remains runtime input and pose remains transform-owned. `AudioEmitterComponent` stores one stable audio `AssetId` only. No component performs I/O, resource loading, renderer/audio/native lookup, or service discovery.
+The accepted public `engine-world` surface adds exactly `TransformComponent`, `NameComponent`, `MeshRendererComponent`, `CameraComponent`, and `AudioEmitterComponent`. Transform state reuses the canonical `engine-core Transform`; mesh/material/audio references retain only stable `AssetId` values; camera stores projection configuration while pose comes from transform and aspect remains runtime input. D-083 records the policy. There is still no public `World`, scene schema/parser, GUID persistence contract, renderer/audio bridge, or later Phase 7 behavior in P7-T05.
 
-Because supported public signatures expose existing `Transform` and `AssetId` types, `engine-world` publishes its already-existing `engine-core` and `engine-assets` edges through Gradle `api(...)` metadata. This adds no project edge, dependency family/version, lockfile change, reverse dependency, renderer/audio dependency, or persisted schema.
+## Phase 7 stable authoring entity GUIDs — P7-T06 / Issue #424
 
-P7-T07 still owns scene JSON. P7-T05 tests represent scene-like parsed data in memory and construct all five components directly from that data, without introducing a production scene parser/schema, public `World`, GUIDs, entity lifecycle, component store/query API, world-to-renderer extraction, arbitrary mesh/material submission, runtime audio playback, physics integration, serialization, or networking.
+P7-T06 is active from accepted baseline `8275f5e86647b2629d3cb1b4d3ae973a647043ca` on branch `p7-t06-authoring-entity-guids`.
 
-Wiki impact: yes — the five new supported component APIs require `wiki/WORLD/COMPONENTS.md`, API index/navigation, and limitation updates.
-Sandbox impact: none — public component values alone still cannot be exercised as an integrated world feature without a public world/entity lifecycle plus renderer/audio bridges that belong to later tasks.
-Independent review: not performed in this connected session; no independent reviewer/provenance is currently available.
+The bounded implementation adds public immutable `EntityGuid(highBits,lowBits)` with JDK-backed generation plus strict canonical lowercase UUID text parsing/formatting. Existing `EntityId(index,generation)` remains the transient runtime handle and its value/reuse semantics are unchanged. A package-private `EntityGuidIndex` owns one-to-one GUID/current-live-`EntityId` bindings against one `EntityIdAllocator`, rejects conflicting bindings, invalidates dead runtime mappings, and never transfers a GUID to a reused slot generation.
 
-Exact next action: finish P7-T05 / Issue #422 only, complete full verification/documentation/wiki/API-metadata/spatial audits, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #422. Do not materialize P7-T06 before P7-T05 is accepted.
+Focused tests cover GUID text round trips and malformed input, live forward/reverse binding, stale/unknown runtime IDs, duplicate GUID/entity rejection, destruction/reuse safety, stale unbind safety, null misuse, and a save-like/reload scenario where the stored cross-entity reference is GUID text and resolves to a different runtime ID after reload. Branch preflight run #1 / `37007769079` passed Spotless, `engine-world` tests, and the architecture boundary test on the formatter-applied tree; the formatter result is committed on the task branch. Final candidate verification is still pending.
+
+P7-T06 deliberately adds no scene JSON/schema/parser, Jackson usage, parent GUID field, public world/entity lifecycle, prefab behavior, renderer/audio/physics/network integration, replication identity, dependency/module edge, or lockfile change. P7-T07 retains ownership of the first versioned scene JSON contract.
+
+Wiki impact: yes — the public identity guidance must distinguish stable authoring `EntityGuid` from transient runtime `EntityId` and must not claim scene JSON is implemented.
+
+Sandbox impact: none — public GUID values alone are not an honest runnable save/reload capability because GUID binding/resolution and entity lifecycle remain internal.
+
+Independent review: not performed in this connected session; no independent reviewer/provenance is currently available. Remaining risk is limited to author self-review plus automated verification until an independent reviewer inspects the final diff.
+
+Exact next action: finish P7-T06 / Issue #424 only, complete documentation/wiki/identity-domain audits and full branch verification, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #424. Do not materialize P7-T07 before P7-T06 is accepted.

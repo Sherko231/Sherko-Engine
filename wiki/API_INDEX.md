@@ -174,7 +174,8 @@ Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_MET
 
 | Type | Purpose |
 | --- | --- |
-| `EntityId` | Immutable generational world-entity identity containing a non-negative reusable index plus non-negative generation. |
+| `EntityId` | Immutable transient runtime world-entity handle containing a non-negative reusable index plus non-negative generation; never persist it. |
+| `EntityGuid` | Stable 128-bit authoring/persistence identity with canonical lowercase UUID text, deliberately separate from runtime `EntityId`. |
 | `TransformComponent` | Mutable spatial component that owns one canonical `engine-core Transform` created from explicit local position/quaternion/scale data. |
 | `NameComponent` | Immutable nonblank human-readable entity name preserving accepted text exactly. |
 | `MeshRendererComponent` | Immutable stable mesh/material `AssetId` references; it does not load or submit renderer resources. |
@@ -185,7 +186,7 @@ Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_MET
 
 P7-T05 component construction is data-only. `TransformComponent` creates and owns a fresh canonical `Transform`; mesh/material/audio references are stable path-independent `AssetId` values rather than loaded `ResourceHandle` or backend/native identifiers. `CameraComponent` stores only projection values independent of framebuffer aspect. These component values do not perform I/O and do not imply that world-to-renderer or runtime-audio integration exists.
 
-There is still no public `World`, entity allocator, component store/query API, deferred structural-command API, scene JSON/schema/parser, prefab lifecycle, GUID/persistence contract, renderer extraction bridge, audio playback bridge, replication identity, or entity serialization contract. P7-T07 still owns the first planned scene JSON format.
+There is still no public `World`, entity allocator, component store/query API, deferred structural-command API, scene JSON/schema/parser, prefab lifecycle, public GUID-binding/resolution API, renderer extraction bridge, audio playback bridge, replication identity, or entity serialization format. `EntityGuid` now supplies stable authoring identity and canonical text only; P7-T07 still owns the first planned scene JSON format and parent/component representation.
 
 Usage: [Entity identities](WORLD/ENTITY_IDS.md) and [World components](WORLD/COMPONENTS.md).
 

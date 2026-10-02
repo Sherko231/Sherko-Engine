@@ -1,15 +1,38 @@
 # Entity identities
 
-`com.samo.engine.world.api.EntityId` is the public immutable identity value for Phase 7 world entities.
+`engine-world` now exposes two deliberately different public identity values:
 
-## Value shape
+- `com.samo.engine.world.api.EntityGuid` — stable authoring/persistence identity for one logical entity;
+- `com.samo.engine.world.api.EntityId` — transient runtime handle for one currently allocated entity slot/generation.
+
+Do not substitute one for the other.
+
+## Stable `EntityGuid`
+
+An `EntityGuid` is an immutable 128-bit value represented by `highBits` and `lowBits`. The complete bit pair is the identity.
+
+```java
+EntityGuid guid = EntityGuid.generate();
+String savedText = guid.toString();
+EntityGuid loaded = EntityGuid.parse(savedText);
+```
+
+`toString()` uses canonical lowercase UUID text in `8-4-4-4-12` hexadecimal form. `parse(String)` accepts only that exact lowercase canonical form. Null input throws `NullPointerException`; malformed, uppercase, truncated, or otherwise non-canonical input throws `IllegalArgumentException`.
+
+All 128-bit values are valid; there is no reserved zero/sentinel GUID. `generate()` uses the JDK UUID generator for newly-authored identities.
+
+An authored cross-entity reference should retain the target `EntityGuid`, not a runtime `EntityId`. During loading/runtime binding, the world layer resolves that stable GUID to whatever runtime ID represents the entity in the current world instance.
+
+P7-T06 proves this boundary with an internal resolver and save-like in-memory test data. It does **not** define the production scene JSON representation. P7-T07 owns schema versioning, entity/parent GUID fields, component objects, parsing, and save/load document behavior.
+
+## Transient `EntityId`
 
 An `EntityId` contains two non-negative integers:
 
-- `index` — the reusable slot index;
+- `index` — the reusable runtime slot index;
 - `generation` — the version of that slot.
 
-Both values are part of the identity. Do not keep or compare only the index.
+Both values are part of the runtime handle. Do not keep or compare only the index.
 
 ```java
 EntityId id = new EntityId(12, 3);
@@ -19,20 +42,18 @@ int generation = id.generation();
 
 Constructing an ID with a negative index or generation fails with `IllegalArgumentException`.
 
-## Stale-ID rule
-
-The engine-world allocator may reuse an index after its current entity is destroyed. Any later reuse returns that index with the previous generation plus one. Therefore an old `(index, generation)` pair does not become valid merely because the same index is occupied again.
+The internal allocator may reuse an index after its current entity is destroyed. Any later reuse returns that index with the previous generation plus one. Therefore an old `(index, generation)` pair does not become valid merely because the same index is occupied again.
 
 The generation never wraps. When an internal slot reaches `Integer.MAX_VALUE` and is destroyed, that index is retired permanently rather than returning to generation zero and risking stale-ID resurrection.
 
-## Current public surface
+Never persist or network an `EntityId`. Save-like authored references use `EntityGuid`; future replication/network identity remains a separate later contract.
 
-P7-T01 intentionally exposes only the immutable `EntityId` value. Entity allocation, destruction, and liveness bookkeeping remain internal to `engine-world` for now.
+## Current resolution boundary
 
-There is currently no public `World`, public entity allocator, component store, deferred structural-command API, prefab/scene entity lifecycle, replication identity, or entity serialization contract. Those remain later bounded Phase 7/network tasks.
+P7-T06 keeps GUID-to-runtime resolution internal. The package-private resolver binds each stable GUID to one currently live exact `EntityId`, rejects conflicting GUID/entity bindings, validates allocator liveness, and removes dead mappings so index reuse cannot inherit an old entity's authored identity.
 
-Do not invent entity IDs by index alone in gameplay code or treat `EntityId` as a network or persisted identifier. Later APIs that create/own entities will return and validate these values.
+There is still no public `World`, public entity allocator, public GUID-binding API, component store/query API, scene JSON/schema/parser, prefab lifecycle, parent GUID contract, or replication identity.
 
 ## Ownership and threading
 
-`EntityId` owns no native resources and requires no cleanup. It is an immutable Java value. P7-T01 introduces no concurrency guarantee for internal world allocation; later world owners define their own synchronization/update-phase rules.
+`EntityGuid` and `EntityId` own no native resources and require no cleanup. They are immutable Java values. Current internal allocation/GUID-resolution work adds no concurrency guarantee; later world owners define synchronization/update-phase rules.

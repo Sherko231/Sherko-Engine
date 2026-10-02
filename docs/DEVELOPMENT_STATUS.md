@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / Issue #414 is accepted; P7-T02 / Issue #416 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
+| Active phase | Phase 7 active — P7-T01 / Issue #414 and P7-T02 / Issue #416 are accepted; P7-T03 / Issue #418 is the current bounded task; Phase 6, including the accepted sandbox Asset Lab and visual diagnostics polish, remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T02 / Issue #416 — package-private packed component store keyed sparsely by entity index; implementation is on `p7-t02-packed-component-store`; final PR/CI is not yet accepted |
+| Active executable task | P7-T03 / Issue #418 — package-private deferred entity/component structural commands with explicit post-iteration flush; implementation is on `p7-t03-deferred-structural-commands`; final PR/CI is not yet accepted |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -172,7 +172,7 @@ P5R-T24 / Issue #304 is accepted through PR #353. Final head `aa43d2fee5e4f4f087
 
 ## Exact next action
 
-Complete **P7-T02 / Issue #416** only. Finish the bounded package-private packed component store and its stale-ID/add/get/remove/iteration tests, reconcile architecture/status/orientation documentation, complete the final diff/consistency audit, then require exact-head five-job PR CI before merge. Do not materialize or implement P7-T03 until P7-T02 is accepted.
+Complete **P7-T03 / Issue #418** only. Finish the bounded package-private deferred structural-command buffer and its iteration/deferred-visibility/FIFO/failure tests, reconcile architecture/status/orientation documentation, remove temporary preflight tooling, complete the final diff/consistency audit, then require exact-head five-job PR CI before merge. Do not materialize or implement P7-T04 until P7-T03 is accepted.
 
 
 P5R-T25 / Issue #305 is accepted through Markdown-only PR #355. Final audit head `12681d0a1261926a32961d86ee541c1376e7ff7f` merged as `9ab1ef0d449c7ee5c390767c3ba0b58f967b7c6a`. The complete PR diff contained 8 Markdown files only, so the AGENTS.md Markdown-only exemption required neither the heavy five-job PR matrix nor post-merge Lightweight verification; no unrun check is claimed as passing. The final audit found no justified Java/Gradle/resource/wiki/sandbox cleanup, no authored-Java `@Deprecated` compatibility shim, no orphaned P5R helper, and no avoidable compatibility alias. Remaining obsolete-name text is intentional historical provenance. No behavior, public API, module/dependency, native ownership, spatial, persisted/config, wire/protocol, wiki, or sandbox contract changed.
@@ -246,7 +246,7 @@ GitHub's PR workflow checked out synthetic merge commit `97ae0cad824ae3da8607d35
 
 The connected GitHub tool does not expose `workflow_dispatch`. A bounded attempt to rerun a skipped heavy push job on run #607 was accepted by the Actions API but GitHub re-evaluated the push-job condition and kept heavy work skipped. Phase-exit acceptance therefore uses the full five-job verification of the byte-identical merge tree from run #606 plus exact-SHA Lightweight verification from run #607; no separate workflow-dispatch result is claimed.
 
-The Phase 7 readiness review found no prerequisite conflict. P7-T01 / Issue #414 is accepted: final candidate `182ff9ca4ed8ef915fac94e05427d6328f41c78f` passed the required five-job matrix in run #641 / `36872723180`, PR #415 merged as `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359`, and exact merged master passed Lightweight verification in run #642 / `36878894604`. P7-T02 / Issue #416 is now the only materialized Phase 7 implementation task; later P7 tasks remain unmaterialized.
+The Phase 7 readiness review found no prerequisite conflict. P7-T01 / Issue #414 is accepted: final candidate `182ff9ca4ed8ef915fac94e05427d6328f41c78f` passed the required five-job matrix in run #641 / `36872723180`, PR #415 merged as `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359`, and exact merged master passed Lightweight verification in run #642 / `36878894604`. P7-T02 / Issue #416 is also accepted: final candidate `7968e6ececf4a2b5cdd614c4e6848cf703ddb6f1` passed the required five-job matrix in run #645 / `36986058671`, PR #417 merged as `1b10c7683a231afec49e3fecd085314834ab2a96`, and exact merged master passed Lightweight verification in run #646 / `36986734070`. P7-T03 / Issue #418 is now the only materialized Phase 7 implementation task; later P7 tasks remain unmaterialized.
 
 
 ## Pre-Phase 7 sandbox integration
@@ -259,7 +259,7 @@ The owner controls use only the existing public input vocabulary: `E`, `Right Sh
 
 The demo does not expose asset or renderer internals, add native calls, add arbitrary MESH/MATERIAL renderer submission, add a SHADER AssetType, or implement any Phase 7 world/ECS behavior. Offline cooker/import/texture/audio/dependency-graph and renderer-internal upload/shader-reload capabilities remain documented/tested rather than falsely visualized.
 
-Phase 7 has accepted P7-T01 and is active on P7-T02. The sandbox remains intentionally unchanged because P7-T02 adds only package-private component storage and there is still no public world/entity/component lifecycle that can be exercised honestly without pulling later world/ECS work forward.
+Phase 7 has accepted P7-T01 and P7-T02 and is active on P7-T03. The sandbox remains intentionally unchanged because the accepted/current Phase 7 work is internal identity/storage/structural-command infrastructure and there is still no public world/entity/component lifecycle that can be exercised honestly without pulling P7-T04+ work forward.
 
 
 ## Pre-Phase 7 sandbox visual polish
@@ -282,12 +282,24 @@ The accepted implementation adds public immutable `com.samo.engine.world.api.Ent
 
 ## Phase 7 packed component storage — P7-T02 / Issue #416
 
-P7-T02 is active from accepted P7-T01 merge baseline `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359` on branch `p7-t02-packed-component-store`. The bounded candidate adds package-private `PackedComponentStore<T>` plus focused internal tests only in `engine-world`. The store uses sparse entity-index lookup into dense exact-`EntityId`/component storage, delegates liveness and generation validity to the accepted P7-T01 allocator, swap-compacts removals, excludes stale entries from size/iteration, and rejects structural add/remove through the same store during iteration so P7-T03 retains deferred-command ownership.
+P7-T02 is accepted from the P7-T01 merge baseline `e25458acaaa68bcd5f9dc5ab201cfd55f4bfb359`. Final candidate `7968e6ececf4a2b5cdd614c4e6848cf703ddb6f1` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #645 / `36986058671`. PR #417 merged as `1b10c7683a231afec49e3fecd085314834ab2a96`, and exact merged master passed Lightweight verification in run #646 / `36986734070`. Issue #416 is closed completed.
 
-Current authoring verification state: the connected environment cannot execute the Gradle wrapper locally because direct GitHub network access is unavailable, so no focused/local Gradle command is claimed as passing here. No Gradle/dependency/lockfile change is intended. Before final acceptance, the candidate still requires complete diff/self-review/consistency audit and the exact-head five-job PR matrix; after merge, exact merged master must pass Lightweight verification before Issue #416 closes.
+The accepted implementation adds package-private `PackedComponentStore<T>` plus focused internal tests only in `engine-world`. The store uses sparse entity-index lookup into dense exact-`EntityId`/component storage, delegates liveness and generation validity to the accepted P7-T01 allocator, swap-compacts removals, excludes stale entries from size/iteration, and rejects structural add/remove through the same store during iteration so P7-T03 retains deferred-command ownership. No public `World` or component-store API, deferred command queue, fixed update phases, concrete components, prefab/scene behavior, dependency/module edge, persisted/protocol/network identity, renderer/physics/audio/assets/game behavior, Gradle change, or lockfile change was introduced.
 
 Wiki impact: none — P7-T02 adds no supported public engine API or consumer-visible behavior.
-Sandbox impact: none — the store is package-private and there is still no public world/entity/component lifecycle to exercise without pulling P7-T03+ work forward.
-Independent review: not performed in this connected session; no approval is inferred.
+Sandbox impact: none — the store is package-private and there is still no public world/entity/component lifecycle to exercise without pulling later Phase 7 work forward.
+Independent review: not performed in the connected authoring session; no independent approval is inferred.
 
-Exact next action: finish P7-T02 / Issue #416 only, open the final non-draft PR only after the diff/docs are complete, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification. Do not materialize P7-T03 before P7-T02 is accepted.
+## Phase 7 deferred structural commands — P7-T03 / Issue #418
+
+P7-T03 is active from accepted P7-T02 merge baseline `1b10c7683a231afec49e3fecd085314834ab2a96` on branch `p7-t03-deferred-structural-commands`. The bounded candidate adds package-private `DeferredStructuralCommandBuffer` plus focused internal tests only in `engine-world`. Entity creation/destruction and component add/removal requests are recorded without immediate structural mutation and are applied only by an explicit FIFO `flush()` after iteration. A pending internal creation result resolves only when its creation command executes. P7-T03 reuses the accepted P7-T01 allocator and P7-T02 store semantics rather than duplicating liveness, generation, sparse/dense, or removal logic.
+
+The buffer rejects recursive flush and recording during an active flush. Commands are removed from the queue before execution: commands already reached stay applied, a failing command is consumed and propagates its exception, and untouched tail commands remain queued in original order for a later explicit flush. No transactional rollback or automatic flush/update phase is claimed; P7-T04 retains ownership of fixed world update phases and eventual flush scheduling.
+
+Authoring preflight run #3 / `36990597864` on head `254d927326ea9a288324ee2ef93f89ba896907fe` passed Spotless verification, `:engine-world:test --rerun-tasks`, and the architecture boundary test. This temporary branch-only preflight is authoring evidence only and will be removed before the final candidate; final acceptance still requires the exact-head five-job PR matrix and exact-merge Lightweight verification. The connected environment does not execute the Gradle wrapper locally, so no separate local command run is claimed.
+
+Wiki impact: none — P7-T03 adds no supported public engine API or consumer-visible behavior.
+Sandbox impact: none — deferred commands remain package-private and there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.
+Independent review: not performed in this connected session; no independent reviewer/provenance is available.
+
+Exact next action: finish P7-T03 / Issue #418 only, remove temporary preflight tooling, complete the final diff/self-review/consistency audit, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #418. Do not materialize P7-T04 before P7-T03 is accepted.

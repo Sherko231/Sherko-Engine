@@ -99,7 +99,7 @@ P5-T12 / D-060 adds deterministic package-internal ordering after P5-T11 culling
 | `engine-assets` | Runtime asset identity, handles/formats, and loading contracts | P6-T01 through P6-T14 provide stable identity, strict source metadata, deterministic cooking/formats/dependencies, typed resource handles/fallbacks, asynchronous manifest-backed MESH/MATERIAL loading, and opt-in development MATERIAL hot reload; caches/reference counting and other runtime asset types remain planned | `engine-core` |
 | `engine-ui` | Renderer-neutral runtime HUD/menu model and draw data | Skeleton | `engine-core`, `engine-assets` |
 | `engine-render-opengl` | OpenGL renderer and runtime-UI draw adapter | Bounded public indexed-mesh renderer plus P5-T03..T12 resource/upload/shader/uniform/sRGB/material/frame-snapshot/CPU-culling/draw-ordering foundations | `engine-core`, `engine-platform-lwjgl`, `engine-assets`, `engine-ui` |
-| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; P7-T02 adds package-private packed one-type component storage keyed sparsely by entity index with exact-ID stale safety; public world lifecycle, deferred structural commands, update phases, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
+| `engine-world` | Scene/world/component/prefab runtime | P7-T01 public generational `EntityId` plus package-private allocation/reuse/liveness bookkeeping; P7-T02 adds package-private packed one-type component storage keyed sparsely by entity index with exact-ID stale safety; P7-T03 adds package-private FIFO deferred entity/component structural commands with explicit flush; public world lifecycle, fixed update phases, concrete components, and prefab/scene behavior remain planned | `engine-core`, `engine-assets` |
 | `engine-physics-jolt` | Jolt-backed physics adapter and ownership | Skeleton | `engine-core` |
 | `engine-audio-openal` | OpenAL-backed positional audio | Skeleton | `engine-core` |
 | `engine-network-api` | Transport-neutral session/message contracts | Skeleton | `engine-core` |
@@ -930,3 +930,17 @@ The store remains internal and externally serialized. P7-T02 introduces no publi
 Durable decision impact: none — this is the bounded internal implementation of the already planned P7-T02 packed-store contract and consumes P7-T01 identity validity without adding a new cross-task architecture policy.
 Wiki impact: none — no supported public engine API or consumer-visible behavior changes.
 Sandbox impact: none — there is still no public world/entity/component lifecycle that can be exercised honestly without pulling P7-T03+ work forward.
+
+## Phase 7 deferred structural commands — P7-T03 / Issue #418
+
+`engine-world` adds package-private `DeferredStructuralCommandBuffer` above the accepted P7-T01 identity allocator and P7-T02 packed component store. Internal callers record entity creation/destruction and typed component add/removal requests while packed-store iteration is active; recording itself does not mutate allocator or store structure. An owner later invokes `flush()` explicitly, and queued commands execute in FIFO record order.
+
+Deferred entity creation uses a package-private pending result whose `EntityId` is unavailable until the queued creation command executes. Destruction delegates to `EntityIdAllocator.destroy(...)`, preserving exact generation/liveness safety. Component commands delegate to `PackedComponentStore.add/remove(...)`, preserving exact-ID lookup, stale-generation isolation, swap-compaction, and the existing prohibition on direct structural mutation during a store's own iteration. P7-T03 adds no alternate generation or sparse/dense bookkeeping.
+
+`flush()` is deliberately non-transactional. Each command is removed from the queue before it executes: earlier successful commands remain applied, a failing command propagates and is consumed, and commands not yet reached remain queued in original order for a later explicit flush. Recursive flush and recording during an active flush are rejected deterministically. Access remains externally serialized; no concurrency guarantee is added.
+
+P7-T03 does not define automatic flush scheduling or a world update phase. P7-T04 remains the owner of fixed update phases and eventual structural-command visibility timing. No public `World`, public command buffer/component store, concrete component set, query/event scheduler, prefab/scene behavior, persistence/protocol/network identity, renderer/physics/audio/assets/game behavior, project edge, or production dependency is introduced.
+
+Durable decision impact: none — the active Issue bounds this internal FIFO/explicit-flush mechanism without establishing a broader public or cross-phase contract.
+Wiki impact: none — no supported public engine API or consumer-visible usage changes.
+Sandbox impact: none — there is still no public world/entity/component lifecycle to exercise without pulling P7-T04+ work forward.

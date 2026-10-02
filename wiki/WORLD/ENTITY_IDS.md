@@ -23,7 +23,7 @@ All 128-bit values are valid; there is no reserved zero/sentinel GUID. `generate
 
 An authored cross-entity reference should retain the target `EntityGuid`, not a runtime `EntityId`. During loading/runtime binding, the world layer resolves that stable GUID to whatever runtime ID represents the entity in the current world instance.
 
-P7-T06 proves this boundary with an internal resolver and save-like in-memory test data. It does **not** define the production scene JSON representation. P7-T07 owns schema versioning, entity/parent GUID fields, component objects, parsing, and save/load document behavior.
+P7-T06 proves the identity boundary with the internal resolver. P7-T07 now defines schema-v1 scene persistence internally: entity `guid` and nullable `parentGuid` fields use canonical `EntityGuid` text, while runtime `EntityId` values never appear in the persisted document. The codec is still package-private and does not expose public world activation/loading.
 
 ## Transient `EntityId`
 
@@ -52,7 +52,7 @@ Never persist or network an `EntityId`. Save-like authored references use `Entit
 
 P7-T06 keeps GUID-to-runtime resolution internal. The package-private resolver binds each stable GUID to one currently live exact `EntityId`, rejects conflicting GUID/entity bindings, validates allocator liveness, and removes dead mappings so index reuse cannot inherit an old entity's authored identity.
 
-There is still no public `World`, public entity allocator, public GUID-binding API, component store/query API, scene JSON/schema/parser, prefab lifecycle, parent GUID contract, or replication identity.
+There is still no public `World`, public entity allocator, public GUID-binding API, component store/query API, public scene codec/activation API, prefab lifecycle, or replication identity. The internal scene schema now records parent GUIDs, but runtime hierarchy activation remains later work.
 
 ## Ownership and threading
 

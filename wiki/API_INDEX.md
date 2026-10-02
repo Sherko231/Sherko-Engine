@@ -186,9 +186,9 @@ Usage: [Asset identity](ASSETS/ASSET_ID.md), [Source metadata](ASSETS/SOURCE_MET
 
 P7-T05 component construction is data-only. `TransformComponent` creates and owns a fresh canonical `Transform`; mesh/material/audio references are stable path-independent `AssetId` values rather than loaded `ResourceHandle` or backend/native identifiers. `CameraComponent` stores only projection values independent of framebuffer aspect. These component values do not perform I/O and do not imply that world-to-renderer or runtime-audio integration exists.
 
-There is still no public `World`, entity allocator, component store/query API, deferred structural-command API, scene JSON/schema/parser, prefab lifecycle, public GUID-binding/resolution API, renderer extraction bridge, audio playback bridge, replication identity, or entity serialization format. `EntityGuid` now supplies stable authoring identity and canonical text only; P7-T07 still owns the first planned scene JSON format and parent/component representation.
+P7-T07 now defines and tests an internal strict version-1 scene JSON persistence format using stable `EntityGuid`/`AssetId` text plus the five accepted component data contracts. The codec/document types remain package-private, so there is still no public `World`, entity allocator, component store/query API, deferred structural-command API, public scene load/save/activation API, prefab lifecycle, public GUID-binding/resolution API, renderer extraction bridge, audio playback bridge, or replication identity. P7-T08 retains unknown optional editor-data compatibility policy and P7-T11 retains runtime world activation.
 
-Usage: [Entity identities](WORLD/ENTITY_IDS.md) and [World components](WORLD/COMPONENTS.md).
+Usage: [Entity identities](WORLD/ENTITY_IDS.md), [World components](WORLD/COMPONENTS.md), and [Scene persistence format](WORLD/SCENES.md).
 
 ## `engine-render-opengl` — `com.samo.engine.render.api`
 

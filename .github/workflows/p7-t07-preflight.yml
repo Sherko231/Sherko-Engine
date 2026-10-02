@@ -1,0 +1,64 @@
+name: P7-T07 Authoring Preflight
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: p7-t07-scene-json
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Generate authorized lock and formatter changes
+        shell: pwsh
+        run: |
+          .\gradlew.bat resolveAndLockAllDependencies --write-locks
+          .\gradlew.bat spotlessApply
+      - name: Guard generated diff
+        shell: pwsh
+        run: |
+          $allowed = @(
+            'engine-world/gradle.lockfile',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneFormatException.java',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneTransformData.java',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneComponentsDocument.java',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneEntityDocument.java',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneDocument.java',
+            'engine-world/src/main/java/com/samo/engine/world/internal/SceneJsonCodec.java',
+            'engine-world/src/test/java/com/samo/engine/world/internal/SceneJsonCodecTest.java'
+          )
+          $changed = @(git diff --name-only)
+          foreach ($path in $changed) {
+            if ($allowed -notcontains $path) {
+              throw "Unexpected generated path: $path"
+            }
+          }
+          git diff --check
+      - name: Focused verification
+        shell: pwsh
+        run: |
+          .\gradlew.bat spotlessCheck
+          .\gradlew.bat :engine-world:test --rerun-tasks
+          .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+      - name: Commit generated changes
+        shell: pwsh
+        run: |
+          if (-not (git status --porcelain)) {
+            Write-Host 'No generated changes to commit.'
+            exit 0
+          }
+          git config user.name 'Sherko'
+          git config user.email '120306123+Sherko231@users.noreply.github.com'
+          git add -- engine-world/gradle.lockfile engine-world/src/main/java/com/samo/engine/world/internal/SceneFormatException.java engine-world/src/main/java/com/samo/engine/world/internal/SceneTransformData.java engine-world/src/main/java/com/samo/engine/world/internal/SceneComponentsDocument.java engine-world/src/main/java/com/samo/engine/world/internal/SceneEntityDocument.java engine-world/src/main/java/com/samo/engine/world/internal/SceneDocument.java engine-world/src/main/java/com/samo/engine/world/internal/SceneJsonCodec.java engine-world/src/test/java/com/samo/engine/world/internal/SceneJsonCodecTest.java
+          git commit -m 'style: format P7-T07 scene JSON implementation'
+          git push origin HEAD:p7-t07-scene-json

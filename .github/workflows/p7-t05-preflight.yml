@@ -4,6 +4,9 @@ on:
   push:
     branches: [ p7-t05-core-world-components ]
 
+permissions:
+  contents: write
+
 jobs:
   preflight:
     runs-on: windows-latest
@@ -14,6 +17,19 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Apply authoritative formatting
+        shell: powershell
+        run: |
+          & .\gradlew.bat spotlessApply
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- engine-world/src/main/java engine-world/src/test/java
+            git commit -m "style: apply Spotless to P7-T05"
+            git push origin HEAD:$env:GITHUB_REF_NAME
+          }
       - name: Verify formatting
         run: .\gradlew.bat spotlessCheck
       - name: Run engine-world tests

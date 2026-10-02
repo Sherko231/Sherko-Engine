@@ -4,14 +4,8 @@ import java.util.List;
 import java.util.Objects;
 
 final class WorldUpdatePipeline {
-    private static final List<WorldUpdatePhase> PHASE_ORDER = List.of(
-        WorldUpdatePhase.INPUT,
-        WorldUpdatePhase.PRE_PHYSICS,
-        WorldUpdatePhase.PHYSICS,
-        WorldUpdatePhase.POST_PHYSICS,
-        WorldUpdatePhase.GAMEPLAY,
-        WorldUpdatePhase.REPLICATION_CAPTURE,
-        WorldUpdatePhase.PRESENTATION_EXTRACTION);
+    private static final List<WorldUpdatePhase> PHASE_ORDER = List.of(WorldUpdatePhase.INPUT, WorldUpdatePhase.PRE_PHYSICS, WorldUpdatePhase.PHYSICS, WorldUpdatePhase.POST_PHYSICS,
+        WorldUpdatePhase.GAMEPLAY, WorldUpdatePhase.REPLICATION_CAPTURE, WorldUpdatePhase.PRESENTATION_EXTRACTION);
 
     private final DeferredStructuralCommandBuffer commands;
     private boolean updating;

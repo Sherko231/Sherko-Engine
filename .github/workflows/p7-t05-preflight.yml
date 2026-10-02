@@ -16,6 +16,8 @@ jobs:
       - name: Apply guarded documentation and wiki sync
         shell: powershell
         run: |
+          git fetch --no-tags --depth=1 origin 2098866d1ae01d6d80e66777e1830cb08b6c0bdd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git checkout 2098866d1ae01d6d80e66777e1830cb08b6c0bdd -- README.md ROADMAP.md docs/ARCHITECTURE.md docs/DECISIONS.md docs/DEVELOPMENT_STATUS.md wiki/API_INDEX.md wiki/LIMITATIONS.md wiki/README.md
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Remove-Item wiki/WORLD/COMPONENTS.md -ErrorAction SilentlyContinue

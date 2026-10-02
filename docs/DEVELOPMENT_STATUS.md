@@ -346,6 +346,6 @@ Wiki impact: yes — `wiki/WORLD/SCENES.md` documents the persisted schema contr
 Sandbox impact: none — the codec/document boundary is package-private and there is still no public scene activation/world lifecycle to exercise without pulling P7-T11+ work forward.
 Independent review: not performed in this connected session; no independent reviewer/provenance is currently available.
 
-Authoring verification: temporary branch preflight run #2 / `37013532281` passed module-local lock generation guard, Spotless, `engine-world` tests, and the architecture boundary test on the formatter-applied candidate lineage. Final full branch verification and the five-job exact-head PR matrix remain pending.
+Authoring verification: temporary branch preflight run #5 / `37015889902` passed the guarded documentation reconciliation, Spotless, `engine-world` tests, the architecture boundary test, root `check`, and read-only dependency-lock resolution on the candidate lineage. Temporary authoring tooling remains branch-only and must be removed before the final PR; the five-job exact-head PR matrix remains pending.
 
 Exact next action: finish P7-T07 / Issue #426 only, complete full branch verification and complete diff/persisted-format/spatial/wiki audits, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #426. Do not materialize P7-T08 before P7-T07 is accepted.

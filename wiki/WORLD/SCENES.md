@@ -1,8 +1,10 @@
 # Scene persistence format
 
-P7-T07 defines the first persisted Sherko Engine scene document: strict UTF-8 JSON schema version 1. This page documents the accepted file contract. The production codec/document implementation is currently package-private inside `engine-world`; there is not yet a public `World` or public scene activation/loading API.
+P7-T07 defines the first persisted Sherko Engine scene document: UTF-8 JSON schema version 1. P7-T08 refines its unknown-data compatibility policy with an explicit optional editor-only metadata namespace. The production codec/document implementation remains package-private inside `engine-world`; there is not yet a public `World`, public scene activation/loading API, or public editor API.
 
 ## Root document
+
+The runtime fields remain:
 
 ```json
 {
@@ -11,25 +13,43 @@ P7-T07 defines the first persisted Sherko Engine scene document: strict UTF-8 JS
 }
 ```
 
-The root contains exactly `schemaVersion` and `entities`. Version must be integer `1`; other versions fail with an upgrade-required diagnostic. Entity array order is preserved across load/save and is authoring/document order, not runtime identity. Duplicate JSON fields are rejected.
+The root may additionally contain optional `editorData`:
+
+```json
+{
+  "schemaVersion": 1,
+  "entities": [],
+  "editorData": {
+    "futureEditor": {"gridSnap": 0.25},
+    "notes": ["authoring-only"]
+  }
+}
+```
+
+`schemaVersion` must be integer `1`. Entity array order is preserved across load/save and is authoring/document order, not runtime identity. Unknown root fields other than the reserved `editorData` field remain invalid. Duplicate JSON fields are rejected.
 
 ## Entity identity and hierarchy
 
-Each entity contains exactly `guid`, `parentGuid`, and `components`:
+Each entity retains the required runtime fields `guid`, `parentGuid`, and `components`, with optional `editorData`:
 
 ```json
 {
   "guid": "00000000-0000-0000-0000-000000000001",
   "parentGuid": null,
-  "components": {}
+  "components": {},
+  "editorData": {
+    "futureInspector": {"collapsed": true}
+  }
 }
 ```
 
-`guid` and non-null `parentGuid` use canonical lowercase `EntityGuid` text. Runtime `EntityId(index,generation)` values are never persisted. Entity GUIDs must be unique; a non-null parent must exist in the same document; self-parenting and parent cycles fail before a scene document is returned. P7-T07 stores authored hierarchy identity only and does not activate `Transform.parent()` relationships.
+`guid` and non-null `parentGuid` use canonical lowercase `EntityGuid` text. Runtime `EntityId(index,generation)` values are never persisted. Entity GUIDs must be unique; a non-null parent must exist in the same document; self-parenting and parent cycles fail before a scene document is returned. Scene persistence stores authored hierarchy identity only and does not activate `Transform.parent()` relationships.
 
-## Versioned components
+Unknown entity fields other than `editorData` remain invalid.
 
-The `components` object may contain any subset of exactly five known names. Every present component carries its own `schemaVersion: 1`.
+## Versioned runtime components
+
+The `components` object may contain any subset of exactly five known runtime component names. Every present component carries its own `schemaVersion: 1`.
 
 - `transform`: `position` XYZ meters, `rotation` quaternion XYZW, `scale` dimensionless XYZ. Values are local D-041 engine-space values with no axis/unit/handedness conversion. Rotation is canonicalized through the existing `Transform` semantics.
 - `name`: one required nonblank string preserved exactly.
@@ -37,16 +57,26 @@ The `components` object may contain any subset of exactly five known names. Ever
 - `camera`: finite `verticalFovRadians`, positive `nearPlaneMeters`, and farther `farPlaneMeters` under D-045. Pose comes from transform and aspect remains runtime input.
 - `audioEmitter`: canonical `audioAssetId` text only; no backend/native audio object.
 
-Unknown root/entity/component-object fields, unknown component names, duplicate fields, missing/wrong schema versions, malformed shapes, non-finite values, malformed identities, and component-domain violations fail under the P7-T07 strict baseline.
+An unknown key directly under `components` is treated as an **unknown required runtime component** and the scene fails to load. It is not preserved or ignored. Known component objects remain strict: unknown fields and unsupported schema versions fail.
+
+## Optional editor data
+
+`editorData` is optional at the root and entity levels only. When present, it must be a JSON object.
+
+Its nested keys and values are opaque editor-only metadata. Objects, arrays, strings, numbers, booleans, and null values may appear inside it. The runtime scene codec does not interpret those values as components, assets, entity references, spatial data, or lifecycle instructions.
+
+The codec preserves `editorData` semantically through load -> save -> load. Original whitespace is not preserved. Presence is preserved too: an explicit empty `editorData: {}` remains present rather than becoming absent.
+
+Duplicate fields inside `editorData` are rejected by the same strict JSON parser used for the rest of the scene.
 
 ## Save/load semantics
 
-The writer emits deterministic schema-v1 JSON with fixed known-field ordering and canonical GUID/AssetId text. Hand-authored input does not need to be reproduced byte-for-byte. The contract is semantic: load -> save -> load preserves the scene document's meaning, including entity order, identity, parent references, component values, normalized transform rotation, and optional component absence.
+The writer emits deterministic schema-v1 JSON for known runtime fields with canonical GUID/AssetId text. Hand-authored input does not need to be reproduced byte-for-byte. The runtime contract is semantic: load -> save -> load preserves entity order, identity, parent references, known component values, normalized transform rotation, optional component absence, and any accepted opaque editor data.
 
 ## Current compatibility boundary
 
-P7-T07 intentionally does not define the final unknown-data forward-compatibility policy. P7-T08 owns the distinction between unknown required components and unknown optional editor data, including preserve/warn behavior.
+P7-T08 deliberately permits unknown content only inside the explicit `editorData` namespace. It does **not** establish a general "ignore unknown JSON" rule. Unknown required runtime components and unknown fields outside the reserved namespace remain hard failures.
 
-There is also still no public scene codec, file-path/atomic-save API, runtime world instantiation/activation, prefab expansion, renderer/audio/physics integration, editor workflow, or networking/replication identity. Those remain later bounded tasks.
+There is still no public scene codec, file-path/atomic-save API, runtime world instantiation/activation, prefab expansion, renderer/audio/physics integration, editor workflow/API, or networking/replication identity. Those remain later bounded tasks.
 
-Normative sources: D-041/D-045/D-085 in `docs/DECISIONS.md`, `docs/SPATIAL_CONVENTIONS.md`, and Issue #426.
+Normative sources: D-041/D-045/D-085/D-086 in `docs/DECISIONS.md`, `docs/SPATIAL_CONVENTIONS.md`, Issue #426, and Issue #429.

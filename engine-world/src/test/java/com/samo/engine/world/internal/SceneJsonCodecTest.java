@@ -143,7 +143,92 @@ class SceneJsonCodecTest {
 
         assertFormatFailure("{\"schemaVersion\":1,\"schemaVersion\":1,\"entities\":[]}", "{\"schemaVersion\":1,\"entities\":[],\"extra\":true}",
             sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{},\"extra\":true"),
-            sceneWithComponents("{\"futureComponent\":{\"schemaVersion\":1}}"), sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"ok\",\"extra\":true}}"));
+            sceneWithComponents("{\"name\":{\"schemaVersion\":1,\"name\":\"ok\",\"extra\":true}}"));
+
+    }
+
+    @Test
+    void preservesOpaqueRootAndEntityEditorDataAcrossRoundTrip() {
+
+        String scene = """
+            {
+              "schemaVersion": 1,
+              "entities": [
+                {
+                  "guid": "00000000-0000-0000-0000-000000000001",
+                  "parentGuid": null,
+                  "components": {
+                    "name": {
+                      "schemaVersion": 1,
+                      "name": "Editor Fixture"
+                    }
+                  },
+                  "editorData": {
+                    "futureInspector": {"collapsed": true},
+                    "tabs": [1, "two", null],
+                    "flag": false
+                  }
+                }
+              ],
+              "editorData": {
+                "futureEditor": {"gridSnap": 0.25},
+                "notes": ["authoring-only"],
+                "marker": null
+              }
+            }
+            """;
+
+        SceneDocument first = SceneJsonCodec.decode(scene);
+
+        assertThat(first.entities()).hasSize(1);
+        assertThat(first.entities().get(0).components().name().name()).isEqualTo("Editor Fixture");
+        assertThat(first.editorData()).isNotNull();
+        assertThat(first.editorData().jsonObject()).isEqualTo("{\"futureEditor\":{\"gridSnap\":0.25},\"notes\":[\"authoring-only\"],\"marker\":null}");
+        assertThat(first.entities().get(0).editorData()).isNotNull();
+        assertThat(first.entities().get(0).editorData().jsonObject())
+            .isEqualTo("{\"futureInspector\":{\"collapsed\":true},\"tabs\":[1,\"two\",null],\"flag\":false}");
+
+        SceneDocument second = SceneJsonCodec.decode(SceneJsonCodec.encode(first));
+
+        assertSceneSemanticallyEqual(first, second);
+
+    }
+
+    @Test
+    void preservesEditorDataPresenceAndAbsence() {
+
+        SceneDocument absent = SceneJsonCodec.decode(sceneWithComponents("{}"));
+        assertThat(absent.editorData()).isNull();
+        assertThat(absent.entities().get(0).editorData()).isNull();
+
+        String presentJson = "{\"schemaVersion\":1,\"entities\":[{\"guid\":\"" + ROOT_GUID
+            + "\",\"parentGuid\":null,\"components\":{},\"editorData\":{}}],\"editorData\":{}}";
+        SceneDocument present = SceneJsonCodec.decode(presentJson);
+        SceneDocument reloaded = SceneJsonCodec.decode(SceneJsonCodec.encode(present));
+
+        assertThat(present.editorData()).isEqualTo(new SceneEditorData("{}"));
+        assertThat(present.entities().get(0).editorData()).isEqualTo(new SceneEditorData("{}"));
+        assertSceneSemanticallyEqual(present, reloaded);
+
+    }
+
+    @Test
+    void rejectsInvalidOrDuplicateEditorData() {
+
+        assertFormatFailure("{\"schemaVersion\":1,\"entities\":[],\"editorData\":null}", "{\"schemaVersion\":1,\"entities\":[],\"editorData\":[]}",
+            "{\"schemaVersion\":1,\"entities\":[],\"editorData\":\"text\"}", "{\"schemaVersion\":1,\"entities\":[],\"editorData\":1}",
+            sceneWithEntityFields("\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{},\"editorData\":[]"),
+            "{\"schemaVersion\":1,\"entities\":[],\"editorData\":{\"duplicate\":1,\"duplicate\":2}}");
+
+    }
+
+    @Test
+    void rejectsUnknownRequiredComponents() {
+
+        assertThatThrownBy(() -> SceneJsonCodec.decode(sceneWithComponents("{\"futurePhysicsBody\":{\"schemaVersion\":1}}")))
+            .isInstanceOf(SceneFormatException.class)
+            .hasMessageContaining("unknown required component")
+            .hasMessageContaining("futurePhysicsBody");
 
     }
 
@@ -205,12 +290,14 @@ class SceneJsonCodecTest {
 
     private static void assertSceneSemanticallyEqual(SceneDocument expected, SceneDocument actual) {
 
+        assertThat(actual.editorData()).isEqualTo(expected.editorData());
         assertThat(actual.entities()).hasSameSizeAs(expected.entities());
         for (int index = 0; index < expected.entities().size(); index++) {
             SceneEntityDocument expectedEntity = expected.entities().get(index);
             SceneEntityDocument actualEntity = actual.entities().get(index);
             assertThat(actualEntity.guid()).isEqualTo(expectedEntity.guid());
             assertThat(actualEntity.parentGuid()).isEqualTo(expectedEntity.parentGuid());
+            assertThat(actualEntity.editorData()).isEqualTo(expectedEntity.editorData());
             assertComponentsSemanticallyEqual(expectedEntity.components(), actualEntity.components());
         }
 

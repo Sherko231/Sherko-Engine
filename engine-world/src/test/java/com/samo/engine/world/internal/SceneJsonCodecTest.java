@@ -185,8 +185,7 @@ class SceneJsonCodecTest {
         assertThat(first.editorData()).isNotNull();
         assertThat(first.editorData().jsonObject()).isEqualTo("{\"futureEditor\":{\"gridSnap\":0.25},\"notes\":[\"authoring-only\"],\"marker\":null}");
         assertThat(first.entities().get(0).editorData()).isNotNull();
-        assertThat(first.entities().get(0).editorData().jsonObject())
-            .isEqualTo("{\"futureInspector\":{\"collapsed\":true},\"tabs\":[1,\"two\",null],\"flag\":false}");
+        assertThat(first.entities().get(0).editorData().jsonObject()).isEqualTo("{\"futureInspector\":{\"collapsed\":true},\"tabs\":[1,\"two\",null],\"flag\":false}");
 
         SceneDocument second = SceneJsonCodec.decode(SceneJsonCodec.encode(first));
 
@@ -201,8 +200,7 @@ class SceneJsonCodecTest {
         assertThat(absent.editorData()).isNull();
         assertThat(absent.entities().get(0).editorData()).isNull();
 
-        String presentJson = "{\"schemaVersion\":1,\"entities\":[{\"guid\":\"" + ROOT_GUID
-            + "\",\"parentGuid\":null,\"components\":{},\"editorData\":{}}],\"editorData\":{}}";
+        String presentJson = "{\"schemaVersion\":1,\"entities\":[{\"guid\":\"" + ROOT_GUID + "\",\"parentGuid\":null,\"components\":{},\"editorData\":{}}],\"editorData\":{}}";
         SceneDocument present = SceneJsonCodec.decode(presentJson);
         SceneDocument reloaded = SceneJsonCodec.decode(SceneJsonCodec.encode(present));
 
@@ -225,10 +223,8 @@ class SceneJsonCodecTest {
     @Test
     void rejectsUnknownRequiredComponents() {
 
-        assertThatThrownBy(() -> SceneJsonCodec.decode(sceneWithComponents("{\"futurePhysicsBody\":{\"schemaVersion\":1}}")))
-            .isInstanceOf(SceneFormatException.class)
-            .hasMessageContaining("unknown required component")
-            .hasMessageContaining("futurePhysicsBody");
+        assertThatThrownBy(() -> SceneJsonCodec.decode(sceneWithComponents("{\"futurePhysicsBody\":{\"schemaVersion\":1}}"))).isInstanceOf(SceneFormatException.class)
+            .hasMessageContaining("unknown required component").hasMessageContaining("futurePhysicsBody");
 
     }
 

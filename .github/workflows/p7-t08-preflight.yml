@@ -1,0 +1,59 @@
+name: P7-T08 Authoring Preflight
+
+"on":
+  push:
+    branches:
+      - p7-t08-editor-data
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: p7-t08-editor-data
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Apply canonical Java formatting
+        shell: pwsh
+        run: .\gradlew.bat spotlessApply
+      - name: Show formatter diff
+        if: always()
+        shell: pwsh
+        run: |
+          git status --short
+          git diff --check
+          git diff -- engine-world/src/main/java engine-world/src/test/java
+      - name: Run focused world tests
+        shell: pwsh
+        run: .\gradlew.bat :engine-world:test --rerun-tasks
+      - name: Run architecture boundary test
+        shell: pwsh
+        run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+      - name: Verify formatting
+        shell: pwsh
+        run: .\gradlew.bat spotlessCheck
+      - name: Run root quality gate
+        shell: pwsh
+        run: .\gradlew.bat check
+      - name: Resolve committed dependency locks
+        shell: pwsh
+        run: .\gradlew.bat resolveAndLockAllDependencies
+      - name: Require clean verification workspace
+        shell: pwsh
+        run: |
+          git diff --check
+          $changes = git status --porcelain
+          if ($changes) {
+            Write-Host $changes
+            git diff
+            throw 'Verification changed tracked files; reconcile formatter/lock output before final PR.'
+          }

@@ -22,8 +22,8 @@ import java.util.Set;
 
 final class SceneJsonCodec {
     private static final int COMPONENT_SCHEMA_VERSION = 1;
-    private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "entities");
-    private static final Set<String> ENTITY_FIELDS = Set.of("guid", "parentGuid", "components");
+    private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "entities", "editorData");
+    private static final Set<String> ENTITY_FIELDS = Set.of("guid", "parentGuid", "components", "editorData");
     private static final Set<String> COMPONENT_FIELDS = Set.of("transform", "name", "meshRenderer", "camera", "audioEmitter");
     private static final Set<String> TRANSFORM_FIELDS = Set.of("schemaVersion", "position", "rotation", "scale");
     private static final Set<String> NAME_FIELDS = Set.of("schemaVersion", "name");
@@ -61,6 +61,9 @@ final class SceneJsonCodec {
         for (SceneEntityDocument entity : document.entities()) {
             writeEntity(entities.addObject(), entity);
         }
+        if (document.editorData() != null) {
+            writeEditorData(root, document.editorData(), "root.editorData");
+        }
 
         try {
             return MAPPER.writeValueAsString(root);
@@ -85,7 +88,8 @@ final class SceneJsonCodec {
         for (int index = 0; index < entitiesNode.size(); index++) {
             entities.add(parseEntity(entitiesNode.get(index), "root.entities[" + index + "]"));
         }
-        return new SceneDocument(entities);
+        SceneEditorData editorData = root.has("editorData") ? parseEditorData(root.get("editorData"), "root.editorData") : null;
+        return new SceneDocument(entities, editorData);
 
     }
 
@@ -105,14 +109,16 @@ final class SceneJsonCodec {
         }
 
         JsonNode componentsNode = requireField(node, "components", context);
-        return new SceneEntityDocument(guid, parentGuid, parseComponents(componentsNode, context + ".components"));
+        SceneComponentsDocument components = parseComponents(componentsNode, context + ".components");
+        SceneEditorData editorData = node.has("editorData") ? parseEditorData(node.get("editorData"), context + ".editorData") : null;
+        return new SceneEntityDocument(guid, parentGuid, components, editorData);
 
     }
 
     private static SceneComponentsDocument parseComponents(JsonNode node, String context) {
 
         requireObject(node, context);
-        requireOnlyFields(node, COMPONENT_FIELDS, context);
+        requireOnlyComponents(node, context);
 
         SceneTransformData transform = node.has("transform") ? parseTransform(node.get("transform"), context + ".transform") : null;
         NameComponent name = node.has("name") ? parseName(node.get("name"), context + ".name") : null;
@@ -188,6 +194,17 @@ final class SceneJsonCodec {
         requireSchemaVersion(node, COMPONENT_SCHEMA_VERSION, context);
         AssetId audioAssetId = parseAssetId(requireText(node, "audioAssetId", context), context + ".audioAssetId");
         return new AudioEmitterComponent(audioAssetId);
+
+    }
+
+    private static SceneEditorData parseEditorData(JsonNode node, String context) {
+
+        requireObject(node, context);
+        try {
+            return new SceneEditorData(MAPPER.writeValueAsString(node));
+        } catch (JsonProcessingException exception) {
+            throw failure("failed to preserve " + context, exception);
+        }
 
     }
 
@@ -296,6 +313,18 @@ final class SceneJsonCodec {
 
     }
 
+    private static void requireOnlyComponents(JsonNode object, String context) {
+
+        Iterator<String> fields = object.fieldNames();
+        while (fields.hasNext()) {
+            String field = fields.next();
+            if (!COMPONENT_FIELDS.contains(field)) {
+                throw failure("unknown required component " + context + "." + field);
+            }
+        }
+
+    }
+
     private static void writeEntity(ObjectNode node, SceneEntityDocument entity) {
 
         node.put("guid", entity.guid().toString());
@@ -305,6 +334,21 @@ final class SceneJsonCodec {
             node.put("parentGuid", entity.parentGuid().toString());
         }
         writeComponents(node.putObject("components"), entity.components());
+        if (entity.editorData() != null) {
+            writeEditorData(node, entity.editorData(), "entity.editorData");
+        }
+
+    }
+
+    private static void writeEditorData(ObjectNode parent, SceneEditorData editorData, String context) {
+
+        try {
+            JsonNode node = MAPPER.readTree(editorData.jsonObject());
+            requireObject(node, context);
+            parent.set("editorData", node);
+        } catch (JsonProcessingException exception) {
+            throw failure("failed to encode " + context, exception);
+        }
 
     }
 

@@ -8,8 +8,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-record SceneDocument(List<SceneEntityDocument> entities) {
+record SceneDocument(List<SceneEntityDocument> entities, SceneEditorData editorData) {
     static final int CURRENT_SCHEMA_VERSION = 1;
+
+    SceneDocument(List<SceneEntityDocument> entities) {
+
+        this(entities, null);
+
+    }
 
     SceneDocument {
 

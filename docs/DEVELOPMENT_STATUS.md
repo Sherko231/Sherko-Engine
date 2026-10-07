@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T06 / #424 are accepted; P7-T07 / Issue #426 is the current bounded task; Phase 6 remains complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T07 / #426 are accepted; P7-T08 is the next backlog task and is not yet materialized as an executable Issue; Phase 6 remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T07 / Issue #426 — package-private strict scene JSON schema-v1 document/codec plus semantic load-save-load round trip; implementation is on `p7-t07-scene-json`; final PR/CI is not yet accepted |
+| Active executable task | None — P7-T07 / Issue #426 is accepted; next action is to materialize P7-T08 from the technical backlog before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -328,9 +328,9 @@ Wiki impact: yes — public identity guidance distinguishes stable authored `Ent
 Sandbox impact: none — there is no public entity lifecycle or public GUID binding/resolution boundary to exercise honestly.
 Independent review: not performed in the connected authoring session; acceptance relied on the bounded Issue contract, self-review, exact-head five-job CI, and exact-merge Lightweight verification.
 
-## Phase 7 versioned scene JSON document — P7-T07 / Issue #426
+## Phase 7 versioned scene JSON document — P7-T07 / Issue #426 — accepted
 
-P7-T07 is active from accepted baseline `82827a7367fca11ec8e3beba6e92fac8ae5457ca` on branch `p7-t07-scene-json`.
+P7-T07 is accepted. Final candidate `d88d3b48a2d1dbb8ad335fa26901b5456d14a37d` passed all five required PR jobs in run #656 / `37017131128`; PR #427 merged as `c0c6ecafdfc4047b6c156b91b835fed261cee53b`, and exact merged `master` passed Lightweight verification in run #657 / `37017937181`.
 
 The bounded candidate adds package-private immutable scene document values plus a strict Jackson-backed schema-v1 codec under `engine-world`. Persisted entity identity and parent references use canonical `EntityGuid` text only; transient `EntityId` values are never persisted. The root schema is exactly `schemaVersion` plus ordered `entities`; each entity requires `guid`, nullable `parentGuid`, and `components`. Entity GUID uniqueness, parent existence, self-parent rejection, and parent-cycle rejection are validated before a document is returned.
 
@@ -346,6 +346,6 @@ Wiki impact: yes — `wiki/WORLD/SCENES.md` documents the persisted schema contr
 Sandbox impact: none — the codec/document boundary is package-private and there is still no public scene activation/world lifecycle to exercise without pulling P7-T11+ work forward.
 Independent review: not performed in this connected session; no independent reviewer/provenance is currently available.
 
-Authoring verification: temporary branch preflight run #5 / `37015889902` passed the guarded documentation reconciliation, Spotless, `engine-world` tests, the architecture boundary test, root `check`, and read-only dependency-lock resolution on the candidate lineage. Temporary authoring tooling remains branch-only and must be removed before the final PR; the five-job exact-head PR matrix remains pending.
+Final verification: temporary branch preflight runs #5 / `37015889902` and #6 / `37016382617` passed the guarded authoring checks before temporary tooling was removed. Exact-head PR run #656 / `37017131128` then passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke on final candidate `d88d3b48a2d1dbb8ad335fa26901b5456d14a37d`. PR #427 merged as `c0c6ecafdfc4047b6c156b91b835fed261cee53b`, and exact merged-master run #657 / `37017937181` passed Lightweight master verification.
 
-Exact next action: finish P7-T07 / Issue #426 only, complete full branch verification and complete diff/persisted-format/spatial/wiki audits, remove temporary authoring tooling, open one final non-draft PR, require the five-job exact-head matrix, merge only while tested head/base remain current, then require exact-merge Lightweight verification before closing #426. Do not materialize P7-T08 before P7-T07 is accepted.
+Exact next action: materialize P7-T08 from `docs/roadmap/TECHNICAL_BACKLOG.md` as one bounded executable Issue, then create its dedicated branch from current `master`. Do not implement P7-T09+ or change the accepted P7-T07 strict schema outside that new Issue contract.

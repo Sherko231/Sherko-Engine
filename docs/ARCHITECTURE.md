@@ -1006,3 +1006,17 @@ The task activates the already-selected Jackson 2.21.2 databind dependency direc
 
 Wiki impact: yes — persisted scene schema v1 is documented under `wiki/WORLD/SCENES.md` while clearly identifying the package-private codec/runtime-activation limitation.
 Sandbox impact: none — no public scene/world activation boundary exists to drive the persistent sandbox honestly.
+
+
+## Phase 7 optional editor-data compatibility — P7-T08 / Issue #429
+
+P7-T08 refines the P7-T07 schema-v1 unknown-data boundary without changing the five known runtime component schemas. The root scene object and each entity object may carry one optional `editorData` JSON object. That object is an explicit editor-only namespace: arbitrary nested keys and JSON values are preserved semantically by the package-private scene codec but are not interpreted as runtime component, asset, entity, spatial, or lifecycle semantics.
+
+`SceneDocument` and `SceneEntityDocument` retain optional package-private `SceneEditorData` values. The opaque value stores immutable serialized object content rather than a mutable Jackson tree. Existing package-private convenience constructors preserve internal callers that do not supply editor metadata.
+
+The compatibility boundary is asymmetric by design. Unknown names directly under `components` are required runtime components and fail with an explicit diagnostic. Unknown root/entity fields outside `editorData`, unknown fields inside known component objects, duplicate fields, and unsupported known-component schema versions also remain failures. This avoids silently discarding behavior-bearing data while allowing editor-only metadata to survive a runtime reader that does not understand its individual keys.
+
+D-086 records this refinement of D-085. No public `World`, public scene/editor API, prefab behavior, runtime activation, renderer/audio/physics/network integration, project edge, dependency family/version, native ownership, concurrency policy, or D-041/D-045 spatial convention changes are introduced.
+
+Wiki impact: yes — `wiki/WORLD/SCENES.md` documents the `editorData` namespace and required-component rejection boundary.
+Sandbox impact: none — the compatibility behavior remains package-private and has no public lifecycle to exercise honestly.

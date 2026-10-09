@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T07 / #426 are accepted; P7-T08 / Issue #429 is the current bounded task; Phase 6 remains complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T08 / #429 are accepted; P7-T09 is the next backlog task and is not yet materialized as an executable Issue; Phase 6 remains complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T08 / Issue #429 — preserve explicit optional root/entity `editorData` while rejecting unknown required runtime components; implementation is on `p7-t08-editor-data`; final PR/CI is not yet accepted |
+| Active executable task | None — P7-T08 / Issue #429 is accepted; next action is to materialize P7-T09 from the technical backlog before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -348,12 +348,12 @@ Independent review: not performed in this connected session; no independent revi
 
 Final verification: temporary branch preflight runs #5 / `37015889902` and #6 / `37016382617` passed the guarded authoring checks before temporary tooling was removed. Exact-head PR run #656 / `37017131128` then passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke on final candidate `d88d3b48a2d1dbb8ad335fa26901b5456d14a37d`. PR #427 merged as `c0c6ecafdfc4047b6c156b91b835fed261cee53b`, and exact merged-master run #657 / `37017937181` passed Lightweight master verification.
 
-Exact next action: finish P7-T08 / Issue #429 only, run the authorized branch preflight and full required verification, reconcile the complete diff, remove temporary authoring workflow scaffolding, open the final non-draft PR, require the exact-head five-job matrix, then merge and require exact-merge Lightweight verification before closing #429. Do not implement P7-T09+.
+Exact next action: materialize P7-T09 from `docs/roadmap/TECHNICAL_BACKLOG.md` as one bounded executable Issue, then create its dedicated branch from current `master`. Do not implement P7-T10+ or alter the accepted P7-T08 compatibility policy outside that new Issue contract.
 
 
-## Phase 7 scene unknown-data compatibility — P7-T08 / Issue #429
+## Phase 7 scene unknown-data compatibility — P7-T08 / Issue #429 — accepted
 
-P7-T08 is active from accepted baseline `37fc7fe8cd4653a7484892c83063cc8a9ff87eff` on branch `p7-t08-editor-data`.
+P7-T08 is accepted. Final candidate `06de60e1a61f15354f80ca559b1b3b1eb22857a1` passed all five required PR jobs in run #658 / `37658335858`; PR #430 merged as `55dc0d426fb11049b104450f5bcc419003c23c50`, and exact merged `master` passed Lightweight verification in run #659 / `37659069575`. Issue #429 is closed completed.
 
 The bounded candidate refines only the P7-T07 schema-v1 unknown-data policy. Optional root-level and entity-level `editorData` objects are an explicit reserved namespace for opaque editor-only metadata. Their arbitrary nested JSON content is preserved semantically across load-save-load without being interpreted as runtime behavior. Presence of an empty object remains distinct from absence.
 
@@ -364,3 +364,5 @@ The implementation stays package-private in `engine-world` and stores editor met
 D-086 records the compatibility policy. Wiki impact: yes — scene persistence guidance documents the reserved editor metadata namespace and the hard-failure boundary for unknown runtime components. Sandbox impact: none — no public scene/world/editor lifecycle exists to exercise this internal persistence behavior.
 
 Authoring verification: temporary branch preflight run #2 / `37657863325` passed on candidate `5779362245252a00b288c8090c8096d0aa319101`: `spotlessApply` produced no remaining tracked diff, `:engine-world:test --rerun-tasks` passed, `ModulePackageBoundaryTest` passed, `spotlessCheck` passed, root `check` passed, `resolveAndLockAllDependencies` passed, and the final clean-workspace gate passed. Preflight run #1 / `37657573954` had already passed all behavioral/architecture/quality/lock checks but intentionally failed the final clean-workspace gate because Spotless reformatted only `SceneJsonCodecTest.java`; that formatter-only diff was committed before run #2. The temporary workflow was removed before the final PR.
+
+Final verification: exact-head PR run #658 / `37658335858` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke on final candidate `06de60e1a61f15354f80ca559b1b3b1eb22857a1`. The tested base remained `37fc7fe8cd4653a7484892c83063cc8a9ff87eff` and the candidate remained `behind_by=0` immediately before merge. PR #430 merged as `55dc0d426fb11049b104450f5bcc419003c23c50`; exact merged-master run #659 / `37659069575` passed committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting.

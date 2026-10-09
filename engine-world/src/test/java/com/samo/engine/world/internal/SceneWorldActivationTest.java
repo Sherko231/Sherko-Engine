@@ -91,8 +91,7 @@ class SceneWorldActivationTest {
     @Test
     void activatesSiblingPrefabInstancesWithScopedGuidsAndDistinctOverrides() {
 
-        PrefabDocument room = prefab(rootScene(),
-            "[" + instance("left", LAMP, PARENT, "[" + overrideName("Left Lamp") + "]") + "," + instance("right", LAMP, PARENT, "[]") + "]");
+        PrefabDocument room = prefab(rootScene(), "[" + instance("left", LAMP, PARENT, "[" + overrideName("Left Lamp") + "]") + "," + instance("right", LAMP, PARENT, "[]") + "]");
         PrefabDocument lamp = prefab(lampScene(), "[]");
         SceneWorldActivation activation = new SceneWorldActivation();
 
@@ -129,12 +128,10 @@ class SceneWorldActivationTest {
 
         SceneDocument root = SceneJsonCodec.decode(rootScene());
         SceneDocument nested = SceneJsonCodec.decode(lampScene());
-        List<PrefabResolvedGroup> groups = List.of(
-            new PrefabResolvedGroup(List.of(), id(ROOM), root, List.of(), null),
+        List<PrefabResolvedGroup> groups = List.of(new PrefabResolvedGroup(List.of(), id(ROOM), root, List.of(), null),
             new PrefabResolvedGroup(List.of("nested"), id(LAMP), nested, List.of(), guid("00000000-0000-0000-0000-000000000009")));
 
-        assertThatThrownBy(() -> SceneWorld.fromPrefabs(groups)).isInstanceOf(SceneFormatException.class)
-            .hasMessageContaining("missing prefab attachment parentGuid");
+        assertThatThrownBy(() -> SceneWorld.fromPrefabs(groups)).isInstanceOf(SceneFormatException.class).hasMessageContaining("missing prefab attachment parentGuid");
         assertThat(root.entities().getFirst().guid()).isEqualTo(guid(PARENT));
 
     }

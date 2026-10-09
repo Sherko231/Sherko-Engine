@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T10 / #435 accepted; next P7-T11 not materialized; Phase 6 complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T10 / #435 accepted; P7-T11 / #439 implementation candidate, verification pending; Phase 6 complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P7-T10 / Issue #435 accepted and closed; next action is to materialize P7-T11 from technical backlog on verified `master` |
+| Active executable task | P7-T11 / Issue #439 — in-memory scene/world staging with atomic activation; branch `p7-t11-atomic-scene-activation` from verified `master` `5ed9a4b2dd1acfa58a022878bcd2eaef97fbb0bc` |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -379,7 +379,7 @@ Environment: the connected authoring session has no local Java 25/Gradle checkou
 
 Independent review: not performed; no independent reviewer available during authoring. Remaining risk: nested prefab values are resolved into package-private scene groups, not a live runtime/world hierarchy. This is intentional and must not be called an activated prefab system.
 
-P7-T10 / Issue #435 is accepted after exact-head five-job CI, merge, and exact-merge Lightweight verification. Exact next action: materialize P7-T11 from `docs/roadmap/TECHNICAL_BACKLOG.md` as a bounded executable Issue after fresh `master` verification. P7-T11 owns temporary-world scene loading and atomic activation; do not assume P7-T10 implements it.
+P7-T10 / Issue #435 is accepted after exact-head five-job CI, merge, and exact-merge Lightweight verification. P7-T11 is now materialized as Issue #439 and its own branch based on verified `master`. Current bounded implementation/verification state is at the end of this checkpoint; do not implement P7-T12+.
 
 
 ## Phase 7 prefab circular-reference preflight — P7-T10 / Issue #435 — accepted
@@ -389,3 +389,11 @@ P7-T10 / Issue #435 is accepted. The dedicated branch `p7-t10-prefab-cycle-prefl
 Connected authoring container: Linux, Java 21 only, no local authenticated Git checkout or Java 25/Gradle verification. Hosted Windows/Temurin 25 temporary preflight run `37978128407` passed `spotlessApply`, `:engine-world:test --rerun-tasks`, `:test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks`, `spotlessCheck`, root `check`, `resolveAndLockAllDependencies`, and tracked-clean guard on candidate `70530f60d15e8ff8bb281201056b2b6adb84a3b8`; the temporary workflow was removed before the final PR. No local Gradle pass is claimed. Final candidate head `e82ef286b76db1d9697bb9a7cc7e10df824520ed` passed all five required exact-head jobs (Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, Windows native smoke) in run `37978552585`. The tested base `9d56c01e64e4871ffd3a7a37601710d0fcd8dab8` and PR head remained unchanged until PR #437 merged as `f64c7cd8baae27233563791ffb3ad404f8809477`; exact merged-`master` run `37979015700` passed Lightweight verification for committed dependency locks, headless-server runtime boundary and exact-merge client/server version reporting. Issue #435 is closed completed; duplicated Issue #436 is closed duplicate. No unrelated changes, dependency/module edges, public API, persisted prefab/scene schema, spatial conventions, native ownership, sandbox, or P7-T11+ implementation entered the final diff.
 
 Wiki impact: `wiki/WORLD/PREFABS.md` documents internal preflight. Sandbox impact: none — the current package-private prefab resolver has no public world activation lifecycle. Independent review: not performed; self-review and CI are not an independent reviewer. No extra native/performance artifact specific to this Java-only graph check is required beyond the standard Windows CI matrix.
+
+## Phase 7 staged scene-world atomic activation — P7-T11 / Issue #439 — implementation candidate
+
+Issue #439 was materialized after the accepted P7-T10 / #435 handoff from merged `master` `5ed9a4b2dd1acfa58a022878bcd2eaef97fbb0bc`; the dedicated branch is `p7-t11-atomic-scene-activation`. The bounded internal-only candidate builds scene-v1 JSON or P7-T09/T10 resolved prefab groups into a new in-memory `SceneWorld` with its own P7-T01 allocator, path-scoped P7-T06 GUID indexes, five accepted P7-T05 typed packed stores, and separately connected entity/Transform parent relationships. It stages all components/identities before linking hierarchy, then changes the active world pointer only after full success. Source-local prefab GUIDs may legitimately repeat across different instance-key paths and resolve to independent runtime entities. Failures preserve the old world reference, its GUID/index/component state, and its mutable transforms. D-088 records single-caller internal atomic activation. No public World API, new storage schema/ID convention, module/dependency/lock change, native asset or physics/audio/render resource ownership, file/cooked asset loading, sandbox wiring, or P7-T12+ behavior is introduced.
+
+Verification: hosted Windows/Temurin 25 **focused preflight PASS** on code candidate `94a3802e66906e3edc8cf694543aab22cd850bc9` in run `37982538981`. Executed `spotlessApply`, focused `SceneWorldActivationTest`, complete `:engine-world:test --rerun-tasks`, architecture `ModulePackageBoundaryTest`, `spotlessCheck`, root `check`, `resolveAndLockAllDependencies`, and a final tracked-workspace clean guard — all passed. Earlier runs exposed only formatter-generated changes, corrected using the exact Spotless diffs; they were not accepted as clean candidates. The connected authoring container has Linux/Java 21 and no local Gradle checkout or authorized Java 25 compilation; **local Gradle not run**. The temporary branch-only hosted workflow must be removed before final PR. Final exact-head five-job PR CI, merge, and exact merged-master lightweight verification remain **PENDING**. Native/performance artifact: none required by this internal Java-only graph/world change. Independent review: not performed in current authoring session; needs separate coverage if available, otherwise record remaining risk. Wiki impact: internal scene/prefab guidance updated; no new public API. Sandbox impact: none — the runtime world and staging API are package-private with no public renderer/query/extraction integration.
+
+Exact next action: execute focused SceneWorldActivationTest and all `engine-world`/architecture/formatting/quality/lock checks on Java 25, finalize documentation and complete diff audit, remove temporary preflight, open one normal non-draft PR linked to #439, then require exact-head five-job CI before merge and exact merged-master lightweight verification before closing #439. P7-T12 is not materialized.

@@ -2426,3 +2426,21 @@ The final non-exempt candidate requires the normal five-job PR matrix followed b
 
 
 Accepted P6-SANDBOX-VISUAL verification evidence: final PR #412 head `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. The accepted candidate includes deterministic/bounded visual-scene tests, lifecycle/action beacon mapping, the four-light limit, MATERIAL-driven primary light colors, and committed dependency-lock coverage for sandbox visual tests. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`; exact merged master passed Lightweight verification in run #626 / `35931594902`, including dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-SANDBOX-VISUAL acceptance is complete. No engine public API, persisted schema, renderer internal exposure, runtime UI/font system, or Phase 7 implementation changed.
+
+## P7-T11 atomic scene-world activation verification
+
+Issue #439 stages schema-v1 scenes and P7-T09/T10 resolved prefabs into fresh package-private `SceneWorld` instances and swaps active ownership only upon success. Run on Windows/Java 25:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-world:test --tests "com.samo.engine.world.internal.SceneWorldActivationTest" --rerun-tasks
+.\gradlew.bat :engine-world:test --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+The focused fixture tests a scene with all five data component kinds, parent declared after child, an independent D-041 world/local Transform expectation, an empty activation, successful replacement, strict unknown-component/invalid-parent parse rejection, scope-separated prefab reuse/overrides, preflight cycle/missing-source failure, and a deliberate late invalid attachment during in-memory stage construction. On failure, assert **reference identity** of the pre-existing active world, original transient GUID mapping, parent links, name/component data, and mutable world transform. Tests use independently authored JSON/reference values and no fake world state. Run the accepted P7-T07–T10 tests as regressions via the complete `:engine-world:test` suite; inspect the unchanged module/dependency locks. This task introduces no native handle, physics, renderer, or performance artifact of its own.
+
+Final non-draft PR must pass all five exact-head CI jobs before merge; after merge require Lightweight exact-merge master verification. The connected authoring Linux environment lacks a Java 25 checkout/toolchain; any commands not actually executed locally are **not run**. Issue #439 permits a temporary branch-only GitHub-hosted Windows Java 25 preflight, removed before the normal PR, for focused verification and Spotless formatting.

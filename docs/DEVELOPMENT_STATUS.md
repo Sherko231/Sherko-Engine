@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T08 / #429 accepted; P7-T09 / Issue #432 active (not accepted); Phase 6 complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T09 / #432 accepted; next P7-T10 not yet materialized; Phase 6 complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | P7-T09 / Issue #432 — nested prefab authoring JSON and explicit property override inheritance on `p7-t09-prefab-json`; final PR/CI not yet accepted |
+| Active executable task | None — P7-T09 / Issue #432 accepted; next action is to materialize P7-T10 from the technical backlog before implementation |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -367,7 +367,7 @@ Authoring verification: temporary branch preflight run #2 / `37657863325` passed
 
 Final verification: exact-head PR run #658 / `37658335858` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke on final candidate `06de60e1a61f15354f80ca559b1b3b1eb22857a1`. The tested base remained `37fc7fe8cd4653a7484892c83063cc8a9ff87eff` and the candidate remained `behind_by=0` immediately before merge. PR #430 merged as `55dc0d426fb11049b104450f5bcc419003c23c50`; exact merged-master run #659 / `37659069575` passed committed dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting.
 
-## Phase 7 nested prefab JSON — P7-T09 / Issue #432 — in progress
+## Phase 7 nested prefab JSON — P7-T09 / Issue #432 — accepted
 
 P7-T09 was materialized after accepted P7-T08 and Markdown-only handoff PR #431 (merged `4afbe6d6999353e4ba61aa3771b218ecf6cddb66`). The dedicated branch is `p7-t09-prefab-json`, founded on that verified `master` commit.
 
@@ -375,8 +375,8 @@ The bounded candidate introduces package-private prefab schema v1 with a strict 
 
 D-087 records the durable contract. Wiki impact: `wiki/WORLD/PREFABS.md` documents this internal format; existing Scene JSON v1 remains unchanged. Sandbox impact: none — there is no public prefab/world lifecycle for the owner-facing sandbox to consume. No Java object serialization, module/dependency/lockfile, D-041/D-045 spatial, native ownership, public API, or renderer/audio/physics/network change is authorized.
 
-Environment: the connected authoring session has no local Java 25/Gradle checkout and cannot clone through the container network. Temporary branch-only preflight run #1 / `37973818552` passed `spotlessApply`, `:engine-world:test --rerun-tasks`, the `ModulePackageBoundaryTest`, `spotlessCheck`, root `check`, and `resolveAndLockAllDependencies`; the final clean-tree guard **failed** because Spotless made formatter-only edits to six new Java/test files. Those exact formatter-only changes were committed in candidate `c0b95f7733b6495ca7c788f7140cb65c43755959`. Temporary branch-only preflight run #2 / `37974969167` then passed `spotlessApply`, `:engine-world:test --rerun-tasks`, the `ModulePackageBoundaryTest`, `spotlessCheck`, root `check`, `resolveAndLockAllDependencies`, and the final clean-workspace guard. The temporary workflow is removed in the final authoring candidate. No final PR or exact-head five-job matrix has been run for P7-T09 yet.
+Environment: the connected authoring session has no local Java 25/Gradle checkout and cannot clone through the container network. Temporary branch-only preflight run #1 / `37973818552` passed `spotlessApply`, `:engine-world:test --rerun-tasks`, the `ModulePackageBoundaryTest`, `spotlessCheck`, root `check`, and `resolveAndLockAllDependencies`; the final clean-tree guard **failed** because Spotless made formatter-only edits to six new Java/test files. Those exact formatter-only changes were committed in candidate `c0b95f7733b6495ca7c788f7140cb65c43755959`. Temporary branch-only preflight run #2 / `37974969167` then passed `spotlessApply`, `:engine-world:test --rerun-tasks`, the `ModulePackageBoundaryTest`, `spotlessCheck`, root `check`, `resolveAndLockAllDependencies`, and the final clean-workspace guard. The temporary workflow is removed in the final authoring candidate. Final candidate `e007711e4ff8bd74e1a155c0402faf5f810695b3` passed all five required exact-head PR jobs (Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, Windows native smoke) in run #660 / `37975398592`. PR #433 merged as `ebea9dd7a69e14b5b6a71c99229916c7b97516b8`, and exact merged-master run #661 / `37976046324` passed Lightweight verification (dependency locks, headless server runtime boundary, exact-merge client/server version reporting). Issue #432 was closed completed after that verifier. The authoring environment did not execute local Gradle; the temporary hosted preflight and final repository CI establish the recorded checks.
 
 Independent review: not performed; no independent reviewer available during authoring. Remaining risk: nested prefab values are resolved into package-private scene groups, not a live runtime/world hierarchy. This is intentional and must not be called an activated prefab system.
 
-Next action: audit the final diff/docs/wiki/sandbox with the temporary workflow removed, then open one non-draft PR referencing #432; require all five exact-head jobs, merge only while head/base are current, require exact-merge Lightweight verification, then close #432. Do not implement P7-T10+.
+Exact next action: materialize P7-T10 from `docs/roadmap/TECHNICAL_BACKLOG.md` as one bounded executable Issue and start its dedicated branch from freshly verified `master`. Do not implement P7-T11+ or alter accepted P7-T09 prefab semantics outside that Issue contract.

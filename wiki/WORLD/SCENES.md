@@ -1,6 +1,6 @@
 # Scene persistence format
 
-P7-T07 defines the first persisted Sherko Engine scene document: UTF-8 JSON schema version 1. P7-T08 refines its unknown-data compatibility policy with an explicit optional editor-only metadata namespace. The production codec/document implementation remains package-private inside `engine-world`; there is not yet a public `World`, public scene activation/loading API, or public editor API.
+P7-T07 defines the first persisted Sherko Engine scene document: UTF-8 JSON schema version 1. P7-T08 refines its unknown-data compatibility policy with an explicit optional editor-only metadata namespace. The production codec/document implementation remains package-private inside `engine-world`; P7-T11 adds an **internal package-private** in-memory `SceneWorldActivation` that decodes this unchanged schema, materializes all entities/components in a fresh isolated `SceneWorld`, binds local parent GUIDs (including forward references), and swaps the active reference only after complete success. Failed loads leave the previous world untouched. This is not a public `World`, scene-loading API, or editor API.
 
 ## Root document
 
@@ -77,6 +77,6 @@ The writer emits deterministic schema-v1 JSON for known runtime fields with cano
 
 P7-T08 deliberately permits unknown content only inside the explicit `editorData` namespace. It does **not** establish a general "ignore unknown JSON" rule. Unknown required runtime components and unknown fields outside the reserved namespace remain hard failures.
 
-P7-T09 introduces a separate **package-private** prefab JSON composition format using this unchanged scene schema as an embedded value; see [Prefab authoring format](PREFABS.md). There is still no public scene/prefab codec, file-path/atomic-save API, live world/prefab instantiation or activation, renderer/audio/physics integration, editor workflow/API, or networking/replication identity. Those remain later bounded tasks.
+P7-T09 introduces a separate **package-private** prefab JSON composition format using this unchanged scene schema as an embedded value; see [Prefab authoring format](PREFABS.md). The internal P7-T11 staging boundary can now materialize the authored scene and atomically activate its private world reference. There is still no public scene/prefab codec, public live-world lifecycle/activation API, file-path/atomic-save I/O, renderer/audio/physics integration, editor workflow/API, or networking/replication identity. Transient EntityIds must be resolved again for each newly activated world. Those remain later bounded tasks.
 
 Normative sources: D-041/D-045/D-085/D-086 in `docs/DECISIONS.md`, `docs/SPATIAL_CONVENTIONS.md`, Issue #426, and Issue #429.

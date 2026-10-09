@@ -2426,3 +2426,21 @@ The final non-exempt candidate requires the normal five-job PR matrix followed b
 
 
 Accepted P6-SANDBOX-VISUAL verification evidence: final PR #412 head `0583d8477abf7567d02938db78a8ecc5dcc53c17` passed Build and quality gates, Unit tests, Architecture tests, JaCoCo coverage reports, and Windows native smoke in run #625 / `35930652978`. The accepted candidate includes deterministic/bounded visual-scene tests, lifecycle/action beacon mapping, the four-light limit, MATERIAL-driven primary light colors, and committed dependency-lock coverage for sandbox visual tests. PR #412 merged as `79befe0199fbe163a56667b5f5d984e5aad7e053`; exact merged master passed Lightweight verification in run #626 / `35931594902`, including dependency locks, the headless-server runtime boundary, and exact-merge client/server version reporting. P6-SANDBOX-VISUAL acceptance is complete. No engine public API, persisted schema, renderer internal exposure, runtime UI/font system, or Phase 7 implementation changed.
+
+## P7-T10 proactive prefab-cycle validation verification
+
+Issue #436 adds only package-private `engine-world` prefab-reference graph preflight ahead of P7-T09 group resolution. On a Windows x64 runner with Java 25 and the committed Gradle Wrapper, run:
+
+```powershell
+.\gradlew.bat spotlessApply
+.\gradlew.bat :engine-world:test --tests "com.samo.engine.world.internal.PrefabCycleValidatorTest" --tests "com.samo.engine.world.internal.PrefabResolverTest" --rerun-tasks
+.\gradlew.bat :engine-world:test --rerun-tasks
+.\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+.\gradlew.bat spotlessCheck
+.\gradlew.bat check
+.\gradlew.bat resolveAndLockAllDependencies
+```
+
+The focused cycle tests independently assert canonical complete closed chains and instance-key labels for self/indirect cycles, declaration-order first-cycle choice, shared acyclic source reuse, unreachable graph isolation, existing missing-source errors, and nonrecursive graph validation. The resolver integration test forces a reachable cycle to take precedence over an invalid earlier override, proving preflight ordering rather than merely checking the old traversal guard. Existing P7-T09 inheritance/nesting/override, scene JSON, and architecture tests remain regression gates. This task adds no native-resource or GPU-specific acceptance artifact.
+
+The ordinary non-exempt final PR must pass the exact-current-head five-job matrix under `docs/CI_LIFECYCLE.md`, then the exact-merge Lightweight master verifier before Issue closure. The connected authoring container has Java 21 rather than Java 25 and no GitHub DNS/Gradle checkout: commands not actually executed locally must be reported as **not run**, not as pass. A temporary branch-only hosted Windows/Java 25 preflight is authorized by Issue #436 but must be removed before the normal final non-draft PR.

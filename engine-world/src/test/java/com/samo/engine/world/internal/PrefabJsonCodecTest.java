@@ -83,8 +83,7 @@ class PrefabJsonCodecTest {
             "{\"schemaVersion\":1,\"scene\":{\"schemaVersion\":1,\"entities\":[]},\"instances\":{},\"extra\":true}",
             "{\"schemaVersion\":1,\"scene\":{\"schemaVersion\":1,\"entities\":[]},\"instances\":[],\"extra\":true}",
             "{\"schemaVersion\":1,\"schemaVersion\":1,\"scene\":{\"schemaVersion\":1,\"entities\":[]},\"instances\":[]}",
-            "{\"schemaVersion\":1,\"scene\":{\"schemaVersion\":1,\"entities\":[],\"bad\":true},\"instances\":[]}",
-            emptyPrefab() + " {}");
+            "{\"schemaVersion\":1,\"scene\":{\"schemaVersion\":1,\"entities\":[],\"bad\":true},\"instances\":[]}", emptyPrefab() + " {}");
 
     }
 
@@ -94,8 +93,8 @@ class PrefabJsonCodecTest {
         assertFailure(withInstances("[{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[],\"unknown\":0}]"),
             withInstances("[{\"instanceKey\":\"X\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[]}]"),
             withInstances("[{\"instanceKey\":\"x\",\"prefabAssetId\":\"bad\",\"parentGuid\":null,\"overrides\":[]}]"),
-            withInstances("[{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[]},"
-                + "{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[]}]"),
+            withInstances("[{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[]}," + "{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID
+                + "\",\"parentGuid\":null,\"overrides\":[]}]"),
             withInstances("[{\"instanceKey\":\"x\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":\"" + GUID + "\",\"overrides\":[]}]"),
             withInstances("[{\"instanceKey\":\"x\",\"instanceKey\":\"y\",\"prefabAssetId\":\"" + ID + "\",\"parentGuid\":null,\"overrides\":[]}]"));
 
@@ -108,8 +107,7 @@ class PrefabJsonCodecTest {
         assertFailure(withOverrides("[{\"instancePath\":[],\"entityGuid\":\"" + GUID + "\",\"component\":\"name\",\"property\":\"schemaVersion\",\"value\":1}]"),
             withOverrides("[{\"instancePath\":[],\"entityGuid\":\"" + GUID + "\",\"component\":\"unknown\",\"property\":\"name\",\"value\":\"x\"}]"),
             withOverrides("[{\"instancePath\":[123],\"entityGuid\":\"" + GUID + "\",\"component\":\"name\",\"property\":\"name\",\"value\":\"x\"}]"),
-            withOverrides("[{\"instancePath\":[],\"entityGuid\":\"" + GUID + "\",\"component\":\"name\",\"property\":\"name\"}]"),
-            withOverrides("[" + prefix + "," + prefix + "]"),
+            withOverrides("[{\"instancePath\":[],\"entityGuid\":\"" + GUID + "\",\"component\":\"name\",\"property\":\"name\"}]"), withOverrides("[" + prefix + "," + prefix + "]"),
             withOverrides("[{\"instancePath\":[],\"entityGuid\":\"" + GUID + "\",\"component\":\"name\",\"property\":\"name\",\"value\":\"x\",\"extra\":1}]"));
 
     }

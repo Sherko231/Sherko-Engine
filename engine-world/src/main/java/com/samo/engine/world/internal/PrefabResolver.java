@@ -57,8 +57,7 @@ final class PrefabResolver {
                     }
                     PrefabResolvedGroup group = groups.get(index);
                     SceneDocument updated = applyOverride(group.scene(), override, targetPath);
-                    groups.set(index,
-                        new PrefabResolvedGroup(group.instancePath(), group.sourcePrefabAssetId(), updated, group.parentInstancePath(), group.parentGuid()));
+                    groups.set(index, new PrefabResolvedGroup(group.instancePath(), group.sourcePrefabAssetId(), updated, group.parentInstancePath(), group.parentGuid()));
                 }
             }
         } finally {
@@ -89,8 +88,7 @@ final class PrefabResolver {
                 }
                 JsonNode component = entityNode.get("components").get(override.component());
                 if (!(component instanceof ObjectNode componentObject) || !componentObject.has(override.property())) {
-                    throw new PrefabFormatException("override targets missing component property at " + path + ": " + override.component() + "."
-                        + override.property());
+                    throw new PrefabFormatException("override targets missing component property at " + path + ": " + override.component() + "." + override.property());
                 }
                 JsonNode value = MAPPER.readTree(override.valueJson());
                 if (value == null) {

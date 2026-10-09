@@ -9,12 +9,8 @@ import java.util.regex.Pattern;
 
 record PrefabPropertyOverride(List<String> instancePath, EntityGuid entityGuid, String component, String property, String valueJson) {
     private static final Pattern INSTANCE_KEY = Pattern.compile("[a-z][a-z0-9_-]*");
-    private static final Map<String, Set<String>> PROPERTIES = Map.of(
-        "transform", Set.of("position", "rotation", "scale"),
-        "name", Set.of("name"),
-        "meshRenderer", Set.of("meshAssetId", "materialAssetId"),
-        "camera", Set.of("verticalFovRadians", "nearPlaneMeters", "farPlaneMeters"),
-        "audioEmitter", Set.of("audioAssetId"));
+    private static final Map<String, Set<String>> PROPERTIES = Map.of("transform", Set.of("position", "rotation", "scale"), "name", Set.of("name"), "meshRenderer",
+        Set.of("meshAssetId", "materialAssetId"), "camera", Set.of("verticalFovRadians", "nearPlaneMeters", "farPlaneMeters"), "audioEmitter", Set.of("audioAssetId"));
 
     PrefabPropertyOverride {
 

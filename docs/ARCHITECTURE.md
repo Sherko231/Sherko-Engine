@@ -1020,3 +1020,11 @@ D-086 records this refinement of D-085. No public `World`, public scene/editor A
 
 Wiki impact: yes — `wiki/WORLD/SCENES.md` documents the `editorData` namespace and required-component rejection boundary.
 Sandbox impact: none — the compatibility behavior remains package-private and has no public lifecycle to exercise honestly.
+
+## Phase 7 nested prefab authoring — P7-T09 / Issue #432 (in progress)
+
+The `engine-world` package-private prefab document/codec uses a separate strict schema-v1 authoring boundary with an embedded, unchanged D-085/D-086 scene JSON object. Sibling-scoped `instanceKey` names identify referenced prefab instances by canonical `AssetId`; a nullable `parentGuid` identifies a containing prefab's local authoring entity but has no runtime hierarchy effect yet. Explicit overrides target existing component fields using a nested instance-key path and source-local `EntityGuid`. Only the existing five P7-T05 component field sets are writable. Version, GUID/parent identity, `editorData`, component structure, and unknown runtime components remain protected.
+
+An internal, no-I/O source-map resolver returns immutable ordered scene groups keyed by instance path. Source values are re-read on each resolution, so non-overridden properties follow source updates; nested override layers are applied child-first and ancestor-last. A traversal guard fails cycles generically to prevent unbounded recursion; the stronger complete-chain pre-instantiation diagnostic belongs to P7-T10. This is authoring composition, not public prefab instantiation, whole-scene GUID remapping, P7-T11 atomic world activation, asset loading/cooking, renderer submission, or a public editor API.
+
+D-087 describes the durable format and override policy. No new module edge, external dependency, Gradle/lock change, native lifecycle obligation, network/asset protocol, or D-041/D-045 spatial semantic change. Wiki impact: internal format guidance at `wiki/WORLD/PREFABS.md`. Sandbox impact: none, because no public production prefab/world activation path exists.

@@ -5,8 +5,7 @@ import com.samo.engine.world.api.EntityGuid;
 import java.util.List;
 import java.util.Objects;
 
-record PrefabResolvedGroup(List<String> instancePath, AssetId sourcePrefabAssetId, SceneDocument scene, List<String> parentInstancePath,
-    EntityGuid parentGuid) {
+record PrefabResolvedGroup(List<String> instancePath, AssetId sourcePrefabAssetId, SceneDocument scene, List<String> parentInstancePath, EntityGuid parentGuid) {
 
     PrefabResolvedGroup {
 

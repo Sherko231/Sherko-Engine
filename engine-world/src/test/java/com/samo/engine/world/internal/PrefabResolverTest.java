@@ -24,8 +24,8 @@ class PrefabResolverTest {
 
         PrefabDocument originalLamp = document(localScene("Original Lamp", MATERIAL_A), "[]");
         PrefabDocument updatedLamp = document(localScene("Updated Lamp", MATERIAL_B), "[]");
-        String instances = "[" + instance("left", LAMP, "null", "[" + override("[]", ENTITY, "name", "name", "\"Custom Lamp\"") + "]") + ","
-            + instance("right", LAMP, "null", "[]") + "]";
+        String instances = "[" + instance("left", LAMP, "null", "[" + override("[]", ENTITY, "name", "name", "\"Custom Lamp\"") + "]") + "," + instance("right", LAMP, "null", "[]")
+            + "]";
         PrefabDocument room = document(emptyScene(), instances);
 
         List<PrefabResolvedGroup> before = PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(LAMP), originalLamp));
@@ -94,8 +94,7 @@ class PrefabResolverTest {
     private static void assertBadOverride(PrefabDocument lamp, String overrideJson, String message) {
 
         PrefabDocument room = document(emptyScene(), "[" + instance("lamp", LAMP, "null", "[" + overrideJson + "]") + "]");
-        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class)
-            .hasMessageContaining(message);
+        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class).hasMessageContaining(message);
 
     }
 

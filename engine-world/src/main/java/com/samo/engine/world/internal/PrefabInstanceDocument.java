@@ -24,8 +24,8 @@ record PrefabInstanceDocument(String instanceKey, AssetId prefabAssetId, EntityG
         for (PrefabPropertyOverride override : overrides) {
             List<Object> target = List.of(override.instancePath(), override.entityGuid(), override.component(), override.property());
             if (!targets.add(target)) {
-                throw new PrefabFormatException("duplicate prefab override target: " + instanceKey + " / " + override.instancePath() + " / "
-                    + override.entityGuid() + " / " + override.component() + "." + override.property());
+                throw new PrefabFormatException("duplicate prefab override target: " + instanceKey + " / " + override.instancePath() + " / " + override.entityGuid() + " / "
+                    + override.component() + "." + override.property());
             }
         }
 

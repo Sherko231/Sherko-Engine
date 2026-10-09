@@ -9,11 +9,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.samo.engine.assets.api.AssetId;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 final class PrefabResolver {
     private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
@@ -27,41 +26,61 @@ final class PrefabResolver {
         Objects.requireNonNull(rootPrefabAssetId, "rootPrefabAssetId");
         Objects.requireNonNull(sources, "sources");
         Map<AssetId, PrefabDocument> sourceSnapshot = Map.copyOf(sources);
+        validateAcyclic(rootPrefabAssetId, sourceSnapshot, new HashMap<>(), new ArrayList<>());
         List<PrefabResolvedGroup> groups = new ArrayList<>();
-        resolveInto(rootPrefabAssetId, List.of(), List.of(), null, sourceSnapshot, new HashSet<>(), groups);
+        resolveInto(rootPrefabAssetId, List.of(), List.of(), null, sourceSnapshot, groups);
         return List.copyOf(groups);
 
     }
 
-    private static void resolveInto(AssetId prefabId, List<String> path, List<String> parentPath, com.samo.engine.world.api.EntityGuid parentGuid,
-        Map<AssetId, PrefabDocument> sources, Set<AssetId> active, List<PrefabResolvedGroup> groups) {
+    private static void validateAcyclic(AssetId prefabId, Map<AssetId, PrefabDocument> sources, Map<AssetId, Boolean> completed, List<AssetId> active) {
 
+        int cycleStart = active.indexOf(prefabId);
+        if (cycleStart >= 0) {
+            List<String> cycle = new ArrayList<>();
+            for (int index = cycleStart; index < active.size(); index++) {
+                cycle.add(active.get(index).toString());
+            }
+            cycle.add(prefabId.toString());
+            throw new PrefabFormatException("cyclic prefab reference: " + String.join(" -> ", cycle));
+        }
+        if (completed.containsKey(prefabId)) {
+            return;
+        }
         PrefabDocument source = sources.get(prefabId);
         if (source == null) {
             throw new PrefabFormatException("missing referenced prefab AssetId: " + prefabId);
         }
-        if (!active.add(prefabId)) {
-            throw new PrefabFormatException("cyclic prefab reference (complete chain validation belongs to P7-T10)");
-        }
-
+        active.add(prefabId);
         try {
-            groups.add(new PrefabResolvedGroup(path, prefabId, source.scene(), parentPath, parentGuid));
             for (PrefabInstanceDocument instance : source.instances()) {
-                List<String> childPath = append(path, instance.instanceKey());
-                resolveInto(instance.prefabAssetId(), childPath, path, instance.parentGuid(), sources, active, groups);
-                for (PrefabPropertyOverride override : instance.overrides()) {
-                    List<String> targetPath = appendAll(childPath, override.instancePath());
-                    int index = findGroup(groups, targetPath);
-                    if (index < 0) {
-                        throw new PrefabFormatException("unknown prefab override instancePath: " + targetPath);
-                    }
-                    PrefabResolvedGroup group = groups.get(index);
-                    SceneDocument updated = applyOverride(group.scene(), override, targetPath);
-                    groups.set(index, new PrefabResolvedGroup(group.instancePath(), group.sourcePrefabAssetId(), updated, group.parentInstancePath(), group.parentGuid()));
-                }
+                validateAcyclic(instance.prefabAssetId(), sources, completed, active);
             }
         } finally {
-            active.remove(prefabId);
+            active.remove(active.size() - 1);
+        }
+        completed.put(prefabId, Boolean.TRUE);
+
+    }
+
+    private static void resolveInto(AssetId prefabId, List<String> path, List<String> parentPath, com.samo.engine.world.api.EntityGuid parentGuid,
+        Map<AssetId, PrefabDocument> sources, List<PrefabResolvedGroup> groups) {
+
+        PrefabDocument source = sources.get(prefabId);
+        groups.add(new PrefabResolvedGroup(path, prefabId, source.scene(), parentPath, parentGuid));
+        for (PrefabInstanceDocument instance : source.instances()) {
+            List<String> childPath = append(path, instance.instanceKey());
+            resolveInto(instance.prefabAssetId(), childPath, path, instance.parentGuid(), sources, groups);
+            for (PrefabPropertyOverride override : instance.overrides()) {
+                List<String> targetPath = appendAll(childPath, override.instancePath());
+                int index = findGroup(groups, targetPath);
+                if (index < 0) {
+                    throw new PrefabFormatException("unknown prefab override instancePath: " + targetPath);
+                }
+                PrefabResolvedGroup group = groups.get(index);
+                SceneDocument updated = applyOverride(group.scene(), override, targetPath);
+                groups.set(index, new PrefabResolvedGroup(group.instancePath(), group.sourcePrefabAssetId(), updated, group.parentInstancePath(), group.parentGuid()));
+            }
         }
 
     }

@@ -1,4 +1,4 @@
-# Prefab authoring format (P7-T09)
+# Prefab authoring format (P7-T09 / P7-T10)
 
 P7-T09 / Issue #432 defines an **internal, package-private** authored prefab document in `engine-world`. It is not yet a public editor or runtime World/prefab-loading API. The existing [scene JSON schema v1](SCENES.md) is embedded without altering its runtime component, GUID/parent, or optional `editorData` rules.
 
@@ -60,6 +60,6 @@ The internal resolver accepts an explicit in-memory `AssetId -> PrefabDocument` 
 
 Every resolution reads current source documents again. An explicit override stays fixed while all non-overridden properties inherit the current referenced source values. A nested child override is applied first, then an outer instance override aimed at the same nested target, so the enclosing authoring layer wins. Source documents are never mutated by resolution.
 
-Missing references, malformed nested paths, invalid target entity/component/property/value, and cycles detected during traversal fail atomically (no partial result). The cycle guard is not the P7-T10 **pre-instantiation full reference-chain** diagnostic. Live GUID mapping, authored parent attachment, scene activation, renderer/physics/audio integration, cooked-prefab loading, and public API are deferred to later bounded tasks, particularly P7-T11.
+Before any resolved scene groups or overrides are processed, P7-T10 validates the reachable prefab reference graph in depth-first instance order. A cycle fails atomically with the full closed sequence of canonical AssetIds, e.g. `A -> B -> C -> A` (using actual UUIDs). An acyclic prefix is omitted from the reported cycle; shared noncyclic references and cycles only in unreachable prefabs do not fail the selected root. Missing reachable sources fail explicitly. Malformed nested paths and invalid override targets/values still fail atomically during subsequent resolution. Live GUID mapping, authored parent attachment, scene activation, renderer/physics/audio integration, cooked-prefab loading, and public API are deferred to later bounded tasks, particularly P7-T11.
 
-Normative sources: D-083/D-084/D-085/D-086/D-087 and Issue #432. These are internal format notes, not a supported public engine API.
+Normative sources: D-083/D-084/D-085/D-086/D-087, Issue #432 and Issue #435. These are internal format notes, not a supported public engine API.

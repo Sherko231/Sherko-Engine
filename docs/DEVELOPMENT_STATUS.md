@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T09 / #432 accepted; next P7-T10 not yet materialized; Phase 6 complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T09 / #432 accepted; P7-T10 / #436 implementation candidate on dedicated branch, verification pending; Phase 6 complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P7-T09 / Issue #432 accepted; next action is to materialize P7-T10 from the technical backlog before implementation |
+| Active executable task | P7-T10 / Issue #436 — proactive prefab-cycle full reference-chain diagnostics; branch `p7-t10-prefab-cycle-chain` from verified `master` `9d56c01e64e4871ffd3a7a37601710d0fcd8dab8` |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -379,4 +379,10 @@ Environment: the connected authoring session has no local Java 25/Gradle checkou
 
 Independent review: not performed; no independent reviewer available during authoring. Remaining risk: nested prefab values are resolved into package-private scene groups, not a live runtime/world hierarchy. This is intentional and must not be called an activated prefab system.
 
-Exact next action: materialize P7-T10 from `docs/roadmap/TECHNICAL_BACKLOG.md` as one bounded executable Issue and start its dedicated branch from freshly verified `master`. Do not implement P7-T11+ or alter accepted P7-T09 prefab semantics outside that Issue contract.
+## Phase 7 proactive prefab cycle validation — P7-T10 / Issue #436 — implementation candidate
+
+Issue #436 is materialized and branch `p7-t10-prefab-cycle-chain` starts from verified `master` `9d56c01e64e4871ffd3a7a37601710d0fcd8dab8`. The bounded implementation adds iterative, package-private graph preflight to the accepted P7-T09 source-map resolver. Reachable cycles now report a complete, deterministically ordered root-to-repeat AssetId reference chain labeled with `instanceKey` edges before scene-group resolution or property overrides begin. Reused prefab sources without an active back edge remain legal, and existing missing-reference diagnostics are preserved. Unit/integration tests include direct and indirect chains, declared first-cycle ordering, shared DAG reuse, unreachable cycle isolation, large nonrecursive preflight, and an earlier invalid override that must not obscure the cycle. D-088 and internal prefab wiki guidance record this behavior; no public API, scene/prefab schema, resource ownership, dependency/module edge, native system, runtime world activation, or future P7-T11+ work changed.
+
+Verification state at this checkpoint: local Java 25/Gradle execution **not run** because the connected container exposes Java 21 and cannot clone GitHub via DNS. The Issue permits a temporary branch-only hosted Windows/Java 25 preflight that must be removed before the normal final non-draft PR; authoritative final-head five-job CI and exact merged-master Lightweight verification remain **pending**. Independent review: not performed in this connected authoring environment; remaining risk is implementation/formatting defects until hosted checks run. Wiki impact: updated `wiki/WORLD/PREFABS.md` for internal diagnostics. Sandbox impact: none — no public prefab/world activation boundary.
+
+Exact next action: run hosted Java 25 focused verification and formatting on branch `p7-t10-prefab-cycle-chain`, remove any temporary workflow, audit the complete final diff and dependency locks, then open one non-draft PR referencing Issue #436. Merge only after exact-head five-job CI passes and close Issue only after the exact merge Lightweight master verification succeeds. Do not implement P7-T11+ in this Issue.

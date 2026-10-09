@@ -95,7 +95,7 @@ class PrefabResolverTest {
     void reportsCompleteSelfReferenceChainBeforeApplyingOverrides() {
 
         PrefabDocument root = document(emptyScene(),
-            "[" + instance("self", ROOM, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\\"Invalid\\"") + "]") + "]");
+            "[" + instance("self", ROOM, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Invalid\"") + "]") + "]");
         assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), root)))
             .isInstanceOf(PrefabFormatException.class)
             .hasMessage("cyclic prefab reference: " + ROOM + " -> " + ROOM);
@@ -134,7 +134,7 @@ class PrefabResolverTest {
     void preflightReportsDeepCycleBeforeEarlierInvalidOverride() {
 
         PrefabDocument room = document(emptyScene(),
-            "[" + instance("broken", TABLE, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\\"Bad\\"") + "]") + ","
+            "[" + instance("broken", TABLE, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Bad\"") + "]") + ","
                 + instance("cycle", LAMP, "null", "[]") + "]");
         PrefabDocument table = document(emptyScene(), "[]");
         PrefabDocument lamp = document(emptyScene(), "[" + instance("back", ROOM, "null", "[]") + "]");

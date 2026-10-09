@@ -77,6 +77,6 @@ The writer emits deterministic schema-v1 JSON for known runtime fields with cano
 
 P7-T08 deliberately permits unknown content only inside the explicit `editorData` namespace. It does **not** establish a general "ignore unknown JSON" rule. Unknown required runtime components and unknown fields outside the reserved namespace remain hard failures.
 
-There is still no public scene codec, file-path/atomic-save API, runtime world instantiation/activation, prefab expansion, renderer/audio/physics integration, editor workflow/API, or networking/replication identity. Those remain later bounded tasks.
+P7-T09 introduces a separate **package-private** prefab JSON composition format using this unchanged scene schema as an embedded value; see [Prefab authoring format](PREFABS.md). There is still no public scene/prefab codec, file-path/atomic-save API, live world/prefab instantiation or activation, renderer/audio/physics integration, editor workflow/API, or networking/replication identity. Those remain later bounded tasks.
 
 Normative sources: D-041/D-045/D-085/D-086 in `docs/DECISIONS.md`, `docs/SPATIAL_CONVENTIONS.md`, Issue #426, and Issue #429.

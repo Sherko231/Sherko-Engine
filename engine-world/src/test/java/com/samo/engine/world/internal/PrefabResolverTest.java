@@ -95,7 +95,7 @@ class PrefabResolverTest {
     void detectsCyclesBeforeResolvingEarlierInvalidOverrides() {
 
         PrefabDocument lamp = document(localScene("Source Lamp", MATERIAL_A), "[]");
-        String invalidOverride = override("[]", MISSING_ENTITY, "name", "name", "\\"Broken\\"");
+        String invalidOverride = override("[]", MISSING_ENTITY, "name", "name", "\"Broken\"");
         PrefabDocument room = document(emptyScene(),
             "[" + instance("broken", LAMP, "null", "[" + invalidOverride + "]") + "," + instance("cycle", ROOM, "null", "[]") + "]");
 

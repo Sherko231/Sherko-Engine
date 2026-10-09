@@ -27,6 +27,7 @@ final class PrefabResolver {
         Objects.requireNonNull(rootPrefabAssetId, "rootPrefabAssetId");
         Objects.requireNonNull(sources, "sources");
         Map<AssetId, PrefabDocument> sourceSnapshot = Map.copyOf(sources);
+        PrefabCycleValidator.validate(rootPrefabAssetId, sourceSnapshot);
         List<PrefabResolvedGroup> groups = new ArrayList<>();
         resolveInto(rootPrefabAssetId, List.of(), List.of(), null, sourceSnapshot, new HashSet<>(), groups);
         return List.copyOf(groups);

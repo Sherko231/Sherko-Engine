@@ -1,0 +1,44 @@
+name: P7-T10 Temporary Authoring Preflight
+
+on:
+  push:
+    branches: [ p7-t10-prefab-cycle-preflight ]
+  workflow_dispatch:
+
+jobs:
+  focused:
+    name: Prefab branch-only verification
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Apply repository Java formatter
+        run: .\gradlew.bat spotlessApply
+
+      - name: Verify prefab and existing world tests
+        run: .\gradlew.bat :engine-world:test --rerun-tasks
+
+      - name: Verify module ownership
+        run: .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+
+      - name: Verify formatting
+        run: .\gradlew.bat spotlessCheck
+
+      - name: Verify root quality gate
+        run: .\gradlew.bat check
+
+      - name: Resolve committed dependencies
+        run: .\gradlew.bat resolveAndLockAllDependencies
+
+      - name: Show and reject tracked changes after formatting and lock resolution
+        shell: powershell
+        run: |
+          git status --short
+          git diff -- . ':!gradle/wrapper/gradle-wrapper.jar'
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

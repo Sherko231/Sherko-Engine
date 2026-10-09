@@ -134,7 +134,7 @@ D-085 / P7-T07 persists scene transform and camera values directly in canonical 
 - camera near/far planes are meters with the existing D-045 finite ordering rules;
 - scene JSON performs no handedness, axis, unit, Euler, matrix, or external-format conversion.
 
-`parentGuid` records authored hierarchy identity only. P7-T07 does not compute or persist world matrices and does not call `Transform.setParent(...)`; runtime hierarchy activation remains later world-loading work. Asset IDs and entity GUIDs are identity domains, not spatial quantities.
+`parentGuid` records authored hierarchy identity only. P7-T07 does not compute or persist world matrices and does not call `Transform.setParent(...)`. P7-T11 now binds entity parents during **package-private runtime world staging** and applies the accepted canonical `Transform.setParent(...)` only when both directly related entities have transforms. Local persisted values, world-space handedness/units, and serialization remain unchanged; missing transforms do not imply synthesized spatial parents. Asset IDs and entity GUIDs are identity domains, not spatial quantities.
 
 ## Boundary conversion rule
 

@@ -94,10 +94,8 @@ class PrefabResolverTest {
     @Test
     void reportsCompleteSelfReferenceChainBeforeApplyingOverrides() {
 
-        PrefabDocument root = document(emptyScene(),
-            "[" + instance("self", ROOM, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Invalid\"") + "]") + "]");
-        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), root)))
-            .isInstanceOf(PrefabFormatException.class)
+        PrefabDocument root = document(emptyScene(), "[" + instance("self", ROOM, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Invalid\"") + "]") + "]");
+        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), root))).isInstanceOf(PrefabFormatException.class)
             .hasMessage("cyclic prefab reference: " + ROOM + " -> " + ROOM);
 
     }
@@ -108,8 +106,7 @@ class PrefabResolverTest {
         PrefabDocument room = document(emptyScene(), "[" + instance("table", TABLE, "null", "[]") + "]");
         PrefabDocument table = document(emptyScene(), "[" + instance("lamp", LAMP, "null", "[]") + "]");
         PrefabDocument lamp = document(emptyScene(), "[" + instance("table", TABLE, "null", "[]") + "]");
-        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(TABLE), table, id(LAMP), lamp)))
-            .isInstanceOf(PrefabFormatException.class)
+        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(TABLE), table, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class)
             .hasMessage("cyclic prefab reference: " + TABLE + " -> " + LAMP + " -> " + TABLE);
 
     }
@@ -117,16 +114,15 @@ class PrefabResolverTest {
     @Test
     void sharedReachableSourcesAreNotCyclesAndUnreachableCyclesAreIgnored() {
 
-        PrefabDocument room = document(emptyScene(),
-            "[" + instance("left", TABLE, "null", "[]") + "," + instance("right", LAMP, "null", "[]") + "]");
+        PrefabDocument room = document(emptyScene(), "[" + instance("left", TABLE, "null", "[]") + "," + instance("right", LAMP, "null", "[]") + "]");
         PrefabDocument table = document(emptyScene(), "[" + instance("shared", MESH, "null", "[]") + "]");
         PrefabDocument lamp = document(emptyScene(), "[" + instance("shared", MESH, "null", "[]") + "]");
         PrefabDocument shared = document(emptyScene(), "[]");
         PrefabDocument unreachable = document(emptyScene(), "[" + instance("self", MATERIAL_A, "null", "[]") + "]");
         List<PrefabResolvedGroup> groups = PrefabResolver.resolve(id(ROOM),
             Map.of(id(ROOM), room, id(TABLE), table, id(LAMP), lamp, id(MESH), shared, id(MATERIAL_A), unreachable));
-        assertThat(groups).extracting(PrefabResolvedGroup::instancePath)
-            .containsExactly(List.of(), List.of("left"), List.of("left", "shared"), List.of("right"), List.of("right", "shared"));
+        assertThat(groups).extracting(PrefabResolvedGroup::instancePath).containsExactly(List.of(), List.of("left"), List.of("left", "shared"), List.of("right"),
+            List.of("right", "shared"));
 
     }
 
@@ -134,12 +130,10 @@ class PrefabResolverTest {
     void preflightReportsDeepCycleBeforeEarlierInvalidOverride() {
 
         PrefabDocument room = document(emptyScene(),
-            "[" + instance("broken", TABLE, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Bad\"") + "]") + ","
-                + instance("cycle", LAMP, "null", "[]") + "]");
+            "[" + instance("broken", TABLE, "null", "[" + override("[]", MISSING_ENTITY, "name", "name", "\"Bad\"") + "]") + "," + instance("cycle", LAMP, "null", "[]") + "]");
         PrefabDocument table = document(emptyScene(), "[]");
         PrefabDocument lamp = document(emptyScene(), "[" + instance("back", ROOM, "null", "[]") + "]");
-        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(TABLE), table, id(LAMP), lamp)))
-            .isInstanceOf(PrefabFormatException.class)
+        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(TABLE), table, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class)
             .hasMessage("cyclic prefab reference: " + ROOM + " -> " + LAMP + " -> " + ROOM);
 
     }

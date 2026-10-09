@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Active phase | Phase 7 active — P7-T01 / #414 through P7-T09 / #432 accepted; next P7-T10 not yet materialized; Phase 6 complete |
+| Active phase | Phase 7 active — P7-T01 / #414 through P7-T09 / #432 accepted; P7-T10 / #435 in progress; Phase 6 complete |
 | Completed milestone | M1 — Engine Foundation (Phases 1–4) |
 | P4-T08 accepted | Issue #101 / PR #175; intentionally completed before P4-T07 |
 | P4-T07 accepted | Issue #100 / PR #176 |
@@ -18,7 +18,7 @@
 | Phase 4 exit gate | Passed — spatial tests execute in `engine-core` independently of OpenGL and Jolt |
 | Phase 4 exit/readiness record | Issue #180 / Markdown-only PR #181 |
 | Phase 5 activation baseline | `41988dc60b3f36ea64687e733a9c2d5a594e50e3` |
-| Active executable task | None — P7-T09 / Issue #432 accepted; next action is to materialize P7-T10 from the technical backlog before implementation |
+| Active executable task | P7-T10 / Issue #435 — cycle detection preflight under implementation; PR verification pending |
 | Independent feasibility follow-ups | P0-T09A / #42, P0-T13 / #43, P0-T14 / #44 |
 
 ## Phase 4 completion
@@ -379,4 +379,9 @@ Environment: the connected authoring session has no local Java 25/Gradle checkou
 
 Independent review: not performed; no independent reviewer available during authoring. Remaining risk: nested prefab values are resolved into package-private scene groups, not a live runtime/world hierarchy. This is intentional and must not be called an activated prefab system.
 
-Exact next action: materialize P7-T10 from `docs/roadmap/TECHNICAL_BACKLOG.md` as one bounded executable Issue and start its dedicated branch from freshly verified `master`. Do not implement P7-T11+ or alter accepted P7-T09 prefab semantics outside that Issue contract.
+Exact next action: verify and merge P7-T10 / Issue #435 only after complete five-job final candidate CI and exact-merge Lightweight master verification; then update this checkpoint to accepted. P7-T11 is not yet materialized. Do not implement it in the P7-T10 branch.
+
+
+## P7-T10 implementation checkpoint (Issue #435, pending verification)
+
+Task branch `p7-t10-prefab-cycle-preflight` originates at verified master `9d56c01e64e4871ffd3a7a37601710d0fcd8dab8`. Package-private reachable-graph validation runs ahead of prefab group resolution; it reports a complete closed AssetId cycle chain and preserves sharing, unreachable graph isolation, missing-source diagnostics, and unchanged P7-T09 schema and overrides. New unit fixtures assert full chain, validation order, and shared DAG behavior. Final candidate checks, merge, and exact-master verification remain required; no passing CI is claimed at this checkpoint. No public API or sandbox impact; wiki documents internal preflight. Independent review not yet performed.

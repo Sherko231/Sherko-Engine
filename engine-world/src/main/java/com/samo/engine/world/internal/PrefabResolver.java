@@ -33,8 +33,7 @@ final class PrefabResolver {
 
     }
 
-    private static void validateAcyclic(AssetId prefabId, Map<AssetId, PrefabDocument> sources, Map<AssetId, Boolean> completed,
-        List<AssetId> active) {
+    private static void validateAcyclic(AssetId prefabId, Map<AssetId, PrefabDocument> sources, Map<AssetId, Boolean> completed, List<AssetId> active) {
 
         int cycleStart = active.indexOf(prefabId);
         if (cycleStart >= 0) {

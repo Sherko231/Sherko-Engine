@@ -204,9 +204,11 @@ final class SceneWorld {
 
     private record Group(List<String> path, SceneDocument scene, List<String> parentPath, EntityGuid parentGuid) {
         private Group {
+
             path = List.copyOf(path);
             parentPath = List.copyOf(parentPath);
             Objects.requireNonNull(scene, "scene");
+
         }
     }
 }

@@ -1,0 +1,39 @@
+name: P7-T11 temporary Java 25 preflight
+
+on:
+  push:
+    branches: [p7-t11-atomic-scene-activation]
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    name: P7-T11 focused Windows Java 25
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Format and verify world staging
+        shell: powershell
+        run: |
+          & .\gradlew.bat spotlessApply
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat :engine-world:test --tests "com.samo.engine.world.internal.SceneWorldActivationTest" --rerun-tasks
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat :engine-world:test --rerun-tasks
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat :test-support:test --tests "com.samo.architecture.ModulePackageBoundaryTest" --rerun-tasks
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat spotlessCheck
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\gradlew.bat resolveAndLockAllDependencies
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --color=never --exit-code
+          if ($LASTEXITCODE -ne 0) { Write-Output "Commit formatter-only changes before PR"; exit $LASTEXITCODE }

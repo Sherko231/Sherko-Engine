@@ -91,6 +91,19 @@ class PrefabResolverTest {
 
     }
 
+    @Test
+    void detectsCyclesBeforeResolvingEarlierInvalidOverrides() {
+
+        PrefabDocument lamp = document(localScene("Source Lamp", MATERIAL_A), "[]");
+        String invalidOverride = override("[]", MISSING_ENTITY, "name", "name", "\\"Broken\\"");
+        PrefabDocument room = document(emptyScene(),
+            "[" + instance("broken", LAMP, "null", "[" + invalidOverride + "]") + "," + instance("cycle", ROOM, "null", "[]") + "]");
+
+        assertThatThrownBy(() -> PrefabResolver.resolve(id(ROOM), Map.of(id(ROOM), room, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class)
+            .hasMessage("cyclic prefab reference: " + ROOM + " --[cycle]--> " + ROOM);
+
+    }
+
     private static void assertBadOverride(PrefabDocument lamp, String overrideJson, String message) {
 
         PrefabDocument room = document(emptyScene(), "[" + instance("lamp", LAMP, "null", "[" + overrideJson + "]") + "]");

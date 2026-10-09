@@ -118,10 +118,10 @@ class SceneWorldActivationTest {
             .hasMessageContaining("cyclic prefab reference");
         assertThatThrownBy(() -> activation.loadAndActivatePrefab(id(ROOM), Map.of(id(ROOM), room))).isInstanceOf(PrefabFormatException.class)
             .hasMessageContaining("missing referenced prefab");
-        PrefabDocument invalidOverride = prefab(rootScene(),
-            "[" + instance("broken", LAMP, PARENT, "[{\"instancePath\":[],\"entityGuid\":\"00000000-0000-0000-0000-000000000009\",\"component\":\"name\",\"property\":\"name\",\"value\":\"Missing\"}]") + "]");
-        assertThatThrownBy(() -> activation.loadAndActivatePrefab(id(ROOM), Map.of(id(ROOM), invalidOverride, id(LAMP), lamp)))
-            .isInstanceOf(PrefabFormatException.class).hasMessageContaining("missing entityGuid");
+        PrefabDocument invalidOverride = prefab(rootScene(), "[" + instance("broken", LAMP, PARENT,
+            "[{\"instancePath\":[],\"entityGuid\":\"00000000-0000-0000-0000-000000000009\",\"component\":\"name\",\"property\":\"name\",\"value\":\"Missing\"}]") + "]");
+        assertThatThrownBy(() -> activation.loadAndActivatePrefab(id(ROOM), Map.of(id(ROOM), invalidOverride, id(LAMP), lamp))).isInstanceOf(PrefabFormatException.class)
+            .hasMessageContaining("missing entityGuid");
         assertThat(activation.activeWorld()).isSameAs(old);
         assertThat(old.name(left).name()).isEqualTo("Left Lamp");
 
